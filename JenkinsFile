@@ -17,6 +17,7 @@ pipeline{
     stages{
         stage('Checkout'){
             steps {
+                cleanWs()
                 git branch : params.PROJECT_ANOMALY_GIT_BRANCH, url: params.PROJECT_ANOMALY_GITHUB_REPO_LINK
             }
         }
