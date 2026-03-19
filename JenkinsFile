@@ -45,11 +45,10 @@ pipeline{
         }
        stage('Deploy to Steam') {
             steps {
-                 bat """
-                cd /d C:\\Tools\\steamcmd
-                 steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit 
-                 """
-            }
+             bat """
+             "C:\\Tools\\steamcmd\\steamcmd.exe" +login %CREDS_USR% %CREDS_PSW% +run_app_build "${env.WORKSPACE}\\BuildScripts\\app_build.vdf" +quit
+              """
+           }
         }
     }
       post {
