@@ -42,12 +42,12 @@ pipeline{
                 }
             }
         }
-        stage('Deploy to Steam') {
+       stage('Deploy to Steam') {
             steps {
-                bat '''
+                 bat """
                 cd /d C:\\Tools\\steamcmd
-                steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build \"C:\\Data\\Jenkins_Home\\workspace\\ProjectAnomalyAutomationPipeline\\BuildScripts\\app_build.vdf\" +quit 
-                '''
+                 steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit 
+                 """
             }
         }
     }
