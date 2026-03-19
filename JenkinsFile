@@ -11,6 +11,7 @@ pipeline{
         CREDS = credentials('MY_SECRET_ID')
         BUILD_DIR = "${env.WORKSPACE}\\Builds"
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
+        ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
     }
 
     stages{
@@ -48,6 +49,18 @@ pipeline{
                 cd /d C:\\Tools\\steamcmd
                  steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit 
                  """
+            }
+        }
+        post {
+            always{
+                echo 'Cleaning up, Sir'
+            }
+            failure {
+                discordSend title: 'Jenkins Build Notification',
+                description: 'Most unfortunate news Sir, the build has Failed.',
+                link: env.BUILD_URL
+                result: 'FAILURE',
+                webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
     }
