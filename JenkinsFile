@@ -1,56 +1,54 @@
-pipeline {
-    agent any 
+pipeline{
+    agent any
 
- environment {
-        //Parameters inside our Jenkins Item -> Assigning
-        STEAM_CREDS = credentials('MY_SECRET_ID')   //This is the credentials for the SAE steam account the buttler uses to build, and they are the same for all the projects
-        GITHUB_REPO_LINK = credentials('PROJECT_ANOMALY_GITHUB_REPO_LINK')  //The link to our project repo
-        GIT_BRANCH = credentials('PROJECT_ANOMALY_GIT_BRANCH')  //Telling the Buttler what branch to choose for the build
-        ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')    //Our Link to Discord
-
-        //Unity path inside Jenkins PC
-        UNITY_EXE = 'C:\\"Program Files"\\Unity\\Hub\\Editor\\6000.0.55f1\\Editor\\Unity.exe'
-        //Steam console path
-        STEAMCMD_EXE = 'C:\\Tools\\steamcmd\\steamcmd.exe'
+    parameters{
+        string(name: 'PROJECT_ANOMALY_GIT_BRANCH', defaultValue: 'main', description: 'Git Branch that pipeline builds from')
+        string(name: 'PROJECT_ANOMALY_GITHUB_REPO_LINK', defaultValue: 'https://github.com/thanostham/Studio-Proj-26S1.git', description: '')
     }
 
-    stages {
-        stage('Checkout') {
+    environment{
+        UNITY_PATH = '"C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.10f1\\Editor\\Unity.exe"'
+        CREDS = credentials('MY_SECRET_ID')
+        BUILD_DIR = "${env.WORKSPACE}\\Builds"
+        UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
+    }
+
+    stages{
+        stage('Checkout'){
             steps {
-                //Auto Pull
-                bat "git config core.symlinks false"
-                git branch: GIT_BRANCH, url: GITHUB_REPO_LINK
-                bat "git lfs pull"
+                git branch : params.GIT_BRANCH, url: params.GIT_REPO_LINK
             }
         }
-
+        stage ('Echo smth'){
+            steps{
+                script{
+                    echo "Hello"
+                }
+            }
+        }
         stage('Build') {
             steps {
-                echo 'Commencing your Unity build forthwith, Sir.'
-                //Unity console command
-                bat "set __COMPAT_LAYER=RunAsInvoker && ${UNITY_EXE} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild" //-logFile build.log"
+                bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"%cd%\\unity_build.log\""
             }
         }
-
-        stage('Deploy to Steam') {
+        stage('Check Unity Build Success'){
+            steps{
+                script{
+                    def logFile = readFile(file: UNITY_LOG_PATH)
+                    if (logFile.contains('Build Finished, Result: Failure')){
+                        currentBuild.result = 'FAILURE'
+                        error 'Unity build failed based on log file.'
+                    }
+                }
+            }
+        }
+        /*stage('Deploy to Steam') {
             steps {
-                echo 'Your content is being delivered to Steam with all due haste, Sir.'
-                //Steam cmd with creds
-                bat "${STEAMCMD_EXE} +login ${STEAM_CREDS_USR} %STEAM_CREDS_PSW% +run_app_build ../build_scripts/app_config.vdf +quit"
+                bat '''
+                cd /d C:\\Tools\\steamcmd
+                steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build \"C:\\Data\\Jenkins_Home\\workspace\\UnityBuildAndSteamWorksDeploymentPipeline\\BuildScripts\\app_build.vdf\" +quit 
+                '''
             }
-        }
-    }
-    
-    post {
-        always {
-            echo 'Tidying up, Sir. A well-kept environment is simply part of the service.'
-        }
-        failure {
-            discordSend title: 'Jenkins Build Notification', 
-                        description: 'Most unfortunate news, Sir. The build has failed.', 
-                        link: env.BUILD_URL, 
-                        result: 'FAILURE', 
-                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
-        }
+        }*/
     }
 }
