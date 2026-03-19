@@ -42,13 +42,13 @@ pipeline{
                 }
             }
         }
-        /*stage('Deploy to Steam') {
+        stage('Deploy to Steam') {
             steps {
                 bat '''
                 cd /d C:\\Tools\\steamcmd
                 steamcmd +login %CREDS_USR% %CREDS_PSW% +run_app_build \"C:\\Data\\Jenkins_Home\\workspace\\UnityBuildAndSteamWorksDeploymentPipeline\\BuildScripts\\app_build.vdf\" +quit 
                 '''
             }
-        }*/
+        }
     }
 }
