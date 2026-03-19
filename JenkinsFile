@@ -51,17 +51,17 @@ pipeline{
                  """
             }
         }
-        post {
+    }
+      post {
             always{
                 echo 'Cleaning up, Sir'
             }
             failure {
                 discordSend title: 'Jenkins Build Notification',
                 description: 'Most unfortunate news Sir, the build has Failed.',
-                link: env.BUILD_URL
+                link: env.BUILD_URL,
                 result: 'FAILURE',
                 webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
-    }
 }
