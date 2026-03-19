@@ -46,6 +46,8 @@ pipeline{
         }
       stage('Deploy to Steam') {
           steps {
+              bat 'if exist "C:\\Tools\\steamcmd\\builder" rmdir \s \q "C:\\Tools\\steamcmd\\builder"'
+
               bat """
              "C:\\Tools\\steamcmd\\steamcmd.exe" +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit
              """
@@ -57,7 +59,7 @@ pipeline{
                 echo 'Cleaning up, Sir'
             }
             failure {
-                discordSend title: 'Jenkins Build Notification',
+                discordSend title: "Jenkins Build Attempt #${env.BUILD_NUMBER}",
                 description: 'Most unfortunate news Sir, the build has Failed.',
                 link: env.BUILD_URL,
                 result: 'FAILURE',
