@@ -16,7 +16,7 @@ pipeline{
     stages{
         stage('Checkout'){
             steps {
-                git branch : params.GIT_BRANCH, url: params.GIT_REPO_LINK
+                git branch : params.PROJECT_ANOMALY_GIT_BRANCH, url: params.PROJECT_ANOMALY_GITHUB_REPO_LINK
             }
         }
         stage ('Echo smth'){
