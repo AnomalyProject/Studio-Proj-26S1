@@ -1,0 +1,56 @@
+pipeline {
+    agent any 
+
+ environment {
+        //Parameters inside our Jenkins Item -> Assigning
+        STEAM_CREDS = credentials('MY_SECRET_ID')   //This is the credentials for the SAE steam account the buttler uses to build, and they are the same for all the projects
+        GITHUB_REPO_LINK = credentials('PROJECT_ANOMALY_GITHUB_REPO_LINK')  //The link to our project repo
+        GIT_BRANCH = credentials('PROJECT_ANOMALY_GIT_BRANCH')  //Telling the Buttler what branch to choose for the build
+        ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')    //Our Link to Discord
+
+        //Unity path inside Jenkins PC
+        UNITY_EXE = 'C:\\"Program Files"\\Unity\\Hub\\Editor\\6000.0.55f1\\Editor\\Unity.exe'
+        //Steam console path
+        STEAMCMD_EXE = 'C:\\Tools\\steamcmd\\steamcmd.exe'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                //Auto Pull
+                bat "git config core.symlinks false"
+                git branch: GIT_BRANCH, url: GITHUB_REPO_LINK
+                bat "git lfs pull"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Commencing your Unity build forthwith, Sir.'
+                //Unity console command
+                bat "set __COMPAT_LAYER=RunAsInvoker && ${UNITY_EXE} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild" //-logFile build.log"
+            }
+        }
+
+        stage('Deploy to Steam') {
+            steps {
+                echo 'Your content is being delivered to Steam with all due haste, Sir.'
+                //Steam cmd with creds
+                bat "${STEAMCMD_EXE} +login ${STEAM_CREDS_USR} %STEAM_CREDS_PSW% +run_app_build ../build_scripts/app_config.vdf +quit"
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Tidying up, Sir. A well-kept environment is simply part of the service.'
+        }
+        failure {
+            discordSend title: 'Jenkins Build Notification', 
+                        description: 'Most unfortunate news, Sir. The build has failed.', 
+                        link: env.BUILD_URL, 
+                        result: 'FAILURE', 
+                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+        }
+    }
+}
