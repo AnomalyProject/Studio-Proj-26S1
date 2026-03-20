@@ -1,12 +1,12 @@
-pipeline{
+pipeline {
     agent any
 
-    parameters{
+    parameters {
         string(name: 'PROJECT_ANOMALY_GIT_BRANCH', defaultValue: 'main', description: 'Git Branch that pipeline builds from')
         string(name: 'PROJECT_ANOMALY_GITHUB_REPO_LINK', defaultValue: 'https://github.com/thanostham/Studio-Proj-26S1.git', description: '')
     }
 
-    environment{
+    environment {
         UNITY_PATH = '"C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.10f1\\Editor\\Unity.exe"'
         CREDS = credentials('MY_SECRET_ID')
         BUILD_DIR = "${env.WORKSPACE}\\Builds"
@@ -14,16 +14,16 @@ pipeline{
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
     }
 
-    stages{
-        stage('Checkout'){
+    stages {
+        stage('Checkout') {
             steps {
                 cleanWs()
-                git branch : params.PROJECT_ANOMALY_GIT_BRANCH, url: params.PROJECT_ANOMALY_GITHUB_REPO_LINK
+                git branch: params.PROJECT_ANOMALY_GIT_BRANCH, url: params.PROJECT_ANOMALY_GITHUB_REPO_LINK
             }
         }
-        stage ('Echo smth'){
-            steps{
-                script{
+        stage('Echo smth') {
+            steps {
+                script {
                     echo "Hello"
                 }
             }
@@ -33,37 +33,52 @@ pipeline{
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"%cd%\\unity_build.log\""
             }
         }
-        stage('Check Unity Build Success'){
-            steps{
-                script{
+        stage('Check Unity Build Success') {
+            steps {
+                script {
                     def logFile = readFile(file: UNITY_LOG_PATH)
-                    if (logFile.contains('Build Finished, Result: Failure')){
+                    if (logFile.contains('Build Finished, Result: Failure')) {
                         currentBuild.result = 'FAILURE'
                         error 'Unity build failed based on log file.'
                     }
                 }
             }
         }
-      stage('Deploy to Steam') {
-          steps {
-              bat 'if exist "C:\\Tools\\steamcmd\\builder" rmdir /s /q "C:\\Tools\\steamcmd\\builder"'
-
-              bat """
-             "C:\\Tools\\steamcmd\\steamcmd.exe" +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit
-             """
-           }
+        stage('Deploy to Steam') {
+            steps {
+                bat 'if exist "C:\\Tools\\steamcmd\\builder" rmdir /s /q "C:\\Tools\\steamcmd\\builder"'
+                bat """
+                "C:\\Tools\\steamcmd\\steamcmd.exe" +login %CREDS_USR% %CREDS_PSW% +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" +quit
+                """
+            }
         }
     }
-      post {
-            always{
-                echo 'Cleaning up, Sir'
-            }
-            failure {
-                discordSend title: "Jenkins Build Attempt #${env.BUILD_NUMBER}",
-                description: 'Most unfortunate news Sir, the build has Failed.',
-                link: env.BUILD_URL,
-                result: 'FAILURE',
-                webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+
+    post {
+        always {
+            echo 'Cleaning up, Sir'
+        }
+        success {
+            script {
+                def commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+
+                discordSend title: "✅ Build Success: Attempt #${env.BUILD_NUMBER}",
+                    description: "Splendid news, Sir! The build and Steam deployment were successful.\n**Latest Push:** ${commitMsg}",
+                    link: env.BUILD_URL,
+                    result: 'SUCCESS',
+                    webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
+        failure {
+            script {
+                def commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+
+                discordSend title: "❌ Build Failed: Attempt #${env.BUILD_NUMBER}",
+                    description: "Most unfortunate news Sir, the build has Failed.\n**Latest Push:** ${commitMsg}",
+                    link: env.BUILD_URL,
+                    result: 'FAILURE',
+                    webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+            }
+        }
+    }
 }
