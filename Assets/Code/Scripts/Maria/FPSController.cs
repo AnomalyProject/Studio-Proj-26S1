@@ -8,6 +8,7 @@ using UnityEngine;
 [RequireComponent(typeof(FPSInputHandler))]
 public class FPSController : MonoBehaviour
 {
+    #region Inspector Configuration
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float sprintSpeed = 9f;
@@ -26,7 +27,9 @@ public class FPSController : MonoBehaviour
     [Header("Camera Reference")]
     [Tooltip("Assign the Camera root child (not the Camera itself).")]
     [SerializeField] private Transform cameraHolder;
+    #endregion
 
+    #region Private Fields
     private CharacterController character;
     private FPSInputHandler input;
 
@@ -39,7 +42,9 @@ public class FPSController : MonoBehaviour
 
     // Cached camera holder standing Y so crouch offset is relative
     private float cameraStandingLocalY;
+    #endregion
 
+    #region Unity Lifecycle
     private void Awake()
     {
         character = GetComponent<CharacterController>();
@@ -60,7 +65,9 @@ public class FPSController : MonoBehaviour
         HandleGravity();
         SmoothCrouchTransition();
     }
+    #endregion
 
+    #region Ground Detection
     private void HandleGroundCheck()
     {
         // Sphere at the bottom of the CharacterController
@@ -71,7 +78,9 @@ public class FPSController : MonoBehaviour
         if (isGrounded && velocity.y < 0f)
             velocity.y = -2f;
     }
+    #endregion
 
+    #region Crouch Handling
     private void HandleCrouchToggle()
     {
         if (!input.CrouchTriggered) return;
@@ -99,6 +108,23 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    private void SmoothCrouchTransition()
+    {
+        // Smoothly resize the CharacterController
+        character.height = Mathf.Lerp(character.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+
+        // Keep the controller centred (adjust center Y)
+        character.center = new Vector3(0f, character.height * 0.5f, 0f);
+
+        // Smoothly move the camera holder
+        if (cameraHolder == null) return;
+
+        Vector3 camPos = cameraHolder.localPosition;
+        camPos.y = Mathf.Lerp(camPos.y, targetCameraLocalY, crouchTransitionSpeed * Time.deltaTime);
+
+        cameraHolder.localPosition = camPos;
+    }
+
     private bool CanStandUp()
     {
         // Cast upward from current position to check for overhead obstacles
@@ -106,7 +132,9 @@ public class FPSController : MonoBehaviour
         return !Physics.SphereCast(transform.position, groundCheckRadius, Vector3.up, out _, castDistance, groundLayers, QueryTriggerInteraction.Ignore);
 
     }
+    #endregion
 
+    #region Movement
     private void HandleMovement()
     {
         Vector2 inputDir = input.MoveInput;
@@ -126,35 +154,22 @@ public class FPSController : MonoBehaviour
 
         character.Move(move * (speed * Time.deltaTime));
     }
+    #endregion
 
+    #region Gravity
     private void HandleGravity()
     {
         velocity.y += gravity * Time.deltaTime;
         character.Move(velocity * Time.deltaTime);
     }
+    #endregion
 
-    private void SmoothCrouchTransition()
-    {
-        // Smoothly resize the CharacterController
-        character.height = Mathf.Lerp(character.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
-
-        // Keep the controller centred (adjust center Y)
-        character.center = new Vector3(0f, character.height * 0.5f, 0f);
-
-        // Smoothly move the camera holder
-        if (cameraHolder == null) return;
-
-        Vector3 camPos = cameraHolder.localPosition;
-        camPos.y = Mathf.Lerp(camPos.y, targetCameraLocalY, crouchTransitionSpeed * Time.deltaTime);
-
-        cameraHolder.localPosition = camPos;
-    }
-
+    #region Public Accessors (commented out for now)
     // Public Accessors (for other systems, e.g. audio, UI)
 
     //public bool IsCrouching => isCrouching;
     //public bool IsSprinting => input.SprintHeld && !isCrouching;
     //public bool IsGrounded => isGrounded;
     //public float CurrentSpeed => isCrouching ? crouchSpeed : (input.SprintHeld ? sprintSpeed : walkSpeed);
-
+    #endregion
 }

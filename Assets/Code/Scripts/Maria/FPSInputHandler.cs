@@ -11,6 +11,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class FPSInputHandler : MonoBehaviour
 {
+    #region Exposed Properties
     public Vector2 MoveInput { get; private set; }
 
     public Vector2 LookInput { get; private set; }
@@ -18,14 +19,18 @@ public class FPSInputHandler : MonoBehaviour
     public bool SprintHeld { get; private set; }
 
     public bool CrouchTriggered { get; private set; }
+    #endregion
 
+    #region Unity Lifecycle
     private void LateUpdate()
     {
         // Reset one-frame flags after all other components have read them
         CrouchTriggered = false;
         LookInput = Vector2.zero;   // Look is delta-based; clear each frame
     }
+    #endregion
 
+    #region Input Callbacks
     // Input System Callbacks (wired via PlayerInput -> Invoke Unity Events)
     // These are public so they appear in the Inspector event dropdown.
 
@@ -51,4 +56,5 @@ public class FPSInputHandler : MonoBehaviour
         if (ctx.started)
             CrouchTriggered = true;
     }
+    #endregion
 }

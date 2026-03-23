@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public class FPSCameraController : MonoBehaviour
 {
+    #region Inspector Configuration
     [Header("Sensitivity")]
     [SerializeField] private float mouseSensitivityX = 0.15f;
     [SerializeField] private float mouseSensitivityY = 0.15f;
@@ -18,10 +19,14 @@ public class FPSCameraController : MonoBehaviour
     [Header("References")]
     [Tooltip("The Player root transform (rotates on Y axis).")]
     [SerializeField] private Transform playerBody;
+    #endregion
 
+    #region Private Fields
     private FPSInputHandler inputHandler;
     private float currentPitch = 0f;   // accumulated vertical rotation
+    #endregion
 
+    #region Unity Lifecycle
     private void Awake()
     {
         // Input handler lives on the Player root
@@ -37,7 +42,9 @@ public class FPSCameraController : MonoBehaviour
     {
         ApplyLook();
     }
+    #endregion
 
+    #region Look
     private void ApplyLook()
     {
         if (inputHandler == null) return;
@@ -52,7 +59,9 @@ public class FPSCameraController : MonoBehaviour
         currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
         transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
     }
+    #endregion
 
+    #region Cursor Control
     private static void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -65,4 +74,5 @@ public class FPSCameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
+    #endregion
 }
