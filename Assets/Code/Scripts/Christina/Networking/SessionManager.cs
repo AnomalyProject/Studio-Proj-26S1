@@ -14,6 +14,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     public bool IsHost => NetworkManager.main != null && NetworkManager.main.isHost;
 
+    private PlayerID? hostPlayerID;
+    private bool sessionCreated = false;
+
     public static SessionManager Instance { get; private set; }
 
     private void Awake()
@@ -48,6 +51,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!asServer) return;
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
+
+        // if the session was just created and no one is in it yet -> we have our host
+        if (sessionCreated && playerConnectionMap.Count == 0)
+        {
+            hostPlayerID = playerID;
+            AddPlayerToSession(playerID, 0, "Host Player", isHost: true);
+            Debug.Log("[SessionManager] Host registered as first player.");
+        }
     }
 
     public void OnPlayerDisconnected(PlayerID playerID, bool asServer)
@@ -78,16 +89,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         // Host registers themselves as the first player
         // Using 0 as placeholder Steam ID until Steam integration is ready
         // todo: connect Steam ID when it's ready
-        PlayerID? localPlayer = NetworkManager.main.localPlayer;
-
-        if (localPlayer.HasValue)
-        {
-            AddPlayerToSession(localPlayer.Value, 0, "Host Player", isHost: true);
-        }
-        else
-        {
-            Debug.LogWarning("[SessionManager] Could not get local PlayerID for host.");
-        }
+        sessionCreated = true;
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
     }
@@ -186,7 +188,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Start match request from PlayerID: {sender}");
 
         // ONLY the host can start the game session
-        if (sender != PlayerID.Server)
+        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
         {
             Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is not the host.");
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can start the game.");
