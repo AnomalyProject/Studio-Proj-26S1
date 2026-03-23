@@ -16,7 +16,7 @@ public class FSM_GameStates : MonoBehaviour
             gameStatesEnum.Lobby => (nextState == gameStatesEnum.Loading || nextState == gameStatesEnum.Menu),
             gameStatesEnum.Loading => (nextState == gameStatesEnum.InGame),
             gameStatesEnum.InGame => (nextState == gameStatesEnum.PostGame),
-            gameStatesEnum.PostGame => (nextState == gameStatesEnum.Menu)
+            gameStatesEnum.PostGame => (nextState == gameStatesEnum.Menu || nextState == gameStatesEnum.Lobby)
         };
     }
     private void Awake()
