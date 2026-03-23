@@ -1,3 +1,5 @@
+using System;
+
 public static class SessionEvents
 {
 
