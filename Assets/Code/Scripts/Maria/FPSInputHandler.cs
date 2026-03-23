@@ -37,13 +37,13 @@ public class FPSInputHandler : MonoBehaviour
     public void OnMove(InputAction.CallbackContext ctx)
     {
         MoveInput = ctx.ReadValue<Vector2>();
-        Debug.Log("Move: " + MoveInput);
+        //Debug.Log("Move: " + MoveInput);
     }
 
     public void OnLook(InputAction.CallbackContext ctx)
     {
         LookInput = ctx.ReadValue<Vector2>();
-        Debug.Log("Look: " + LookInput);
+        //Debug.Log("Look: " + LookInput);
     }
 
     public void OnSprint(InputAction.CallbackContext ctx)
