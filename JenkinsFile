@@ -38,24 +38,17 @@ pipeline {
             }
         }
 
-        stage('Deploy to Steam') {
+     stage('Deploy to Steam') {
             steps {
                 script {
-                    def steamBeta = "default"
-                    if (params.BUILD_BRANCH == 'develop') {
-                        steamBeta = "internal_testing"
-                    }
+                    def currentBranch = env.BRANCH_NAME ?: params.BUILD_BRANCH
+                    def steamBeta = (currentBranch == 'develop') ? "internal_testing" : "default"
 
-                    echo "Targeting Steam Branch: ${steamBeta}"
+                    echo "Targeting Steam Branch: ${steamBeta} for Git Branch: ${currentBranch}"
 
                     bat 'if exist "C:\\Tools\\steamcmd\\builder" rmdir /s /q "C:\\Tools\\steamcmd\\builder"'
                     
-                    bat """
-                    "C:\\Tools\\steamcmd\\steamcmd.exe" +login %CREDS_USR% %CREDS_PSW% ^
-                    +run_app_build "${WORKSPACE}\\BuildScripts\\app_build.vdf" ^
-                    +set_live "${steamBeta}" ^
-                    +quit
-                    """
+                    bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +set_live ${steamBeta} +run_app_build \"${WORKSPACE}\\BuildScripts\\app_build.vdf\" +quit"
                 }
             }
         }
