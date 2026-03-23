@@ -4,15 +4,26 @@ using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-public class BuildScript
+public class BuildScript 
 {
     [MenuItem("Build/Perform Build")]
-    public static void PerformBuild()
+    public static void PerformBuild() 
     {
         string[] activeScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+
+        if (activeScenes.Length == 0) {
+            Debug.LogError("Buttler Jeeves: I cannot find any enabled scenes in Build Settings, Sir!");
+            Debug.LogError("Please ensure your scenes are added and CHECKED in File > Build Settings.");
+            EditorApplication.Exit(1);
+            return;
+        }
+
         string buildPath = "Builds/Studio-Proj-26S1.exe";
 
-        Debug.Log("Buttler Jeeves: Starting the build process, Sir...");
+        Debug.Log($"Buttler Jeeves: Starting the build process for {activeScenes.Length} scenes, Sir...");
+        foreach (var scene in activeScenes) {
+            Debug.Log($"Buttler Jeeves: Packing scene: {scene}");
+        }
 
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
         buildPlayerOptions.scenes = activeScenes;
@@ -23,19 +34,13 @@ public class BuildScript
         BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
         BuildSummary summary = report.summary;
 
-        if (summary.result == BuildResult.Succeeded)
-        {
-            Debug.Log("Buttler Jeeves: Build Finished, Result: Success");
+        if (summary.result == BuildResult.Succeeded) {
+            Debug.Log($"Buttler Jeeves: Build Finished, Result: Success. Size: {summary.totalSize / 1024 / 1024} MB");
         }
 
-        if (summary.result == BuildResult.Failed)
-        {
-            Debug.Log("Buttler Jeeves: Build Finished, Result: Failure");
-            System.Console.Error.WriteLine("Unity Build Failed!");
-            //Make buttler exit with an error code to indicate failure  
-            UnityEditor.EditorApplication.Exit(1);
-            //string[] activeScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-            //BuildPipeline.BuildPlayer(activeScenes, "Builds/studio-proj-26S1.exe", BuildTarget.StandaloneWindows64, BuildOptions.None);
+        if (summary.result == BuildResult.Failed) {
+            Debug.LogError("Buttler Jeeves: Build Finished, Result: Failure");
+            EditorApplication.Exit(1);
         }
     }
 }
