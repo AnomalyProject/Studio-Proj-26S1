@@ -10,7 +10,7 @@ public class BuildScript
     public static void PerformBuild()
     {
         string[] activeScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-        string buildPath = "Builds/studio-proj-26S1.exe";
+        string buildPath = "Builds/Studio-Proj-26S1.exe";
 
         Debug.Log("Buttler Jeeves: Starting the build process, Sir...");
 
