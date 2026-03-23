@@ -26,11 +26,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     protected override void OnSpawned(bool asServer)
     {
+        DontDestroyOnLoad(gameObject);
+
         if (asServer)
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
@@ -77,7 +78,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         // Host registers themselves as the first player
         // Using 0 as placeholder Steam ID until Steam integration is ready
         // todo: connect Steam ID when it's ready
-        AddPlayerToSession(PlayerID.Server, 0, "Host Player", isHost: true);
+        PlayerID? localPlayer = NetworkManager.main.localPlayer;
+
+        if (localPlayer.HasValue)
+        {
+            AddPlayerToSession(localPlayer.Value, 0, "Host Player", isHost: true);
+        }
+        else
+        {
+            Debug.LogWarning("[SessionManager] Could not get local PlayerID for host.");
+        }
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
     }
@@ -156,7 +166,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!playerConnectionMap.ContainsKey(sender))
         {
             Debug.Log($"[SessionManager] Rejected: PlayerID {sender} not found in session.");
-            SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are not in this session.");
+            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
         }
 
