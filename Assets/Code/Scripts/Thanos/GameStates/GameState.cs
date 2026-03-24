@@ -1,5 +1,5 @@
 using UnityEngine;
-public enum gameStatesEnum
+public enum GameState
 { 
     Menu, // Main menu, no session active
     Lobby, // Players gathering, configuring match settings
