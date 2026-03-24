@@ -38,17 +38,16 @@ pipeline {
             }
         }
 
-     stage('Deploy to Steam') {
+        stage('Deploy to Steam') {
             steps {
                 script {
-                    def currentBranch = env.BRANCH_NAME ?: params.BUILD_BRANCH
-                    def steamBeta = (currentBranch == 'develop') ? "internal_testing" : "default"
+                     def steamBranch = (params.BUILD_BRANCH == 'develop') ? "internal_testing" : "default"
 
-                    echo "Targeting Steam Branch: ${steamBeta} for Git Branch: ${currentBranch}"
+                     echo "Butler Jeeves: Preparing VDF for Steam Branch: ${steamBranch}"
 
-                    bat 'if exist "C:\\Tools\\steamcmd\\builder" rmdir /s /q "C:\\Tools\\steamcmd\\builder"'
-                    
-                    bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +set_live ${steamBeta} +run_app_build \"${WORKSPACE}\\BuildScripts\\app_build.vdf\" +quit"
+                     bat "powershell -Command \"(Get-Content BuildScripts\\app_build.vdf) -replace 'STEAM_BRANCH_PLACEHOLDER', '${steamBranch}' | Set-Content BuildScripts\\app_build.vdf\""
+
+                     bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +run_app_build \"${WORKSPACE}\\BuildScripts\\app_build.vdf\" +quit"
                 }
             }
         }
