@@ -11,8 +11,8 @@ public class TestGetRef : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        Debug.Log(RefrenceManager.Instance.GamePlayRef.TestRef.GetPosition());
+        Debug.Log("Cube Position in world is at: " + RefrenceManager.Instance.GamePlayRef.TestRef.GetPosition());
     }
 }
