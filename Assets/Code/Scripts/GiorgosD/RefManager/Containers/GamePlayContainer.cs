@@ -9,5 +9,6 @@ using UnityEngine;
 [Serializable]
 public class GamePlayContainer
 {
-    
+    [SerializeField] private TestRef testRef;
+    public TestRef TestRef => testRef;
 }
