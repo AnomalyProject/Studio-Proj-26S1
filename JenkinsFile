@@ -41,13 +41,13 @@ pipeline {
         stage('Deploy to Steam') {
             steps {
                 script {
-                     def steamBranch = (params.BUILD_BRANCH == 'develop') ? "internal_testing" : "default"
-
-                     echo "Butler Jeeves: Preparing VDF for Steam Branch: ${steamBranch}"
-
-                     bat "powershell -Command \"(Get-Content BuildScripts\\app_build.vdf) -replace 'STEAM_BRANCH_PLACEHOLDER', '${steamBranch}' | Set-Content BuildScripts\\app_build.vdf\""
+                    def steamBranch = (params.BUILD_BRANCH == 'develop') ? "internal_testing" : "default"
+            
+                     echo "Butler Jeeves: Forcing Steam Branch to: ${steamBranch}"
 
                      bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +run_app_build \"${WORKSPACE}\\BuildScripts\\app_build.vdf\" +quit"
+
+                     bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +app_set_config 4383780 beta ${steamBranch} +quit"
                 }
             }
         }
