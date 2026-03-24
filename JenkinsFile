@@ -24,6 +24,7 @@ pipeline {
         stage('Unity Build') {
             steps {
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
+                sleep time: 10, unit: 'SECONDS'
             }
         }
 
@@ -43,6 +44,9 @@ pipeline {
                 script {
                     def steamBranch = (params.BUILD_BRANCH == 'develop') ? "internal_testing" : "default"
             
+                     bat "if not exist Builds mkdir Builds"
+                     bat "if not exist SteamOutput mkdir SteamOutput"
+
                      echo "Butler Jeeves: Forcing Steam Branch to: ${steamBranch}"
 
                      bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +run_app_build \"${WORKSPACE}\\BuildScripts\\app_build.vdf\" +quit"
@@ -64,6 +68,17 @@ pipeline {
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
+
+        aborted {
+            script {
+                discordSend title: "⚪ Build Aborted: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
+                    description: "Sir, you have aborted the build, quite a controversial action of you. ",
+                    link: env.BUILD_URL,
+                    result: 'ABORTED',
+                    webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+            }
+        }
+
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
