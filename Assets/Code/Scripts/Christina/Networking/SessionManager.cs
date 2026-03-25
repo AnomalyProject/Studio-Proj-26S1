@@ -123,7 +123,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Join request received from PlayerID: {sender}");
 
         //todo: check if session is full 
-        // todo: check if GameState is Lobby -> reject if game already started
+        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
+        {
+            // should reject the request
+            Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is in the wrong game state.");
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
+            return;
+        }
 
         // check if player is already in session
         if (playerConnectionMap.ContainsKey(sender))
@@ -171,9 +177,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
         }
-
-
         //todo: check if GameState is Lobby
+        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
+        {
+            // should reject the request
+            Debug.Log($"[SessionManager] Toggle ready request rejected: PlayerID {sender} is in the wrong game state.");
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
+            return;
+        }
+
+
         //todo: toggle PlayerSessionInfo.IsReady
 
         OnSessionUpdated_Client();

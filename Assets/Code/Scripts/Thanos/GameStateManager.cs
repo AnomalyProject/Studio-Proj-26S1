@@ -6,7 +6,7 @@ public class GameStateManager : MonoBehaviour
     // Public:
     public static GameStateManager Instance { get; private set; }
     public GameState CurrentState { get; private set; }
-    public event Action<GameState, GameState> OnStateChanged; //(previous, next)
+    public event Action<GameState, GameState> OnStateChanged; //(previous state, next state)
 
     // Private:
     private bool isTransitioning;
