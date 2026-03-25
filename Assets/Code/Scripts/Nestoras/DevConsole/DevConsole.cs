@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
+using UnityEngine.Events;
 
 public class DevConsole : MonoBehaviour
 {
@@ -19,6 +20,9 @@ public class DevConsole : MonoBehaviour
     [SerializeField] private TextMeshProUGUI logText;
 
     [Header("Input")]
+    public UnityEvent onConsoleToggledOn;
+    public UnityEvent onConsoleToggledOff;
+
     private IA_DevConsole inputActions;
     private InputAction submitAction;
     private InputAction scrollAction;
@@ -80,12 +84,14 @@ public class DevConsole : MonoBehaviour
 
         if (isOpen)
         {
+            onConsoleToggledOn.Invoke();
             submitAction.Enable();
             scrollAction.Enable();
             commandLine.ActivateInputField();
         }
         else
         {
+            onConsoleToggledOff.Invoke();
             submitAction.Disable();
             scrollAction.Disable();
         }
