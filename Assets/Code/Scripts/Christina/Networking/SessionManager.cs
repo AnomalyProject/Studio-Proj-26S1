@@ -46,6 +46,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
 
+    public override void OnDespawned()
+    {
+        GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
+    }
+
     public void OnPlayerConnected(PlayerID playerID, bool isReconnect, bool asServer)
     {
         if (!asServer) return;
@@ -90,6 +95,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         // Using 0 as placeholder Steam ID until Steam integration is ready
         // todo: connect Steam ID when it's ready
         sessionCreated = true;
+
+        GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
     }
@@ -177,7 +184,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
         }
-        //todo: check if GameState is Lobby
+
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
         {
             // should reject the request
@@ -208,9 +215,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
+        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
+        {
+            Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is in the wrong game state.");
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
+            return;
+        }
+
         // todo: check if all the players are ready
-        // todo: check if the GameState is in the right state (Lobby)
-        // todo: transition game state to loading
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+
 
         Debug.Log("[SessionManager] Game starting...");
     }
@@ -256,6 +270,20 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         //todo: will take serialized SessionData as parameters when ready
 
         Debug.Log($"[SessionManager] [Client] Session Data Changed.");
+    }
+
+    [ObserversRpc]
+    private void ChangeState_Client(GameState stateToTransition)
+    {
+        if (GameStateManager.Instance.CurrentState == stateToTransition) return;
+
+        GameStateManager.Instance.RequestStateChange(stateToTransition);
+    }
+
+
+    private void HandleStateChanged(GameState currentState, GameState nextState)
+    {
+        ChangeState_Client(nextState);
     }
 
     [TargetRpc]

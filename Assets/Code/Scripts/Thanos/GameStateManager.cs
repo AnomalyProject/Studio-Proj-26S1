@@ -13,15 +13,21 @@ public class GameStateManager : MonoBehaviour
 
     private bool CanMakeTransition(GameState currentState, GameState nextState)
     {
-        return currentState switch
+        switch (currentState)
         {
-            GameState.Menu => (nextState == GameState.Lobby),
-            GameState.Lobby => (nextState == GameState.Loading || nextState == GameState.Menu),
-            GameState.Loading => (nextState == GameState.InGame || nextState == GameState.Lobby),
-            GameState.InGame => (nextState == GameState.PostGame),
-            GameState.PostGame => (nextState == GameState.Menu || nextState == GameState.Lobby),
-            _ => false
-        };
+            case GameState.Menu:
+                return (nextState == GameState.Lobby);
+            case GameState.Lobby:
+                return (nextState == GameState.Loading || nextState == GameState.Menu);
+            case GameState.Loading:
+                return (nextState == GameState.InGame || nextState == GameState.Lobby);
+            case GameState.InGame:
+                return (nextState == GameState.PostGame);
+            case GameState.PostGame:
+                return (nextState == GameState.InGame || nextState == GameState.Lobby);
+            default:
+                return false;
+        }
     }
     private void Awake()
     {
