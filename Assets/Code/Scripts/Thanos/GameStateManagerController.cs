@@ -37,17 +37,6 @@ public class GameStateManagerController : MonoBehaviour
         GUILayout.EndArea();
     }
 
-    // private void Update()
-    // {
-    //     if (GameStateManager.Instance == null) return;
-
-    //     if (Input.GetKeyDown(KeyCode.Z)) GameStateManager.Instance.RequestStateChange(GameState.Lobby);
-    //     if (Input.GetKeyDown(KeyCode.X)) GameStateManager.Instance.RequestStateChange(GameState.Loading);
-    //     if (Input.GetKeyDown(KeyCode.C)) GameStateManager.Instance.RequestStateChange(GameState.InGame);
-    //     if (Input.GetKeyDown(KeyCode.V)) GameStateManager.Instance.RequestStateChange(GameState.PostGame);
-    //     if (Input.GetKeyDown(KeyCode.B)) GameStateManager.Instance.RequestStateChange(GameState.Menu);
-    // }
-
     public void HandleStateChanged(GameState previous, GameState next)
     {
         Debug.Log($"[GameStateManagerController]: State Changed from {previous} to {next}");
