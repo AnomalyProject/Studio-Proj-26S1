@@ -109,7 +109,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private void AddPlayerToSession(PlayerID playerID, ulong steamID, string displayName, bool isHost = false)
     {
-        // todo: create PlayerSessionInfo and ass to SessionData.Players list
+        // todo: create PlayerSessionInfo and add to SessionData.Players list
 
         playerConnectionMap[playerID] = steamID;
 
@@ -118,7 +118,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (!isHost)
         {
-            SendStateChangeToClient(playerID, GameState.Lobby);
+            // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
+            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
         }
 
     }
@@ -247,7 +248,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Update settings request from PlayerID: {sender}");
 
-        if (sender != PlayerID.Server)
+        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
         {
             Debug.LogWarning($"[SessionManager] Update settings rejected: PlayerID {sender} is not the host.");
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can update the game settings.");
@@ -284,17 +285,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] [Client] Session Data Changed.");
     }
 
-    // [ObserversRpc]
-    // private void ChangeState_Client(GameState stateToTransition)
-    // {
-    //     if (GameStateManager.Instance.CurrentState == stateToTransition) return;
-
-    //     GameStateManager.Instance.RequestStateChange(stateToTransition);
-    // }
-
-
     private void HandleStateChanged(GameState currentState, GameState nextState)
     {
+        // todo: the first transition here does nothing, which is fine for now but should take a closer look later 
+        // on how to fix this
         foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
         {
             SendStateChangeToClient(playerID.Key, nextState);
