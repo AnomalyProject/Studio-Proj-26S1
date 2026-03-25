@@ -46,7 +46,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
 
-    public override void OnDespawned()
+    protected override void OnDespawned()
     {
         GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
     }
