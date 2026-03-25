@@ -44,6 +44,7 @@ public class DevConsole : MonoBehaviour
     private int historyIndex = -1;
     private bool isOpen = false;
     private List<string> commandHistory = new List<string>();
+    private bool cursorVisibleLastToggle;
 
     [Header("Events")]
     public static Action<string[]> onCommandEntered;
@@ -167,6 +168,10 @@ public class DevConsole : MonoBehaviour
 
         if (isOpen)
         {
+            cursorVisibleLastToggle = Cursor.visible;
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             onConsoleToggledOn?.Invoke();
             submitAction.Enable();
             scrollAction.Enable();
@@ -174,6 +179,12 @@ public class DevConsole : MonoBehaviour
         }
         else
         {
+            if (!cursorVisibleLastToggle)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            
             onConsoleToggledOff?.Invoke();
             submitAction.Disable();
             scrollAction.Disable();
