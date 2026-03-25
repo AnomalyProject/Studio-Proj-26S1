@@ -48,7 +48,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     protected override void OnDespawned()
     {
-        GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
+        }
+
     }
 
     public void OnPlayerConnected(PlayerID playerID, bool isReconnect, bool asServer)
@@ -98,6 +102,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+
         Debug.Log("[SessionManager] Session created, host registered as first player.");
     }
 
@@ -109,6 +115,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         SessionEvents.InvokePlayerJoined(steamID, displayName);
         OnPlayerJoined_Client(steamID, displayName);
+
+        if (!isHost)
+        {
+            SendStateChangeToClient(playerID, GameState.Lobby);
+        }
+
     }
 
     private void RemovePlayerFromSession(PlayerID playerID, ulong steamID, string reason)
@@ -161,7 +173,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (!playerConnectionMap.ContainsKey(sender))
         {
-            Debug.LogWarning($"[SessionManager] Leave rejected: PlayerID {sender} not found in session.");
+            Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
         }
@@ -272,18 +284,29 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] [Client] Session Data Changed.");
     }
 
-    [ObserversRpc]
-    private void ChangeState_Client(GameState stateToTransition)
-    {
-        if (GameStateManager.Instance.CurrentState == stateToTransition) return;
+    // [ObserversRpc]
+    // private void ChangeState_Client(GameState stateToTransition)
+    // {
+    //     if (GameStateManager.Instance.CurrentState == stateToTransition) return;
 
-        GameStateManager.Instance.RequestStateChange(stateToTransition);
-    }
+    //     GameStateManager.Instance.RequestStateChange(stateToTransition);
+    // }
 
 
     private void HandleStateChanged(GameState currentState, GameState nextState)
     {
-        ChangeState_Client(nextState);
+        foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
+        {
+            SendStateChangeToClient(playerID.Key, nextState);
+        }
+    }
+
+    [TargetRpc]
+    private void SendStateChangeToClient(PlayerID target, GameState stateToTransition)
+    {
+        if (GameStateManager.Instance.CurrentState == stateToTransition) return;
+
+        GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
 
     [TargetRpc]
