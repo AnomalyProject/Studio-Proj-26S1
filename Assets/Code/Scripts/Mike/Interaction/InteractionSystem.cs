@@ -108,16 +108,16 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     {
         if(radius < 0) return;
 
-        Collider[] colliders = Physics.OverlapSphere(position, radius, layerMask);
-        colliders.OrderBy(collider => Vector3.Distance(position, collider.transform.position));
+        IOrderedEnumerable<Collider> colliders = Physics.OverlapSphere(position, radius, layerMask)
+            .OrderBy(collider => Vector3.Distance(position, collider.transform.position));
 
         foreach (Collider collider in colliders)
         {
             if(collider.TryGetComponent(out IInteractable<TInteractor> interactable) && interactable.CanInteract(Interactor))
             {
                 Ray validationRay = new Ray(position, collider.transform.position - position);
-                float distance = Vector3.Distance(position, collider.transform.position) + 1;
-                bool rayHit = Physics.Raycast(validationRay, out RaycastHit hitInfo, distance, layerMask);
+                float distance = Vector3.Distance(position, collider.transform.position);
+                bool rayHit = Physics.Raycast(validationRay, out RaycastHit hitInfo, distance);
 
                 if (rayHit && hitInfo.collider == collider)
                 {
