@@ -44,8 +44,8 @@ pipeline {
                 script {
                     def steamBranch = (params.BUILD_BRANCH == 'develop') ? "internal_testing" : "default"
             
-                    def contentRoot = "${WORKSPACE}\\Builds".replace("\\", "\\\\")
-                    def outputRoot = "${WORKSPACE}\\SteamOutput".replace("\\", "\\\\")
+                    def contentRoot = "${WORKSPACE}\\Builds"
+                    def outputRoot = "${WORKSPACE}\\SteamOutput"
                     def vdfPath = "${WORKSPACE}\\BuildScripts\\app_build.vdf"
 
                     bat "if not exist Builds mkdir Builds"
@@ -55,14 +55,9 @@ pipeline {
 
                     echo "Butler Jeeves: Customizing the VDF for this specific workspace..."
 
-                    powershell """
-                        (Get-Content "${vdfPath}") `
-                        -replace 'STEAM_BRANCH_PLACEHOLDER', '${steamBranch}' `
-                        -replace 'CONTENT_ROOT_PLACEHOLDER', '${contentRoot}' `
-                        -replace 'OUTPUT_ROOT_PLACEHOLDER', '${outputRoot}' | Set-Content "${vdfPath}"
-                    """
-
                     bat "dir /s \"${WORKSPACE}\\Builds\""
+
+                    bat """powershell -Command "(Get-Content '${vdfPath}') -replace 'STEAM_BRANCH_PLACEHOLDER','${steamBranch}' -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${vdfPath}'" """
 
                     bat "\"C:\\Tools\\steamcmd\\steamcmd.exe\" +login %CREDS_USR% %CREDS_PSW% +run_app_build \"${vdfPath}\" +quit"
                 }
