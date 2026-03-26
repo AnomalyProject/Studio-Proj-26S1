@@ -55,12 +55,7 @@ pipeline {
 
                     echo "Butler Jeeves: Customizing the VDF for this specific workspace..."
 
-                    bat """ powershell 
-                        (Get-Content "${vdfPath}") `
-                        -replace 'STEAM_BRANCH_PLACEHOLDER', '${steamBranch}' `
-                        -replace 'CONTENT_ROOT_PLACEHOLDER', '${contentRoot}' `
-                        -replace 'OUTPUT_ROOT_PLACEHOLDER', '${outputRoot}' | Set-Content "${vdfPath}"
-                    """
+                    bat """powershell -Command "(Get-Content '${vdfPath}') -replace 'STEAM_BRANCH_PLACEHOLDER','${steamBranch}' -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${vdfPath}'" """
 
                     bat "dir /s \"${WORKSPACE}\\Builds\""
 
