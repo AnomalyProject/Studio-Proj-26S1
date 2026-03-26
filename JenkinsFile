@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'BUILD_BRANCH', choices: ['develop', 'main'], description: 'Select the Git branch to build and deploy')
+        choice(name: 'BUILD_BRANCH', choices: ['develop', 'main', 'thanos-jenkins-torture-ci'], description: 'Select the Git branch to build and deploy')
         string(name: 'REPO_LINK', defaultValue: 'https://github.com/thanostham/Studio-Proj-26S1.git', description: 'Source code URL')
     }
 
