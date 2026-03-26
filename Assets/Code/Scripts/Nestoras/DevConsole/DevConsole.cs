@@ -19,15 +19,20 @@ using TMPro;
 public class DevConsole : MonoBehaviour
 {
     [Header("UI")]
-    [Tooltip("The root gameobject of the console. MUST NOT CONTAIN THIS SCRIPT. Used for toggling the console window.")]
-    [SerializeField] private GameObject consoleRoot;
-    [Tooltip("The TMP Input Field where the user writes commands")]
-    [SerializeField] private TMP_InputField commandLine;
-    [Tooltip("The scrollRect containing the log TextField")]
-    [SerializeField] private ScrollRect logArea;
-    [Tooltip("The TMP Text Field inside the \'Content\' gameobject of the logArea")]
     [SerializeField] private GameObject logPrefab;
-    [SerializeField] private Transform content;
+    [Tooltip("The TMP InputField where the user writes commands")]
+    [SerializeField] private TMP_InputField commandLine;
+    [Tooltip("The ScrollRect containing the log TextField")]
+    [SerializeField] private ScrollRect logArea;
+    [Tooltip("The \'Content\' gameobject of the log area")]
+    [SerializeField] private Transform logsContent;
+    [Tooltip("The stack trace ScrollRect")]
+    [SerializeField] private GameObject stackTracePanel;
+    [Tooltip("The TMP InputField where the stack trace appears")]
+    [SerializeField] private TMP_InputField stackTraceInputField;
+    private GameObject mainPanel;
+    private RectTransform stackTraceContentTransform;
+    private RectTransform stackTraceTransform;
 
     [Header("Input")]
     private IA_DevConsole inputActions;
@@ -45,6 +50,8 @@ public class DevConsole : MonoBehaviour
     private bool isOpen = false;
     private List<string> commandHistory = new List<string>();
     private bool cursorVisibleLastToggle;
+    private static Dictionary<LogType, Sprite> icons = new Dictionary<LogType, Sprite>();
+    private LogEntry focusedEntry;
 
     [Header("Events")]
     public static Action<string[]> onCommandEntered;
@@ -65,7 +72,8 @@ public class DevConsole : MonoBehaviour
         
         public DateTime timestamp;
         public TextMeshProUGUI textComponent;
-        public bool showStackTrace;
+        public bool visible;
+        public Image background;
 
         public LogEntry(string message = null, string stackTrace = null, LogType type = default)
         {
@@ -124,9 +132,17 @@ public class DevConsole : MonoBehaviour
     #region Attach / Detach
     private void Awake()
     {
+        // Set up UI references
+        mainPanel = transform.GetChild(0).gameObject;
+        stackTraceInputField.textComponent.textWrappingMode = TextWrappingModes.Normal;
+        stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
+        stackTraceTransform = (RectTransform)stackTraceInputField.transform;
+
+        // Instance specific
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         commands["cls"].callback += ClearScreen;
 
+        // Input
         inputActions = new IA_DevConsole();
         submitAction = inputActions.DevConsole.Submit;
         scrollAction = inputActions.DevConsole.ScrollHistory;
@@ -164,7 +180,7 @@ public class DevConsole : MonoBehaviour
     private void OnToggleConsole(InputAction.CallbackContext context)
     {
         isOpen = !isOpen;
-        consoleRoot.SetActive(isOpen);
+        mainPanel.SetActive(isOpen);
 
         if (isOpen)
         {
@@ -201,7 +217,7 @@ public class DevConsole : MonoBehaviour
         if (historyDepth >= 0 && commandHistory.Count -1 >= historyDepth) commandHistory.RemoveAt(0);
         historyIndex = commandHistory.Count;
 
-        if (logCommands && input[0] != '@') Log(new LogEntry($"> {input}", "", LogType.Log), false); // Suppress echo optionally
+        if (logCommands && input[0] != '@') Log(new LogEntry($"> {input}", "", LogType.Log), true); // Suppress echo optionally
 
         commandLine.text = "";
         commandLine.ActivateInputField();
@@ -280,12 +296,22 @@ public class DevConsole : MonoBehaviour
     #endregion
 
     #region Logging
-    public static void Propagate(LogEntry entry, bool includeStackTrace = true)
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    private static void FetchIcons()
+    {
+        icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/log"));
+        icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/warning"));
+        Sprite error = Resources.Load<Sprite>("DevConsole/error");
+        icons.Add(LogType.Error, error);
+        icons.Add(LogType.Exception, error);
+        icons.Add(LogType.Assert, error);
+    }
+    public static void Propagate(LogEntry entry, bool isCommand = false)
     {
         if (devConsoles.Count == 0) return;
 
         // Log instantly if on main thread, otherwise enqueue for next update
-        if (UnityMainThreadDispatcher.IsMainThread) foreach (var console in devConsoles) console.Log(entry, includeStackTrace);
+        if (UnityMainThreadDispatcher.IsMainThread) foreach (var console in devConsoles) console.Log(entry, isCommand);
         else lock (queueLock) mainThreadLogQueue.Enqueue(entry);
     }
     private void Update()
@@ -302,8 +328,11 @@ public class DevConsole : MonoBehaviour
 
             if (entry != null) Log(entry);
         }
+
+        // Manualy update scroll rect content height so that it works with the input field
+        stackTraceContentTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, stackTraceTransform.rect.height + 10);
     }
-    private void Log(LogEntry entry, bool includeStackTrace = true)
+    private void Log(LogEntry entry, bool isCommand = false)
     {
         // Enforce max logs and reuse oldest log GameObject
         GameObject log = null;
@@ -313,21 +342,51 @@ public class DevConsole : MonoBehaviour
             log = logObjects.Dequeue();
             log.transform.SetAsLastSibling();
         }
-        else log = Instantiate(logPrefab, content);
+        else log = Instantiate(logPrefab, logsContent);
 
         entry.textComponent = log.GetComponent<TextMeshProUGUI>();
         AdvancedButton button = log.GetComponent<AdvancedButton>();
-        UpdateLogEntryUIText(entry); // Populate text
+        Image icon = log.GetComponentsInChildren<Image>().First();
+        entry.background = log.GetComponentsInChildren<Image>().Last();
+
+        if (isCommand)
+        {
+            // Hide icon
+            icon.gameObject.SetActive(false);
+            entry.textComponent.text = entry.message;
+        }
+        else
+        {
+            // Assign correct icon and append the first line of the stack trace
+            icon.sprite = icons[entry.type];
+            entry.textComponent.text = $"<line-indent=1.5em>{entry.message}</line-indent><size=0.8em>\n{entry.stackTrace.Split('\n')[1]}</size>";
+        }
 
         // Copy on right click
         button.OnRightClick.AddListener(() => GUIUtility.systemCopyBuffer = entry.Format(true, true));
-        // Add stack trace toggle on left click
-        if (includeStackTrace)
+        // Show stack trace on left click
+        if (!isCommand)
         {
             button.OnLeftClick.AddListener(() =>
             {
-                entry.showStackTrace = !entry.showStackTrace;
-                UpdateLogEntryUIText(entry);
+                // Remove color from last focused entry
+                Color color = entry.background.color;
+                color.a = 0;
+                if (focusedEntry != null) focusedEntry.background.color = color;
+
+                if (focusedEntry == entry)
+                {
+                    focusedEntry = null;
+                    stackTracePanel.SetActive(false);
+                }
+                else
+                {
+                    focusedEntry = entry;
+                    stackTracePanel.SetActive(true);
+                    stackTraceInputField.text = entry.Format(true, true);
+                    color.a = 0.1f;
+                    entry.background.color = color;
+                }
             });
         }
 
@@ -338,20 +397,6 @@ public class DevConsole : MonoBehaviour
         if (logArea.verticalNormalizedPosition <= 0.05f) StartCoroutine(nameof(ScrollToBottomNextFrame));
 
         onLogReceived?.Invoke(entry);
-    }
-    private void UpdateLogEntryUIText(LogEntry entry)
-    {
-        string color = entry.type switch
-        {
-            LogType.Error => "red",
-            LogType.Assert => "red",
-            LogType.Exception => "red",
-            LogType.Warning => "yellow",
-            _ => "white"
-        };
-
-        entry.textComponent.text = $"<line-indent=0.5em><color={color}>{entry.message}</color></line-indent>";
-        if (entry.showStackTrace) entry.textComponent.text += $"<line-indent=0.5em><color={color}><size=0.8em><indent=1.2em>\n{entry.stackTrace}</indent></size></color></line-indent>";
     }
     private IEnumerator ScrollToBottomNextFrame()
     {
