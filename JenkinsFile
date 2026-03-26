@@ -55,7 +55,7 @@ pipeline {
 
                     echo "Butler Jeeves: Customizing the VDF for this specific workspace..."
 
-                    powershell """
+                    bat """ powershell 
                         (Get-Content "${vdfPath}") `
                         -replace 'STEAM_BRANCH_PLACEHOLDER', '${steamBranch}' `
                         -replace 'CONTENT_ROOT_PLACEHOLDER', '${contentRoot}' `
