@@ -1,14 +1,17 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Text;
-using System.Linq;
 using System;
-using UnityEngine.InputSystem;
-using UnityEngine.Events;
-using UnityEngine.UI;
-using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting.Antlr3.Runtime;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using static UnityEngine.EventSystems.EventTrigger;
 
 /// <summary>
 /// Nestoras
@@ -18,47 +21,46 @@ using TMPro;
 /// </summary>
 public class DevConsole : MonoBehaviour
 {
+    #region Declarations
+    #region UI
     [Header("UI")]
+    private GameObject root;
+    private GameObject screen;
+    private HorizontalOrVerticalLayoutGroup screenLayoutGroup;
     [SerializeField] private GameObject logPrefab;
-    [Tooltip("The TMP InputField where the user writes commands")]
-    [SerializeField] private TMP_InputField commandLine;
-    [Tooltip("The ScrollRect containing the log TextField")]
-    [SerializeField] private ScrollRect logArea;
-    [Tooltip("The \'Content\' gameobject of the log area")]
-    [SerializeField] private Transform logsContent;
-    [Tooltip("The stack trace ScrollRect")]
-    [SerializeField] private GameObject stackTracePanel;
-    [Tooltip("The TMP InputField where the stack trace appears")]
-    [SerializeField] private TMP_InputField stackTraceInputField;
-    private GameObject mainPanel;
+    private ScrollRect logsScrollRect;
+    private Transform logsContent;
+    private GameObject stackTracePanel;
+    private TMP_InputField stackTraceInputField;
     private RectTransform stackTraceContentTransform;
     private RectTransform stackTraceTransform;
+    private TMP_InputField commandLine;
+    #endregion
 
+    #region Input
     [Header("Input")]
     private IA_DevConsole inputActions;
     private InputAction submitAction;
     private InputAction scrollAction;
+    #endregion
 
+    #region Settings
     [Header("Settings")]
     [Tooltip("How many logs to keep in the console at once. -1 = Infinite")] [Min(-1)]
     [SerializeField] private int maxLogs = -1;
     [Tooltip("How many commands to keep in history. -1 = Infinite")] [Min(-1)]
     [SerializeField] private int historyDepth = 50;
-    
-    private static bool logCommands = true;
-    private int historyIndex = -1;
-    private bool isOpen = false;
-    private List<string> commandHistory = new List<string>();
-    private bool cursorVisibleLastToggle;
-    private static Dictionary<LogType, Sprite> icons = new Dictionary<LogType, Sprite>();
-    private LogEntry focusedEntry;
+    #endregion
 
-    [Header("Events")]
-    public static Action<string[]> onCommandEntered;
+    #region Events
+    [Header("Events")] [Space(5)]
     public UnityEvent onConsoleToggledOn;
     public UnityEvent onConsoleToggledOff;
     public UnityEvent<LogEntry> onLogReceived;
+    public static Action<string[]> onCommandEntered;
+    #endregion
 
+    #region Structures
     [Header("Structures")]
     private static readonly List<DevConsole> devConsoles = new List<DevConsole>();
     private readonly Queue<GameObject> logObjects = new();
@@ -119,7 +121,9 @@ public class DevConsole : MonoBehaviour
 
         public void Execute(string[] args) => callback?.Invoke(args);
     }
+    #endregion
 
+    #region Multi-threaded logging
     [Header("Multi-threaded logging")]
     private static int mainThreadId;
     private static readonly Queue<LogEntry> mainThreadLogQueue = new();
@@ -128,17 +132,44 @@ public class DevConsole : MonoBehaviour
     {
         public static bool IsMainThread => System.Threading.Thread.CurrentThread.ManagedThreadId == mainThreadId;
     }
+    #endregion
+
+    #region Console State
+    [Header("Console State")]
+    private bool isOpen;
+    private static bool logCommands = true; // echo
+    private bool screenIsVertical;
+    private bool showLogs = true;
+    private bool showWarnings = true;
+    private bool showErrors = true;
+    private int historyIndex = -1;
+    private List<string> commandHistory = new List<string>();
+    private bool cursorVisibleLastToggle;
+    private static Dictionary<LogType, Sprite> icons = new Dictionary<LogType, Sprite>();
+    private LogEntry focusedEntry;
+    #endregion
+    #endregion
 
     #region Attach / Detach
     private void Awake()
     {
         // Set up UI references
-        mainPanel = transform.GetChild(0).gameObject;
-        stackTraceInputField.textComponent.textWrappingMode = TextWrappingModes.Normal;
+        root = transform.GetChild(0).gameObject;
+        screen = root.transform.GetChild(0).gameObject;
+        screen.TryGetComponent(out screenLayoutGroup);
+        commandLine = root.transform.GetChild(1).GetComponentInChildren<TMP_InputField>();
+        screen.transform.GetChild(0).TryGetComponent(out logsScrollRect);
+        logsContent = logsScrollRect.content;
+        stackTracePanel = screen.transform.GetChild(1).gameObject;
+        stackTraceInputField = stackTracePanel.GetComponentInChildren<TMP_InputField>();
+
+        screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
         stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
         stackTraceTransform = (RectTransform)stackTraceInputField.transform;
+        // Enforce text wrapping for stack trace input field
+        stackTraceInputField.textComponent.textWrappingMode = TextWrappingModes.Normal;
 
-        // Instance specific
+        // Instance specific assignments
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         commands["cls"].callback += ClearScreen;
 
@@ -180,7 +211,7 @@ public class DevConsole : MonoBehaviour
     private void OnToggleConsole(InputAction.CallbackContext context)
     {
         isOpen = !isOpen;
-        mainPanel.SetActive(isOpen);
+        root.SetActive(isOpen);
 
         if (isOpen)
         {
@@ -293,6 +324,28 @@ public class DevConsole : MonoBehaviour
         commandLine.selectionAnchorPosition = pos;
         commandLine.selectionFocusPosition = pos;
     }
+
+    public void RotateScreenLayout()
+    {
+        screenIsVertical = !screenIsVertical;
+        DestroyImmediate(screenLayoutGroup);
+        if (screenIsVertical) screenLayoutGroup = screen.AddComponent<VerticalLayoutGroup>();
+        else screenLayoutGroup = screen.AddComponent<HorizontalLayoutGroup>();
+        screenLayoutGroup.childControlWidth = true;
+        screenLayoutGroup.childControlHeight = true;
+    }
+    public void ToggleLogs()
+    {
+        showLogs = !showLogs;
+    }
+    public void ToggleWarnings()
+    {
+        showWarnings = !showWarnings;
+    }
+    public void ToggleError()
+    {
+        showErrors = !showErrors;
+    }
     #endregion
 
     #region Logging
@@ -311,7 +364,7 @@ public class DevConsole : MonoBehaviour
         if (devConsoles.Count == 0) return;
 
         // Log instantly if on main thread, otherwise enqueue for next update
-        if (UnityMainThreadDispatcher.IsMainThread) foreach (var console in devConsoles) console.Log(entry, isCommand);
+        if (UnityMainThreadDispatcher.IsMainThread) foreach (DevConsole console in devConsoles) console.Log(entry, isCommand);
         else lock (queueLock) mainThreadLogQueue.Enqueue(entry);
     }
     private void Update()
@@ -394,7 +447,7 @@ public class DevConsole : MonoBehaviour
         logObjects.Enqueue(log);
 
         // Scroll to bottom if already near the bottom
-        if (logArea.verticalNormalizedPosition <= 0.05f) StartCoroutine(nameof(ScrollToBottomNextFrame));
+        if (logsScrollRect.verticalNormalizedPosition <= 0.05f) StartCoroutine(nameof(ScrollToBottomNextFrame));
 
         onLogReceived?.Invoke(entry);
     }
@@ -402,7 +455,7 @@ public class DevConsole : MonoBehaviour
     {
         yield return null;
         Canvas.ForceUpdateCanvases();
-        logArea.verticalNormalizedPosition = 0f;
+        logsScrollRect.verticalNormalizedPosition = 0f;
     }
     #endregion
 

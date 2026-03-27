@@ -7,9 +7,10 @@ public class ExportIcons
     //[MenuItem("Tools/Export Console Icons")]
     static void Export()
     {
-        Save("console.infoicon", "log.png");
-        Save("console.warnicon", "warning.png");
-        Save("console.erroricon", "error.png");
+        //Save("console.infoicon", "log.png");
+        //Save("console.warnicon", "warning.png");
+        //Save("console.erroricon", "error.png");
+        //Save("RotateTool", "rotate.png");
     }
 
     static void Save(string iconName, string fileName)
@@ -20,7 +21,7 @@ public class ExportIcons
         Texture2D readableTex = MakeReadable(source);
 
         var bytes = readableTex.EncodeToPNG();
-        File.WriteAllBytes("Assets/Resources/DevConsole" + fileName, bytes);
+        File.WriteAllBytes("Assets/Resources/DevConsole/" + fileName, bytes);
 
         Debug.Log("Saved: " + fileName);
     }
