@@ -7,6 +7,14 @@ using UnityEngine.Rendering;
 
 public class AudioManager : MonoBehaviour
 {
+    public enum AudioChannel
+    {
+        Master,
+        Music,
+        SFX,
+        UI
+    }
+
     public static AudioManager Instance { get; private set; }
 
     [Header("Audio Sources")]
@@ -35,10 +43,10 @@ public class AudioManager : MonoBehaviour
 
     private Coroutine musicTranasitionCorouine;
 
-    public event Action musicStart;
-    public event Action musicStop;
-    public event Action crossFadeStart;
-    public event Action fadeInOutStart;
+    public event Action OnMusicStart;
+    public event Action OnMusicStop;
+    public event Action OnCrossFadeStart;
+    public event Action OnFadeInOutStart;
 
     #region Manager Object Setup
     private void Awake()
@@ -59,7 +67,10 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     private void CreateMusicSources()
     {
+        if(!musicA)
         musicA = gameObject.AddComponent<AudioSource>();
+
+        if(!musicB)
         musicB = gameObject.AddComponent<AudioSource>();
 
         Source(musicA, musicGroup, true);
@@ -91,8 +102,22 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     /// <param name="param"></param>
     /// <param name="normalizedVolume"> expects the float value to be 0.0-1.0 </param>
-    public void Volume(string param, float normalizedVolume)
+    public void Volume(AudioChannel channel, float normalizedVolume)
     {
+        string param = string.Empty;
+
+        switch (channel)
+        {
+            case AudioChannel.Master: param = masterVolume;
+                break;
+            case AudioChannel.Music: param = musicVolume;
+                break;
+            case AudioChannel.SFX: param = sfxVolume;
+                break;
+            case AudioChannel.UI: param = uiVolume;
+                break;
+        }
+
         float dB = Mathf.Log10(Mathf.Clamp(normalizedVolume, 0.0001f, 1f)) * 20f;
         audioMixer.SetFloat(param, dB);
     }
@@ -136,7 +161,7 @@ public class AudioManager : MonoBehaviour
         activeMusic.clip = clip;
         activeMusic.volume = 1f;
         activeMusic.Play();
-        musicStart?.Invoke();
+        OnMusicStart?.Invoke();
     }
 
     // See summary above PlayMusic
@@ -187,7 +212,7 @@ public class AudioManager : MonoBehaviour
         musicB.Stop();
         musicB.volume = 1f;
 
-        musicStop?.Invoke();
+        OnMusicStop?.Invoke();
     }
 
     /// <summary>
@@ -240,7 +265,7 @@ public class AudioManager : MonoBehaviour
     /// <returns></returns>
     private IEnumerator CrossFadeTransition(AudioClip clip)
     {
-        crossFadeStart?.Invoke();
+        OnCrossFadeStart?.Invoke();
 
         AudioSource fadingOut = activeMusic;
         AudioSource fadingIn = (activeMusic == musicA) ? musicB : musicA;
@@ -275,7 +300,7 @@ public class AudioManager : MonoBehaviour
     // See summary above CrossFadeTransition
     private IEnumerator FadeOutTransition(AudioClip clip)
     {
-        fadeInOutStart?.Invoke();
+        OnFadeInOutStart?.Invoke();
 
         AudioSource source = activeMusic;
 
