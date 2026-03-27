@@ -9,5 +9,5 @@ using UnityEngine;
 [Serializable]
 public class GlobalContainer
 {
-    
+    public AudioManager AudioManager => AudioManager.Instance;
 }
