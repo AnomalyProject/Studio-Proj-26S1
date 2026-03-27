@@ -61,6 +61,7 @@ GameObject:
   - component: {fileID: 3679284614733776610}
   - component: {fileID: 288975442859635402}
   - component: {fileID: 1494246198799042083}
+  - component: {fileID: 3680812478694482278}
   - component: {fileID: 3412492635846844219}
   - component: {fileID: 3390244406132924047}
   m_Layer: 0
@@ -123,6 +124,26 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   cameraHolder: {fileID: 7145071027208893932}
+--- !u!114 &3680812478694482278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4722490883632117968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ff644aa3d10d243a0514701d770d2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
+  playerCamera: {fileID: 1415168984759268418}
+  interactionMode: 0
+  tickRate: 0.1
+  scanLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  scanRange: 5
+  debugGizmos: 1
 --- !u!143 &3412492635846844219
 CharacterController:
   m_ObjectHideFlags: 0
@@ -237,6 +258,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 57f2109f-f494-4eaa-8f05-f1ce07e40daf
     m_ActionName: 'Player/Crouch[/Keyboard/leftCtrl,/DualShock4GamepadHID/buttonEast]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3680812478694482278}
+        m_TargetAssemblyTypeName: PlayerInteraction, Assembly-CSharp
+        m_MethodName: InteractFocused
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 4073cb0f-f3e6-4a6b-9632-f02f034b6a04
+    m_ActionName: 'Player/Interact[/Keyboard/f]'
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
