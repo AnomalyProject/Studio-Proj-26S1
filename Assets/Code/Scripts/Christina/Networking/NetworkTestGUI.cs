@@ -105,7 +105,10 @@ public class NetworkTestUI : MonoBehaviour
 
         if (GUILayout.Button("Request Join"))
         {
-            SessionManager.Instance.RequestJoinSession();
+            SessionManager.Instance.RequestJoinSession(
+                SteamUser.GetSteamID().m_SteamID,
+                SteamFriends.GetPersonaName()
+            );
         }
 
         if (GUILayout.Button("Toggle Ready"))

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Steamworks;
+using PurrNet.Steam;
 
 public class SteamSessionBridge : MonoBehaviour
 {
@@ -173,7 +174,23 @@ public class SteamSessionBridge : MonoBehaviour
     private void ConnectToHost(CSteamID hostSteamId)
     {
         Debug.Log($"[SteamBridge] Connecting PurrNet to host: {hostSteamId}");
-        // todo: Use PurrNet's SteamTransport to connect to hostSteamId
+
+        var networkManager = PurrNet.NetworkManager.main;
+        if (networkManager == null)
+        {
+            Debug.LogError("[SteamBridge] NetworkManager not found!");
+            return;
+        }
+
+        var steamTransport = networkManager.transport as SteamTransport;
+        if (steamTransport == null)
+        {
+            Debug.LogError("[SteamBridge] SteamTransport not assigned to NetworkManager!");
+            return;
+        }
+
+        steamTransport.address = hostSteamId.m_SteamID.ToString();
+        networkManager.StartClient();
     }
 
     private void OnLobbyChatUpdate(LobbyChatUpdate_t callback)
