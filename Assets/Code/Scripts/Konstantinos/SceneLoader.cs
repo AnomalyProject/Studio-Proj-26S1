@@ -35,6 +35,7 @@ public class SceneLoader : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private IEnumerator Start()
@@ -66,7 +67,11 @@ public class SceneLoader : MonoBehaviour
 
     public void LoadSceneWithAsync(string sceneName)
     {
-        StartCoroutine(LoadSceneAsync(sceneName));
+        StartCoroutine(LoadSceneAsyncEnumerator(sceneName));
+    }
+    public void LoadSceneWithAsync(int sceneIndex)
+    {
+        StartCoroutine(LoadSceneAsyncEnumerator(sceneIndex));
     }
 
     public void ReloadCurrentScene()
@@ -75,15 +80,16 @@ public class SceneLoader : MonoBehaviour
     }
 
 
-
-    IEnumerator LoadSceneAsync(string sceneName)
+    IEnumerator LoadSceneAsyncEnumerator(string sceneName) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName));
+    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex));
+    IEnumerator PerformAsyncLoading(AsyncOperation op)
     {
         // Show loading UI
         if (loadingScreen != null)
             loadingScreen.SetActive(true);
 
         // Start loading scene in background but don't allow to switch yet
-        async = SceneManager.LoadSceneAsync(sceneName);
+        async = op;
         async.allowSceneActivation = false;
 
         while (!async.isDone)
