@@ -38,10 +38,216 @@ public class SteamSessionBridge : MonoBehaviour
         joinRequestedCallback = Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
 
         lobbyCreatedCallResult = CallResult<LobbyCreated_t>.Create(OnLobbyCreated);
+
+        SubscribeToSessionEvents();
     }
     
-    private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure) { }
-    private void OnLobbyEntered(LobbyEnter_t callback) { }
-    private void OnLobbyChatUpdate(LobbyChatUpdate_t callback) { }
-    private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback) { }
+    public void CreateSteamLobby(int maxPlayers)
+    {
+        if (!SteamManager.Initialized)
+        {
+            Debug.LogWarning("[Steam Manager] Steam is not initialized, skipping lobby creation.");
+            return;
+        }
+        
+        Debug.Log($"[Steam Manager] Creating steam lobby for {maxPlayers} players.");
+
+        SteamAPICall_t apiCall = SteamMatchmaking.CreateLobby(
+            ELobbyType.k_ELobbyTypeFriendsOnly,
+            maxPlayers
+        );
+        
+        lobbyCreatedCallResult.Set(apiCall);
+    }
+    
+    public void UpdateRichPresence(GameState state)
+    {
+        if (!SteamManager.Initialized) return;
+
+        string status;
+        
+        switch (state)
+        {
+            case GameState.Menu:
+                status = "In Menu";
+                break;
+            case GameState.Lobby:
+                status = "In Lobby";
+                break;
+            case GameState.Loading:
+                status = "Loading...";
+                break;
+            case GameState.InGame:
+                status = "Playing";
+                break;
+            case GameState.PostGame:
+                status = "Post-Game Results";
+                break;
+            default:
+                status = "Unknown";
+                break;
+        }
+
+        SteamFriends.SetRichPresence("status", status);
+
+        // when connect has a key, Steam shows a "Join Game" button on your profile in the friends list. 
+        // when someone clicks it Steam fires GameLobbyJoinRequested_t 
+        if (state == GameState.Lobby && isInLobby)
+        {
+            SteamFriends.SetRichPresence("connect", $"+connect_lobby {currentLobbyId}");
+        }
+        else
+        {
+            SteamFriends.SetRichPresence("connect", "");
+        }
+
+        Debug.Log($"[SteamBridge] Rich Presence updated: {status}");
+    }
+    
+    public void LeaveSteamLobby()
+    {
+        if (isInLobby)
+        {
+            SteamMatchmaking.LeaveLobby(currentLobbyId);
+            currentLobbyId = new CSteamID();
+            isInLobby = false;
+            SteamFriends.ClearRichPresence();
+            Debug.Log("[SteamBridge] Left Steam lobby and cleared Rich Presence");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        LeaveSteamLobby();
+    }
+
+    private void OnApplicationQuit()
+    {
+        LeaveSteamLobby();
+    }
+
+    private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure)
+    {
+        // ioFailure means the request never reached Steam's servers
+        if (ioFailure)
+        {
+            Debug.LogError("[SteamBridge] Lobby creation failed with IO error");
+            return;
+        }
+
+        // m_eResult means that the request reached Steam servers but something went wrong. 
+        if (result.m_eResult != EResult.k_EResultOK)
+        {
+            Debug.LogError($"[SteamBridge] Lobby creation failed: {result.m_eResult}");
+            return;
+        }
+        
+        currentLobbyId = new CSteamID(result.m_ulSteamIDLobby);
+        isInLobby = true;
+        
+        Debug.Log($"[SteamBridge] Steam lobby created! With ID: {currentLobbyId}");
+
+        SyncMetadataToSteamLobby();
+
+    }
+
+    private void OnLobbyEntered(LobbyEnter_t callback)
+    {
+        currentLobbyId = new CSteamID(callback.m_ulSteamIDLobby);
+        isInLobby = true;
+
+        CSteamID lobbyOwner = SteamMatchmaking.GetLobbyOwner(currentLobbyId);
+        bool isHost = lobbyOwner == SteamUser.GetSteamID();
+
+        if (isHost)
+        {
+            Debug.Log("[SteamBridge] Entered lobby as HOST");
+        }
+        else
+        {
+            Debug.Log("[SteamBridge] Entered lobby as CLIENT: connecting to host...");
+            ConnectToHost(lobbyOwner);
+        }
+    }
+    
+    private void ConnectToHost(CSteamID hostSteamId)
+    {
+        Debug.Log($"[SteamBridge] Connecting PurrNet to host: {hostSteamId}");
+        // todo: Use PurrNet's SteamTransport to connect to hostSteamId
+    }
+
+    private void OnLobbyChatUpdate(LobbyChatUpdate_t callback)
+    {
+        CSteamID changedUser = new CSteamID(callback.m_ulSteamIDUserChanged);
+        string userName = SteamFriends.GetFriendPersonaName(changedUser);
+
+        var changeType = (EChatMemberStateChange)callback.m_rgfChatMemberStateChange;
+
+        if (changeType.HasFlag(EChatMemberStateChange.k_EChatMemberStateChangeEntered))
+        {
+            Debug.Log($"[SteamBridge] {userName} joined the Steam lobby");
+        }
+
+        if (changeType.HasFlag(EChatMemberStateChange.k_EChatMemberStateChangeLeft) ||
+            changeType.HasFlag(EChatMemberStateChange.k_EChatMemberStateChangeDisconnected))
+        {
+            Debug.Log($"[SteamBridge] {userName} left the Steam lobby");
+        }
+    }
+
+    private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
+    {
+        Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
+        SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
+    }
+    
+    // note: only lobby owner can set the metadata
+    private void SyncMetadataToSteamLobby()
+    {
+        if (!isInLobby) return;
+
+        var session = SessionManager.Instance.CurrentSession;
+        if (session == null) return;
+
+        // everything inside the metadata are strings + keys have 255 character limit. Should keep them short.
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "session_id", session.SessionId);
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "map_name", session.MapName);
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "game_mode", session.GameMode);
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "host_name", SteamFriends.GetPersonaName());
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "player_count", session.Players.Count.ToString());
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "max_players", session.MaxPlayers.ToString());
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "game_state", GameStateManager.Instance.CurrentState.ToString());
+
+        Debug.Log("[SteamBridge] Lobby metadata successfully synced to Steam");
+    }
+    
+    private void SubscribeToSessionEvents()
+    {
+        SessionEvents.OnPlayerJoined += OnPlayerJoinedSession;
+        SessionEvents.OnPlayerLeft += OnPlayerLeftSession;
+        SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobby;
+        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+    }
+    
+    private void OnPlayerJoinedSession(ulong steamID, string displayName)
+    {
+        SyncMetadataToSteamLobby();
+    }
+
+    private void OnPlayerLeftSession(ulong steamID, string reason)
+    {
+        SyncMetadataToSteamLobby();
+    }
+
+    private void OnGameStateChanged(GameState previous, GameState next)
+    {
+        UpdateRichPresence(next);
+        SyncMetadataToSteamLobby();
+
+        if (next == GameState.Menu)
+        {
+            LeaveSteamLobby();
+        }
+        
+    }
 }

@@ -158,6 +158,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
+        
+        // the null check ensures that CreateSession will run even if steam is not available
+        // or the build doesn't run on steam
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.CreateSteamLobby(sessionData.MaxPlayers);
+        }
     }
 
     /// <summary>
