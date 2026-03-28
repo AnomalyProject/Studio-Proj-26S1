@@ -284,11 +284,20 @@ public class DevConsole : MonoBehaviour
                     GC.WaitForPendingFinalizers();
                     break;
 
+                case "stack":
+                    StackOverflow();
+                    break;
+
+                case "crash":
+                    Environment.FailFast("Forced crash via command");
+                    break;
+
                 default:
                     throw new Exception("Test exception (Unity handled)");
             }
-        }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection."));
+        }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection.\n<color=green>stack</color> causes a stack overflow.\n<color=green>crash</color> crashes the running process."));
     }
+    private static void StackOverflow() => StackOverflow();
     private void ClearScreen(string[] args)
     {
         while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
@@ -522,6 +531,8 @@ public class DevConsole : MonoBehaviour
     }
     private void Log(LogEntry entry, bool isCommand = false)
     {
+        if (entry.message == null || entry.stackTrace == null) return;
+
         // Enforce max logs and reuse oldest log GameObject
         GameObject log = null;
         if (maxLogs >= 0 && logs.Count >= maxLogs)
@@ -548,7 +559,8 @@ public class DevConsole : MonoBehaviour
         {
             // Assign correct icon and append the first line of the stack trace
             icon.sprite = icons[entry.type];
-            entry.textComponent.text = $"<line-indent=1.5em>{entry.message}</line-indent><size=0.8em>\n{entry.stackTrace.Split('\n')[1]}</size>";
+            string stackPreview = entry.stackTrace?.Split('\n').Skip(1).FirstOrDefault() ?? entry.stackTrace ?? "";
+            entry.textComponent.text = $"<line-indent=1.5em>{entry.message}</line-indent><size=0.8em>\n{stackPreview}</size>";
         }
 
         // Copy on right click
