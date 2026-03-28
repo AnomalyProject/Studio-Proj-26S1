@@ -24,19 +24,6 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnSessionError -= LogSessionError;
     }
 
-    private void Start()
-    {
-        if (SteamManager.Initialized)
-        {
-            string name = SteamFriends.GetPersonaName();
-            Debug.Log($"[Steam] Hello, {name}! Steam is working.");
-        }
-        else
-        {
-            Debug.LogError("[Steam] SteamManager failed to initialize!");
-        }
-    }
-
     private void AddLog(string message)
     {
         eventLog.Add(message);
