@@ -48,7 +48,7 @@ public class BugReporter : MonoBehaviour
         bool isActive = !bugReporterPanel.activeSelf;
         bugReporterPanel.SetActive(isActive);
         
-        // Auto-hide the thank you message when the panel is closed
+        // Auto hide the thank you message when the panel is closed
         if (!isActive)
         {
             thankYouMessage.SetActive(false);
@@ -67,7 +67,7 @@ public class BugReporter : MonoBehaviour
         if (isSending) return;
         
         isSending = true;
-        submitButton.interactable = false; // Lock button while sending
+        submitButton.interactable = false; 
 
         SendEmailReport();
     }
@@ -90,20 +90,19 @@ public class BugReporter : MonoBehaviour
                         $"OS: {os}\n\n" +
                         $"Player Description:\n{userDescription}";
 
-            // Setup SMTP Client
+            // SMTP Client
             SmtpClient smtpServer = new SmtpClient(smtpHost);
             smtpServer.Port = smtpPort;
             smtpServer.Credentials = new NetworkCredential(senderEmail, senderPassword) as ICredentialsByHost;
             smtpServer.EnableSsl = true;
-
-            // Bypass Unity's strict SSL certificate validation
+            
             ServicePointManager.ServerCertificateValidationCallback = 
                 delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) 
                 { return true; };
 
             smtpServer.Send(mail);
 
-            // On Success: Clear text and show Thank You message
+            //  Clear text and show Thank You message when successfully submit
             descriptionInput.text = "";
             thankYouMessage.SetActive(true);
             Debug.Log("Bug report sent successfully.");
