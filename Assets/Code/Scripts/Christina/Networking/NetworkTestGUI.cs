@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using PurrNet;
+using Steamworks;
 
 public class NetworkTestUI : MonoBehaviour
 {
@@ -21,6 +22,19 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnPlayerLeft -= LogPlayerLeft;
         SessionEvents.OnSessionDataChanged -= LogSessionDataChanged;
         SessionEvents.OnSessionError -= LogSessionError;
+    }
+
+    private void Start()
+    {
+        if (SteamManager.Initialized)
+        {
+            string name = SteamFriends.GetPersonaName();
+            Debug.Log($"[Steam] Hello, {name}! Steam is working.");
+        }
+        else
+        {
+            Debug.LogError("[Steam] SteamManager failed to initialize!");
+        }
     }
 
     private void AddLog(string message)
