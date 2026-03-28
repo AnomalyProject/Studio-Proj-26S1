@@ -120,6 +120,7 @@ public class SceneLoader : MonoBehaviour
                 async.allowSceneActivation = true; // switch scene
             }
 
+            if (loadingScreen != null) loadingScreen.SetActive(false);
         }
     }
 }
