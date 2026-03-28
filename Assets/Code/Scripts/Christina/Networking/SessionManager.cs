@@ -5,19 +5,19 @@ using System.Collections.Generic;
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
 
-    // todo: Blocked from Thanos tasks
-    //private SessionData sessionData;
-    //private GameStateManager gameStateManager;
+    private SessionData sessionData;
+    private PlayerID? hostPlayerID;
 
     // this Dictionary maps PurrNet's PlayerID to Steam ulong IDs.
     private readonly Dictionary<PlayerID, ulong> playerConnectionMap = new();
 
     public bool IsHost => NetworkManager.main != null && NetworkManager.main.isHost;
 
-    private PlayerID? hostPlayerID;
-    private bool sessionCreated = false;
+    // for UI to be able to read the sessionData
+    public SessionData CurrentSession => sessionData;
 
     public static SessionManager Instance { get; private set; }
+
 
     private void Awake()
     {
@@ -48,6 +48,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     protected override void OnDespawned()
     {
+        sessionData = null;
+
         if (GameStateManager.Instance != null)
         {
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
@@ -61,11 +63,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
-        // if the session was just created and no one is in it yet -> we have our host
-        if (sessionCreated && playerConnectionMap.Count == 0)
+        // check: Does an actual state exists? And is it empty / no one in it yet? Then we have our host 
+        if (sessionData != null && playerConnectionMap.Count == 0)
         {
             hostPlayerID = playerID;
-            AddPlayerToSession(playerID, 0, "Host Player", isHost: true);
+            // todo: replace with real steamID
+            ulong tempSteamID = (ulong)playerID.GetHashCode();
+            AddPlayerToSession(playerID, tempSteamID, "Host Player", isHost: true);
             Debug.Log("[SessionManager] Host registered as first player.");
         }
     }
@@ -91,17 +95,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         Debug.Log("[SessionManager] Creating new session...");
 
-        // todo Generate SessionId (System.Guid.NewGuid().ToString())
-        // todo  Set HostSteamId on SessionData
-        // todo  Initialize SessionData with defaults
 
-        // Host registers themselves as the first player
-        // Using 0 as placeholder Steam ID until Steam integration is ready
-        // todo: connect Steam ID when it's ready
-        sessionCreated = true;
+        sessionData = new SessionData
+        {
+            HostSteamID = 0, // todo: this is a placeholder. to be replaced once Steamworks is wired in
+            MapName = "Default",
+            GameMode = "Default",
+            MaxPlayers = 4
+        };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
@@ -109,11 +112,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private void AddPlayerToSession(PlayerID playerID, ulong steamID, string displayName, bool isHost = false)
     {
-        // todo: create PlayerSessionInfo and add to SessionData.Players list
+
+        var playerInfo = new PlayerSessionInfo(steamID, displayName, isHost);
+        sessionData.AddPlayer(playerInfo);
 
         playerConnectionMap[playerID] = steamID;
 
-        SessionEvents.InvokePlayerJoined(steamID, displayName);
         OnPlayerJoined_Client(steamID, displayName);
 
         if (!isHost)
@@ -126,13 +130,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private void RemovePlayerFromSession(PlayerID playerID, ulong steamID, string reason)
     {
-        // todo: find and remove player from SessionData.Players list
+        sessionData.RemovePlayer(steamID);
 
         playerConnectionMap.Remove(playerID);
 
-        SessionEvents.InvokePlayerLeft(steamID, reason);
         OnPlayerLeft_Client(steamID, reason);
 
+        sessionData.ResetReadyStates();
         Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
     }
 
@@ -140,9 +144,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public void RequestJoinSession(RPCInfo info = default)
     {
         PlayerID sender = info.sender;
+
+        if (sessionData.IsSessionFull)
+        {
+            Debug.Log($"[SessionManager] Join rejected: Session is full!");
+            SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full..");
+            return;
+        }
+
         Debug.Log($"[SessionManager] Join request received from PlayerID: {sender}");
 
-        //todo: check if session is full 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
         {
             // should reject the request
@@ -159,9 +170,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
+        // todo: replace with real steamID
+        ulong tempSteamId = (ulong)sender.GetHashCode();
         // if validation above passes, then add the player into the session
         string displayName = $"Player_{sender}";
-        AddPlayerToSession(sender, 0, displayName);
+        AddPlayerToSession(sender, tempSteamId, displayName);
 
         Debug.Log($"[SessionManager] Join approved for PlayerID: {sender}");
     }
@@ -207,7 +220,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
 
-        //todo: toggle PlayerSessionInfo.IsReady
+        ulong steamId = playerConnectionMap[sender];
+        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamId);
+
+        if (playerIndex == -1)
+        {
+            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "Player data not found in session.");
+            return;
+        }
+
+        var playerInfo = sessionData.Players[playerIndex];
+        playerInfo.IsReady = !playerInfo.IsReady;
+        sessionData.Players[playerIndex] = playerInfo;
 
         OnSessionUpdated_Client();
         Debug.Log($"[SessionManager] Ready toggled for PlayerID: {sender}");
@@ -235,7 +259,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        // todo: check if all the players are ready
+        if (!sessionData.AllPlayersReady)
+        {
+            Debug.LogWarning($"[SessionManager] Start rejected: Not all players are ready.");
+            SendErrorToClient(sender, SessionErrorCode.PlayersNotReady, "Not all players are ready.");
+            return;
+        }
+
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
 
@@ -255,7 +285,24 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        //todo: update the SessionData.Custom properties with the correct key/value pairs
+        switch (key)
+        {
+            case "MapName":
+                sessionData.MapName = value;
+                break;
+            case "GameMode":
+                sessionData.GameMode = value;
+                break;
+            case "MaxPlayers":
+                if (int.TryParse(value, out int maxPlayers))
+                    sessionData.MaxPlayers = maxPlayers;
+                break;
+            default:
+                sessionData.SetCustomProperty(key, value);
+                break;
+        }
+
+        sessionData.ResetReadyStates();
 
         OnSessionUpdated_Client();
         Debug.Log("[SessionManager] Settings updated.");
@@ -280,8 +327,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void OnSessionUpdated_Client()
     {
         SessionEvents.InvokeSessionDataChanged();
-        //todo: will take serialized SessionData as parameters when ready
-
+        //todo: pass sessionData to clients. watch for serialization issues with DateTime and Dictionary fields and PurrNet.
         Debug.Log($"[SessionManager] [Client] Session Data Changed.");
     }
 

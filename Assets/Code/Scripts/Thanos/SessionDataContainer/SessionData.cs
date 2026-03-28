@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Linq;
-using Unity.VisualScripting;
 
 [Serializable]
 public struct PlayerSessionInfo
@@ -22,7 +21,7 @@ public struct PlayerSessionInfo
         IsHost = isHost;
         TeamID = teamID;
         IsReady = false;
-        JoinedAt = DateTime.Now;
+        JoinedAt = DateTime.UtcNow; // todo: check if we need to convert to long
     }
 
 }
@@ -30,15 +29,15 @@ public struct PlayerSessionInfo
 [Serializable]
 public class SessionData
 {
-  public string SessionId {get; private set;}
-  public ulong HostSteamID {get; set;}
-  public List<PlayerSessionInfo> Players {get; set;} = new List<PlayerSessionInfo>();
-  public string MapName {get; set;}
-  public string GameMode {get; set;}
-  public int MaxPlayers {get; set;}
-  public DateTime CreatedAt {get; private set;}
-  public GameState CurrentState {get; set;}
-  public Dictionary<string, string> CustomProperties {get; set;} = new Dictionary<string, string>();
+    public string SessionId { get; private set; }
+    public ulong HostSteamID { get; set; }
+    public List<PlayerSessionInfo> Players { get; set; } = new List<PlayerSessionInfo>();
+    public string MapName { get; set; }
+    public string GameMode { get; set; }
+    public int MaxPlayers { get; set; }
+    public DateTime CreatedAt { get; private set; }
+    public GameState CurrentState { get; set; }
+    public Dictionary<string, string> CustomProperties { get; set; } = new Dictionary<string, string>();
 
     public SessionData()
     {
@@ -60,16 +59,16 @@ public class SessionData
     public void RemovePlayer(ulong steamID)
     {
         int removedCount = Players.RemoveAll(pp => pp.SteamID == steamID);
-        if(removedCount == 0)
+        if (removedCount == 0)
         {
-            Debug.LogWarning($"[SessionDataManager] Attempted to remove player {steamID}, but they werte not in this session.");
+            Debug.LogWarning($"[SessionDataManager] Attempted to remove player {steamID}, but they were not in this session.");
         }
     }
 
     public PlayerSessionInfo? GetPlayer(ulong steamID)
     {
         var player = Players.FirstOrDefault(pp => pp.SteamID == steamID);
-        return player.SteamID == 0 ? (PlayerSessionInfo?) null : player;
+        return player.SteamID == 0 ? (PlayerSessionInfo?)null : player;
     }
 
     public bool IsSessionFull => Players.Count == MaxPlayers;
