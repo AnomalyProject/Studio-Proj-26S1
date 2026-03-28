@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 using System.IO;
@@ -45,3 +46,4 @@ public class ExportIcons
         return readable;
     }
 }
+#endif
