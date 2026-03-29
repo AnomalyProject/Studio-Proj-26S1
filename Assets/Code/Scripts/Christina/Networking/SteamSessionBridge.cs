@@ -1,6 +1,7 @@
 using UnityEngine;
 using Steamworks;
 using PurrNet.Steam;
+using System.Collections;
 
 public class SteamSessionBridge : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class SteamSessionBridge : MonoBehaviour
 
     private CSteamID currentLobbyId;
     private bool isInLobby = false;
+    private bool isCreatingLobby = false;
 
     // steam callbacks (always listening)
     private Callback<LobbyEnter_t> lobbyEnteredCallback;
@@ -47,11 +49,12 @@ public class SteamSessionBridge : MonoBehaviour
     {
         if (!SteamManager.Initialized)
         {
-            Debug.LogWarning("[Steam Manager] Steam is not initialized, skipping lobby creation.");
+            Debug.LogWarning("[SteamBridge] Steam is not initialized, skipping lobby creation.");
             return;
         }
-        
-        Debug.Log($"[Steam Manager] Creating steam lobby for {maxPlayers} players.");
+
+        isCreatingLobby = true;
+        Debug.Log($"[SteamBridge] Creating steam lobby for {maxPlayers} players.");
 
         SteamAPICall_t apiCall = SteamMatchmaking.CreateLobby(
             ELobbyType.k_ELobbyTypeFriendsOnly,
@@ -64,6 +67,12 @@ public class SteamSessionBridge : MonoBehaviour
     public void UpdateRichPresence(GameState state)
     {
         if (!SteamManager.Initialized) return;
+        
+        string mapName = "";
+        if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
+        {
+            mapName = SessionManager.Instance.CurrentSession.MapName;
+        }
 
         string status;
         
@@ -107,6 +116,8 @@ public class SteamSessionBridge : MonoBehaviour
     
     public void LeaveSteamLobby()
     {
+        isCreatingLobby = false;
+        
         if (isInLobby)
         {
             SteamMatchmaking.LeaveLobby(currentLobbyId);
@@ -119,6 +130,7 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnDestroy()
     {
+        UnsubscribeFromSessionEvents();
         LeaveSteamLobby();
     }
 
@@ -129,6 +141,8 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure)
     {
+        isCreatingLobby = false;
+        
         // ioFailure means the request never reached Steam's servers
         if (ioFailure)
         {
@@ -146,14 +160,30 @@ public class SteamSessionBridge : MonoBehaviour
         currentLobbyId = new CSteamID(result.m_ulSteamIDLobby);
         isInLobby = true;
         
+        // checking if player already left while we were waiting for Steam
+        if (GameStateManager.Instance == null ||
+            GameStateManager.Instance.CurrentState == GameState.Menu)
+        {
+            Debug.LogWarning("[SteamBridge] Lobby created but player already left, cleaning up..");
+            LeaveSteamLobby();
+            return;
+        }
+        
         Debug.Log($"[SteamBridge] Steam lobby created! With ID: {currentLobbyId}");
-
         SyncMetadataToSteamLobby();
 
     }
 
     private void OnLobbyEntered(LobbyEnter_t callback)
     {
+        // without this check, if the lobby was full or the player was banned, the code would still set
+        // isInLobby = true and try to connect to the host. 
+        if (callback.m_EChatRoomEnterResponse != (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess)
+        {
+            Debug.LogError($"[SteamBridge] Failed to enter lobby: {(EChatRoomEnterResponse)callback.m_EChatRoomEnterResponse}");
+            return;
+        }
+        
         currentLobbyId = new CSteamID(callback.m_ulSteamIDLobby);
         isInLobby = true;
 
@@ -191,6 +221,37 @@ public class SteamSessionBridge : MonoBehaviour
 
         steamTransport.address = hostSteamId.m_SteamID.ToString();
         networkManager.StartClient();
+        // we use coroutine because StartClient() is asynchronous.
+        // we need to wait for the response to send RPCs
+        StartCoroutine(WaitForConnectionThenJoin());
+    }
+    
+    private IEnumerator WaitForConnectionThenJoin()
+    {
+        var networkManager = PurrNet.NetworkManager.main;
+
+        // wait until PurrNet reports that the client is connected
+        while (networkManager != null && !networkManager.isClient)
+        {
+            yield return null;
+        }
+
+        if (networkManager == null || !networkManager.isClient)
+        {
+            Debug.LogError("[SteamBridge] Failed to connect to host via PurrNet");
+            yield break;
+        }
+
+        if (SessionManager.Instance == null)
+        {
+            Debug.LogError("[SteamBridge] SessionManager not available after connecting");
+            yield break;
+        }
+
+        ulong steamID = SteamUser.GetSteamID().m_SteamID;
+        string displayName = SteamFriends.GetPersonaName();
+        SessionManager.Instance.RequestJoinSession(steamID, displayName);
+        Debug.Log("[SteamBridge] PurrNet connected, session join requested");
     }
 
     private void OnLobbyChatUpdate(LobbyChatUpdate_t callback)
@@ -222,7 +283,11 @@ public class SteamSessionBridge : MonoBehaviour
     private void SyncMetadataToSteamLobby()
     {
         if (!isInLobby) return;
-
+        
+        // only the lobby owner can set metadata
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyId) != SteamUser.GetSteamID()) return;
+        
+        if (SessionManager.Instance == null) return;  // <-- null check the Instance
         var session = SessionManager.Instance.CurrentSession;
         if (session == null) return;
 
@@ -234,6 +299,15 @@ public class SteamSessionBridge : MonoBehaviour
         SteamMatchmaking.SetLobbyData(currentLobbyId, "player_count", session.Players.Count.ToString());
         SteamMatchmaking.SetLobbyData(currentLobbyId, "max_players", session.MaxPlayers.ToString());
         SteamMatchmaking.SetLobbyData(currentLobbyId, "game_state", GameStateManager.Instance.CurrentState.ToString());
+        
+        
+        // sync custom properties with prefix to avoid key collisions, for example
+        // if someone calls session.SetCustomProperty("map_name", "something"), without a prefix it would
+        // overwrite the reserved map_name key. Namespacing prevents that kind of collisions.
+        foreach (var kvp in session.CustomProperties)
+        {
+            SteamMatchmaking.SetLobbyData(currentLobbyId, $"custom_{kvp.Key}", kvp.Value);
+        }
 
         Debug.Log("[SteamBridge] Lobby metadata successfully synced to Steam");
     }
@@ -244,6 +318,18 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerLeft += OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobby;
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+    }
+    
+    private void UnsubscribeFromSessionEvents()
+    {
+        SessionEvents.OnPlayerJoined -= OnPlayerJoinedSession;
+        SessionEvents.OnPlayerLeft -= OnPlayerLeftSession;
+        SessionEvents.OnSessionDataChanged -= SyncMetadataToSteamLobby;
+
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+        }
     }
     
     private void OnPlayerJoinedSession(ulong steamID, string displayName)
