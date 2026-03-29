@@ -90,7 +90,7 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     {
 #if UNITY_EDITOR == false
         // Actual version
-        bCanInteract = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
+        bEnoughPlayers = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
 
         Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
 #else
