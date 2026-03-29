@@ -2,7 +2,8 @@ using UnityEngine;
 /// <summary>
 /// Door class that implements an interaction interface , basically open and close door
 /// </summary>
-public class Door : MonoBehaviour,IInteractable<MonoBehaviour>
+[RequireComponent(typeof(Collider))]
+public class Door : MonoBehaviour, IInteractable<FPSController>
 {
     [SerializeField] private Animation anim;
     [SerializeField] private string doorAnimationName = "Door Open";
@@ -10,17 +11,18 @@ public class Door : MonoBehaviour,IInteractable<MonoBehaviour>
     private bool isOpen = false;// Checks if door is currently open
     private bool isAnimating = false; // Prevents interaction while animation is playing
 
-    public bool CanInteract(MonoBehaviour Interactor)
+    public bool CanInteract(FPSController Interactor)
     {
         return !isAnimating;  // Interaction is only allowed if not animating
     }
     // Attempts to interact with the door
-    public bool TryInteract(MonoBehaviour Interactor) 
+    public bool TryInteract(FPSController Interactor) 
     {
         if(!CanInteract(Interactor))
         {
             return false; 
         }
+        Debug.Log("Door Interacted with by " + Interactor.name);
         PlayAnimation();//Animation PLay
         return true;
     }
