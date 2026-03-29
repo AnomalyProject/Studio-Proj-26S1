@@ -1,14 +1,14 @@
 using UnityEngine;
 using Newtonsoft.Json;
 
-public class SessionController : MonoBehaviour
+public class SessionDataController : MonoBehaviour
 {
     [Header("Session State")]
     public SessionData CurrentSession;
     
     [Header("Debug Settings")]
-    [SerializeField] private ulong testSteamId = 676967690;
-    [SerializeField] private string testName = "Xx|Obama_killer69|xX";
+    [SerializeField] public ulong testSteamId = 676967690;
+    [SerializeField] public static readonly string testName = "Xx|Obama_killer69|xX";
 
     void Start()
     {

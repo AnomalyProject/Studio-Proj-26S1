@@ -1,3 +1,4 @@
+using PurrNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,7 +10,7 @@ using UnityEngine.InputSystem;
 /// the "IA_PlayerInputActions" Input Actions asset.
 /// </summary>
 [RequireComponent(typeof(PlayerInput))]
-public class FPSInputHandler : MonoBehaviour
+public class FPSInputHandler : NetworkBehaviour
 {
     #region Exposed Properties
     public Vector2 MoveInput { get; private set; }
@@ -36,23 +37,31 @@ public class FPSInputHandler : MonoBehaviour
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
+        if (!isOwner && !isController) return;
+
         MoveInput = ctx.ReadValue<Vector2>();
         //Debug.Log("Move: " + MoveInput);
     }
 
     public void OnLook(InputAction.CallbackContext ctx)
     {
+        if (!isOwner && !isController) return;
+
         LookInput = ctx.ReadValue<Vector2>();
         //Debug.Log("Look: " + LookInput);
     }
 
     public void OnSprint(InputAction.CallbackContext ctx)
     {
+        if (!isOwner && !isController) return;
+
         SprintHeld = ctx.performed;
     }
 
     public void OnCrouch(InputAction.CallbackContext ctx)
     {
+        if (!isOwner && !isController) return;
+
         if (ctx.started)
             CrouchTriggered = true;
     }
