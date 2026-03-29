@@ -285,7 +285,7 @@ public class SteamSessionBridge : MonoBehaviour
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
         
         // Same lobby check: if player is already in the lobby they're trying to join, ignore it
-        if (isInLobby && currentLobbyId == new CSteamID(callback.m_steamIDLobby))
+        if (isInLobby && currentLobbyId ==callback.m_steamIDLobby)
         {
             Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
             return;
@@ -304,6 +304,7 @@ public class SteamSessionBridge : MonoBehaviour
     // note: only lobby owner can set the metadata
     private void SyncMetadataToSteamLobby()
     {
+        if (!isSteamAvailable) return; 
         if (!isInLobby) return;
         
         // only the lobby owner can set metadata
