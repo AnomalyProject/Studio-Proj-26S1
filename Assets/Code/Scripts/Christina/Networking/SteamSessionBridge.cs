@@ -82,13 +82,13 @@ public class SteamSessionBridge : MonoBehaviour
                 status = "In Menu";
                 break;
             case GameState.Lobby:
-                status = "In Lobby";
+                status =  string.IsNullOrEmpty(mapName) ? "In Lobby" : $"In Lobby — {mapName}";
                 break;
             case GameState.Loading:
                 status = "Loading...";
                 break;
             case GameState.InGame:
-                status = "Playing";
+                status = string.IsNullOrEmpty(mapName) ? "Playing" : $"Playing — {mapName}";
                 break;
             case GameState.PostGame:
                 status = "Post-Game Results";
@@ -141,7 +141,13 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure)
     {
-        isCreatingLobby = false;
+        if (!isCreatingLobby)
+        {
+            Debug.LogWarning("[SteamBridge] Lobby created but player already left, cleaning up..");
+            LeaveSteamLobby();
+            return;
+        }
+        isCreatingLobby = false; 
         
         // ioFailure means the request never reached Steam's servers
         if (ioFailure)
@@ -159,15 +165,6 @@ public class SteamSessionBridge : MonoBehaviour
         
         currentLobbyId = new CSteamID(result.m_ulSteamIDLobby);
         isInLobby = true;
-        
-        // checking if player already left while we were waiting for Steam
-        if (GameStateManager.Instance == null ||
-            GameStateManager.Instance.CurrentState == GameState.Menu)
-        {
-            Debug.LogWarning("[SteamBridge] Lobby created but player already left, cleaning up..");
-            LeaveSteamLobby();
-            return;
-        }
         
         Debug.Log($"[SteamBridge] Steam lobby created! With ID: {currentLobbyId}");
         SyncMetadataToSteamLobby();
@@ -287,7 +284,7 @@ public class SteamSessionBridge : MonoBehaviour
         // only the lobby owner can set metadata
         if (SteamMatchmaking.GetLobbyOwner(currentLobbyId) != SteamUser.GetSteamID()) return;
         
-        if (SessionManager.Instance == null) return;  // <-- null check the Instance
+        if (SessionManager.Instance == null) return;
         var session = SessionManager.Instance.CurrentSession;
         if (session == null) return;
 
@@ -299,6 +296,7 @@ public class SteamSessionBridge : MonoBehaviour
         SteamMatchmaking.SetLobbyData(currentLobbyId, "player_count", session.Players.Count.ToString());
         SteamMatchmaking.SetLobbyData(currentLobbyId, "max_players", session.MaxPlayers.ToString());
         SteamMatchmaking.SetLobbyData(currentLobbyId, "game_state", GameStateManager.Instance.CurrentState.ToString());
+        SteamMatchmaking.SetLobbyData(currentLobbyId, "game_version", Application.version);
         
         
         // sync custom properties with prefix to avoid key collisions, for example
