@@ -10,6 +10,7 @@ public class SteamSessionBridge : MonoBehaviour
     private CSteamID currentLobbyId;
     private bool isInLobby = false;
     private bool isCreatingLobby = false;
+    private bool isSteamAvailable = false;
 
     // steam callbacks (always listening)
     private Callback<LobbyEnter_t> lobbyEnteredCallback;
@@ -35,6 +36,7 @@ public class SteamSessionBridge : MonoBehaviour
     {
         // safety check
         if (!SteamManager.Initialized) return;
+        isSteamAvailable = true;  
 
         lobbyEnteredCallback = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
         lobbyChatUpdateCallback = Callback<LobbyChatUpdate_t>.Create(OnLobbyChatUpdate);
@@ -120,10 +122,17 @@ public class SteamSessionBridge : MonoBehaviour
         
         if (isInLobby)
         {
-            SteamMatchmaking.LeaveLobby(currentLobbyId);
+            // Steam API calls are guarded separately because during shutdown SteamManager may
+            // have already called SteamAPI.Shutdown() before our OnDestroy runs.
+            if (isSteamAvailable)
+            {
+                SteamMatchmaking.LeaveLobby(currentLobbyId);
+                SteamFriends.ClearRichPresence();
+            }
+            
             currentLobbyId = new CSteamID();
             isInLobby = false;
-            SteamFriends.ClearRichPresence();
+            
             Debug.Log("[SteamBridge] Left Steam lobby and cleared Rich Presence");
         }
     }
@@ -132,6 +141,7 @@ public class SteamSessionBridge : MonoBehaviour
     {
         UnsubscribeFromSessionEvents();
         LeaveSteamLobby();
+        isSteamAvailable = false; 
     }
 
     private void OnApplicationQuit()
@@ -273,6 +283,21 @@ public class SteamSessionBridge : MonoBehaviour
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
+        
+        // Same lobby check: if player is already in the lobby they're trying to join, ignore it
+        if (isInLobby && currentLobbyId == new CSteamID(callback.m_steamIDLobby))
+        {
+            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
+            return;
+        }
+        
+        // Existing lobby cleanup: if player is in a different lobby or mid-creation, clean up first
+        if (isInLobby || isCreatingLobby)
+        {
+            Debug.Log("[SteamBridge] Leaving current lobby before joining new one.");
+            LeaveSteamLobby();
+        }
+        // after the checks now JoinLobby proceeds into a clean empty state
         SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
     }
     
