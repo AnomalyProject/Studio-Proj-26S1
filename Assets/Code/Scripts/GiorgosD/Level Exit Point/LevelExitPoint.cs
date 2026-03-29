@@ -1,32 +1,39 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
+[RequireComponent(typeof(Collider))]
 public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 {
     [Header("Settings")]
     [SerializeField] private LayerMask playerMask;
-    [SerializeField] private Collider interablecCollider;
+    Collider col;
 
     // Checks
-    private bool bCanInteract;
+    private bool bEnoughPlayers, bIsAvailable;
     [SerializeField] private bool bHasAnomaly;
 
     private HashSet<FPSController> playersInArea = new HashSet<FPSController>();
 
     // Events
-    public event Action<bool> OnActivateExit;
+    public UnityEvent<bool> OnActivateExit;
 
-    public bool CanInteract(FPSController interactor) => bCanInteract;
+    void Awake()
+    {
+        if(!GetComponentInChildren<ExitInteractable>())
+        {
+            Debug.LogError($"{gameObject.name}: No ExitInteractable found as a child. Please add one for interaction.");
+        }
+
+        col = GetComponent<Collider>();
+        col.isTrigger = true;
+        bIsAvailable = true;
+    }
+    public bool CanInteract(FPSController interactor) => bEnoughPlayers && bIsAvailable;
 
     public bool TryInteract(FPSController interactor)
     {
-        if (!bCanInteract)
-        {
-            return false;
-        }
-
-        Debug.Log($"Gay test");
         Exit();
         return true;
     }
@@ -81,31 +88,25 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     private void CheckPlayersInArea()
     {
-    #if UNITY_EDITOR == false
+#if UNITY_EDITOR == false
         // Actual version
         bCanInteract = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
 
-        Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {bCanInteract}");
-    #else
+        Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
+#else
         //for testing purposes only
-        bCanInteract = playersInArea.Count >= 1;
+        bEnoughPlayers = playersInArea.Count >= 1;
 
-        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {bCanInteract}");
+        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");
     #endif
     }
 #endregion
 
     #region Interactable Collider
     /// <summary>
-    /// Enables/Desables the collider of the interactable.
+    /// Enables/Disables the interaction mode.
     /// </summary>
-    /// <param name="state"></param>
-    public void SetCollider(bool state)
-    {
-        if (interablecCollider != null)
-        {
-            interablecCollider.enabled = state;
-        }
-    }
+    /// <param name="active"></param>
+    public void SetInteraction(bool active) => bIsAvailable = active;
     #endregion
 }
