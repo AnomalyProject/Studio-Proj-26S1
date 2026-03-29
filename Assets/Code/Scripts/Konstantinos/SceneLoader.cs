@@ -3,8 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System;
-using Unity.VectorGraphics;
-using UnityEngine.UIElements;
 
 public class SceneLoader : MonoBehaviour
 {
@@ -17,9 +15,11 @@ public class SceneLoader : MonoBehaviour
 
     float currentFakeProgress = 0f;
 
+    [Header("Loading UI")]
+    [SerializeField] private GameObject loadingScreen;
+    [SerializeField] private Slider progressBar;
 
     [Header("Loading logic")]
-    [SerializeField] bool showLoadingScreen = true;
     [SerializeField] private bool useRealLoading = true;
     [SerializeField] private float fakeLoadSpeed = 1.0f;
     [SerializeField] private float fakeLoadTime = 3.5f;
@@ -68,6 +68,7 @@ public class SceneLoader : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        HideUI();
     }
 
     private IEnumerator Start()
@@ -82,7 +83,7 @@ public class SceneLoader : MonoBehaviour
             }
             else
             {
-                LoadSceneWithAsync(debugSceneToLoadOnStart);
+                LoadSceneWithAsync(debugSceneToLoadOnStart, true);
             }
         }
     }
@@ -109,7 +110,9 @@ public class SceneLoader : MonoBehaviour
     }
 
     #region async loading overloads
-    public void LoadSceneWithAsync(string sceneName)
+    public void LoadSceneWithAsync(string sceneName) => LoadSceneWithAsync(sceneName, true); // Just for ui element convinience
+    public void LoadSceneWithAsync(int sceneIndex) => LoadSceneWithAsync(sceneIndex, true); // Just for ui element convinience
+    public void LoadSceneWithAsync(string sceneName, bool showUI = true)
     {
         if (!SceneExists(sceneName))
         {
@@ -118,12 +121,12 @@ public class SceneLoader : MonoBehaviour
         }
         if (isLoading)
         {
-            Debug.LogWarning("Already loading a scene!");
+            Debug.LogWarning("Already performing a loading a scene!");
             return;
         }
-        StartCoroutine(LoadSceneAsyncEnumerator(sceneName));
+        StartCoroutine(LoadSceneAsyncEnumerator(sceneName, showUI));
     }
-    public void LoadSceneWithAsync(int sceneIndex)
+    public void LoadSceneWithAsync(int sceneIndex, bool showUI = true)
     {
         if (!SceneExists(sceneIndex))
         {
@@ -135,9 +138,9 @@ public class SceneLoader : MonoBehaviour
             Debug.LogWarning("Already loading a scene!");
             return;
         }
-        StartCoroutine(LoadSceneAsyncEnumerator(sceneIndex));
+        StartCoroutine(LoadSceneAsyncEnumerator(sceneIndex, showUI));
     }
-    public void LoadSceneWithAsync(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
+    public void LoadSceneWithAsync(string sceneName, bool showUI = true, LoadSceneMode mode = LoadSceneMode.Single)
     {
         if (!SceneExists(sceneName))
         {
@@ -150,7 +153,16 @@ public class SceneLoader : MonoBehaviour
             return;
         }
         // Additive & Single load types
-        StartCoroutine(LoadSceneAsyncEnumerator(sceneName, mode));
+        StartCoroutine(LoadSceneAsyncEnumerator(sceneName,showUI, mode));
+    }
+    public void PerformAsyncOperation(AsyncOperation op, bool showUI = true)
+    {
+        if (isLoading)
+        {
+            Debug.LogWarning("Already performing an operation!");
+            return;
+        }
+        StartCoroutine(PerformAsyncLoading(op, showUI));
     }
     #endregion
 
@@ -169,15 +181,34 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
+    #region Helpers
+    public void ShowUI()
+    {
+        if (loadingScreen != null)
+            loadingScreen.SetActive(true);
+    }
 
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName));
-    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex));
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode));
-    IEnumerator PerformAsyncLoading(AsyncOperation op)
+    public void HideUI()
+    {
+        if (loadingScreen != null)
+            loadingScreen.SetActive(false);
+    }
+
+    public void SetProgress(float value)
+    {
+        if (progressBar != null)
+            progressBar.value = value;
+    }
+    #endregion
+
+
+    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
+    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
+    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
+    IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
     {
         // Show loading UI if loading screen exists AND showLoadingScreen is checked
-        if (showLoadingScreen)
-            LoadingManager.Instance.ShowUI();
+        if (showLoadUI) ShowUI();
 
         // Start loading scene in background but don't allow to switch yet
         async = op;
@@ -186,7 +217,7 @@ public class SceneLoader : MonoBehaviour
         isLoading = true;
 
         // reset progress
-        LoadingManager.Instance.SetProgress(0f);
+        SetProgress(0f);
 
         //action start
         OnLoadStarted?.Invoke();
@@ -197,7 +228,7 @@ public class SceneLoader : MonoBehaviour
             {
                 // progress goes from 0 to 0.9 before activation
                 float progress = Mathf.Clamp01(async.progress / 0.9f);
-                LoadingManager.Instance.SetProgress(progress);
+                SetProgress(progress);
 
                 // action progress
                 OnLoadProgress?.Invoke(progress);
@@ -214,7 +245,7 @@ public class SceneLoader : MonoBehaviour
                 {
                     float progress = Time.deltaTime * fakeLoadSpeed;
                     currentFakeProgress += progress;
-                    LoadingManager.Instance.SetProgress(currentFakeProgress);
+                    SetProgress(currentFakeProgress);
 
                     if (!showRealProgressOnAction)
                     {
@@ -226,7 +257,7 @@ public class SceneLoader : MonoBehaviour
                 }
                 yield return new WaitForSeconds(fakeLoadTime);
                 currentFakeProgress = 1f;
-                LoadingManager.Instance.SetProgress(1f);
+                SetProgress(1f);
                 yield return new WaitForSeconds(0.5f); // small delay
                 async.allowSceneActivation = true; // switch scene
             }
@@ -234,6 +265,6 @@ public class SceneLoader : MonoBehaviour
         isLoading = false;
         //action finished
         OnLoadFinished?.Invoke();
-        LoadingManager.Instance.HideUI();
+        HideUI();
     }
 }
