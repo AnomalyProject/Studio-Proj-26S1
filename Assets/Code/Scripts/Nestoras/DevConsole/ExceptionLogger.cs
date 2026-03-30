@@ -59,7 +59,7 @@ public static class ExceptionLogger
         Propagate(entry);
     }
 
-    private static void WriteToFile(string text)
+    public static void WriteToFile(string text)
     {
         try { lock(fileLock) File.AppendAllText(logFilePath, $"{text}\n\n"); }
         catch { }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
+using Steamworks;
 
 
 /// <summary>
@@ -106,8 +107,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             hostPlayerID = playerID;
             // todo: replace with real steamID
-            ulong tempSteamID = (ulong)playerID.GetHashCode();
-            AddPlayerToSession(playerID, tempSteamID, "Host Player", isHost: true);
+            ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
+            string hostName = SteamFriends.GetPersonaName();
+            AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
             Debug.Log("[SessionManager] Host registered as first player.");
         }
     }
@@ -148,7 +150,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         sessionData = new SessionData
         {
-            HostSteamID = 0, // todo: this is a placeholder. to be replaced once Steamworks is wired in
+            HostSteamID =  SteamUser.GetSteamID().m_SteamID,
             MapName = "Default",
             GameMode = "Default",
             MaxPlayers = 4
@@ -158,6 +160,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
+        
+        // the null check ensures that CreateSession will run even if steam is not available
+        // or the build doesn't run on steam
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.CreateSteamLobby(sessionData.MaxPlayers);
+        }
     }
 
     /// <summary>
@@ -212,7 +221,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// derived from PlayerID hash until Steamworks integration is ready.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(RPCInfo info = default)
+    public void RequestJoinSession(ulong steamID, string displayName, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
 
@@ -240,12 +249,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are already in session.");
             return;
         }
-
-        // todo: replace with real steamID
-        ulong tempSteamId = (ulong)sender.GetHashCode();
-        // if validation above passes, then add the player into the session
-        string displayName = $"Player_{sender}";
-        AddPlayerToSession(sender, tempSteamId, displayName);
+        
+        AddPlayerToSession(sender, steamID, displayName);
 
         Debug.Log($"[SessionManager] Join approved for PlayerID: {sender}");
     }
