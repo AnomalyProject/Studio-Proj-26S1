@@ -231,9 +231,17 @@ public class Inventory
     #endregion
 
     #region Remove Methods
-    public void Remove(ItemData itemData, int quantity)
+    /// <summary>
+    /// Removes the specified quantity of items matching the given item data from the collection.
+    /// </summary>
+    /// <remarks>If the requested quantity exceeds the available amount, all matching items are removed and
+    /// the actual number removed is returned.</remarks>
+    /// <param name="itemData">The item data identifying the type of item to remove. Cannot be null.</param>
+    /// <param name="quantity">The number of items to remove. Must be greater than zero.</param>
+    /// <returns>The total number of items actually removed. Returns 0 if no items were removed.</returns>
+    public int Remove(ItemData itemData, int quantity)
     {
-        if(quantity <= 0) return;
+        if(quantity <= 0) return 0;
 
         List<int> sameItemSlots = FindSlotsWithItem(itemData);
         int totalAmountRemoved = 0;
@@ -257,15 +265,31 @@ public class Inventory
             if (quantity <= 0)
             {
                 OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
-                return;
+                return totalAmountRemoved;
             }
         }
 
         if(totalAmountRemoved > 0)
         OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
+
+        return totalAmountRemoved;
     }
-    public void RemoveOne(ItemData itemData) => Remove(itemData, 1);
-    public void Remove(ItemStack stack) => Remove(stack.ItemData, stack.Quantity);
+
+    /// <summary>
+    /// Removes the specified quantity of items from the collection based on the provided item stack.
+    /// </summary>
+    /// <param name="stack">The item stack specifying the item type and quantity to remove. The stack's quantity determines how many items
+    /// to remove.</param>
+    /// <returns>The number of items that were actually removed from the collection. This value may be less than the requested
+    /// quantity if insufficient items are available.</returns>
+    public int Remove(ItemStack stack) => Remove(stack.ItemData, stack.Quantity);
+
+    /// <summary>
+    /// Removes one of the specified item from the collection.
+    /// </summary>
+    /// <param name="itemData">The item to remove from the collection. Cannot be null.</param>
+    /// <returns>true if the item was successfully removed. Otherwise, false.</returns>
+    public bool RemoveOne(ItemData itemData) => Remove(itemData, 1) > 0;
 
     #endregion
 
