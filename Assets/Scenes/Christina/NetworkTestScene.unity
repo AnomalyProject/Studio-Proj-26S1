@@ -380,100 +380,6 @@ Transform:
   - {fileID: 1795472075}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &618966237
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 618966240}
-  - component: {fileID: 618966239}
-  - component: {fileID: 618966241}
-  - component: {fileID: 618966242}
-  m_Layer: 0
-  m_Name: Network Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &618966239
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 618966237}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: baacc2bfe126d544691d4f39fa3785f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkManager
-  _stopPlayingOnDisconnect: 0
-  _startServerFlags: 9
-  _startClientFlags: 7
-  _cookieScope: 1
-  _dontDestroyOnLoad: 0
-  _transport: {fileID: 618966241}
-  _networkPrefabs: {fileID: 11400000, guid: 0fabbdcf850938741a22f4bf65319ec4, type: 2}
-  _networkAssets: {fileID: 11400000, guid: 8a41eeed42a33fa4ea46e2f06e98e67a, type: 2}
-  _networkRules: {fileID: 11400000, guid: d8799083b96579a42b8b2d03e4ceae98, type: 2}
-  _visibilityRules: {fileID: 11400000, guid: 8f014a5bd8dc68646a2a3c0b18c5bbd8, type: 2}
-  _authenticator: {fileID: 0}
-  _tickRate: 20
-  _patchLingeringProcessBug: 0
---- !u!4 &618966240
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 618966237}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.52539, y: 0, z: -13.25646}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &618966241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 618966237}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ccc454d6a19ac140b15f8d619d0fb5e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Steam.Runtime::PurrNet.Steam.SteamTransport
-  _serverPort: 5003
-  _dedicatedServer: 0
-  _peerToPeer: 1
-  _address: 127.0.0.1
---- !u!114 &618966242
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 618966237}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc64ff707d914a64e95f2ac0bf554c09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.UDPTransport
-  _automaticCloudSetups:
-    _adaptToEdgegap: 1
-  _serverPort: 5000
-  _maxConnections: 100
-  _address: 127.0.0.1
-  _timeoutInSeconds: 5
-  _pollEventsInUpdate: 0
 --- !u!1 &626726365
 GameObject:
   m_ObjectHideFlags: 0
@@ -1146,6 +1052,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &9067903857306638135
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_Name
+      value: Network Manager
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.52539
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -13.25646
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1156,7 +1119,7 @@ SceneRoots:
   - {fileID: 434718061}
   - {fileID: 1565289021}
   - {fileID: 626726366}
-  - {fileID: 618966240}
+  - {fileID: 9067903857306638135}
   - {fileID: 407181793}
   - {fileID: 1791902484}
   - {fileID: 1726847574}
