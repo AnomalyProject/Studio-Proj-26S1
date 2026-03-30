@@ -21,7 +21,7 @@ public class PlayerSpawnManager : NetworkBehaviour
 
             bool spawned = false;
 
-            for (int i = 0; i < spawnPoint.Length; i++)
+            /*for (int i = 0; i < spawnPoint.Length; i++)
             {
                 Vector3 pos = spawnPoint[i].transform.position;
 
@@ -34,7 +34,7 @@ public class PlayerSpawnManager : NetworkBehaviour
                 spawned = true;
                 break;
                 
-            }
+            }*/
 
             if (!spawned)
             {

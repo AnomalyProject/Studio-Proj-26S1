@@ -211,6 +211,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         sessionData.ResetReadyStates();
         Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
     }
+    
+    /// <summary>
+    /// Given a Steam ID, returns the PurrNet PlayerID.
+    /// </summary>
+    public PlayerID? GetPlayerIDForSteam(ulong steamID)
+    {
+        foreach (var entry in playerConnectionMap)
+        {
+            if (entry.Value == steamID) return entry.Key;
+        }
+        return null;
+    }
 
     /// <summary>
     /// Client-to-server RPC: requests to join the session. Validates in order:
