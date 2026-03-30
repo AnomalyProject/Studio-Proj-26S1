@@ -76,12 +76,6 @@ public class ItemStack : IReadOnlyItemStack
     /// <returns>true if one item was successfully removed; otherwise, false.</returns>
     public bool TryRemoveOne() => RemoveFromStack(1) == 1;
     public bool IsFull() => Quantity >= ItemData.MaxStackSize;
-
-    /// <summary>
-    /// Determines whether the specified amount can be added without exceeding the maximum stack size.
-    /// </summary>
-    /// <param name="amount">The number of items to check for available space in the stack. Must be zero or greater.</param>
-    /// <returns>true if the specified amount can be added. Otherwise false.</returns>
     public bool CanFit(int amount) => Quantity + amount <= ItemData.MaxStackSize;
     public int GetQuantity() => Quantity;
     public ItemData GetItemData() => ItemData;
@@ -96,6 +90,11 @@ public interface IReadOnlyItemStack
     ItemData GetItemData();
     bool IsFull();
     bool IsEmpty();
+    /// <summary>
+    /// Determines whether the specified amount can be added without exceeding the maximum stack size.
+    /// </summary>
+    /// <param name="amount">The number of items to check for available space in the stack. Must be zero or greater.</param>
+    /// <returns>true if the specified amount can be added. Otherwise false.</returns>
     bool CanFit(int amount);
     int GetRemainingCapacity();
 }
