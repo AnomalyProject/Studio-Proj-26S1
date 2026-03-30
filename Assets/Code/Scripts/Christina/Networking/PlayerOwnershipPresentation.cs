@@ -13,12 +13,12 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
 
     protected override void OnSpawned(bool asServer)
     {
-        if (!asServer) ApplyOwnershipState();
+        //if (!asServer) ApplyOwnershipState();
     }
 
     protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
     {
-        if (!asServer) ApplyOwnershipState();
+       if (!asServer) ApplyOwnershipState();
     }
 
     private void ApplyOwnershipState()
