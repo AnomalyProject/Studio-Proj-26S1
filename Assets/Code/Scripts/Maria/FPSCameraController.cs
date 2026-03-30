@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -34,7 +35,26 @@ public class FPSCameraController : MonoBehaviour
 
         if (inputHandler == null)
             Debug.LogError("[FPSCameraController] Could not find FPSInputHandler. " + "Ensure it is on the Player root GameObject.");
+    }
 
+    private void Start()
+    {
+        // christina: if we are not the owner, disable the camera and audio listener
+        // so only the owning player sees through this camera
+        if (inputHandler == null || !inputHandler.isOwner)
+        {
+            Camera camera = GetComponent<Camera>();
+            if (camera != null) camera.enabled = false;
+
+            AudioListener listener = GetComponent<AudioListener>();
+            if (listener != null) listener.enabled = false;
+
+            enabled = false;
+            return;
+        }
+        
+        // christina: moved the LockCursot in Start because we need to check ownership first (inputHandler.isOwner)
+        // in Awake PurrNet may not have assigned ownership yet and this can cause issues.
         LockCursor();
     }
 
