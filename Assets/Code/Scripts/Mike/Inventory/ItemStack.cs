@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class ItemStack
@@ -6,24 +7,26 @@ public class ItemStack
 
     // Fields
     ItemData itemData;
-    int quantity = 0;
+    int quantity;
 
     //Properties
     public ItemData ItemData => itemData;
     public int Quantity => quantity;
     public bool IsEmpty => quantity <= 0;
+    public int RemainingCapacity => itemData.MaxStackSize - quantity;
 
     #endregion
 
     #region Constructors
     public ItemStack(ItemData itemData, int quantity)
     {
-        this.itemData = itemData;
-        this.quantity = quantity;
+        this.itemData = itemData ?? throw new ArgumentNullException(nameof(itemData));
+        this.quantity = Math.Clamp(quantity, 0, itemData.MaxStackSize);
     }
     public ItemStack(ItemData itemData)
     {
         this.itemData = itemData;
+        quantity = 1;
     }
     #endregion
 
@@ -79,5 +82,12 @@ public class ItemStack
     /// <returns>true if one item was successfully removed; otherwise, false.</returns>
     public bool TryRemoveOne() => RemoveFromStack(1) == 1;
     public bool IsFull() => quantity >= itemData.MaxStackSize;
+
+    /// <summary>
+    /// Determines whether the specified amount can be added without exceeding the maximum stack size.
+    /// </summary>
+    /// <param name="amount">The number of items to check for available space in the stack. Must be zero or greater.</param>
+    /// <returns>true if the specified amount can be added. Otherwise false.</returns>
+    public bool CanFit(int amount) => quantity + amount <= itemData.MaxStackSize;
     #endregion
 }
