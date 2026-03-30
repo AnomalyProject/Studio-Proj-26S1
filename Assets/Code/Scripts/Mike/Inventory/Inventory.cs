@@ -150,7 +150,7 @@ public class Inventory
     #endregion
 
     #region Get Methods
-    public bool TryGet(int slotIndex, out ItemStack itemStack)
+    public bool TryGet(int slotIndex, out IReadOnlyItemStack itemStack)
     {
         itemStack = null;
 
@@ -161,7 +161,7 @@ public class Inventory
         if(itemStack != null) return true;
         else return false;
     }
-    public bool TryGet(ItemData itemData, out ItemStack itemStack, out int slotIndex)
+    public bool TryGet(ItemData itemData, out IReadOnlyItemStack itemStack, out int slotIndex)
     {
         slotIndex = -1;
         itemStack = null;

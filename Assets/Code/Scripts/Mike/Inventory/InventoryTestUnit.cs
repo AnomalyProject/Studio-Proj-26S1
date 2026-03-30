@@ -17,7 +17,7 @@ public class InventoryTestUnit : MonoBehaviour
         int totalAdded = inventory.Add(inputStack);
         Debug.Log("total added: " + totalAdded);
         Debug.Log("Input Stack Quantity: " + inputStack.Quantity);
-        Debug.Log("Got item: " + inventory.TryGet(testItem, out ItemStack stack, out int slotIndex) + $" {stack.ItemData.name} in index {slotIndex}");
+        Debug.Log("Got item: " + inventory.TryGet(testItem, out var stack, out int slotIndex) + $" {stack.GetItemData().name} in index {slotIndex}");
         inventory.SwapSlots(1, inventory.TotalSlots - 1);
         inventory.Remove(testItem, 5);
         inventory.SwapSlots(0, inventory.TotalSlots - 1);
