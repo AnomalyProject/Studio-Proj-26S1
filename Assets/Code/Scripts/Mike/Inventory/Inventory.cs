@@ -101,11 +101,10 @@ public class Inventory
         return totalAmountAdded;
     }
     /// <summary>
-    /// Adds the specified quantity of the given item to the collection.
+    /// Adds one of the given item to the collection.
     /// </summary>
     /// <param name="itemData">The item to add to the collection. Cannot be null.</param>
-    /// <param name="quantity">The number of items to add. Must be greater than zero.</param>
-    /// <returns>The total quantity successfully received after the addition.</returns>
+    /// <returns>true if successful.</returns>
     public bool TryAddOne(ItemData itemData) => Add(itemData, 1) > 0;
     #endregion
 
