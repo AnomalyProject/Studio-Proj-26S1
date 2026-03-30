@@ -294,6 +294,11 @@ public class Inventory
     #endregion
 
     #region Clear Methods
+    /// <summary>
+    /// Clears the contents of the specified slot, setting it to null if the index is valid.
+    /// </summary>
+    /// <param name="slotIndex">The index of the slot to clear. Must be greater than or equal to 0 and less than the total number of
+    /// slots.</param>
     public void ClearSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
@@ -400,6 +405,13 @@ public class Inventory
         slots[toSlot] = temp;
         OnSlotsMoved?.Invoke();
     }
+
+    /// <summary>
+    /// Determines whether the collection contains at least one slot with the specified item and a quantity greater than
+    /// zero.
+    /// </summary>
+    /// <param name="data">The item to locate in the collection. Cannot be null.</param>
+    /// <returns>true if a slot containing the specified item with a quantity greater than zero is found; otherwise, false.</returns>
     public bool Contains(ItemData data) => slots.Any(s => s != null && s.ItemData == data && s.Quantity > 0);
     #endregion
 }
