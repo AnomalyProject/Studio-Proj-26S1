@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections;
-using System.Text;
 using System.Linq;
+using System.Text;
 using System;
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
@@ -18,44 +18,53 @@ using TMPro;
 /// </summary>
 public class DevConsole : MonoBehaviour
 {
+    #region Declarations
+    #region UI
     [Header("UI")]
-    [Tooltip("The root gameobject of the console. MUST NOT CONTAIN THIS SCRIPT. Used for toggling the console window.")]
-    [SerializeField] private GameObject consoleRoot;
-    [Tooltip("The TMP Input Field where the user writes commands")]
-    [SerializeField] private TMP_InputField commandLine;
-    [Tooltip("The scrollRect containing the log TextField")]
-    [SerializeField] private ScrollRect logArea;
-    [Tooltip("The TMP Text Field inside the \'Content\' gameobject of the logArea")]
+    private GameObject root;
+    private GameObject screen;
+    private HorizontalOrVerticalLayoutGroup screenLayoutGroup;
     [SerializeField] private GameObject logPrefab;
-    [SerializeField] private Transform content;
+    private ScrollRect logsScrollRect;
+    private Transform logsContent;
+    private GameObject stackTracePanel;
+    private TMP_InputField stackTraceInputField;
+    private RectTransform stackTraceContentTransform;
+    private RectTransform stackTraceTransform;
+    private TMP_InputField commandLine;
+    private LogTypeToggle logsToggle;
+    private LogTypeToggle warningsToggle;
+    private LogTypeToggle errorsToggle;
+    #endregion
 
+    #region Input
     [Header("Input")]
     private IA_DevConsole inputActions;
     private InputAction submitAction;
     private InputAction scrollAction;
+    #endregion
 
+    #region Settings
     [Header("Settings")]
     [Tooltip("How many logs to keep in the console at once. -1 = Infinite")] [Min(-1)]
     [SerializeField] private int maxLogs = -1;
     [Tooltip("How many commands to keep in history. -1 = Infinite")] [Min(-1)]
     [SerializeField] private int historyDepth = 50;
-    
-    private static bool logCommands = true;
-    private int historyIndex = -1;
-    private bool isOpen = false;
-    private List<string> commandHistory = new List<string>();
-    private bool cursorVisibleLastToggle;
+    #endregion
 
-    [Header("Events")]
-    public static Action<string[]> onCommandEntered;
+    #region Events
+    [Header("Events")] [Space(5)]
     public UnityEvent onConsoleToggledOn;
     public UnityEvent onConsoleToggledOff;
     public UnityEvent<LogEntry> onLogReceived;
+    public static Action<string[]> onCommandEntered;
+    #endregion
 
+    #region Structures
     [Header("Structures")]
     private static readonly List<DevConsole> devConsoles = new List<DevConsole>();
-    private readonly Queue<GameObject> logObjects = new();
-    private readonly Queue<LogEntry> logs = new();
+    private readonly Queue<GameObject> logObjects = new Queue<GameObject>();
+    private readonly Queue<LogEntry> logs = new Queue<LogEntry>();
     [Serializable]
     public class LogEntry
     {
@@ -65,7 +74,8 @@ public class DevConsole : MonoBehaviour
         
         public DateTime timestamp;
         public TextMeshProUGUI textComponent;
-        public bool showStackTrace;
+        public bool isCommand;
+        public Image background;
 
         public LogEntry(string message = null, string stackTrace = null, LogType type = default)
         {
@@ -111,7 +121,9 @@ public class DevConsole : MonoBehaviour
 
         public void Execute(string[] args) => callback?.Invoke(args);
     }
+    #endregion
 
+    #region Multi-threaded logging
     [Header("Multi-threaded logging")]
     private static int mainThreadId;
     private static readonly Queue<LogEntry> mainThreadLogQueue = new();
@@ -120,22 +132,186 @@ public class DevConsole : MonoBehaviour
     {
         public static bool IsMainThread => System.Threading.Thread.CurrentThread.ManagedThreadId == mainThreadId;
     }
+    #endregion
 
-    #region Attach / Detach
+    #region Console State
+    [Header("Console State")]
+    private bool isOpen;
+    private static bool logCommands = true; // echo
+    private bool screenIsVertical;
+    private bool showLogs = true;
+    private bool showWarnings = true;
+    private bool showErrors = true;
+    private int historyIndex = -1;
+    private List<string> commandHistory = new List<string>();
+    private bool cursorVisibleLastToggle;
+    public static Dictionary<LogType, Sprite> icons = new Dictionary<LogType, Sprite>();
+    private LogEntry focusedEntry;
+    #endregion
+    #endregion
+
+    #region Init
     private void Awake()
     {
+        // Set up UI references
+        root = transform.GetChild(0).gameObject;
+        screen = root.transform.GetChild(0).gameObject;
+        screen.TryGetComponent(out screenLayoutGroup);
+        commandLine = root.transform.GetChild(1).GetComponentInChildren<TMP_InputField>(true);
+        screen.transform.GetChild(0).TryGetComponent(out logsScrollRect);
+        logsContent = logsScrollRect.content;
+        stackTracePanel = screen.transform.GetChild(1).gameObject;
+        stackTraceInputField = stackTracePanel.GetComponentInChildren<TMP_InputField>(true);
+        foreach (LogTypeToggle toggleButton in root.GetComponentsInChildren<LogTypeToggle>(true))
+        {
+            switch (toggleButton.type)
+            {
+                case LogType.Log:
+                    logsToggle = toggleButton;
+                    break;
+                case LogType.Warning:
+                    warningsToggle = toggleButton; break;
+                case LogType.Error:
+                case LogType.Exception:
+                case LogType.Assert:
+                    errorsToggle = toggleButton;
+                    break;
+            }
+        }
+
+        screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
+        stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
+        stackTraceTransform = (RectTransform)stackTraceInputField.transform;
+        // Enforce text wrapping for stack trace input field
+        stackTraceInputField.textComponent.textWrappingMode = TextWrappingModes.Normal;
+
+        // Instance specific assignments
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         commands["cls"].callback += ClearScreen;
 
+        // Input
         inputActions = new IA_DevConsole();
         submitAction = inputActions.DevConsole.Submit;
         scrollAction = inputActions.DevConsole.ScrollHistory;
     }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    private static void FetchIcons()
+    {
+        icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/log"));
+        icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/warning"));
+        Sprite error = Resources.Load<Sprite>("DevConsole/error");
+        icons.Add(LogType.Error, error);
+        icons.Add(LogType.Exception, error);
+        icons.Add(LogType.Assert, error);
+    }
+
+    // Register some basic internal commands
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    private static void InternalCommands()
+    {
+        RegisterCommand("cls", new CommandData("Clears the screen.", args => { }));
+        RegisterCommand("exit", new CommandData("Closes the game.", args =>
+        {
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.ExitPlaymode();
+#endif
+        }, "Will also exit playmode in the editor."));
+        RegisterCommand("help", new CommandData("Shows this list. Gives extra info about specific commands.", args =>
+        {
+            StringBuilder sb = new StringBuilder();
+
+            // Show all commands
+            if (args.Length < 1)
+            {
+                sb.AppendLine("<b>Available Commands:</b>");
+                foreach (KeyValuePair<string, CommandData> entry in commands.OrderBy(c => c.Key)) sb.AppendLine($"<color=#00FFFF>{entry.Key}</color><pos=10em>: {entry.Value.description}");
+
+                Debug.Log(sb.ToString());
+                return;
+            }
+            if (TryGetCommand(args[0], out CommandData command))
+            {
+                sb.AppendLine($"<b><color=#00FFFF>{args[0].ToLower()}</color></b>");
+                sb.AppendLine(command.description);
+                if (!string.IsNullOrEmpty(command.manual)) sb.AppendLine(command.manual);
+
+                Debug.Log(sb.ToString());
+            }
+            else Debug.LogWarning($"Unknown command: {args[0]}");
+        }));
+        RegisterCommand("echo", new CommandData("Log a string.", args =>
+        {
+            if (args.Length < 1)
+            {
+                Debug.Log($"ECHO is {(logCommands ? "on" : "off")}.");
+                return;
+            }
+            switch (args[0].ToLower())
+            {
+                case "on":
+                    logCommands = true;
+                    break;
+                case "off":
+                    logCommands = false;
+                    break;
+                default:
+                    Debug.Log(args[0]);
+                    break;
+            }
+        }, "Passing <color=green>on</color>/<color=green>off</color> as arguments toggles automatic command logging. You may use '@' before your command to suppress the echo."));
+        RegisterCommand("exception", new CommandData("Causes an exception.", args =>
+        {
+            switch (args[0])
+            {
+                case "null":
+                    object obj = null;
+                    obj.ToString();
+                    break;
+
+                case "divide0":
+                    int x = 0;
+                    int y = 10 / x;
+                    break;
+
+                case "tasksetup":
+                    Task.Run(() => throw new Exception("Task exception!"));
+                    break;
+
+                case "taskflush":
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    break;
+
+                case "stack":
+                    StackOverflow();
+                    break;
+
+                case "crash":
+                    Environment.FailFast("Forced crash via command");
+                    break;
+
+                default:
+                    throw new Exception("Test exception (Unity handled)");
+            }
+        }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection.\n<color=green>stack</color> causes a stack overflow.\n<color=green>crash</color> crashes the running process."));
+    }
+    private static void StackOverflow() => StackOverflow();
+    private void ClearScreen(string[] args)
+    {
+        while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
+        logs.Clear();
+        if (focusedEntry != null) OnEntryClicked(focusedEntry);
+    }
+    #endregion
+
+    #region Attach / Detach
     private void OnEnable()
     {
         devConsoles.Add(this);
 
-        onCommandEntered += CheckForBuiltInCommands;
+        onCommandEntered += TryRunningAsBuiltInCommand;
 
         inputActions.UI.ToggleConsole.performed += OnToggleConsole;
         submitAction.performed += OnSubmit;
@@ -150,7 +326,7 @@ public class DevConsole : MonoBehaviour
     {
         devConsoles.Remove(this);
 
-        onCommandEntered -= CheckForBuiltInCommands;
+        onCommandEntered -= TryRunningAsBuiltInCommand;
 
         inputActions.UI.ToggleConsole.performed -= OnToggleConsole;
         submitAction.performed -= OnSubmit;
@@ -164,7 +340,7 @@ public class DevConsole : MonoBehaviour
     private void OnToggleConsole(InputAction.CallbackContext context)
     {
         isOpen = !isOpen;
-        consoleRoot.SetActive(isOpen);
+        root.SetActive(isOpen);
 
         if (isOpen)
         {
@@ -201,7 +377,7 @@ public class DevConsole : MonoBehaviour
         if (historyDepth >= 0 && commandHistory.Count -1 >= historyDepth) commandHistory.RemoveAt(0);
         historyIndex = commandHistory.Count;
 
-        if (logCommands && input[0] != '@') Log(new LogEntry($"> {input}", "", LogType.Log), false); // Suppress echo optionally
+        if (logCommands && input[0] != '@') Log(new LogEntry($"> {input}", "", LogType.Log), true); // Suppress echo optionally
 
         commandLine.text = "";
         commandLine.ActivateInputField();
@@ -279,13 +455,60 @@ public class DevConsole : MonoBehaviour
     }
     #endregion
 
+    #region Toggling
+    public void RotateScreenLayout()
+    {
+        screenIsVertical = !screenIsVertical;
+        DestroyImmediate(screenLayoutGroup);
+        if (screenIsVertical) screenLayoutGroup = screen.AddComponent<VerticalLayoutGroup>();
+        else screenLayoutGroup = screen.AddComponent<HorizontalLayoutGroup>();
+        screenLayoutGroup.childControlWidth = true;
+        screenLayoutGroup.childControlHeight = true;
+    }
+    public void ToggleLogs()
+    {
+        showLogs = !showLogs;
+        logsToggle.Toggle(showLogs);
+        RefreshLogVisibility();
+    }
+    public void ToggleWarnings()
+    {
+        showWarnings = !showWarnings;
+        warningsToggle.Toggle(showWarnings);
+        RefreshLogVisibility();
+    }
+    public void ToggleError()
+    {
+        showErrors = !showErrors;
+        errorsToggle.Toggle(showErrors);
+        RefreshLogVisibility();
+    }
+    private bool ShouldShow(LogEntry entry) => entry.isCommand || entry.type switch
+    {
+        LogType.Log => showLogs,
+        LogType.Warning => showWarnings,
+        LogType.Error => showErrors,
+        LogType.Exception => showErrors,
+        LogType.Assert => showErrors,
+        _ => true
+    };
+    private void RefreshLogVisibility()
+    {
+        foreach (LogEntry entry in logs)
+        {
+            if (entry.textComponent != null) entry.textComponent.gameObject.SetActive(ShouldShow(entry));
+        }
+        if (focusedEntry != null && !ShouldShow(focusedEntry)) OnEntryClicked(focusedEntry);
+    }
+    #endregion
+
     #region Logging
-    public static void Propagate(LogEntry entry, bool includeStackTrace = true)
+    public static void Propagate(LogEntry entry, bool isCommand = false)
     {
         if (devConsoles.Count == 0) return;
 
         // Log instantly if on main thread, otherwise enqueue for next update
-        if (UnityMainThreadDispatcher.IsMainThread) foreach (var console in devConsoles) console.Log(entry, includeStackTrace);
+        if (UnityMainThreadDispatcher.IsMainThread) foreach (DevConsole console in devConsoles) console.Log(entry, isCommand);
         else lock (queueLock) mainThreadLogQueue.Enqueue(entry);
     }
     private void Update()
@@ -302,9 +525,14 @@ public class DevConsole : MonoBehaviour
 
             if (entry != null) Log(entry);
         }
+
+        // Manualy update scroll rect content height so that it works with the input field
+        stackTraceContentTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, stackTraceTransform.rect.height + 10);
     }
-    private void Log(LogEntry entry, bool includeStackTrace = true)
+    private void Log(LogEntry entry, bool isCommand = false)
     {
+        if (entry.message == null || entry.stackTrace == null) return;
+
         // Enforce max logs and reuse oldest log GameObject
         GameObject log = null;
         if (maxLogs >= 0 && logs.Count >= maxLogs)
@@ -313,147 +541,75 @@ public class DevConsole : MonoBehaviour
             log = logObjects.Dequeue();
             log.transform.SetAsLastSibling();
         }
-        else log = Instantiate(logPrefab, content);
+        else log = Instantiate(logPrefab, logsContent);
 
         entry.textComponent = log.GetComponent<TextMeshProUGUI>();
         AdvancedButton button = log.GetComponent<AdvancedButton>();
-        UpdateLogEntryUIText(entry); // Populate text
+        Image icon = log.GetComponentsInChildren<Image>().First();
+        entry.background = log.GetComponentsInChildren<Image>().Last();
+        entry.isCommand = isCommand;
+
+        if (entry.isCommand)
+        {
+            // Hide icon
+            icon.gameObject.SetActive(false);
+            entry.textComponent.text = entry.message;
+        }
+        else
+        {
+            // Assign correct icon and append the first line of the stack trace
+            icon.sprite = icons[entry.type];
+            string stackPreview = entry.stackTrace?.Split('\n').Skip(1).FirstOrDefault() ?? entry.stackTrace ?? "";
+            entry.textComponent.text = $"<line-indent=1.5em>{entry.message}</line-indent><size=0.8em>\n{stackPreview}</size>";
+        }
 
         // Copy on right click
         button.OnRightClick.AddListener(() => GUIUtility.systemCopyBuffer = entry.Format(true, true));
-        // Add stack trace toggle on left click
-        if (includeStackTrace)
-        {
-            button.OnLeftClick.AddListener(() =>
-            {
-                entry.showStackTrace = !entry.showStackTrace;
-                UpdateLogEntryUIText(entry);
-            });
-        }
+        // Show stack trace on left click
+        if (!entry.isCommand) button.OnLeftClick.AddListener(() => OnEntryClicked(entry));
 
         logs.Enqueue(entry);
         logObjects.Enqueue(log);
 
         // Scroll to bottom if already near the bottom
-        if (logArea.verticalNormalizedPosition <= 0.05f) StartCoroutine(nameof(ScrollToBottomNextFrame));
-
+        if (logsScrollRect.verticalNormalizedPosition <= 0.05f) StartCoroutine(nameof(ScrollToBottomNextFrame));
+        
+        log.SetActive(ShouldShow(entry));
         onLogReceived?.Invoke(entry);
     }
-    private void UpdateLogEntryUIText(LogEntry entry)
+    private void OnEntryClicked(LogEntry entry)
     {
-        string color = entry.type switch
-        {
-            LogType.Error => "red",
-            LogType.Assert => "red",
-            LogType.Exception => "red",
-            LogType.Warning => "yellow",
-            _ => "white"
-        };
+        // Remove color from last focused entry
+        Color color = entry.background.color;
+        color.a = 0;
+        if (focusedEntry != null) focusedEntry.background.color = color;
 
-        entry.textComponent.text = $"<line-indent=0.5em><color={color}>{entry.message}</color></line-indent>";
-        if (entry.showStackTrace) entry.textComponent.text += $"<line-indent=0.5em><color={color}><size=0.8em><indent=1.2em>\n{entry.stackTrace}</indent></size></color></line-indent>";
+        if (focusedEntry == entry)
+        {
+            focusedEntry = null;
+            stackTracePanel.SetActive(false);
+        }
+        else
+        {
+            focusedEntry = entry;
+            stackTracePanel.SetActive(true);
+            stackTraceInputField.text = entry.Format(true, true);
+            color.a = 0.2f;
+            entry.background.color = color;
+        }
     }
     private IEnumerator ScrollToBottomNextFrame()
     {
         yield return null;
         Canvas.ForceUpdateCanvases();
-        logArea.verticalNormalizedPosition = 0f;
+        logsScrollRect.verticalNormalizedPosition = 0f;
     }
     #endregion
 
-    #region Commands
-    // Register some basic internal commands
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-    private static void InternalCommands()
-    {
-        RegisterCommand("cls", new CommandData("Clears the screen.", args => { }));
-        RegisterCommand("exit", new CommandData("Closes the game.", args =>
-        {
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.ExitPlaymode();
-#endif
-        }, "Will also exit playmode in the editor."));
-        RegisterCommand("help", new CommandData("Shows this list.", args =>
-        {
-            StringBuilder sb = new StringBuilder();
-
-            // Show all commands
-            if (args.Length < 1)
-            {
-                sb.AppendLine("<b>Available Commands:</b>");
-                foreach (KeyValuePair<string, CommandData> entry in commands.OrderBy(c => c.Key)) sb.AppendLine($"<color=#00FFFF>{entry.Key}</color><pos=10em>: {entry.Value.description}");
-
-                Debug.Log(sb.ToString());
-                return;
-            }
-            if (TryGetCommand(args[0], out CommandData command))
-            {
-                sb.AppendLine($"<b><color=#00FFFF>{args[0].ToLower()}</color></b>");
-                sb.AppendLine(command.description);
-                if (!string.IsNullOrEmpty(command.manual)) sb.AppendLine(command.manual);
-
-                Debug.Log(sb.ToString());
-            }
-            else Debug.LogWarning($"Unknown command: {args[0]}");
-        }, "You may pass a registered command as an argument to show more info about it."));
-        RegisterCommand("echo", new CommandData("Log a string.", args =>
-        {
-            if (args.Length < 1)
-            {
-                Debug.Log($"ECHO is {(logCommands ? "on" : "off")}.");
-                return;
-            }
-            switch (args[0].ToLower())
-            {
-                case "on":
-                    logCommands = true;
-                    break;
-                case "off":
-                    logCommands = false;
-                    break;
-                default:
-                    Debug.Log(args[0]);
-                    break;
-            }
-        }, "Passing <color=green>on</color>/<color=green>off</color> as arguments toggles automatic command logging. You may use '@' before your command to suppress the echo."));
-        RegisterCommand("exception", new CommandData("Causes an exception.", args =>
-        {
-            switch (args[0])
-            {
-                case "null":
-                    object obj = null;
-                    obj.ToString();
-                    break;
-
-                case "divide0":
-                    int x = 0;
-                    int y = 10 / x;
-                    break;
-
-                case "tasksetup":
-                    Task.Run(() => throw new Exception("Task exception!"));
-                    break;
-
-                case "taskflush":
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    break;
-
-                default:
-                    throw new Exception("Test exception (Unity handled)");
-            }
-        }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection."));
-    }
-    private void ClearScreen(string[] args)
-    {
-        while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
-    }
-
-    // Command API
+    #region Commands API
     public static void RegisterCommand(string name, CommandData commandData) => commands.TryAdd(name, commandData);
     public static bool TryGetCommand(string name, out CommandData commandData) => commands.TryGetValue(name.ToLower(), out commandData);
-    private void CheckForBuiltInCommands(string[] args)
+    private void TryRunningAsBuiltInCommand(string[] args)
     {
         if (args.Length == 0) return;
 
