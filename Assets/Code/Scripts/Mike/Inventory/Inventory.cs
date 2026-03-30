@@ -23,6 +23,7 @@ public class Inventory
 
     #endregion
 
+    #region Constructor
     public Inventory(int size, params ItemStack[] startingItems)
     {
         slots = new ItemStack[size];
@@ -36,6 +37,7 @@ public class Inventory
             Add(startingItems[i]);
         }
     }
+    #endregion
 
     #region Exposed Methods
 
