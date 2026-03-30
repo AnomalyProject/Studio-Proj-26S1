@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
@@ -36,6 +37,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     // Read-only access for UI and external systems. 
     public SessionData CurrentSession => sessionData;
+    
+    // server-side event fired when a player is added to the session.
+    // carries the PlayerID directly so spawn systems don't need reverse-lookups.
+    public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
+    public static event Action<PlayerID, ulong, string> OnServerPlayerRemoved;
 
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
@@ -185,6 +191,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         playerConnectionMap[playerID] = steamID;
 
         OnPlayerJoined_Client(steamID, displayName);
+        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
+
 
         if (!isHost)
         {
@@ -209,6 +217,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnPlayerLeft_Client(steamID, reason);
 
         sessionData.ResetReadyStates();
+        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
         Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
     }
     

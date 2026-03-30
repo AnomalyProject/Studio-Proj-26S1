@@ -106,7 +106,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sample text
+  m_text: John Doe
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -299,7 +299,7 @@ GameObject:
   - component: {fileID: 288975442859635402}
   - component: {fileID: 1494246198799042083}
   - component: {fileID: 3680812478694482278}
-  - component: {fileID: 7553935847373964581}
+  - component: {fileID: 1076114148990449078}
   - component: {fileID: 3412492635846844219}
   - component: {fileID: 3390244406132924047}
   - component: {fileID: 3674273088732647212}
@@ -403,7 +403,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   scanRange: 5
   debugGizmos: 1
---- !u!114 &7553935847373964581
+--- !u!114 &1076114148990449078
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -412,10 +412,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 4722490883632117968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25a6a2ed67cdca14490e98916fc05d0c, type: 3}
+  m_Script: {fileID: 11500000, guid: 013f154f80a389548b1bfc22961aeb1c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerVisibility
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerOwnershipPresentation
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  playerCamera: {fileID: 1415168984759268418}
+  playerAudioListener: {fileID: 7504813844628006609}
+  playerInput: {fileID: 3390244406132924047}
+  cameraController: {fileID: 8945130606974342615}
   bodyVisuals: {fileID: 5348312652502001726}
+  nameplateVisuals: {fileID: 2628281181172639720}
 --- !u!143 &3412492635846844219
 CharacterController:
   m_ObjectHideFlags: 0

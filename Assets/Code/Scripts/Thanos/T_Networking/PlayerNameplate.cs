@@ -8,48 +8,32 @@ public class PlayerNameplate : NetworkBehaviour
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private GameObject nameplateVisuals;
     
-    private FPSInputHandler inputHandler;
-    private Camera targetCamera;
-    
-    private void Awake()
-    {
-        inputHandler = GetComponentInParent<FPSInputHandler>();
-    }
-
-    void Start()
-    {
-        if (inputHandler == null) return;
-        
-        // hide nameplate for the owner
-        if (inputHandler.isOwner)
-        {
-            nameplateVisuals.SetActive(false);
-            enabled = false;
-            return;
-        }
-    }
-    
     /// <summary>
     /// Called by the spawn system or player setup to set the name.
     /// Kept as a public method so the name can be set after the object is created.
     /// </summary>
+    [ObserversRpc]
     public void SetName(string displayName)
     {
         nameText.text = displayName;
+    }
+    
+    public void SetVisible(bool visible)
+    {
+        nameplateVisuals.SetActive(visible);
     }
 
     // chose late update to avoid jittering
     private void LateUpdate()
     {
-        if (targetCamera == null)
-        {
-            // Camera.main returns the active camera to THIS machine
-            // so each client's active camera
-            targetCamera = Camera.main;
-            if (targetCamera == null) return;
-        }
+        if (nameplateVisuals == null || !nameplateVisuals.activeSelf) return;
+        
+        // Camera.main returns the active camera to THIS machine
+        // so each client's active camera
+        Camera camera = Camera.main;
+        if (camera == null) return;
 
         // rotate nameplate to face the camera
-        transform.forward = targetCamera.transform.forward;
+        transform.forward = camera.transform.forward;
     }
 }

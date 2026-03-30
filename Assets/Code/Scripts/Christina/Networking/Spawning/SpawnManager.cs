@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
+using System.Collections;
 
 public enum SpawnStrategy
 {
@@ -17,36 +18,88 @@ public class SpawnManager : MonoBehaviour
     private SpawnPoint[] spawnPoints;
     private int byTurnIndex = 0;
     
-    void Start()
+    private readonly Dictionary<PlayerID, NetworkIdentity> spawnedPlayers = new();
+
+    private void Awake()
     {
-        spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None);    
+        // moved spawnPoints on awake because we want to make sure that spawn points exist
+        // before anyone else 
+        spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None);
     }
 
+    void Start()
+    {
+        SpawnExistingPlayers();
+    }
+    
     private void OnEnable()
     {
-        SessionEvents.OnPlayerJoined += HandlePlayerJoined;
+        SessionManager.OnServerPlayerAdded += HandlePlayerAdded;
+        SessionManager.OnServerPlayerRemoved += HandlePlayerRemoved;
+        Debug.Log($"[SpawnManager] Spawn OnEnable run");
     }
 
     private void OnDisable()
     {
-        SessionEvents.OnPlayerJoined -= HandlePlayerJoined;
+        SessionManager.OnServerPlayerAdded -= HandlePlayerAdded;
+        SessionManager.OnServerPlayerRemoved -= HandlePlayerRemoved;
     }
 
-    private void HandlePlayerJoined(ulong steamID, string displayName)
+    private void HandlePlayerAdded(PlayerID playerID, ulong steamID, string displayName)
     {
         // only the host can spawn players.
-        if (NetworkManager.main == null || NetworkManager.main.isServer) return;
+        if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
+        if (spawnedPlayers.ContainsKey(playerID)) return;
 
-        PlayerID? playerID = SessionManager.Instance.GetPlayerIDForSteam(steamID);
-        if (!playerID.HasValue) return;
+        PlayerID? playerid = SessionManager.Instance.GetPlayerIDForSteam(steamID);
+        if (!playerid.HasValue) return;
 
         SpawnPoint point = GetNextSpawnPoint();
-        GameObject gameObject = Instantiate(playerPrefab, point.transform.position, Quaternion.identity);   
-        gameObject.GetComponent<NetworkIdentity>().GiveOwnership(playerID.Value);
         
-        point.LastUsedTime   = Time.time;
-        Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}]");
+        GameObject gameObject = Instantiate(playerPrefab, point.transform.position, point.transform.rotation);
+        NetworkIdentity networkIdentity = gameObject.GetComponent<NetworkIdentity>();
+        if (networkIdentity == null) return;
+        
+        spawnedPlayers[playerID] = networkIdentity;
+        networkIdentity.GiveOwnership(playerID);
+
+        var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
+        if (nameplate != null) nameplate.SetName(displayName);
+
+        point.LastUsedTime = Time.time;
+        Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
     }
+    
+    private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
+    {
+        if (!spawnedPlayers.TryGetValue(playerID, out var identity)) return;
+
+        spawnedPlayers.Remove(playerID);
+
+        if (identity != null && identity.isSpawned)
+            identity.Despawn();
+    }
+    
+    
+    // this fixing a networking timing issue
+    private void SpawnExistingPlayers()
+    {
+        
+        if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) return;
+        
+        Debug.Log($"[SpawnManager] Spawning existing players");
+        foreach (var player in SessionManager.Instance.CurrentSession.Players)
+        {
+            PlayerID? playerid = SessionManager.Instance.GetPlayerIDForSteam(player.SteamID);
+            if (playerid.HasValue)
+            {
+                HandlePlayerAdded(playerid.Value, player.SteamID, player.DisplayName);
+            }
+               
+        }
+    }
+
     
     private SpawnPoint GetNextSpawnPoint()
     {

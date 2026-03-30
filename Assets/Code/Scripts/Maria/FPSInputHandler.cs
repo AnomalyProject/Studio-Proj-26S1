@@ -20,6 +20,7 @@ public class FPSInputHandler : NetworkBehaviour
     public bool SprintHeld { get; private set; }
 
     public bool CrouchTriggered { get; private set; }
+    
     #endregion
 
     #region Unity Lifecycle
@@ -37,7 +38,7 @@ public class FPSInputHandler : NetworkBehaviour
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
-        if (!isOwner && !isController) return;
+        if (!isOwner) return;
 
         MoveInput = ctx.ReadValue<Vector2>();
         //Debug.Log("Move: " + MoveInput);
@@ -45,7 +46,7 @@ public class FPSInputHandler : NetworkBehaviour
 
     public void OnLook(InputAction.CallbackContext ctx)
     {
-        if (!isOwner && !isController) return;
+        if (!isOwner) return;
 
         LookInput = ctx.ReadValue<Vector2>();
         //Debug.Log("Look: " + LookInput);
@@ -53,14 +54,14 @@ public class FPSInputHandler : NetworkBehaviour
 
     public void OnSprint(InputAction.CallbackContext ctx)
     {
-        if (!isOwner && !isController) return;
+        if (!isOwner) return;
 
         SprintHeld = ctx.performed;
     }
 
     public void OnCrouch(InputAction.CallbackContext ctx)
     {
-        if (!isOwner && !isController) return;
+        if (!isOwner) return;
 
         if (ctx.started)
             CrouchTriggered = true;
