@@ -244,6 +244,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &354598807
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 354598809}
+  - component: {fileID: 354598808}
+  m_Layer: 0
+  m_Name: Inventory Test Unit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &354598808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 354598807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 140a0ab3d4d0f044eae3577a6b4d7cad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryTestUnit
+  inventorySize: 10
+  testItem: {fileID: 11400000, guid: c51bf38af63833c4ebb1f76a44ebc505, type: 2}
+--- !u!4 &354598809
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 354598807}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -24.71469, y: -0, z: -17.5918}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &439094639
 GameObject:
   m_ObjectHideFlags: 0
@@ -720,6 +766,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4722490883632117968, guid: c096fa1219a645f43a22ed1b050e811a, type: 3}
       insertIndex: 3
       addedObject: {fileID: 1353585756}
+    - targetCorrespondingSourceObject: {fileID: 1040727758960398401, guid: c096fa1219a645f43a22ed1b050e811a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: c096fa1219a645f43a22ed1b050e811a, type: 3}
 --- !u!1 &1353585754 stripped
 GameObject:
@@ -743,6 +792,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15ff644aa3d10d243a0514701d770d2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   playerCamera: {fileID: 1353585755}
   interactionMode: 1
   tickRate: 0.1
@@ -1504,3 +1562,4 @@ SceneRoots:
   - {fileID: 1456031013}
   - {fileID: 1518412124}
   - {fileID: 439094644}
+  - {fileID: 354598809}
