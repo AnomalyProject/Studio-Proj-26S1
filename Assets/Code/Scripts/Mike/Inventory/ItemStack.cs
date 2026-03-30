@@ -17,7 +17,7 @@ public class ItemStack : IReadOnlyItemStack
     }
     public ItemStack(ItemData itemData)
     {
-        this.ItemData = itemData;
+        this.ItemData = itemData ?? throw new ArgumentNullException(nameof(itemData));
         Quantity = 1;
     }
     #endregion
