@@ -23,6 +23,7 @@ public class InventoryTestUnit : MonoBehaviour
         inventory.SwapSlots(0, inventory.TotalSlots - 1);
         inventory.Transfer(testItem, 50, inventory2);
         inventory.ClearSlot(0);
+        Debug.Log(inventory.Contains(null));
         RunDebug();
     }
 
@@ -33,12 +34,12 @@ public class InventoryTestUnit : MonoBehaviour
 
         foreach (var itemStack in inventory.GetEnumeration())
         {
-            invItemOutput += itemStack == null? "Empty Slot\n" : $"Item: {itemStack.ItemData.name}, Quantity: {itemStack.Quantity}\n";
+            invItemOutput += itemStack == null? "Empty Slot\n" : $"Item: {itemStack.GetItemData().name}, Quantity: {itemStack.GetQuantity()}\n";
         }
 
         foreach (var itemStack in inventory2.GetEnumeration())
         {
-            inv2ItemOutput += itemStack == null ? "Empty Slot\n" : $"Item: {itemStack.ItemData.name}, Quantity: {itemStack.Quantity}\n";
+            inv2ItemOutput += itemStack == null ? "Empty Slot\n" : $"Item: {itemStack.GetItemData().name}, Quantity: {itemStack.GetQuantity()}\n";
         }
 
         Debug.Log("Inventory 1:\n" + invItemOutput);
