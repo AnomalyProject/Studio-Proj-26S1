@@ -1,8 +1,9 @@
+using PurrNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(FPSController))]
-public class PlayerInteraction : MonoBehaviour
+public class PlayerInteraction : NetworkBehaviour
 {
     enum InteractionMode
     {

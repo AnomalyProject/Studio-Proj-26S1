@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -34,8 +35,6 @@ public class FPSCameraController : MonoBehaviour
 
         if (inputHandler == null)
             Debug.LogError("[FPSCameraController] Could not find FPSInputHandler. " + "Ensure it is on the Player root GameObject.");
-
-        LockCursor();
     }
 
     private void Update()

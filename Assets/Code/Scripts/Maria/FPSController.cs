@@ -59,6 +59,8 @@ public class FPSController : MonoBehaviour
 
     private void Update()
     {
+        //if (!input.isOwner) return;
+        
         HandleGroundCheck();
         HandleCrouchToggle();
         HandleMovement();

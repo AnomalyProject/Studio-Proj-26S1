@@ -7,7 +7,6 @@ using UnityEngine.Events;
 public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 {
     [Header("Settings")]
-    [SerializeField] private LayerMask playerMask;
     Collider col;
 
     // Checks
@@ -56,28 +55,22 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
-        if(((1 << other.gameObject.layer) & playerMask) != 0)
-        {
             if (other.TryGetComponent(out FPSController player))
             {
                 playersInArea.Add(player);
 
                 CheckPlayersInArea();
             }
-        }
     }
 
     // See OnTriggerEnter summary.
     private void OnTriggerExit(Collider other)
     {
-        if (((1 << other.gameObject.layer) & playerMask) != 0)
+        if (other.TryGetComponent(out FPSController player))
         {
-            if (other.TryGetComponent(out FPSController player))
-            {
-                playersInArea.Remove(player);
+            playersInArea.Remove(player);
 
-                CheckPlayersInArea();
-            }
+            CheckPlayersInArea();
         }
     }
     #endregion
@@ -88,17 +81,23 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     private void CheckPlayersInArea()
     {
-#if UNITY_EDITOR == false
         // Actual version
+        Debug.Log($"SessionManagre is null: {SessionManager.Instance == null}");
+        Debug.Log($"SessionManager CurrentSession is null: {SessionManager.Instance.CurrentSession == null}");
+        Debug.Log($"SessionManager CurrentSession.Players is null: {SessionManager.Instance.CurrentSession.Players ==  null}");
         bEnoughPlayers = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
 
         Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
+        /*bEnoughPlayers = playersInArea.Count >= 1;
+
+        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");*/
+        
+/*#if UNITY_EDITOR == false
+
 #else
         //for testing purposes only
-        bEnoughPlayers = playersInArea.Count >= 1;
 
-        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");
-    #endif
+    #endif*/
     }
 #endregion
 

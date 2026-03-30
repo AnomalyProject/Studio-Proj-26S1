@@ -21,7 +21,7 @@ public struct PlayerSessionInfo
         IsHost = isHost;
         TeamID = teamID;
         IsReady = false;
-        JoinedAt = DateTime.UtcNow; // todo: check if we need to convert to long
+        JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
     }
 
 }
