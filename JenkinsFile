@@ -13,7 +13,8 @@ pipeline {
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
     }
 
-    stages{
+    stages {
+
         stage('Steam Branch Mapping'){
             steps{
                 script{
@@ -24,9 +25,6 @@ pipeline {
                 }
             }
         }
-    }
-
-    stages {
         stage('Checkout') {
             steps {
                 cleanWs()
