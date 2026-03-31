@@ -223,7 +223,7 @@ public class SceneLoader : MonoBehaviour
         //action start
         OnLoadStarted?.Invoke();
 
-        while (async.progress <= 0.9f)
+        while (async.progress <= 0.9f && currentFakeProgress < 1.0f)
         {
             if (useRealLoading)
             {
