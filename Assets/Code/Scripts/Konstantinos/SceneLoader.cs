@@ -218,7 +218,7 @@ public class SceneLoader : MonoBehaviour
 
         // reset progress
         SetProgress(0f);
-        currentFakeProgress(0);
+        currentFakeProgress = 0;
 
         //action start
         OnLoadStarted?.Invoke();
