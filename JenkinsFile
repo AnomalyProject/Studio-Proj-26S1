@@ -1,4 +1,8 @@
-def branchMapp[:]
+def branchMap = [
+    'develop': "internal_testing",
+    'network': "network_testing",
+    'main'   : "default"
+]
 pipeline {
     agent any
 
@@ -16,16 +20,6 @@ pipeline {
 
     stages {
 
-        stage('Steam Branch Mapping'){
-            steps{
-                script{
-                    def branchMap = 
-                    [develop: "internal_testing",
-                    network: "network_testing",
-                    main: "default"]
-                }
-            }
-        }
         stage('Checkout') {
             steps {
                 cleanWs()
