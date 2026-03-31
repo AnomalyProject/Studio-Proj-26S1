@@ -223,7 +223,7 @@ public class SceneLoader : MonoBehaviour
         //action start
         OnLoadStarted?.Invoke();
 
-        while (async.progress <= 0.9f && currentFakeProgress < 1.0f)
+        while (!async.isDone)
         {
             if (useRealLoading)
             {
@@ -263,7 +263,6 @@ public class SceneLoader : MonoBehaviour
                 yield return new WaitForSeconds(0.5f); // small delay
                 async.allowSceneActivation = true; // switch scene
             }
-            // <-------- ERROR while(!async.isDone) is still checking BUT allowSceneActivation is true 
             yield return null;
         }
         isLoading = false;
