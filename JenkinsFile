@@ -18,7 +18,7 @@ pipeline {
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
     }
 
-    stages {//test
+    stages {
 
         stage('Checkout') {
             steps {
