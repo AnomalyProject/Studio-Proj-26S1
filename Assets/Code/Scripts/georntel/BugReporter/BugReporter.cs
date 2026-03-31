@@ -79,7 +79,7 @@ public class BugReporter : MonoBehaviour
             MailMessage mail = new MailMessage();
             mail.From = new MailAddress(senderEmail);
             mail.To.Add(receiverEmail);
-            mail.Subject = "Bug Report ";
+            mail.Subject = $"{Application.productName} | Bug Report";
             string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
             string currentTime = DateTime.Now.ToString("HH:mm:ss");
             string os = SystemInfo.operatingSystem;
