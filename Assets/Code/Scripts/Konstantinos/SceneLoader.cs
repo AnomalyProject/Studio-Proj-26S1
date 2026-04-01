@@ -218,6 +218,7 @@ public class SceneLoader : MonoBehaviour
 
         // reset progress
         SetProgress(0f);
+        currentFakeProgress = 0;
 
         //action start
         OnLoadStarted?.Invoke();
@@ -238,6 +239,7 @@ public class SceneLoader : MonoBehaviour
                     yield return new WaitForSeconds(0.5f); // small delay
                     async.allowSceneActivation = true; // switch scene
                 }
+                yield return null;
             }
             else
             {
@@ -261,6 +263,7 @@ public class SceneLoader : MonoBehaviour
                 yield return new WaitForSeconds(0.5f); // small delay
                 async.allowSceneActivation = true; // switch scene
             }
+            yield return null;
         }
         isLoading = false;
         //action finished
