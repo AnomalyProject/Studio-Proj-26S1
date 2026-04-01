@@ -14,7 +14,7 @@ public class CameraLean : MonoBehaviour
 
     [Header("Camera Offset")]
     [Tooltip("How far the camera shifts sideways at full lean.")]
-    [SerializeField] private float leanDistance = .5f;
+    [SerializeField, Range(.1f, 1)] private float leanDistance = .5f;
 
     [Header("Smoothing")]
     [Tooltip("Higher values = faster lean transition. Set to a very high value for instant lean (no smoothing, do not recommend :)).")]
