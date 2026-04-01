@@ -244,8 +244,6 @@ public class SteamSessionBridge : MonoBehaviour
         var activeTransport = networkManager.transport;
         var steamTransport = activeTransport as SteamTransport;
         
-        Debug.Log(activeTransport != null ? activeTransport.GetType().Name : "null");
-        
         if (steamTransport == null)
         {
             string transportName = activeTransport != null ? activeTransport.GetType().Name : "None";
