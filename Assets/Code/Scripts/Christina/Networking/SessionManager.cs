@@ -166,13 +166,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
-        
-        // the null check ensures that CreateSession will run even if steam is not available
-        // or the build doesn't run on steam
-        if (SteamSessionBridge.Instance != null)
-        {
-            SteamSessionBridge.Instance.CreateSteamLobby(sessionData.MaxPlayers);
-        }
     }
 
     /// <summary>
@@ -350,7 +343,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via hostPlayerID)
-    /// 2. Game is in Lobby state (can't start twice)
+    /// 2. Game is in Lobby state (can't  twice)
     /// 3. All players are ready (SessionData.AllPlayersReady)
     /// Only after all three pass does the state transition to Loading.
     /// </summary>

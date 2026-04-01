@@ -2,6 +2,7 @@ using UnityEngine;
 using Steamworks;
 using PurrNet.Steam;
 using System.Collections;
+using PurrNet;
 
 public class SteamSessionBridge : MonoBehaviour
 {
@@ -11,6 +12,13 @@ public class SteamSessionBridge : MonoBehaviour
     private bool isInLobby = false;
     private bool isCreatingLobby = false;
     private bool isSteamAvailable = false;
+    
+    private HostStartupStatus currentHostStartupStatus;
+    private int hostStartupAttemptID = 0;
+    private Coroutine hostStartupCoroutine;
+    
+    private const float hostReadyTimeoutSeconds = 10f;
+    private const float sessionReadyTimeoutSeconds = 5f;
 
     // steam callbacks (always listening)
     private Callback<LobbyEnter_t> lobbyEnteredCallback;
@@ -148,7 +156,129 @@ public class SteamSessionBridge : MonoBehaviour
     {
         LeaveSteamLobby();
     }
+    
+    public void BeginSteamListenHost()
+    {
+        if (hostStartupCoroutine != null)
+        {
+            Debug.LogWarning("[SteamBridge:SteamHost]  Host startup is already running.");
+            return;
+        }
+        hostStartupAttemptID++;
+        
+        if (!SteamManager.Initialized)
+        {
+            SetBootStage(HostStartupStage.Failed,
+                "SteamManager is not initialized. Cannot start Steam listen-host.", 
+                HostStartupStage.HostStartRequest);
+            return;
+        }
+        
+        hostStartupCoroutine = StartCoroutine(BeginSteamListenHostRoutine());
+    }
+    
+    // the role of this function is to turn this proccess into an observable one. a state machine.
+    private void SetBootStage(HostStartupStage stage, string message, HostStartupStage? failureStage = null)
+    {
+        currentHostStartupStatus.Stage =  stage;
+        currentHostStartupStatus.Message = message;
+        currentHostStartupStatus.AttemptID = hostStartupAttemptID;
+        currentHostStartupStatus.FailureStage = failureStage ?? HostStartupStage.Idle;
+        
+        NetworkManager networkManager = NetworkManager.main;
+        currentHostStartupStatus.ActiveTransport = 
+            networkManager != null && 
+            networkManager.transport != null ? networkManager.transport.GetType().Name : "None";
 
+        Debug.Log(
+            $"[SteamBridge:SteamHost] Attempt={currentHostStartupStatus.AttemptID} " +
+            $"Stage={currentHostStartupStatus.Stage} " +
+            $"FailureStage={currentHostStartupStatus.FailureStage} " +
+            $"Transport={currentHostStartupStatus.ActiveTransport} " +
+            $"Message={currentHostStartupStatus.Message}");
+    }
+    
+    /// <summary>
+    /// Using a coroutine because we need to wait accross frames for:
+    /// StartHost() to fninsh connecting
+    /// SessionManager to exist and create session data
+    /// </summary>
+    private IEnumerator BeginSteamListenHostRoutine()
+    {
+        SetBootStage(HostStartupStage.HostStartRequest, "[SteamSessionBridge] Host startup requested.");
+        
+        NetworkManager networkManager = NetworkManager.main;
+        if (networkManager == null)
+        {
+            SetBootStage(HostStartupStage.Failed, "NetworkManager.main was not found.", HostStartupStage.NetworkManagerFound);
+            hostStartupCoroutine = null;
+            yield break;
+        }
+        
+        SetBootStage(HostStartupStage.NetworkManagerFound, "Network Manager found!");
+
+        var activeTransport = networkManager.transport;
+        var steamTransport = activeTransport as SteamTransport;
+        
+        Debug.Log(activeTransport != null ? activeTransport.GetType().Name : "null");
+        
+        if (steamTransport == null)
+        {
+            string transportName = activeTransport != null ? activeTransport.GetType().Name : "None";
+            
+            SetBootStage(HostStartupStage.Failed, $"Active transport was {currentHostStartupStatus.ActiveTransport}, not SteamTransport.", HostStartupStage.TransportValidated);
+            hostStartupCoroutine = null;
+            yield break;
+        }
+        
+        SetBootStage(HostStartupStage.TransportValidated,  $"Active transport validated: {steamTransport.GetType().Name}");
+        
+        networkManager.StartHost();
+        SetBootStage(HostStartupStage.HostStarting, "StartHost() called. Waiting for listen-host readiness.");
+        
+        float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+        while ((!networkManager.isHost && Time.realtimeSinceStartup < hostDeadline))
+        {
+            yield return null;
+        }
+
+        if (!networkManager.isHost)
+        {
+            SetBootStage(
+                HostStartupStage.Failed,
+                "Timed out waiting for NetworkManager.isHost to become true.",
+                HostStartupStage.HostStarting);
+
+            hostStartupCoroutine = null;
+            yield break;
+        }
+        
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        
+        // checking both here beacause transport readiness and gameplay session readiness are not the same thing.
+        // We want network ready AND authoritative session ready
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) &&
+               Time.realtimeSinceStartup < sessionDeadline)
+        {
+            yield return null;
+        }
+        
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+        {
+            SetBootStage(
+                HostStartupStage.Failed,
+                "Timed out waiting for SessionManager.CurrentSession to be created.",
+                HostStartupStage.HostReady);
+
+            hostStartupCoroutine = null;
+            yield break;
+        }
+
+        SetBootStage(HostStartupStage.HostReady, "Listen-host is ready and session data exists.");
+        hostStartupCoroutine = null;
+        
+    }
+    
     private void OnLobbyCreated(LobbyCreated_t result, bool ioFailure)
     {
         if (!isCreatingLobby)

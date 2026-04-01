@@ -78,8 +78,7 @@ public class NetworkTestUI : MonoBehaviour
 
         if (GUILayout.Button("HOST"))
         {
-            NetworkManager.main.StartServer();
-            // to verify: PurrNet may need a separate StartClient() call for listen server
+            SteamSessionBridge.Instance.BeginSteamListenHost();
         }
 
         if (GUILayout.Button("JOIN"))
@@ -96,9 +95,15 @@ public class NetworkTestUI : MonoBehaviour
         if (GUILayout.Button("Disconnect"))
         {
             if (isHost)
-                NetworkManager.main.StopServer();
-            else
+            {
                 NetworkManager.main.StopClient();
+                NetworkManager.main.StopServer();                
+            }
+            else
+            {
+                NetworkManager.main.StopClient();
+            }
+                
         }
 
         GUILayout.Label("--- RPC Tests ---");
