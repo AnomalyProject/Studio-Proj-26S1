@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// First-Person Camera Controller.
@@ -36,19 +37,19 @@ public class FPSCameraController : MonoBehaviour
         if (inputHandler == null)
             Debug.LogError("[FPSCameraController] Could not find FPSInputHandler. " + "Ensure it is on the Player root GameObject.");
     }
-
-    private void Update()
+    private void Start()
     {
-        ApplyLook();
+        LockCursor();
     }
+
     #endregion
 
     #region Look
-    private void ApplyLook()
+    public void ApplyLook(InputAction.CallbackContext ctx)
     {
         if (inputHandler == null) return;
 
-        Vector2 look = inputHandler.LookInput;
+        Vector2 look = ctx.ReadValue<Vector2>();
 
         // Horizontal -> rotate the player body (yaw)
         playerBody.Rotate(Vector3.up, look.x * mouseSensitivityX, Space.World);
