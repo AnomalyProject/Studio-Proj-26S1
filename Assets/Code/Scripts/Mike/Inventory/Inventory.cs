@@ -157,9 +157,8 @@ public class Inventory
         if (slotIndex < 0 || slotIndex >= slots.Length) return false;
 
         itemStack = slots[slotIndex];
+        return itemStack != null;
 
-        if(itemStack != null) return true;
-        else return false;
     }
     public bool TryGet(ItemData itemData, out IReadOnlyItemStack itemStack, out int slotIndex)
     {
@@ -190,9 +189,10 @@ public class Inventory
     /// be empty if all slots are null.</returns>
     public IEnumerable<IReadOnlyItemStack> GetNonEmptyEnumeration()
     {
-        foreach(var item in slots.Where(slot => slot != null))
+        for (int i = 0; i < slots.Length; i++)
         {
-            yield return item.Clone();
+            if (slots[i] != null)  
+                yield return slots[i].Clone();
         }
     }
     #endregion
@@ -303,6 +303,7 @@ public class Inventory
         Remove(itemData, amount);
         return true;
     }
+
     #endregion
 
     #region Remove Methods
@@ -453,7 +454,7 @@ public class Inventory
         }
         return indices;
     }
-    public bool IsInventoryFull() => slots.All(slot => slot != null && slot.Quantity >= slot.ItemData.MaxStackSize);
+    public bool IsInventoryFull() => !slots.Any(slot => slot == null || slot.GetRemainingCapacity() > 0);
 
     /// <summary>
     /// Determines whether the total quantity of the specified item in the inventory is greater than or equal to the
@@ -481,31 +482,55 @@ public class Inventory
     /// </summary>
     /// <remarks>If both slots contain the same item type, their quantities are combined in the destination
     /// slot up to its stack limit, and the source slot is reduced accordingly. If the slots contain different items,
-    /// their contents are swapped.</remarks>
+    /// their contents are swapped. Cancels if contents of <paramref name="fromSlot"/> are null.</remarks>
     /// <param name="fromSlot">The zero-based index of the source slot to move or combine items from. Must be within the valid range of slot
     /// indices.</param>
     /// <param name="toSlot">The zero-based index of the destination slot to move or combine items to. Must be within the valid range of slot
     /// indices.</param>
-    public void SwapSlots(int fromSlot, int toSlot)
+    public void SwapSlots(int fromSlot, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, invB: this, toSlot);
+    /// <summary>
+    /// Swaps the contents of two inventory slots, from this inventory to another, combining item stacks if they contain the same item type.
+    /// </summary>
+    /// <remarks>If both slots contain the same item type, their quantities are combined in the destination
+    /// slot up to its stack limit, and the source slot is reduced accordingly. If the slots contain different items,
+    /// their contents are swapped. Cancels if contents of <paramref name="fromSlot"/> or <paramref name="toInventory"/> are null.</remarks>
+    /// <param name="fromSlot">The zero-based index of the source slot to move or combine items from. Must be within the valid range of slot
+    /// indices.</param>
+    /// <param name="toInventory">The destination inventory to which the items will be moved or combined. Cannot be null.</param>
+    /// <param name="toSlot">The zero-based index of the destination slot of the other inventory to move or combine items to. Must be within the valid range of slot
+    /// indices.</param>
+    public void SwapSlots(int fromSlot, Inventory toInventory, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, toInventory, toSlot);
+
+    void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
     {
-        if (fromSlot < 0 || fromSlot >= slots.Length || toSlot < 0 || toSlot >= slots.Length) return;
+        if(invA == null || invB == null) return;
+        if(indexA < 0 || indexA >= invA.slots.Length) return;
+        if(indexB < 0 || indexB >= invB.slots.Length) return;
+        if(invA == invB && indexA == indexB) return;
 
-        bool slotsNotNull = (slots[fromSlot] != null && slots[toSlot] != null);
-        bool sameItemType = slotsNotNull && (slots[fromSlot].ItemData == slots[toSlot].ItemData);
+        var stackA = invA.slots[indexA];
+        var stackB = invB.slots[indexB];
 
-        if (sameItemType)
+        if (stackA == null) return;
+
+        bool sameItem = stackB != null && stackA.ItemData == stackB.ItemData;
+
+        if (sameItem)
         {
-            int totalAdded = slots[toSlot].AddToStack(slots[fromSlot].Quantity);
-            slots[fromSlot].RemoveFromStack(totalAdded);
-            if(slots[fromSlot].Quantity <= 0) slots[fromSlot] = null;
-            OnSlotsMoved?.Invoke();
-            return;
+            int added = stackB.AddToStack(stackA.Quantity);
+            stackA.RemoveFromStack(added);
+
+            if (stackA.Quantity <= 0) invA.slots[indexA] = null;
+        }
+        else
+        {
+            invA.slots[indexA] = stackB;
+            invB.slots[indexB] = stackA;
         }
 
-        ItemStack temp = slots[fromSlot];
-        slots[fromSlot] = slots[toSlot];
-        slots[toSlot] = temp;
-        OnSlotsMoved?.Invoke();
+        invA.OnSlotsMoved?.Invoke();
+
+        if (invA != invB) invB.OnSlotsMoved?.Invoke();
     }
 
     /// <summary>

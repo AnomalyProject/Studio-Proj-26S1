@@ -75,7 +75,7 @@ pipeline {
             script {
                 def commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
                 discordSend title: "✅ Build Success: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
-                    description: "Splendid news Sir, the build and the Deployment to Steam (${params.BUILD_BRANCH}) were successful.\n**Commit:** ${commitMsg}",
+                    description: "Splendid news Sir, the build and the Deployment to Steam (${params.BUILD_BRANCH}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'SUCCESS',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
@@ -85,7 +85,7 @@ pipeline {
         aborted {
             script {
                 discordSend title: "⚪ Build Aborted: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
-                    description: "Sir, the build was aborted, and maybe i should have been too.",
+                    description: "Sir, the build was aborted, and maybe i should have been too.\n This is a manual operation so no commit descreption will be provided.",
                     link: env.BUILD_URL,
                     result: 'ABORTED',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
@@ -95,7 +95,7 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
-                    description: "Most unfortunate news Sir, the build has Failed.",
+                    description: "Most unfortunate news Sir, the build for (${params.BUILD_BRANCH}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"

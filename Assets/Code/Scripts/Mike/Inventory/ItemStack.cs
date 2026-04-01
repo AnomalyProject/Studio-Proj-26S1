@@ -81,7 +81,30 @@ public class ItemStack : IReadOnlyItemStack
     public ItemData GetItemData() => ItemData;
     public bool IsEmpty() => Quantity <= 0;
     public int GetRemainingCapacity() => ItemData.MaxStackSize - Quantity;
+    public int GetMaxCapacity() => ItemData.MaxStackSize;
     #endregion
+}
+[Serializable] public class InspectorItemStack
+{
+    [SerializeField] ItemData itemData;
+    [SerializeField, Min(1)] int quantity;
+    ItemStack _cachedStack;
+
+    /// <summary>
+    /// Gets or creates an <see cref="ItemStack"/> instance based on the data stored in this <see cref="InspectorItemStack"/> and internally caches it.
+    /// </summary>
+    /// <returns>The created or cached <see cref="ItemStack"/> instacne.</returns>
+    public ItemStack GetItemStack() => _cachedStack??= new ItemStack(itemData, quantity);
+    /// <summary>
+    /// Creates a new <see cref="ItemStack"/> instance based on the data stored in this <see cref="InspectorItemStack"/> and updates the internal cache with it, if cache parameter is true.
+    /// </summary>
+    /// <returns>The new cached <see cref="ItemStack"/> instacne.</returns>
+    public ItemStack CreateItemStack(bool cache = true)
+    {
+        ItemStack newStack = new ItemStack(itemData, quantity);
+        if (cache) _cachedStack = newStack;
+        return newStack;
+    }
 }
 
 public interface IReadOnlyItemStack
@@ -97,4 +120,5 @@ public interface IReadOnlyItemStack
     /// <returns>true if the specified amount can be added. Otherwise false.</returns>
     bool CanFit(int amount);
     int GetRemainingCapacity();
+    int GetMaxCapacity();
 }
