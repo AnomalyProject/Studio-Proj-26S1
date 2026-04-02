@@ -7,16 +7,17 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] AnomalyMap[] mapCollection;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
     [SerializeField] GameObject[] punishmentRooms;
+    [SerializeField] GameObject winRoom;
     [SerializeField] bool pickMapOnAwake = true;
 
     AnomalyMap activeMap;
-    GameObject activeAnomalyVariation, activePunishmentRoom, winRoom;
+    GameObject activeAnomalyVariation, activePunishmentRoom;
     public bool HasAnomaly => activeAnomalyVariation != null && activeAnomalyVariation.activeInHierarchy;
 
     void Awake()
     {
         foreach(var map in mapCollection) map.DisableAll();
-        if(pickMapOnAwake) PickMap();
+        if (pickMapOnAwake) PickMap();
     }
 
     /// <summary>

@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Serializable]
-public class AnomalyMap
+public class AnomalyMap : MonoBehaviour
 {
-    [SerializeField] bool wholeRoomVariations = true;
+    [SerializeField, Tooltip("If set to true Anomaly Manager will disable the BaseMap object when enabling anomalies, otherwise not.")] 
+    bool wholeRoomVariations = true;
+
     [SerializeField, Tooltip("The base map all anomaly variations are tied to.")] GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<GameObject> anomalyVariations;
    
