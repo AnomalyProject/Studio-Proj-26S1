@@ -21,6 +21,7 @@ public class AnomalyManager : MonoBehaviour
     AnomalyMap activeMap;
     GameObject activeAnomalyGroup, activePunishmentRoom;
     RoomState currentState;
+
     public RoomState CurrentState => currentState;
     public bool HasAnomaly => currentState == RoomState.AnomalyRoom;
 
