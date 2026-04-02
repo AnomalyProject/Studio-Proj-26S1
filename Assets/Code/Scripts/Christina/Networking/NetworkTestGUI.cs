@@ -179,6 +179,7 @@ public class NetworkTestUI : MonoBehaviour
     
     private void DrawJoinDiagnostics()
     {
+        // todo:delete this dummy comment
         GUILayout.Space(10);
         GUILayout.Label("--- Join Diagnostics ---");
 
