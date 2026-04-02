@@ -29,7 +29,7 @@ pipeline {
                 cleanWs()
                 git branch: params.BUILD_BRANCH, url: params.REPO_LINK
                 script{
-                    def commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                    commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
                 }
             }
         }
