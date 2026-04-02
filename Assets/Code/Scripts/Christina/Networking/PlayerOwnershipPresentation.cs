@@ -13,18 +13,20 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
 
     protected override void OnSpawned(bool asServer)
     {
-        //if (!asServer) ApplyOwnershipState();
+        
+        if (!asServer) ApplyOwnershipState();
     }
 
     protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
     {
+        Debug.Log($"[Ownership] OnOwnerChanged fired. Old={oldOwner}, New={newOwner}, asServer={asServer}, isOwner={isOwner}");
        if (!asServer) ApplyOwnershipState();
     }
 
     private void ApplyOwnershipState()
     {
         bool local = isOwner;
-
+        Debug.Log($"[Ownership] ApplyOwnershipState called. isOwner={local}");
         if (playerCamera) playerCamera.enabled = local;
         if (playerAudioListener) playerAudioListener.enabled = local;
         if (playerInput) playerInput.enabled = local;
