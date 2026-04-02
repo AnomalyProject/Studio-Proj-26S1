@@ -64,8 +64,7 @@ public class SpawnManager : MonoBehaviour
         networkIdentity.GiveOwnership(playerID);
 
         var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
-        if (nameplate != null)
-            nameplate.SetName_Server(displayName);
+        if (nameplate != null) nameplate.SetName(displayName);
 
         point.LastUsedTime = Time.time;
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
