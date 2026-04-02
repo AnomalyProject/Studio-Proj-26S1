@@ -2,50 +2,66 @@ using UnityEngine;
 
 public class AnomalyManager : MonoBehaviour
 {
-    public event System.Action OnAnomalyMapChanged, OnPunishmentRoomActivation;
+    public event System.Action OnAnomalyMapChanged, OnPunishmentRoomActivation, OnWinRoomActivation;
 
-    [SerializeField] bool keepBaseMapOnAnomaly = true;
     [SerializeField] AnomalyMap[] mapCollection;
-    [SerializeField, Range(0,100)] int anomalyChance = 50;
+    [SerializeField, Range(0,1)] float anomalyChance = .5f;
     [SerializeField] GameObject[] punishmentRooms;
+    [SerializeField] bool pickMapOnAwake = true;
 
     AnomalyMap activeMap;
-    GameObject activeAnomalyVariation, activePunishmentRoom;
-    public bool HasAnomaly => activeAnomalyVariation != null;
+    GameObject activeAnomalyVariation, activePunishmentRoom, winRoom;
+    public bool HasAnomaly => activeAnomalyVariation != null && activeAnomalyVariation.activeInHierarchy;
 
-    void Awake() => PickRandomMap();
-    public void DecideNextMapVariation()
+    void Awake()
     {
-        if (activeMap == null) PickRandomMap();
+        foreach(var map in mapCollection) map.DisableAll();
+        if(pickMapOnAwake) PickMap();
+    }
 
-        if (activeAnomalyVariation != null)
-        {
-            activeAnomalyVariation.SetActive(false);
-            activeAnomalyVariation = null;
-        }
+    /// <summary>
+    /// Randomly decides the next map variation based on the <see cref="anomalyChance"/>.
+    /// </summary>
+    public void DecideNextMapVariation() => DecideNextMapVariation(Random.value <= anomalyChance);
 
-        bool anomalyRound = Random.Range(0, 101) <= anomalyChance;
+    /// <summary>
+    /// Changes the map variation based on the given parameter. 
+    /// If <paramref name="withAnomalies"/> is false, it will simply enable the base map and disable any active anomaly variations. 
+    /// If true, it will enable a random anomaly variation and disable the base map if the map is set to have whole room variations.
+    /// </summary>
+    /// <param name="withAnomalies"></param>
+    public void DecideNextMapVariation(bool withAnomalies)
+    {
+        if (activeMap == null) PickMap();
 
-        if (!anomalyRound)
+        activeAnomalyVariation?.SetActive(false);
+        activePunishmentRoom?.SetActive(false);
+
+        if (!withAnomalies)
         {
             activeMap.BaseMap.SetActive(true);
             OnAnomalyMapChanged?.Invoke();
             return;
         }
 
-        activeMap.BaseMap.SetActive(keepBaseMapOnAnomaly);
+        activeMap.BaseMap.SetActive(!activeMap.WholeRoomVariations);
 
-        int variationIndex = Random.Range(0, activeMap.AnomalyVariations.Length);
-        activeAnomalyVariation = activeMap.AnomalyVariations[variationIndex];
+        GameObject nextVariation = activeMap.GetNextAnomalyGroup();
+
+        if (!nextVariation)
+        {
+            Debug.LogWarning($"Failed to get next anomaly variation. Check if the active map ({activeMap.BaseMap.name}) has any variations assigned.");
+            return;
+        }
+
+        activeAnomalyVariation = nextVariation;
         activeAnomalyVariation.SetActive(true);
         OnAnomalyMapChanged?.Invoke();
     }
-    public void DisableActiveMap()
-    {
-        if(activeMap == null) return;
-        activeAnomalyVariation?.SetActive(false);
-        activeMap.BaseMap?.SetActive(false);
-    }
+
+    /// <summary>
+    /// Enables a random punishment room from the <see cref="punishmentRooms"/>, disabling the active map and any active anomaly variations.
+    /// </summary>
     public void EnablePunishmentRoom()
     {
         if(punishmentRooms.Length == 0)
@@ -54,13 +70,18 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        DisableActiveMap();
-        if(activePunishmentRoom) activePunishmentRoom.SetActive(false);
+        activeMap?.DisableAll();
+        if (activePunishmentRoom) activePunishmentRoom.SetActive(false);
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
         activePunishmentRoom?.SetActive(true);
         OnPunishmentRoomActivation?.Invoke();
     }
+
+    /// <summary>
+    /// Disables the active punishment room and decides the next map variation. 
+    /// If there is no active punishment room, it will log a warning and do nothing.
+    /// </summary>
     public void DisablePunishmentRoom()
     {
         if(activePunishmentRoom == null)
@@ -72,17 +93,53 @@ public class AnomalyManager : MonoBehaviour
         activePunishmentRoom.SetActive(false);
         DecideNextMapVariation();
     }
-    void PickRandomMap()
+
+    /// <summary>
+    /// Picks a random map from the <see cref="mapCollection"/> and sets it as the active map.
+    /// </summary>
+    public void PickMap() => PickMap(Random.Range(0, mapCollection.Length));
+
+    /// <summary>
+    /// Picks the map at the given index from the <see cref="mapCollection"/> and sets it as the active map.
+    /// </summary>
+    /// <param name="mapIndex"></param>
+    public void PickMap(int mapIndex)
     {
-        if(activeMap != null)
+        if (mapCollection.Length == 0)
         {
-            activeAnomalyVariation?.SetActive(false);
-            activeAnomalyVariation = null;
-            activeMap.BaseMap.SetActive(false);
+            Debug.LogWarning("Tried to pick random map but there are no maps in the collection.");
+            return;
         }
 
-        int mapIndex = Random.Range(0, mapCollection.Length);
+        if(mapIndex < 0 || mapIndex >= mapCollection.Length)
+        {
+            Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is out of bounds for the map collection.");
+            return;
+        }
+
+        activePunishmentRoom?.SetActive(false);
+        winRoom?.SetActive(false);
+        activeMap?.DisableAll();
+
         activeMap = mapCollection[mapIndex];
         activeMap.BaseMap.SetActive(true);
+        OnAnomalyMapChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Enables the win room, disabling the active map and any active anomaly variations or punishment rooms.
+    /// </summary>
+    public void EnableWinRoom()
+    {
+        if (!winRoom)
+        {
+            Debug.LogWarning("Tried to enable win room but there is no win room assigned.");
+            return;
+        }
+
+        activeMap?.DisableAll();
+        activePunishmentRoom?.SetActive(false);
+        winRoom.SetActive(true);
+        OnWinRoomActivation?.Invoke();
     }
 }
