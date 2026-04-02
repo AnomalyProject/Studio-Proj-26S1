@@ -12,7 +12,7 @@ public class BuildScript
         string[] activeScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
 
         if (activeScenes.Length == 0) {
-            Debug.LogError("Buttler Jeeves: I cannot find any enabled scenes in Build Settings, Sir!");
+            Debug.LogError("Alfred: I cannot find any enabled scenes in Build Settings, Sir!");
             Debug.LogError("Please ensure your scenes are added and CHECKED in File > Build Settings.");
             EditorApplication.Exit(1);
             return;
@@ -22,7 +22,7 @@ public class BuildScript
 
         Debug.Log($"Buttler Jeeves: Starting the build process for {activeScenes.Length} scenes, Sir...");
         foreach (var scene in activeScenes) {
-            Debug.Log($"Buttler Jeeves: Packing scene: {scene}");
+            Debug.Log($"Alfred: Packing scene: {scene}");
         }
 
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
@@ -35,11 +35,11 @@ public class BuildScript
         BuildSummary summary = report.summary;
 
         if (summary.result == BuildResult.Succeeded) {
-            Debug.Log($"Buttler Jeeves: Build Finished, Result: Success. Size: {summary.totalSize / 1024 / 1024} MB");
+            Debug.Log($"Alfred: Build Finished, Result: Success. Size: {summary.totalSize / 1024 / 1024} MB");
         }
 
         if (summary.result == BuildResult.Failed) {
-            Debug.LogError("Buttler Jeeves: Build Finished, Result: Failure");
+            Debug.LogError("Alfred: Build Finished, Result: Failure");
             EditorApplication.Exit(1);
         }
     }

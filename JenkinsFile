@@ -90,7 +90,7 @@ pipeline {
         aborted {
             script {
                 discordSend title: "⚪ Build Aborted: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Sir, the build was aborted, and maybe i should have been too.\n This is a manual operation so no commit descreption will be provided.",
+                    description: "Sir, the build was aborted. Just like Jeeves, am i Right ?\n This is a manual operation so no commit descreption will be provided.",
                     link: env.BUILD_URL,
                     result: 'ABORTED',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
