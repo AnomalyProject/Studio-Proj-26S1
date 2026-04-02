@@ -17,6 +17,7 @@ public class SteamSessionBridge : MonoBehaviour
     private HostStartupStatus currentHostStartupStatus;
     private int hostStartupAttemptID = 0;
     private Coroutine hostStartupCoroutine;
+    private const float clientConnectionTimeoutSeconds = 15f;
     
     public HostStartupStatus CurrentHostStartupStatus => currentHostStartupStatus;
     public event System.Action<HostStartupStatus> OnHostStartupStatusChanged;
@@ -540,10 +541,11 @@ public class SteamSessionBridge : MonoBehaviour
     
     private IEnumerator WaitForConnectionThenJoin()
     {
+        float deadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
         var networkManager = PurrNet.NetworkManager.main;
 
         // wait until PurrNet reports that the client is connected
-        while (networkManager != null && !networkManager.isClient)
+        while (networkManager != null && !networkManager.isClient && Time.realtimeSinceStartup < deadline)
         {
             yield return null;
         }
@@ -563,8 +565,14 @@ public class SteamSessionBridge : MonoBehaviour
             yield break;
         }
 
+        if (SessionManager.Instance == null && Time.realtimeSinceStartup < deadline)
+        {
+            yield return null;
+        }
+
         if (SessionManager.Instance == null)
         {
+
             Debug.LogError("[SteamBridge] SessionManager not available after connecting");
             if (joinStartupInProgress)
             {
@@ -575,9 +583,10 @@ public class SteamSessionBridge : MonoBehaviour
 
                 joinStartupInProgress = false;
             }
+
             yield break;
         }
-        
+
         if (joinStartupInProgress)
         {
             SetJoinStage(
@@ -621,6 +630,12 @@ public class SteamSessionBridge : MonoBehaviour
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
+        // Same lobby check: if player is already in the lobby they're trying to join, ignore it
+        if (isInLobby && currentLobbyId ==callback.m_steamIDLobby)
+        {
+            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
+            return;
+        }
         
         joinStartupAttemptID++;
         joinStartupInProgress = true;
@@ -629,13 +644,6 @@ public class SteamSessionBridge : MonoBehaviour
         SetJoinStage(
             JoinStartupStage.JoinRequestReceived,
             $"Join requested for lobby {callback.m_steamIDLobby}");
-        
-        // Same lobby check: if player is already in the lobby they're trying to join, ignore it
-        if (isInLobby && currentLobbyId ==callback.m_steamIDLobby)
-        {
-            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
-            return;
-        }
         
         // Existing lobby cleanup: if player is in a different lobby or mid-creation, clean up first
         if (isInLobby || isCreatingLobby)
