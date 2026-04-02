@@ -14,8 +14,9 @@ public class ChaseState : BaseState
     {
         body.SetMoveSpeed(true);
 
-        body.OnTargetReached += CatchPlayer;
+        body.OnTargetReached += ReachedTaret;
         body.OnLostPlayer += LostPlayer;
+        body.OnPlayerSpotted += PlayerFound;
 
         lastKnownPos = player.position;
         body.MoveToTarget(player.position);
@@ -41,7 +42,7 @@ public class ChaseState : BaseState
     /// <summary>
     /// Transitions between states depending on if the player was caught or flead.
     /// </summary>
-    private void CatchPlayer()
+    private void ReachedTaret()
     {
         if (!isSearching)
         {
@@ -67,9 +68,18 @@ public class ChaseState : BaseState
         body.MoveToTarget(lastKnownPos);
     }
 
+    /// <summary>
+    /// Safty because it ignores you when it turns the corner without it.
+    /// </summary>
+    /// <param name="player"></param>
+    private void PlayerFound(Transform player)
+    {
+        isSearching = false;
+    }
+
     public override void Exit()
     {
-        body.OnTargetReached -= CatchPlayer;
+        body.OnTargetReached -= ReachedTaret;
         body.OnLostPlayer -= LostPlayer;
     }
 }

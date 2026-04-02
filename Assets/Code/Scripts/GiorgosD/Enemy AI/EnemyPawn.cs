@@ -171,6 +171,7 @@ public class EnemyPawn : MonoBehaviour
 
         if (closestDetectedPlayer != null && foundPlayerThisFrame)
         {
+            StopAll();
             OnPlayerSpotted?.Invoke(closestDetectedPlayer);
             Debug.Log("Player Spotted");
         }

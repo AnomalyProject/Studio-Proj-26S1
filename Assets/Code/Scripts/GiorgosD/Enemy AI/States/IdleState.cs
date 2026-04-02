@@ -9,10 +9,10 @@ public class IdleState : BaseState
 
     public override void Enter()
     {
-        body.Idle(brain.IdleTime);
-
         body.OnPlayerSpotted += HandlePlayerSpotted;
         body.OnIdleEnd += ResumePatrol;
+
+        body.Idle(brain.IdleTime);
     }
 
     public override void Update()
@@ -32,4 +32,3 @@ public class IdleState : BaseState
         body.OnIdleEnd -= ResumePatrol;
     }
 }
-

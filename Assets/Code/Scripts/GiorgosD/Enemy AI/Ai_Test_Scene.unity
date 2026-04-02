@@ -877,8 +877,7 @@ GameObject:
   - component: {fileID: 703241687}
   - component: {fileID: 703241690}
   - component: {fileID: 703241689}
-  - component: {fileID: 703241688}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: enemy forward indicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -900,27 +899,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1698502918}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &703241688
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 703241686}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &703241689
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1101,8 +1079,7 @@ GameObject:
   - component: {fileID: 1428963765}
   - component: {fileID: 1428963768}
   - component: {fileID: 1428963767}
-  - component: {fileID: 1428963766}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: BackPack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1124,29 +1101,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1698502918}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &1428963766
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1428963764}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1428963767
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1614,7 +1568,7 @@ MonoBehaviour:
   - {fileID: 858881590}
   - {fileID: 1670410332}
   - {fileID: 658901899}
-  idleTimer: 0.5
+  idleTimer: 3
   respawnPoints:
   - {fileID: 2144060225}
   - {fileID: 19540847}
@@ -1630,12 +1584,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d218db7396aef9241a92a2d24a433a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPawn
-  walkSpeed: 2
+  walkSpeed: 3
   runSpeed: 4
   sightRange: 40
-  autoDetectRange: 2
+  autoDetectRange: 5
   sightAngle: 110.1
-  checkFrequency: 0.5
+  checkFrequency: 1
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
