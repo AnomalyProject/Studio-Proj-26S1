@@ -9,8 +9,10 @@ public class AnomalyMap : MonoBehaviour
     [SerializeField, Tooltip("The base map all anomaly variations are tied to.")] GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
    
-    List<AnomalyGroup> usedAnomalies = new();
+    List<AnomalyGroup> usedAnomalies = new(), availableAnomalies = new();
     public GameObject BaseMap => baseMap;
+
+    void Awake() => availableAnomalies.AddRange(anomalyVariations);
 
     /// <summary>
     /// Returns a random anomaly variation from the list, ensuring that all variations are used before any repeats occur.
@@ -18,23 +20,23 @@ public class AnomalyMap : MonoBehaviour
     /// <returns>The <see cref="GameObject"/> reference of the Anomaly variation.</returns>
     public AnomalyGroup GetNextAnomalyGroup()
     {
-        if (anomalyVariations.Count == 0 && usedAnomalies.Count == 0)
+        if (anomalyVariations.Count == 0)
         {
-            Debug.LogWarning("Anomaly map has no variations assigned.");
+            Debug.LogWarning($"{name}: Anomaly map has no variations assigned.");
             return null;
         }
 
-        if(anomalyVariations.Count == 0)
+        if(availableAnomalies.Count == 0)
         {
-            anomalyVariations.AddRange(usedAnomalies);
+            availableAnomalies.AddRange(usedAnomalies);
             usedAnomalies.Clear();
         }
 
-        int index = UnityEngine.Random.Range(0, anomalyVariations.Count);
-        AnomalyGroup nextAnomaly = anomalyVariations[index];
+        int index = UnityEngine.Random.Range(0, availableAnomalies.Count);
+        AnomalyGroup nextAnomaly = availableAnomalies[index];
 
         usedAnomalies.Add(nextAnomaly);
-        anomalyVariations.RemoveAt(index);
+        availableAnomalies.RemoveAt(index);
         return nextAnomaly;
     }
 
@@ -45,7 +47,7 @@ public class AnomalyMap : MonoBehaviour
     {
         baseMap?.SetActive(false);
 
-        foreach (var variation in anomalyVariations) variation?.GroupRoot.SetActive(false);
+        foreach (var variation in availableAnomalies) variation?.GroupRoot.SetActive(false);
         foreach (var variation in usedAnomalies) variation?.GroupRoot.SetActive(false);
     }
 }

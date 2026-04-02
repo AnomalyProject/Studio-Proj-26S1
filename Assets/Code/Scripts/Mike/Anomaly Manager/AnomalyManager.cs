@@ -2,7 +2,15 @@ using UnityEngine;
 
 public class AnomalyManager : MonoBehaviour
 {
-    public event System.Action OnAnomalyMapChanged, OnPunishmentRoomActivation, OnWinRoomActivation;
+    public enum RoomState 
+    { 
+        NormalRoom,
+        AnomalyRoom, 
+        PunishmentRoom, 
+        WinRoom 
+    }
+
+    public event System.Action<RoomState> OnStateChanged;
 
     [SerializeField] AnomalyMap[] mapCollection;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
@@ -11,13 +19,15 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] bool pickMapOnAwake = true;
 
     AnomalyMap activeMap;
-    GameObject activeAnomalyVariation, activePunishmentRoom;
-    public bool HasAnomaly => activeAnomalyVariation != null && activeAnomalyVariation.activeInHierarchy;
+    GameObject activeAnomalyGroup, activePunishmentRoom;
+    RoomState currentState;
+    public RoomState CurrentState => currentState;
+    public bool HasAnomaly => currentState == RoomState.AnomalyRoom;
 
     void Awake()
     {
-        foreach(var map in mapCollection) map.DisableAll();
-        if (pickMapOnAwake) PickMap();
+        foreach (var map in mapCollection) map.DisableAll();
+        if (pickMapOnAwake) TryPickMap();
     }
 
     /// <summary>
@@ -33,14 +43,14 @@ public class AnomalyManager : MonoBehaviour
     /// <param name="withAnomalies"></param>
     public void DecideNextMapVariation(bool withAnomalies)
     {
-        if (activeMap == null) PickMap();
+        if (activeMap == null && !TryPickMap()) return;
 
         ClearActiveState();
 
         if (!withAnomalies)
         {
             activeMap.BaseMap.SetActive(true);
-            OnAnomalyMapChanged?.Invoke();
+            ChangeState(RoomState.NormalRoom);
             return;
         }
 
@@ -53,9 +63,9 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activeAnomalyVariation = nextVariation.GroupRoot;
-        activeAnomalyVariation.SetActive(true);
-        OnAnomalyMapChanged?.Invoke();
+        activeAnomalyGroup = nextVariation.GroupRoot;
+        activeAnomalyGroup.SetActive(true);
+        ChangeState(RoomState.AnomalyRoom);
     }
 
     /// <summary>
@@ -74,37 +84,40 @@ public class AnomalyManager : MonoBehaviour
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
         activePunishmentRoom?.SetActive(true);
-        OnPunishmentRoomActivation?.Invoke();
+        ChangeState(RoomState.PunishmentRoom);
     }
 
     /// <summary>
     /// Picks a random map from the <see cref="mapCollection"/> and sets it as the active map.
     /// </summary>
-    public void PickMap() => PickMap(Random.Range(0, mapCollection.Length));
+    /// <returns>True if successful, otherwirse False.</returns>
+    public bool TryPickMap() => TryPickMap(Random.Range(0, mapCollection.Length));
 
     /// <summary>
     /// Picks the map at the given index from the <see cref="mapCollection"/> and sets it as the active map.
     /// </summary>
+    /// <returns>True if successful, otherwirse False.</returns>
     /// <param name="mapIndex"></param>
-    public void PickMap(int mapIndex)
+    public bool TryPickMap(int mapIndex)
     {
         if (mapCollection.Length == 0)
         {
             Debug.LogWarning("Tried to pick random map but there are no maps in the collection.");
-            return;
+            return false;
         }
 
         if(mapIndex < 0 || mapIndex >= mapCollection.Length)
         {
             Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is out of bounds for the map collection.");
-            return;
+            return false;
         }
 
         ClearActiveState();
 
         activeMap = mapCollection[mapIndex];
         activeMap.BaseMap.SetActive(true);
-        OnAnomalyMapChanged?.Invoke();
+        ChangeState(RoomState.NormalRoom);
+        return true;
     }
 
     /// <summary>
@@ -121,16 +134,13 @@ public class AnomalyManager : MonoBehaviour
         ClearActiveState();
 
         winRoom?.SetActive(true);
-        OnWinRoomActivation?.Invoke();
+        ChangeState(RoomState.WinRoom);
     }
-    
     void ClearActiveState()
     {
-        if (activeAnomalyVariation)
-        {
-            activeAnomalyVariation.SetActive(false);
-            activeAnomalyVariation = null;
-        }
+        if(activeMap) activeMap.DisableAll();
+
+        activeAnomalyGroup = null;
 
         if (activePunishmentRoom)
         {
@@ -140,8 +150,10 @@ public class AnomalyManager : MonoBehaviour
 
         if(winRoom)
         winRoom.SetActive(false);
-
-        if(activeMap)
-        activeMap.DisableAll();
+    }
+    void ChangeState(RoomState newState)
+    {
+        currentState = newState;
+        OnStateChanged?.Invoke(newState);
     }
 }
