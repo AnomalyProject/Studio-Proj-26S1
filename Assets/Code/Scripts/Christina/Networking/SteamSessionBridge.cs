@@ -13,9 +13,23 @@ public class SteamSessionBridge : MonoBehaviour
     private bool isCreatingLobby = false;
     private bool isSteamAvailable = false;
     
+    // Host
     private HostStartupStatus currentHostStartupStatus;
     private int hostStartupAttemptID = 0;
     private Coroutine hostStartupCoroutine;
+    
+    public HostStartupStatus CurrentHostStartupStatus => currentHostStartupStatus;
+    public event System.Action<HostStartupStatus> OnHostStartupStatusChanged;
+    
+    // Join
+    private JoinStartupStatus currentJoinStartupStatus;
+    private int joinStartupAttemptID = 0;
+    private bool joinStartupInProgress = false;
+    private CSteamID pendingJoinLobbyId;
+
+    public JoinStartupStatus CurrentJoinStartupStatus => currentJoinStartupStatus;
+    public event System.Action<JoinStartupStatus> OnJoinStartupStatusChanged;
+    
     
     // tracks if LobbyCreated_t succeded for this boot attempt
     private bool hostLobbyCreated = false;
@@ -220,6 +234,10 @@ public class SteamSessionBridge : MonoBehaviour
             $"FailureStage={currentHostStartupStatus.FailureStage} " +
             $"Transport={currentHostStartupStatus.ActiveTransport} " +
             $"Message={currentHostStartupStatus.Message}");
+        
+        // event to be able to turn the diagnostics into usable data from other classes
+        // instead of only logs in the console.
+        OnHostStartupStatusChanged?.Invoke(currentHostStartupStatus);
     }
     
     /// <summary>
@@ -374,6 +392,16 @@ public class SteamSessionBridge : MonoBehaviour
         // isInLobby = true and try to connect to the host. 
         if (callback.m_EChatRoomEnterResponse != (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess)
         {
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    $"Failed to enter Steam lobby: {(EChatRoomEnterResponse)callback.m_EChatRoomEnterResponse}",
+                    ConnectionFailureSource.Steam);
+
+                joinStartupInProgress = false;
+            }
+            
             SetBootStage(
                 HostStartupStage.Failed,
                 $"Failed to enter Steam lobby: {(EChatRoomEnterResponse)callback.m_EChatRoomEnterResponse}",
@@ -428,6 +456,16 @@ public class SteamSessionBridge : MonoBehaviour
         else
         {
             Debug.Log("[SteamBridge] Entered lobby as CLIENT: connecting to host...");
+            
+            if (joinStartupInProgress)
+            {
+                pendingJoinLobbyId = enteredLobbyId;
+
+                SetJoinStage(
+                    JoinStartupStage.LobbyEntered,
+                    $"Entered Steam lobby {enteredLobbyId} as client.");
+            }
+            
             ConnectToHost(lobbyOwner);
         }
     }
@@ -456,6 +494,15 @@ public class SteamSessionBridge : MonoBehaviour
         if (networkManager == null)
         {
             Debug.LogError("[SteamBridge] NetworkManager not found!");
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    "NetworkManager not found while starting client connection.",
+                    ConnectionFailureSource.Transport);
+
+                joinStartupInProgress = false;
+            }
             return;
         }
 
@@ -463,10 +510,28 @@ public class SteamSessionBridge : MonoBehaviour
         if (steamTransport == null)
         {
             Debug.LogError("[SteamBridge] SteamTransport not assigned to NetworkManager!");
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    "SteamTransport was not assigned to the NetworkManager.",
+                    ConnectionFailureSource.Transport);
+
+                joinStartupInProgress = false;
+            }
+            
             return;
         }
 
         steamTransport.address = hostSteamId.m_SteamID.ToString();
+        
+        if (joinStartupInProgress)
+        {
+            SetJoinStage(
+                JoinStartupStage.TransportConnectStarting,
+                $"Starting transport connection to host {hostSteamId}.");
+        }
+        
         networkManager.StartClient();
         // we use coroutine because StartClient() is asynchronous.
         // we need to wait for the response to send RPCs
@@ -486,17 +551,50 @@ public class SteamSessionBridge : MonoBehaviour
         if (networkManager == null || !networkManager.isClient)
         {
             Debug.LogError("[SteamBridge] Failed to connect to host via PurrNet");
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    "Failed to connect to host through PurrNet transport.",
+                    ConnectionFailureSource.Transport);
+
+                joinStartupInProgress = false;
+            }
             yield break;
         }
 
         if (SessionManager.Instance == null)
         {
             Debug.LogError("[SteamBridge] SessionManager not available after connecting");
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    "SessionManager was not available after client connection.",
+                    ConnectionFailureSource.Transport);
+
+                joinStartupInProgress = false;
+            }
             yield break;
         }
-
+        
+        if (joinStartupInProgress)
+        {
+            SetJoinStage(
+                JoinStartupStage.TransportConnected,
+                "Transport connected to host successfully.");
+        }
+        
         ulong steamID = SteamUser.GetSteamID().m_SteamID;
         string displayName = SteamFriends.GetPersonaName();
+        
+        if (joinStartupInProgress)
+        {
+            SetJoinStage(
+                JoinStartupStage.SessionJoinRequested,
+                "Transport connected. Requesting session approval from host.");
+        }
+        
         SessionManager.Instance.RequestJoinSession(steamID, displayName);
         Debug.Log("[SteamBridge] PurrNet connected, session join requested");
     }
@@ -524,6 +622,14 @@ public class SteamSessionBridge : MonoBehaviour
     {
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
         
+        joinStartupAttemptID++;
+        joinStartupInProgress = true;
+        pendingJoinLobbyId = callback.m_steamIDLobby;
+
+        SetJoinStage(
+            JoinStartupStage.JoinRequestReceived,
+            $"Join requested for lobby {callback.m_steamIDLobby}");
+        
         // Same lobby check: if player is already in the lobby they're trying to join, ignore it
         if (isInLobby && currentLobbyId ==callback.m_steamIDLobby)
         {
@@ -537,8 +643,17 @@ public class SteamSessionBridge : MonoBehaviour
             Debug.Log("[SteamBridge] Leaving current lobby before joining new one.");
             LeaveSteamLobby();
         }
+        SetJoinStage(
+            JoinStartupStage.LeavingPreviousLobby,
+            "Leaving current Steam lobby before new join attempt.");
+        
         // after the checks now JoinLobby proceeds into a clean empty state
         SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
+        
+        SetJoinStage(
+            JoinStartupStage.LobbyJoinRequested,
+            $"Requested Steam lobby join for {callback.m_steamIDLobby}.");
+
     }
     
     // note: only lobby owner can set the metadata
@@ -587,6 +702,24 @@ public class SteamSessionBridge : MonoBehaviour
         return success;
     }
     
+    private void SetJoinStage(JoinStartupStage stage,string message, ConnectionFailureSource failureSource = ConnectionFailureSource.None)
+    {
+        currentJoinStartupStatus.Stage = stage;
+        currentJoinStartupStatus.Message = message;
+        currentJoinStartupStatus.AttemptID = joinStartupAttemptID;
+        currentJoinStartupStatus.FailureSource = failureSource;
+        currentJoinStartupStatus.TargetLobbyId = pendingJoinLobbyId.IsValid() ? pendingJoinLobbyId.ToString() : "None";
+
+        Debug.Log(
+            $"[SteamBridge:Join] Attempt={currentJoinStartupStatus.AttemptID} " +
+            $"Stage={currentJoinStartupStatus.Stage} " +
+            $"FailureSource={currentJoinStartupStatus.FailureSource} " +
+            $"TargetLobby={currentJoinStartupStatus.TargetLobbyId} " +
+            $"Message={currentJoinStartupStatus.Message}");
+
+        OnJoinStartupStatusChanged?.Invoke(currentJoinStartupStatus);
+    }
+    
     private void SyncMetadataToSteamLobbyFromEvent()
     {
         SyncMetadataToSteamLobby();
@@ -598,6 +731,8 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerLeft += OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobbyFromEvent;
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+        SessionEvents.OnSessionError += OnSessionErrorReceived;
+
     }
     
     private void UnsubscribeFromSessionEvents()
@@ -605,13 +740,29 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerJoined -= OnPlayerJoinedSession;
         SessionEvents.OnPlayerLeft -= OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged -= SyncMetadataToSteamLobbyFromEvent;
+        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+        SessionEvents.OnSessionError -= OnSessionErrorReceived;
 
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
-        }
     }
-    
+
+    private void OnSessionErrorReceived(ulong steamID, string displayName)
+    {
+        SyncMetadataToSteamLobby();
+
+        if (!joinStartupInProgress)
+            return;
+
+        ulong localSteamId = SteamUser.GetSteamID().m_SteamID;
+        if (steamID != localSteamId)
+            return;
+
+        SetJoinStage(
+            JoinStartupStage.SessionJoinApproved,
+            $"Session join approved for local player {displayName}.");
+
+        joinStartupInProgress = false;
+    }
+
     private void OnPlayerJoinedSession(ulong steamID, string displayName)
     {
         SyncMetadataToSteamLobby();
@@ -621,6 +772,20 @@ public class SteamSessionBridge : MonoBehaviour
     {
         SyncMetadataToSteamLobby();
     }
+    
+    private void OnSessionErrorReceived(SessionErrorResponse error)
+    {
+        if (!joinStartupInProgress)
+            return;
+
+        SetJoinStage(
+            JoinStartupStage.Failed,
+            $"Session join failed: {error.Code} - {error.Message}",
+            ConnectionFailureSource.SessionApproval);
+
+        joinStartupInProgress = false;
+    }
+
 
     private void OnGameStateChanged(GameState previous, GameState next)
     {

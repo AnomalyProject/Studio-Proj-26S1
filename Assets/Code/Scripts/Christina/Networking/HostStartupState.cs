@@ -29,3 +29,38 @@ public struct HostStartupStatus
     public string ActiveTransport;
 }
 
+public enum JoinStartupStage
+{
+    Idle,
+    JoinRequestReceived,
+    LeavingPreviousLobby,
+    LobbyJoinRequested,
+    LobbyEntered,
+    TransportConnectStarting,
+    TransportConnected,
+    SessionJoinRequested,
+    SessionJoinApproved,
+    Failed
+}
+
+
+public struct JoinStartupStatus
+{
+    public int AttemptID;
+    public JoinStartupStage Stage;
+    public ConnectionFailureSource FailureSource;
+    public string Message;
+    public string TargetLobbyId;
+}
+
+public enum ConnectionFailureSource
+{
+    None,
+    Steam,
+    Transport,
+    SessionApproval,
+    Unknown
+}
+
+
+

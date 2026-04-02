@@ -6,6 +6,14 @@ using Steamworks;
 public class NetworkTestUI : MonoBehaviour
 {
     private readonly List<string> eventLog = new();
+    
+    private HostStartupStatus hostStartupStatus;
+    private bool hasHostStartupStatus;
+    
+    private JoinStartupStatus joinStartupStatus;
+    private bool hasJoinStartupStatus;
+
+
     private const int MaxLogEntries = 5;
 
     private void OnEnable()
@@ -14,7 +22,16 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnPlayerLeft += LogPlayerLeft;
         SessionEvents.OnSessionDataChanged += LogSessionDataChanged;
         SessionEvents.OnSessionError += LogSessionError;
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged += HandleHostStartupStatusChanged;
+        hostStartupStatus = SteamSessionBridge.Instance.CurrentHostStartupStatus;
+        hasHostStartupStatus = true;
+        
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged += HandleJoinStartupStatusChanged;
+        joinStartupStatus = SteamSessionBridge.Instance.CurrentJoinStartupStatus;
+        hasJoinStartupStatus = true;
+
     }
+
 
     private void OnDisable()
     {
@@ -22,6 +39,11 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnPlayerLeft -= LogPlayerLeft;
         SessionEvents.OnSessionDataChanged -= LogSessionDataChanged;
         SessionEvents.OnSessionError -= LogSessionError;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged -= HandleHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= HandleJoinStartupStatusChanged;
+
+
     }
 
     private void AddLog(string message)
@@ -61,6 +83,9 @@ public class NetworkTestUI : MonoBehaviour
         if (!isConnected)
         {
             DrawDisconnectedUI();
+            DrawHostDiagnostics();
+            DrawJoinDiagnostics();
+
         }
         else
         {
@@ -71,6 +96,8 @@ public class NetworkTestUI : MonoBehaviour
 
         GUILayout.EndArea();
     }
+
+ 
 
     private void DrawDisconnectedUI()
     {
@@ -131,7 +158,43 @@ public class NetworkTestUI : MonoBehaviour
             SessionManager.Instance.RequestStartMatch();
         }
     }
+    
+    private void DrawHostDiagnostics()
+    {
+        GUILayout.Space(10);
+        GUILayout.Label("=== Host Diagnostics ===");
 
+        if (!hasHostStartupStatus)
+        {
+            GUILayout.Label("No host startup status yet.");
+            return;
+        }
+
+        GUILayout.Label($"Stage: {hostStartupStatus.Stage}");
+        GUILayout.Label($"Failure Stage: {hostStartupStatus.FailureStage}");
+        GUILayout.Label($"Transport: {hostStartupStatus.ActiveTransport}");
+        GUILayout.Label($"Attempt: {hostStartupStatus.AttemptID}");
+        GUILayout.Label($"Message: {hostStartupStatus.Message}");
+    }
+    
+    private void DrawJoinDiagnostics()
+    {
+        GUILayout.Space(10);
+        GUILayout.Label("--- Join Diagnostics ---");
+
+        if (!hasJoinStartupStatus)
+        {
+            GUILayout.Label("No join status yet.");
+            return;
+        }
+
+        GUILayout.Label($"Stage: {joinStartupStatus.Stage}");
+        GUILayout.Label($"Failure Source: {joinStartupStatus.FailureSource}");
+        GUILayout.Label($"Attempt: {joinStartupStatus.AttemptID}");
+        GUILayout.Label($"Target Lobby: {joinStartupStatus.TargetLobbyId}");
+        GUILayout.Label($"Message: {joinStartupStatus.Message}");
+    }
+    
     private void DrawEventLog()
     {
         GUILayout.Label("--- Event Log ---");
@@ -141,6 +204,23 @@ public class NetworkTestUI : MonoBehaviour
             GUILayout.Label(eventLog[i]);
         }
     }
+    
+    private void HandleHostStartupStatusChanged(HostStartupStatus status)
+    {
+        hostStartupStatus = status;
+        hasHostStartupStatus = true;
+
+        AddLog($"HOST STAGE: {status.Stage}");
+    }
+    
+    private void HandleJoinStartupStatusChanged(JoinStartupStatus status)
+    {
+        joinStartupStatus = status;
+        hasJoinStartupStatus = true;
+
+        AddLog($"JOIN STAGE: {status.Stage}");
+    }
+
 }
 
 
