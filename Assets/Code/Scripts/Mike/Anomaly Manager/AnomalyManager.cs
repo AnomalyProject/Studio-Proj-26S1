@@ -35,9 +35,7 @@ public class AnomalyManager : MonoBehaviour
     {
         if (activeMap == null) PickMap();
 
-        activeAnomalyVariation?.SetActive(false);
-        activePunishmentRoom?.SetActive(false);
-        winRoom?.SetActive(false);
+        ClearActiveState();
 
         if (!withAnomalies)
         {
@@ -72,31 +70,12 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activeMap?.DisableAll();
-        winRoom?.SetActive(false);
+        ClearActiveState();
 
-        if (activePunishmentRoom) activePunishmentRoom.SetActive(false);
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
         activePunishmentRoom?.SetActive(true);
         OnPunishmentRoomActivation?.Invoke();
-    }
-
-    /// <summary>
-    /// Disables the active punishment room and decides the next map variation. 
-    /// If there is no active punishment room, it will log a warning and do nothing.
-    /// </summary>
-    public void DisablePunishmentRoom()
-    {
-        if(activePunishmentRoom == null)
-        {
-            Debug.LogWarning("Tried to disable punishment room but there is no active punishment room.");
-            return;
-        }
-
-        activePunishmentRoom.SetActive(false);
-        activePunishmentRoom = null;
-        DecideNextMapVariation();
     }
 
     /// <summary>
@@ -122,9 +101,7 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activePunishmentRoom?.SetActive(false);
-        winRoom?.SetActive(false);
-        activeMap?.DisableAll();
+        ClearActiveState();
 
         activeMap = mapCollection[mapIndex];
         activeMap.BaseMap.SetActive(true);
@@ -142,11 +119,22 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
+        ClearActiveState();
+
+        winRoom?.SetActive(true);
+        OnWinRoomActivation?.Invoke();
+    }
+    
+    void ClearActiveState()
+    {
+        activeAnomalyVariation?.SetActive(false);
+        activeAnomalyVariation = null;
+
         activePunishmentRoom?.SetActive(false);
         activePunishmentRoom = null;
 
+        winRoom?.SetActive(false);
+
         activeMap?.DisableAll();
-        winRoom?.SetActive(true);
-        OnWinRoomActivation?.Invoke();
     }
 }
