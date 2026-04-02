@@ -5,21 +5,18 @@ using UnityEngine;
 
 public class AnomalyMap : MonoBehaviour
 {
-    [SerializeField, Tooltip("If set to true Anomaly Manager will disable the BaseMap object when enabling anomalies, otherwise not.")] 
-    bool wholeRoomVariations = true;
 
     [SerializeField, Tooltip("The base map all anomaly variations are tied to.")] GameObject baseMap;
-    [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<GameObject> anomalyVariations;
+    [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
    
-    List<GameObject> usedAnomalies = new();
-    public bool WholeRoomVariations => wholeRoomVariations;
+    List<AnomalyGroup> usedAnomalies = new();
     public GameObject BaseMap => baseMap;
 
     /// <summary>
     /// Returns a random anomaly variation from the list, ensuring that all variations are used before any repeats occur.
     /// </summary>
     /// <returns>The <see cref="GameObject"/> reference of the Anomaly variation.</returns>
-    public GameObject GetNextAnomalyGroup()
+    public AnomalyGroup GetNextAnomalyGroup()
     {
         if (anomalyVariations.Count == 0 && usedAnomalies.Count == 0)
         {
@@ -34,7 +31,7 @@ public class AnomalyMap : MonoBehaviour
         }
 
         int index = UnityEngine.Random.Range(0, anomalyVariations.Count);
-        GameObject nextAnomaly = anomalyVariations[index];
+        AnomalyGroup nextAnomaly = anomalyVariations[index];
 
         usedAnomalies.Add(nextAnomaly);
         anomalyVariations.RemoveAt(index);
@@ -48,7 +45,7 @@ public class AnomalyMap : MonoBehaviour
     {
         baseMap?.SetActive(false);
 
-        foreach (var variation in anomalyVariations) variation?.SetActive(false);
-        foreach (var variation in usedAnomalies) variation?.SetActive(false);
+        foreach (var variation in anomalyVariations) variation?.GroupRoot.SetActive(false);
+        foreach (var variation in usedAnomalies) variation?.GroupRoot.SetActive(false);
     }
 }

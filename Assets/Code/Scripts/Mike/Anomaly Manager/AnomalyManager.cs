@@ -44,17 +44,16 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activeMap.BaseMap.SetActive(!activeMap.WholeRoomVariations);
+        AnomalyGroup nextVariation = activeMap.GetNextAnomalyGroup();
+        activeMap.BaseMap.SetActive(!nextVariation.ReplacesBaseMap);
 
-        GameObject nextVariation = activeMap.GetNextAnomalyGroup();
-
-        if (!nextVariation)
+        if (!nextVariation.GroupRoot)
         {
             Debug.LogWarning($"Failed to get next anomaly variation. Check if the active map ({activeMap.BaseMap.name}) has any variations assigned.");
             return;
         }
 
-        activeAnomalyVariation = nextVariation;
+        activeAnomalyVariation = nextVariation.GroupRoot;
         activeAnomalyVariation.SetActive(true);
         OnAnomalyMapChanged?.Invoke();
     }

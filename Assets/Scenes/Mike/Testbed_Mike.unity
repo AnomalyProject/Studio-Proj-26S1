@@ -3210,13 +3210,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3fb7b05b67073946944eeeee337f20f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnomalyMap
-  wholeRoomVariations: 1
   baseMap: {fileID: 515217204}
   anomalyVariations:
-  - {fileID: 1807348732}
-  - {fileID: 1309664847}
-  - {fileID: 597687573}
-  - {fileID: 2092104593}
+  - _groupRoot: {fileID: 1807348732}
+    _replacesBaseMap: 1
+  - _groupRoot: {fileID: 1309664847}
+    _replacesBaseMap: 1
+  - _groupRoot: {fileID: 597687573}
+    _replacesBaseMap: 1
+  - _groupRoot: {fileID: 2092104593}
+    _replacesBaseMap: 1
 --- !u!1 &2062707093
 GameObject:
   m_ObjectHideFlags: 0
