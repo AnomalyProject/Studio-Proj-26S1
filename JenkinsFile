@@ -12,6 +12,7 @@ pipeline {
 
     options {
         disableConcurrentBuilds()
+        lock ('project-anomaly-build-queue')
     }
 
     environment {
