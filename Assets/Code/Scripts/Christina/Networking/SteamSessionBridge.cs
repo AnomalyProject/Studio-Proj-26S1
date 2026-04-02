@@ -628,6 +628,26 @@ public class SteamSessionBridge : MonoBehaviour
 
             yield break;
         }
+        var identity = SessionManager.Instance.GetComponent<NetworkIdentity>();
+        while (identity != null && !identity.isSpawned && Time.realtimeSinceStartup < deadline)
+        {
+            yield return null;
+        }
+
+        if (identity == null || !identity.isSpawned)
+        {
+            Debug.LogError("[SteamBridge] SessionManager exists but is not network-spawned");
+            if (joinStartupInProgress)
+            {
+                SetJoinStage(
+                    JoinStartupStage.Failed,
+                    "SessionManager was not network-spawned in time.",
+                    ConnectionFailureSource.Transport);
+
+                joinStartupInProgress = false;
+            }
+            yield break;
+        }
 
         if (joinStartupInProgress)
         {
