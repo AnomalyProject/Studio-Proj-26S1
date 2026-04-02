@@ -27,6 +27,26 @@ public struct PlayerSessionInfo
 }
 
 [Serializable]
+public struct ClientPlayerInfo
+{
+    public ulong SteamID;
+    public string DisplayName;
+    public bool IsReady;
+    public bool IsHost;
+}
+    
+[Serializable]
+public struct ClientSessionData
+{
+    public ulong HostSteamID;
+    public string MapName;
+    public string GameMode;
+    public int MaxPlayers;
+    public int PlayerCount;
+    public ClientPlayerInfo[] Players;
+}
+
+[Serializable]
 public class SessionData
 {
     public string SessionId { get; private set; }

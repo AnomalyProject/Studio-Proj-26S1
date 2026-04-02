@@ -402,12 +402,17 @@ public class SteamSessionBridge : MonoBehaviour
 
                 joinStartupInProgress = false;
             }
-            
-            SetBootStage(
-                HostStartupStage.Failed,
-                $"Failed to enter Steam lobby: {(EChatRoomEnterResponse)callback.m_EChatRoomEnterResponse}",
-                HostStartupStage.LobbyEnteredAsHost);
-            RollbackFailedHostStartup();
+            bool hostIsStartingUp = hostStartupCoroutine != null &&
+                                    activeHostStartupAttemptID == currentHostStartupStatus.AttemptID;
+
+            if (hostIsStartingUp)
+            {
+                SetBootStage(
+                    HostStartupStage.Failed,
+                    $"Failed to enter Steam lobby: {(EChatRoomEnterResponse)callback.m_EChatRoomEnterResponse}",
+                    HostStartupStage.LobbyEnteredAsHost);
+                RollbackFailedHostStartup();
+            }
             return;
         }
         
@@ -417,10 +422,10 @@ public class SteamSessionBridge : MonoBehaviour
 
         CSteamID lobbyOwner = SteamMatchmaking.GetLobbyOwner(currentLobbyId);
         bool isHost = lobbyOwner == SteamUser.GetSteamID();
-        
+
         bool hostStartupInProgress = hostStartupCoroutine != null &&
                                      activeHostStartupAttemptID == currentHostStartupStatus.AttemptID;
-
+        
         if (hostStartupInProgress && hostLobbyCreated && enteredLobbyId != pendingHostLobbyId)
         {
             Debug.LogWarning(
@@ -565,7 +570,7 @@ public class SteamSessionBridge : MonoBehaviour
             yield break;
         }
 
-        if (SessionManager.Instance == null && Time.realtimeSinceStartup < deadline)
+        while (SessionManager.Instance == null && Time.realtimeSinceStartup < deadline)
         {
             yield return null;
         }
@@ -740,6 +745,7 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobbyFromEvent;
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
         SessionEvents.OnSessionError += OnSessionErrorReceived;
+        SessionEvents.OnPlayerJoined += OnLocalPlayerJoinApproved;
 
     }
     
@@ -750,10 +756,11 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnSessionDataChanged -= SyncMetadataToSteamLobbyFromEvent;
         GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
         SessionEvents.OnSessionError -= OnSessionErrorReceived;
+        SessionEvents.OnPlayerJoined -= OnLocalPlayerJoinApproved;
 
     }
 
-    private void OnSessionErrorReceived(ulong steamID, string displayName)
+    private void OnLocalPlayerJoinApproved(ulong steamID, string displayName)
     {
         SyncMetadataToSteamLobby();
 

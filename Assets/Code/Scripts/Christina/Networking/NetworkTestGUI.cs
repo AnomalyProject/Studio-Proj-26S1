@@ -108,10 +108,10 @@ public class NetworkTestUI : MonoBehaviour
             SteamSessionBridge.Instance.BeginSteamListenHost();
         }
 
-        if (GUILayout.Button("JOIN"))
+        /*if (GUILayout.Button("JOIN"))
         {
             NetworkManager.main.StartClient();
-        }
+        }*/
     }
 
     private void DrawConnectedUI()
