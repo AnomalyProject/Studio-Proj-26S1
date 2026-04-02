@@ -77,7 +77,7 @@ pipeline {
                 discordSend title: "✅ Build Success: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
                     description: "Splendid news Sir, the build and the Deployment to Steam (${params.BUILD_BRANCH}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
-                    result: 'SUCCESS',
+                    result: 'SUCCESS', //investigate why it does not print steam depo...
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
