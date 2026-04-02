@@ -32,6 +32,12 @@ public class AnomalyManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Modify the chance of anomalous room variations. The value is clamped between 0 and 1.
+    /// </summary>
+    /// <param name="percentage01"></param>
+    public void ChangeAnomalyChance(float percentage01) => anomalyChance = Mathf.Clamp01(percentage01);
+
+    /// <summary>
     /// Randomly decides the next map variation based on the <see cref="anomalyChance"/>.
     /// </summary>
     public void DecideNextMapVariation() => DecideNextMapVariation(Random.value <= anomalyChance);
