@@ -20,7 +20,9 @@ public class FPSInputHandler : NetworkBehaviour
     public bool SprintHeld { get; private set; }
 
     public bool CrouchTriggered { get; private set; }
-    
+
+    public float LeanInput { get; private set; }
+
     #endregion
 
     #region Unity Lifecycle
@@ -65,6 +67,18 @@ public class FPSInputHandler : NetworkBehaviour
 
         if (ctx.started)
             CrouchTriggered = true;
+    }
+
+    public void OnLeanLeft(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed) LeanInput -= 1f;
+        else if (ctx.canceled) LeanInput += 1f;
+    }
+
+    public void OnLeanRight(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed) LeanInput += 1f;
+        else if (ctx.canceled) LeanInput -= 1f;
     }
     #endregion
 }
