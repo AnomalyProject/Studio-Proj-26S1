@@ -127,14 +127,22 @@ public class AnomalyManager : MonoBehaviour
     
     void ClearActiveState()
     {
-        activeAnomalyVariation?.SetActive(false);
-        activeAnomalyVariation = null;
+        if (activeAnomalyVariation)
+        {
+            activeAnomalyVariation.SetActive(false);
+            activeAnomalyVariation = null;
+        }
 
-        activePunishmentRoom?.SetActive(false);
-        activePunishmentRoom = null;
+        if (activePunishmentRoom)
+        {
+            activePunishmentRoom.SetActive(false);
+            activePunishmentRoom = null;
+        }
 
-        winRoom?.SetActive(false);
+        if(winRoom)
+        winRoom.SetActive(false);
 
-        activeMap?.DisableAll();
+        if(activeMap)
+        activeMap.DisableAll();
     }
 }
