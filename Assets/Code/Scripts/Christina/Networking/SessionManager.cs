@@ -233,29 +233,29 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private ClientSessionData BuildClientSessionData()
     {
-        var clientData = new ClientSessionData
+        var players = new List<ClientPlayerInfo>();
+
+        for (int i = 0; i < sessionData.Players.Count; i++)
+        {
+            var p = sessionData.Players[i];
+            players.Add(new ClientPlayerInfo
+            {
+                SteamID = p.SteamID,
+                DisplayName = p.DisplayName,
+                IsReady = p.IsReady,
+                IsHost = p.IsHost
+            });
+        }
+
+        return new ClientSessionData
         {
             HostSteamID = sessionData.HostSteamID,
             MapName = sessionData.MapName,
             GameMode = sessionData.GameMode,
             MaxPlayers = sessionData.MaxPlayers,
             PlayerCount = sessionData.Players.Count,
-            Players = new ClientPlayerInfo[sessionData.Players.Count]
+            Players = players
         };
-
-        for (int i = 0; i < sessionData.Players.Count; i++)
-        {
-            var p = sessionData.Players[i];
-            clientData.Players[i] = new ClientPlayerInfo
-            {
-                SteamID = p.SteamID,
-                DisplayName = p.DisplayName,
-                IsReady = p.IsReady,
-                IsHost = p.IsHost
-            };
-        }
-
-        return clientData;
     }
 
     /// <summary>

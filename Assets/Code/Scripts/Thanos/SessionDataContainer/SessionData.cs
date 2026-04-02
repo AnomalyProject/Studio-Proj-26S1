@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using System.Linq;
 
 [Serializable]
@@ -43,7 +42,7 @@ public struct ClientSessionData
     public string GameMode;
     public int MaxPlayers;
     public int PlayerCount;
-    public ClientPlayerInfo[] Players;
+    public List<ClientPlayerInfo> Players;
 }
 
 [Serializable]

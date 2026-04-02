@@ -22,13 +22,16 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnPlayerLeft += LogPlayerLeft;
         SessionEvents.OnSessionDataChanged += LogSessionDataChanged;
         SessionEvents.OnSessionError += LogSessionError;
-        SteamSessionBridge.Instance.OnHostStartupStatusChanged += HandleHostStartupStatusChanged;
-        hostStartupStatus = SteamSessionBridge.Instance.CurrentHostStartupStatus;
-        hasHostStartupStatus = true;
-        
-        SteamSessionBridge.Instance.OnJoinStartupStatusChanged += HandleJoinStartupStatusChanged;
-        joinStartupStatus = SteamSessionBridge.Instance.CurrentJoinStartupStatus;
-        hasJoinStartupStatus = true;
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged += HandleHostStartupStatusChanged;
+            hostStartupStatus = SteamSessionBridge.Instance.CurrentHostStartupStatus;
+            hasHostStartupStatus = true;
+
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += HandleJoinStartupStatusChanged;
+            joinStartupStatus = SteamSessionBridge.Instance.CurrentJoinStartupStatus;
+            hasJoinStartupStatus = true;
+        }
 
     }
 
@@ -40,8 +43,11 @@ public class NetworkTestUI : MonoBehaviour
         SessionEvents.OnSessionDataChanged -= LogSessionDataChanged;
         SessionEvents.OnSessionError -= LogSessionError;
 
-        SteamSessionBridge.Instance.OnHostStartupStatusChanged -= HandleHostStartupStatusChanged;
-        SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= HandleJoinStartupStatusChanged;
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged -= HandleHostStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= HandleJoinStartupStatusChanged;
+        }
 
 
     }
@@ -75,7 +81,7 @@ public class NetworkTestUI : MonoBehaviour
 
     private void OnGUI()
     {
-        GUILayout.BeginArea(new Rect(10, 10, 250, 400));
+        GUILayout.BeginArea(new Rect(10, 10, 400, 800));
 
         bool isConnected = NetworkManager.main != null &&
             (NetworkManager.main.isClient || NetworkManager.main.isServer);
