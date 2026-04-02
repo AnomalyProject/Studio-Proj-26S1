@@ -77,6 +77,43 @@ public class SteamSessionBridge : MonoBehaviour
         lobbyCreatedCallResult = CallResult<LobbyCreated_t>.Create(OnLobbyCreated);
 
         SubscribeToSessionEvents();
+        
+        CheckForLaunchJoin();
+    }
+    
+    private void CheckForLaunchJoin()
+    {
+        string[] args = System.Environment.GetCommandLineArgs();
+
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] == "+connect_lobby")
+            {
+                if (ulong.TryParse(args[i + 1], out ulong lobbyId))
+                {
+                    Debug.Log($"[SteamBridge] Launched with +connect_lobby {lobbyId}");
+
+                    joinStartupAttemptID++;
+                    joinStartupInProgress = true;
+                    pendingJoinLobbyId = new CSteamID(lobbyId);
+
+                    SetJoinStage(
+                        JoinStartupStage.JoinRequestReceived,
+                        $"Join requested via launch argument for lobby {lobbyId}");
+
+                    SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
+
+                    SetJoinStage(
+                        JoinStartupStage.LobbyJoinRequested,
+                        $"Requested Steam lobby join for {lobbyId}.");
+                }
+                else
+                {
+                    Debug.LogWarning($"[SteamBridge] Invalid lobby ID in launch args: {args[i + 1]}");
+                }
+                return;
+            }
+        }
     }
     
     public void CreateSteamLobby(int maxPlayers)
