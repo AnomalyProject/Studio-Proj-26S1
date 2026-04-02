@@ -84,6 +84,13 @@ public class AnomalyManager : MonoBehaviour
 
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
+
+        if(activePunishmentRoom == null)
+        {
+            Debug.LogWarning($"Tried to enable punishment room at index {punishmentRoomIndex} but it is null.");
+            return;
+        }
+
         activePunishmentRoom?.SetActive(true);
         ChangeState(RoomState.PunishmentRoom);
     }
@@ -116,6 +123,13 @@ public class AnomalyManager : MonoBehaviour
         ClearActiveState();
 
         activeMap = mapCollection[mapIndex];
+
+        if(activeMap == null)
+        {
+            Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is null.");
+            return false;
+        }
+
         activeMap.BaseMap.SetActive(true);
         ChangeState(RoomState.NormalRoom);
         return true;
