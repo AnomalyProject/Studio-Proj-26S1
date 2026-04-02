@@ -77,6 +77,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
+            
+            // register the host now instead of waiting for OnPlayerConnected(),
+            // because OnPlayerConnected() may fire before OnSpawned (race condition but happened and caused issues)
+            PlayerID? localId = NetworkManager.main?.localPlayer;
+            if (localId.HasValue && playerConnectionMap.Count == 0)
+            {
+                hostPlayerID = localId.Value;
+                ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
+                string hostName = SteamFriends.GetPersonaName();
+                AddPlayerToSession(localId.Value, hostSteamID, hostName, isHost: true);
+                Debug.Log("[SessionManager] Host registered as first player in OnSpawned.");
+            }
         }
         else
         {
@@ -115,11 +127,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (sessionData != null && playerConnectionMap.Count == 0)
         {
             hostPlayerID = playerID;
-            // todo: replace with real steamID
             ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
             string hostName = SteamFriends.GetPersonaName();
             AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
-            Debug.Log("[SessionManager] Host registered as first player.");
+            Debug.Log("[SessionManager] Host registered as first player (fallback via OnPlayerConnected).");
         }
     }
 
