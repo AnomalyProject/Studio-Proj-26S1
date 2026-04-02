@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,10 +12,10 @@ public class EnemyPawn : MonoBehaviour
     private NavMeshAgent agent;
 
     [Header("Sight")]
-    [SerializeField] private float sightRange;
-    [SerializeField] private float autoDetectRange;
-    [SerializeField, Range(0, 180)] private float sightAngle;
-    [SerializeField] private float checkFrequency;
+    [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
+    [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
+    [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
+    [SerializeField,Tooltip("How often it should check for what it sees")] private float checkFrequency;
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;

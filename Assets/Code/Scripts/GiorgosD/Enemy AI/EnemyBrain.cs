@@ -5,7 +5,7 @@ public class EnemyBrain : MonoBehaviour
 {
     [Header("Patrol Settings")]
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
-    [SerializeField] private float idleTimer;
+    [SerializeField, Tooltip("How long the AI will stay idle before it continues to other stuff")] private float idleTimer;
 
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
