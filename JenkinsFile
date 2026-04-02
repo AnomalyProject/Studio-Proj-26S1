@@ -3,6 +3,10 @@ def branchMap = [
     'network': "network_testing",
     'main'   : "default"
 ]
+
+def steamBranch = "unknown"
+def commitMsg = "unknown"
+
 pipeline {
     agent any
 
@@ -24,6 +28,9 @@ pipeline {
             steps {
                 cleanWs()
                 git branch: params.BUILD_BRANCH, url: params.REPO_LINK
+                script{
+                    commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                }
             }
         }
 
@@ -48,7 +55,7 @@ pipeline {
         stage('Deploy to Steam') {
             steps {
                 script {
-                    def steamBranch = branchMap.get(params.BUILD_BRANCH, "internal_testing")
+                    steamBranch = branchMap.get(params.BUILD_BRANCH, "internal_testing")
             
                     def contentRoot = "${WORKSPACE}\\Builds"
                     def outputRoot = "${WORKSPACE}\\SteamOutput"
@@ -73,11 +80,10 @@ pipeline {
     post {
         success {
             script {
-                def commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
                 discordSend title: "✅ Build Success: ${params.BUILD_BRANCH} (#${env.BUILD_NUMBER})",
                     description: "Splendid news Sir, the build and the Deployment to Steam (${params.BUILD_BRANCH}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
-                    result: 'SUCCESS',
+                    result: 'SUCCESS', //investigate why it does not print steam depo...
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
