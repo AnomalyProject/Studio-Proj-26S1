@@ -37,6 +37,7 @@ public class AnomalyManager : MonoBehaviour
 
         activeAnomalyVariation?.SetActive(false);
         activePunishmentRoom?.SetActive(false);
+        winRoom?.SetActive(false);
 
         if (!withAnomalies)
         {
@@ -72,6 +73,8 @@ public class AnomalyManager : MonoBehaviour
         }
 
         activeMap?.DisableAll();
+        winRoom?.SetActive(false);
+
         if (activePunishmentRoom) activePunishmentRoom.SetActive(false);
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
@@ -92,6 +95,7 @@ public class AnomalyManager : MonoBehaviour
         }
 
         activePunishmentRoom.SetActive(false);
+        activePunishmentRoom = null;
         DecideNextMapVariation();
     }
 
@@ -138,9 +142,11 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activeMap?.DisableAll();
         activePunishmentRoom?.SetActive(false);
-        winRoom.SetActive(true);
+        activePunishmentRoom = null;
+
+        activeMap?.DisableAll();
+        winRoom?.SetActive(true);
         OnWinRoomActivation?.Invoke();
     }
 }
