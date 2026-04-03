@@ -101,6 +101,7 @@ public class SteamSessionBridge : MonoBehaviour
                         JoinStartupStage.JoinRequestReceived,
                         $"Join requested via launch argument for lobby {lobbyId}");
 
+                    SessionModeManager.Instance.StartJoining();
                     SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
 
                     SetJoinStage(
@@ -717,6 +718,7 @@ public class SteamSessionBridge : MonoBehaviour
             JoinStartupStage.LeavingPreviousLobby,
             "Leaving current Steam lobby before new join attempt.");
         
+        SessionModeManager.Instance.StartJoining();
         // after the checks now JoinLobby proceeds into a clean empty state
         SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
         

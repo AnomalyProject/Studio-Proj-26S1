@@ -23,16 +23,42 @@ public class SessionModeManager : MonoBehaviour
         }
     }
     
+    private void OnEnable()
+    {
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+        }
+    }
+
+    private void OnHostStartupStatusChanged(HostStartupStatus status)
+    {
+        if (status.Stage == HostStartupStage.Failed && currentMode == SessionMode.CoOpHost)
+        {
+            Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
+            SetMode(SessionMode.None);
+        }
+    }
+    
     public void SetMode(SessionMode mode)
     {
-        // don't fire an event if mode is already the same
         if (mode == currentMode) return;
-        // log the transition
+        
         Debug.Log($"Mode: {currentMode} changed to {mode}.");
-        // store previous mode update current
+
         SessionMode previousMode = currentMode;
         currentMode = mode;
-        // fire OnModeChanged event
+
         OnModeChanged?.Invoke(previousMode, currentMode);
     }
 
@@ -69,4 +95,71 @@ public class SessionModeManager : MonoBehaviour
         
     }
     
+    public void StartSolo(string sceneName)
+    {
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
+            return;
+        }
+
+        Debug.Log("[SessionModeManager] Starting Solo session...");
+        
+        SetMode(SessionMode.Solo);
+
+        // in Solo mode we don't need a Lobby phase. But we still go through it because
+        // GameStateManager requires that path. 
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        
+        SceneLoader.Instance.OnLoadFinished += OnSceneLoaded;
+        SceneLoader.Instance.LoadSceneWithAsync(sceneName);
+    }
+    
+    public void StartHosting()
+    {
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start hosting, already in {currentMode} mode.");
+            return;
+        }
+
+        Debug.Log("[SessionModeManager] Starting Co-Op Host...");
+
+        SetMode(SessionMode.CoOpHost);
+
+        SteamSessionBridge.Instance.BeginSteamListenHost();
+    }
+
+    private void OnSceneLoaded()
+    {
+        // unsubscribing immediately because the next time any scene loads through SceneLoader, 
+        // OnSceneLoaded fires again and tries to transition to InGame from Menu. 
+        SceneLoader.Instance.OnLoadFinished -= OnSceneLoaded;
+        
+        GameStateManager.Instance.RequestStateChange(GameState.InGame);
+        Debug.Log("[SessionModeManager] Scene loaded. Transitioned to InGame");
+    }
+    
+    public void StartJoining()
+    {
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot join, already in {currentMode} mode.");
+            return;
+        }
+
+        Debug.Log("[SessionModeManager] Starting Co-Op Client join...");
+
+        SetMode(SessionMode.CoOpClient);
+    }
+    
+    private void OnJoinStartupStatusChanged(JoinStartupStatus status)
+    {
+        if (status.Stage == JoinStartupStage.Failed && currentMode == SessionMode.CoOpClient)
+        {
+            Debug.LogWarning($"[SessionModeManager] Join failed: {status.Message}");
+            SetMode(SessionMode.None);
+        }
+    }
 }

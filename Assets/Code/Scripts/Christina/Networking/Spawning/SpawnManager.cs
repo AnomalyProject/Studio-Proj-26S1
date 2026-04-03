@@ -99,7 +99,6 @@ public class SpawnManager : MonoBehaviour
                
         }
     }
-
     
     private SpawnPoint GetNextSpawnPoint()
     {
