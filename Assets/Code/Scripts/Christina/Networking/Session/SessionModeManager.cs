@@ -37,7 +37,7 @@ public class SessionModeManager : MonoBehaviour
         if (SteamSessionBridge.Instance != null)
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
         }
     }
 
