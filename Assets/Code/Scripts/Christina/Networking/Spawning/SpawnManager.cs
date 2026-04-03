@@ -3,6 +3,8 @@ using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
+using Unity.VisualScripting;
 
 public enum SpawnStrategy
 {
@@ -19,6 +21,9 @@ public class SpawnManager : MonoBehaviour
     private int byTurnIndex = 0;
     
     private readonly Dictionary<PlayerID, NetworkIdentity> spawnedPlayers = new();
+
+    //See what spawn point is assigned to what player
+    private readonly Dictionary<PlayerID, SpawnPoint> playerSpawnPoints = new();
 
     private void Awake()
     {
@@ -56,6 +61,10 @@ public class SpawnManager : MonoBehaviour
 
         SpawnPoint point = GetNextSpawnPoint();
         
+        //Track which point is for what player
+        playerSpawnPoints[playerID] = point;
+        point.LastUsedTime = Time.time;
+
         GameObject gameObject = Instantiate(playerPrefab, point.transform.position, point.transform.rotation);
         NetworkIdentity networkIdentity = gameObject.GetComponent<NetworkIdentity>();
         if (networkIdentity == null) return;
@@ -72,6 +81,14 @@ public class SpawnManager : MonoBehaviour
     
     private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
     {
+
+        //Free his spawn point before sending him home
+        if(playerSpawnPoints.TryGetValue(playerID, out SpawnPoint freedPoint))
+        {
+            playerSpawnPoints.Remove(playerID);
+            Debug.Log($"[SpawnManager] Spawn point is now free -> {freedPoint.name} <-");
+        }
+
         if (!spawnedPlayers.TryGetValue(playerID, out var identity)) return;
 
         spawnedPlayers.Remove(playerID);
@@ -103,12 +120,59 @@ public class SpawnManager : MonoBehaviour
     
     private SpawnPoint GetNextSpawnPoint()
     {
+        if(spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogError("[SpawnManager] You forgor to put the spawn points in the scene!!!");
+            return null;
+        }
+
+        //Get all free poitns
+        List<SpawnPoint> availablePoints = new List<SpawnPoint>();
+        foreach (var pipi in spawnPoints)
+        {
+            if (!playerSpawnPoints.ContainsValue(pipi))
+            {
+                availablePoints.Add(pipi);
+            }
+        }
+
+        //If all points are not free, find the one thats the least recent
+        if(availablePoints.Count == 0)
+        {
+            SpawnPoint oldPoint = spawnPoints[0];
+            for (int i = 1; i < spawnPoints.Length; i++)
+            {
+                if(spawnPoints[i].LastUsedTime < oldPoint.LastUsedTime)
+                {
+                    oldPoint = spawnPoints[i];
+                }
+            }
+            Debug.Log($"[SpawnManager] No free points, so we use the least recent one");
+            return oldPoint;
+        }
+
+        //Random strat
         if (spawnStrategy == SpawnStrategy.Random)
-            return spawnPoints[UnityEngine.Random.Range(0, spawnPoints.Length)];
-        
-        SpawnPoint point = spawnPoints[byTurnIndex];
-        byTurnIndex = (byTurnIndex + 1) % spawnPoints.Length;
-        return point;
+        {
+            SpawnPoint selected = availablePoints[UnityEngine.Random.Range(0, availablePoints.Count)];
+            Debug.Log($"[SpawnManager] Random free spawn selected: {selected.name}");
+            return selected;
+        }
+
+        //Byturn strat
+        for(int i = 0; i < spawnPoints.Length; i++)
+        {
+            SpawnPoint point = spawnPoints[byTurnIndex];
+            byTurnIndex = (byTurnIndex + 1) % spawnPoints.Length;
+
+            if (availablePoints.Contains(point))
+            {
+                Debug.Log($"[SpawnManager] Free byTurn spawn: {point.name}");
+                return point;
+            }
+        }
+
+        return availablePoints[0];
     }
     
 }
