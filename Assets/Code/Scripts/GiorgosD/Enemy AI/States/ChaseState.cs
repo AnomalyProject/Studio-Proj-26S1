@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class ChaseState : BaseState
 {
@@ -14,7 +15,6 @@ public class ChaseState : BaseState
     {
         body.SetMoveSpeed(true);
 
-        body.OnTargetReached += ReachedTaret;
         body.OnLostPlayer += LostPlayer;
         body.OnPlayerSpotted += PlayerFound;
 
@@ -31,26 +31,25 @@ public class ChaseState : BaseState
 
         if (!isSearching)
         {
+            body.RotateTowards(player.position);
+
             if (Vector3.Distance(lastKnownPos, player.position) > 1.0f)
             {
                 lastKnownPos = player.position;
                 body.MoveToTarget(player.position);
             }
-        }
-    }
 
-    /// <summary>
-    /// Transitions between states depending on if the player was caught or flead.
-    /// </summary>
-    private void ReachedTaret()
-    {
-        if (!isSearching)
-        {
-            brain.ChangeState(new AttackState(brain, body, player));
+            if (Vector3.Distance(body.transform.position, player.position) <= 2.0f)
+            {
+                brain.ChangeState(new AttackState(brain, body, player));
+            }
         }
         else
         {
-            brain.ChangeState(new IdleState(brain, body));
+            if (Vector3.Distance(body.transform.position, lastKnownPos) <= 2.0f)
+            {
+                brain.ChangeState(new IdleState(brain, body));
+            }
         }
     }
 
@@ -62,8 +61,6 @@ public class ChaseState : BaseState
         if (isSearching) return;
 
         isSearching = true;
-
-        lastKnownPos = player.position;
 
         body.MoveToTarget(lastKnownPos);
     }
@@ -79,7 +76,7 @@ public class ChaseState : BaseState
 
     public override void Exit()
     {
-        body.OnTargetReached -= ReachedTaret;
         body.OnLostPlayer -= LostPlayer;
+        body.OnPlayerSpotted -= PlayerFound;
     }
 }

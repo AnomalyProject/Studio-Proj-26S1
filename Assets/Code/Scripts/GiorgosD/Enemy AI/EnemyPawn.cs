@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -9,7 +8,7 @@ public class EnemyPawn : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
-    private NavMeshAgent agent;
+    public NavMeshAgent agent { get; private set; }
 
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
@@ -19,13 +18,18 @@ public class EnemyPawn : MonoBehaviour
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
+    private Transform cachedPlayer;
+
+    [Header("Attack")]
+    [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
+    [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
+
+    [Header("Turning")]
+    [SerializeField] private float turnThreshold;
     #endregion
 
     #region Events
     public event Action<Transform> OnPlayerSpotted;
-    public event Action<Transform> OnPlayerAttacked;
-    public event Action OnTargetReached;
-    public event Action OnIdleEnd;
     public event Action OnLostPlayer;
     #endregion
 
@@ -48,8 +52,7 @@ public class EnemyPawn : MonoBehaviour
     /// <param name="target"> either the player or the point whatever the brain thinks </param>
     public void MoveToTarget(Vector3 target) 
     { 
-        StopAllCoroutines();
-        StartCoroutine(Arrival(target));
+        agent.SetDestination(target);
     }
 
     /// <summary>
@@ -60,76 +63,44 @@ public class EnemyPawn : MonoBehaviour
     {
         agent.speed = isRunning ? runSpeed : walkSpeed;
     }
-
-    /// <summary>
-    /// Actually moves the enemy to the target and waits until it reaches it.
-    /// </summary>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    private IEnumerator Arrival(Vector3 target)
-    {
-        agent.SetDestination(target);
-
-        yield return null;
-
-        yield return new WaitUntil(() => !agent.pathPending);
-
-        yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
-
-        Debug.Log("Target Reached");
-
-        OnTargetReached?.Invoke();
-    }
     #endregion
 
     #region Attack
     /// <summary>
-    /// Attacks player.
+    /// Checks if player is in attack range.
     /// </summary>
     /// <param name="player"></param>
-    public void Attack(Transform player, Transform targetPoint)
+    /// <returns></returns>
+    public bool IsHitSuccess(Transform player)
     {
-        var controller = player.GetComponent<CharacterController>();
+        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
 
-        if (controller != null)
-        {
-            controller.enabled = false;
-        }
+        Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, attackHitBox / 2, transform.rotation, playerLayer);
 
-        player.position = targetPoint.position;
-
-        if (controller != null)
-        {
-            controller.enabled = true;
-        }
-
-        Debug.Log("Player Attacked");
-
-        OnPlayerAttacked?.Invoke(player);
+        return Array.Exists(hitColliders, c => c.transform == player);
     }
     #endregion
 
-    #region Idle
+    #region Turning
     /// <summary>
-    /// Makes the enemy idle.
+    /// Makes the enemy always face the player.
+    /// Needed cause sometimes the player can outmaneuver the enemy and stay behind it without the enemy being able to turn around to get him putting them in a stalemate.
     /// </summary>
-    /// <param name="timer"></param>
-    public void Idle(float timer)
-    {
-        StopAllCoroutines();
-        agent.ResetPath();
-        StartCoroutine(IdleTimer(timer));
-    }
-
-    /// <summary>
-    /// gives the enemy a timer to be idle.
-    /// </summary>
-    /// <param name="timer"></param>
+    /// <param name="targetPos"></param>
     /// <returns></returns>
-    private IEnumerator IdleTimer(float timer)
+    public void RotateTowards(Vector3 targetPos)
     {
-        yield return new WaitForSeconds(timer);
-        OnIdleEnd?.Invoke();
+        Vector3 direction = (targetPos - transform.position);
+        direction.y = 0;
+
+        Quaternion targetRot = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRot,
+            agent.angularSpeed * Time.deltaTime
+        );
+
+        agent.isStopped = false; 
     }
     #endregion
 
@@ -141,25 +112,14 @@ public class EnemyPawn : MonoBehaviour
     {
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
-        if (count == 0)
-        {
-            OnLostPlayer?.Invoke();
-            return;
-        }
-
         Transform closestDetectedPlayer = null;
         float minSqrDist = Mathf.Infinity;
-        bool foundPlayerThisFrame = false;
 
         for (int i = 0; i < count; i++)
         {
             Transform player = playersInSight[i].transform;
-            Vector3 directionToPlayer;
-            float distance;
-
-            if (IsPlayerDetected(player, out directionToPlayer, out distance))
+            if (IsPlayerDetected(player, out Vector3 direction, out float distance))
             {
-                foundPlayerThisFrame = true;
                 float sqrDist = distance * distance;
                 if (sqrDist < minSqrDist)
                 {
@@ -169,20 +129,28 @@ public class EnemyPawn : MonoBehaviour
             }
         }
 
-        if (closestDetectedPlayer != null && foundPlayerThisFrame)
+        if (closestDetectedPlayer != null)
         {
-            StopAll();
-            OnPlayerSpotted?.Invoke(closestDetectedPlayer);
-            Debug.Log("Player Spotted");
+            if (cachedPlayer == null || cachedPlayer != closestDetectedPlayer)
+            {
+                cachedPlayer = closestDetectedPlayer;
+                OnPlayerSpotted?.Invoke(cachedPlayer);
+                Debug.Log($"Target Locked: {cachedPlayer.name}");
+            }
         }
         else
         {
-            OnLostPlayer?.Invoke();
+            if (cachedPlayer != null)
+            {
+                cachedPlayer = null;
+                OnLostPlayer?.Invoke();
+                Debug.Log("Target Lost.");
+            }
         }
     }
 
     /// <summary>
-    /// Does dumb math stuff to check if the player is in the auto detect range or in the sight angle.
+    /// Checks if the enemy can actually see the player.
     /// </summary>
     /// <param name="player"></param>
     /// <param name="direction"></param>
@@ -201,21 +169,10 @@ public class EnemyPawn : MonoBehaviour
 
         if (inAutoRange || inSightAngle)
         {
-            return !HasObstacle(direction, distance);
+            return !Physics.Raycast(transform.position, direction, distance, obstacleLayer);
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Checks if there is an obstacle between the enemy and the player. 
-    /// </summary>
-    /// <param name="direction"></param>
-    /// <param name="distance"></param>
-    /// <returns></returns>
-    private bool HasObstacle(Vector3 direction, float distance)
-    {
-        return Physics.Raycast(transform.position, direction, distance, obstacleLayer);
     }
     #endregion
 
@@ -227,6 +184,33 @@ public class EnemyPawn : MonoBehaviour
     {
         StopAllCoroutines();
         agent.ResetPath();
+    }
+    #endregion
+
+    #region Gizmos
+    private void OnDrawGizmosSelected()
+    {
+        // Autodetect range (yellow)
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, autoDetectRange);
+
+        // Max sight range (blue)
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, sightRange);
+
+        // Sight angle (red lines)
+        Vector3 rightLimit = Quaternion.AngleAxis(sightAngle * 0.5f, Vector3.up) * transform.forward;
+        Vector3 leftLimit = Quaternion.AngleAxis(-sightAngle * 0.5f, Vector3.up) * transform.forward;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(transform.position, rightLimit * sightRange);
+        Gizmos.DrawRay(transform.position, leftLimit * sightRange);
+
+        // Attack hitbox (green box)
+        Gizmos.color = Color.green;
+        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
+        Gizmos.matrix = Matrix4x4.TRS(hitboxCenter, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
     }
     #endregion
 }

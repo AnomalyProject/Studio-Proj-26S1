@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PatrolState : BaseState
 {
-    private int pointIndex;
+    private static int pointIndex = -1;
 
     public PatrolState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
@@ -14,14 +14,16 @@ public class PatrolState : BaseState
         body.SetMoveSpeed(false);
 
         body.OnPlayerSpotted += HandlePlayerSpotted;
-        body.OnTargetReached += MoveToNextPoint;
 
         MoveToPoint();
     }
 
     public override void Update()
     {
-        
+        if (!body.agent.pathPending && body.agent.remainingDistance <= body.agent.stoppingDistance)
+        {
+            brain.ChangeState(new IdleState(brain, body));
+        }
     }
 
     /// <summary>
@@ -33,7 +35,7 @@ public class PatrolState : BaseState
 
         int nextIndex = pointIndex;
 
-        while (nextIndex == pointIndex)
+        while (nextIndex == pointIndex && brain.PatrolPoints.Count > 1)
         {
             nextIndex = Random.Range(0, brain.PatrolPoints.Count);
         }
@@ -61,6 +63,5 @@ public class PatrolState : BaseState
     public override void Exit()
     {
         body.OnPlayerSpotted -= HandlePlayerSpotted;
-        body.OnTargetReached -= MoveToNextPoint;
     }
 }

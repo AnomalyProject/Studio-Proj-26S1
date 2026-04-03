@@ -1584,18 +1584,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d218db7396aef9241a92a2d24a433a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPawn
-  walkSpeed: 3
-  runSpeed: 4
-  sightRange: 40
-  autoDetectRange: 5
-  sightAngle: 110.1
-  checkFrequency: 1
+  walkSpeed: 2
+  runSpeed: 3
+  sightRange: 30
+  autoDetectRange: 6
+  sightAngle: 77.6
+  checkFrequency: 0.1
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 1
+  attackHitBox: {x: 1.4, y: 2, z: 1}
+  attackOffset: 1
+  turnThreshold: 0
 --- !u!195 &1698502914
 NavMeshAgent:
   m_ObjectHideFlags: 0

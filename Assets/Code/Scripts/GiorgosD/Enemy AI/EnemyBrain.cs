@@ -21,9 +21,7 @@ public class EnemyBrain : MonoBehaviour
     {
         body = GetComponent<EnemyPawn>();
 
-        currentState = new PatrolState(this, body);
-
-        currentState.Enter();
+        ChangeState(new PatrolState(this, body));
     }
 
     public void ChangeState(BaseState newState)
