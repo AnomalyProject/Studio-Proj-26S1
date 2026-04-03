@@ -1,10 +1,15 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class MainMenuManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] GameObject mainMenuCanvas;
+    [SerializeField] GameObject firstSelectedButton;
 
+    [Space(10)]
+    [Header("Manager Settings")]
+    [SerializeField] bool enableOnStart = true;
 
     [Space(10)]
     [Header("Start Settings")]
@@ -13,7 +18,37 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] int startSceneIndex = 1;
 
 
-    // Canvas Button Methods
+    private void Awake()
+    {
+        SetMenuActivity(false);
+    }
+
+    void Start()
+    {
+        if (enableOnStart)
+        {
+            SetMenuActivity(true);
+        }
+    }
+
+    public void SetMenuActivity(bool active)
+    {
+        switch (active)
+        {
+            case true:
+                // activate canvas and select first button
+                mainMenuCanvas?.SetActive(true);
+                EventSystem.current.SetSelectedGameObject(firstSelectedButton);
+                break;
+            case false:
+                // deactivate canvas and clear selected button
+                mainMenuCanvas?.SetActive(false);
+                EventSystem.current.SetSelectedGameObject(null);
+                break;
+        }
+    }
+
+    #region Canvas Button Methods
     public void StartGame()
     {
         switch (currentSceneLoading)
@@ -41,6 +76,7 @@ public class MainMenuManager : MonoBehaviour
         Application.Quit();
 #endif
     }
+    #endregion
 }
 
 
