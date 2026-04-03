@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ public class EnemyBrain : MonoBehaviour
 
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
+
+    public event Action<BaseState> OnStateChanged;
 
     private EnemyPawn body;
     private BaseState currentState;
@@ -30,6 +33,7 @@ public class EnemyBrain : MonoBehaviour
         body.StopAll();
         currentState = newState;
         currentState.Enter();
+        OnStateChanged?.Invoke(currentState);
     }
 
     private void Update()
