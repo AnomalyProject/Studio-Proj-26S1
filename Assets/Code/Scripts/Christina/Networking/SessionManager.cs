@@ -38,6 +38,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     // Read-only access for UI and external systems. 
     public SessionData CurrentSession => sessionData;
     
+    private ClientSessionData latestClientSession;
+    public ClientSessionData LatestClientSession => latestClientSession;
+    
     // server-side event fired when a player is added to the session.
     // carries the PlayerID directly so spawn systems don't need reverse-lookups.
     public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
@@ -74,6 +77,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
+            
+            // register the host now instead of waiting for OnPlayerConnected(),
+            // because OnPlayerConnected() may fire before OnSpawned (race condition but happened and caused issues)
+            PlayerID? localId = NetworkManager.main?.localPlayer;
+            if (localId.HasValue && playerConnectionMap.Count == 0)
+            {
+                hostPlayerID = localId.Value;
+                ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
+                string hostName = SteamFriends.GetPersonaName();
+                AddPlayerToSession(localId.Value, hostSteamID, hostName, isHost: true);
+                Debug.Log("[SessionManager] Host registered as first player in OnSpawned.");
+            }
         }
         else
         {
@@ -112,11 +127,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (sessionData != null && playerConnectionMap.Count == 0)
         {
             hostPlayerID = playerID;
-            // todo: replace with real steamID
             ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
             string hostName = SteamFriends.GetPersonaName();
             AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
-            Debug.Log("[SessionManager] Host registered as first player.");
+            Debug.Log("[SessionManager] Host registered as first player (fallback via OnPlayerConnected).");
         }
     }
 
@@ -166,13 +180,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created, host registered as first player.");
-        
-        // the null check ensures that CreateSession will run even if steam is not available
-        // or the build doesn't run on steam
-        if (SteamSessionBridge.Instance != null)
-        {
-            SteamSessionBridge.Instance.CreateSteamLobby(sessionData.MaxPlayers);
-        }
     }
 
     /// <summary>
@@ -191,6 +198,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         playerConnectionMap[playerID] = steamID;
 
         OnPlayerJoined_Client(steamID, displayName);
+        OnSessionUpdated_Client(BuildClientSessionData());
         OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
 
 
@@ -215,6 +223,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         playerConnectionMap.Remove(playerID);
 
         OnPlayerLeft_Client(steamID, reason);
+        OnSessionUpdated_Client(BuildClientSessionData());
 
         sessionData.ResetReadyStates();
         OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
@@ -231,6 +240,33 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             if (entry.Value == steamID) return entry.Key;
         }
         return null;
+    }
+    
+    private ClientSessionData BuildClientSessionData()
+    {
+        var players = new List<ClientPlayerInfo>();
+
+        for (int i = 0; i < sessionData.Players.Count; i++)
+        {
+            var p = sessionData.Players[i];
+            players.Add(new ClientPlayerInfo
+            {
+                SteamID = p.SteamID,
+                DisplayName = p.DisplayName,
+                IsReady = p.IsReady,
+                IsHost = p.IsHost
+            });
+        }
+
+        return new ClientSessionData
+        {
+            HostSteamID = sessionData.HostSteamID,
+            MapName = sessionData.MapName,
+            GameMode = sessionData.GameMode,
+            MaxPlayers = sessionData.MaxPlayers,
+            PlayerCount = sessionData.Players.Count,
+            Players = players
+        };
     }
 
     /// <summary>
@@ -343,14 +379,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         playerInfo.IsReady = !playerInfo.IsReady;
         sessionData.Players[playerIndex] = playerInfo;
 
-        OnSessionUpdated_Client();
+        OnSessionUpdated_Client(BuildClientSessionData());
         Debug.Log($"[SessionManager] Ready toggled for PlayerID: {sender}");
     }
 
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via hostPlayerID)
-    /// 2. Game is in Lobby state (can't start twice)
+    /// 2. Game is in Lobby state (can't  twice)
     /// 3. All players are ready (SessionData.AllPlayersReady)
     /// Only after all three pass does the state transition to Loading.
     /// </summary>
@@ -427,7 +463,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         sessionData.ResetReadyStates();
 
-        OnSessionUpdated_Client();
+        OnSessionUpdated_Client(BuildClientSessionData());
         Debug.Log("[SessionManager] Settings updated.");
     }
 
@@ -458,15 +494,15 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     /// <summary>
     /// Server-to-all-clients broadcast: notifies clients that session data changed
-    /// (ready state toggled, settings updated). Currently sends no payload. Clients
+    /// (ready state toggled, settings updated). Clients
     /// only know something changed, not what. Will carry serialized SessionData once
     /// serialization issues (DateTime, Dictionary) with PurrNet are resolved. Needs research.
     /// </summary>
     [ObserversRpc]
-    private void OnSessionUpdated_Client()
+    private void OnSessionUpdated_Client(ClientSessionData clientData)
     {
+        latestClientSession = clientData;
         SessionEvents.InvokeSessionDataChanged();
-        //todo: pass sessionData to clients. watch for serialization issues with DateTime and Dictionary fields and PurrNet.
         Debug.Log($"[SessionManager] [Client] Session Data Changed.");
     }
 

@@ -1060,9 +1060,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: _peerToPeer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: _dedicatedServer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
       propertyPath: m_Name
       value: Network Manager
+      objectReference: {fileID: 0}
+    - target: {fileID: 4048040728350394396, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1104,11 +1120,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6765213486235499625, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      propertyPath: _transport
+      value: 
+      objectReference: {fileID: 9067903857306638136}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+--- !u!114 &9067903857306638136 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+  m_PrefabInstance: {fileID: 9067903857306638135}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ccc454d6a19ac140b15f8d619d0fb5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Steam.Runtime::PurrNet.Steam.SteamTransport
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1118,10 +1149,10 @@ SceneRoots:
   - {fileID: 327474781}
   - {fileID: 434718061}
   - {fileID: 1565289021}
-  - {fileID: 626726366}
   - {fileID: 9067903857306638135}
   - {fileID: 407181793}
   - {fileID: 1791902484}
   - {fileID: 1726847574}
   - {fileID: 1854465660}
   - {fileID: 1204988896}
+  - {fileID: 626726366}

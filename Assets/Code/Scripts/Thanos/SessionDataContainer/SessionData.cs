@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using System.Linq;
 
 [Serializable]
@@ -24,6 +23,26 @@ public struct PlayerSessionInfo
         JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
     }
 
+}
+
+[Serializable]
+public struct ClientPlayerInfo
+{
+    public ulong SteamID;
+    public string DisplayName;
+    public bool IsReady;
+    public bool IsHost;
+}
+    
+[Serializable]
+public struct ClientSessionData
+{
+    public ulong HostSteamID;
+    public string MapName;
+    public string GameMode;
+    public int MaxPlayers;
+    public int PlayerCount;
+    public List<ClientPlayerInfo> Players;
 }
 
 [Serializable]

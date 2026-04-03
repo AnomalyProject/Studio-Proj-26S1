@@ -12,17 +12,12 @@ public class PlayerNameplate : NetworkBehaviour
     /// Called by the spawn system or player setup to set the name.
     /// Kept as a public method so the name can be set after the object is created.
     /// </summary>
-    [ObserversRpc]
+    [ObserversRpc(bufferLast: true)]
     public void SetName(string displayName)
     {
         nameText.text = displayName;
     }
     
-    public void SetVisible(bool visible)
-    {
-        nameplateVisuals.SetActive(visible);
-    }
-
     // chose late update to avoid jittering
     private void LateUpdate()
     {
