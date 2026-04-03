@@ -13,7 +13,7 @@ public class AnomalyManager : MonoBehaviour
     public event System.Action<RoomState> OnStateChanged;
 
     [SerializeField] AnomalyMap[] mapCollection;
-    [SerializeField, Tooltip("Weather to Instantiate Maps or Enable/Disable them from the scene.")] bool InstantiateMaps = true;
+    [SerializeField, Tooltip("Weather to Instantiate Map Prefabs or Enable/Disable them from the scene.")] bool InstantiateMaps = true;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
     [SerializeField] GameObject[] punishmentRooms;
     [SerializeField] GameObject winRoom;
