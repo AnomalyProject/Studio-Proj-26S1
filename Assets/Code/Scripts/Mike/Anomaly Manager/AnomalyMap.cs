@@ -43,9 +43,9 @@ public class AnomalyMap : MonoBehaviour
     /// <summary>
     /// Disables the base map and all anomaly variation GameObjects.
     /// </summary>
-    public void DisableAll()
+    public void DisableAll(bool keepBase = false)
     {
-        baseMap?.SetActive(false);
+        baseMap?.SetActive(keepBase);
 
         foreach (var variation in availableAnomalies) variation?.GroupRoot.SetActive(false);
         foreach (var variation in usedAnomalies) variation?.GroupRoot.SetActive(false);

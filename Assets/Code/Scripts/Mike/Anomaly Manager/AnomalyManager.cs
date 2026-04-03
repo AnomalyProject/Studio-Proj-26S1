@@ -13,6 +13,7 @@ public class AnomalyManager : MonoBehaviour
     public event System.Action<RoomState> OnStateChanged;
 
     [SerializeField] AnomalyMap[] mapCollection;
+    [SerializeField, Tooltip("Weather to Instantiate Maps or Enable/Disable them from the scene.")] bool InstantiateMaps = true;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
     [SerializeField] GameObject[] punishmentRooms;
     [SerializeField] GameObject winRoom;
@@ -27,7 +28,9 @@ public class AnomalyManager : MonoBehaviour
 
     void Awake()
     {
+        if(!InstantiateMaps)
         foreach (var map in mapCollection) map.DisableAll();
+
         if (pickMapOnAwake) TryPickMap();
     }
 
@@ -52,7 +55,7 @@ public class AnomalyManager : MonoBehaviour
     {
         if (activeMap == null && !TryPickMap()) return;
 
-        ClearActiveState();
+        ClearActiveState(destroyGameObject: false);
 
         if (!withAnomalies)
         {
@@ -86,7 +89,7 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        ClearActiveState();
+        ClearActiveState(destroyGameObject: false);
 
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
@@ -106,6 +109,7 @@ public class AnomalyManager : MonoBehaviour
     /// </summary>
     /// <returns>True if successful, otherwirse False.</returns>
     public bool TryPickMap() => TryPickMap(Random.Range(0, mapCollection.Length));
+    public void PickMap() => TryPickMap();
 
     /// <summary>
     /// Picks the map at the given index from the <see cref="mapCollection"/> and sets it as the active map.
@@ -126,17 +130,18 @@ public class AnomalyManager : MonoBehaviour
             return false;
         }
 
-        ClearActiveState();
+        ClearActiveState(destroyGameObject: InstantiateMaps);
 
-        activeMap = mapCollection[mapIndex];
-
-        if(activeMap == null)
+        if(!mapCollection[mapIndex])
         {
             Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is null.");
             return false;
         }
 
-        activeMap.BaseMap.SetActive(true);
+        if(InstantiateMaps) activeMap = Instantiate(mapCollection[mapIndex]);
+        else activeMap = mapCollection[mapIndex];
+
+        activeMap.DisableAll(keepBase: true);
         ChangeState(RoomState.NormalRoom);
         return true;
     }
@@ -152,14 +157,18 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        ClearActiveState();
+        ClearActiveState(false);
 
         winRoom?.SetActive(true);
         ChangeState(RoomState.WinRoom);
     }
-    void ClearActiveState()
+    void ClearActiveState(bool destroyGameObject)
     {
-        if(activeMap) activeMap.DisableAll();
+        if (activeMap)
+        {
+            if (destroyGameObject) Destroy(activeMap.gameObject);
+            else activeMap.DisableAll();
+        }   
 
         activeAnomalyGroup = null;
 
