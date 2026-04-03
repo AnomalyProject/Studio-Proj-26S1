@@ -23,7 +23,7 @@ public class IdleState : BaseState
         }
     }
     
-    private void HandlePlayerSpotted(Transform player) => brain.ChangeState(new ChaseState(brain, body, player));
+    private void HandlePlayerSpotted(GameObject player) => brain.ChangeState(new ChaseState(brain, body, player.transform));
     
 
     public override void Exit()

@@ -69,7 +69,7 @@ public class ChaseState : BaseState
     /// Safty because it ignores you when it turns the corner without it.
     /// </summary>
     /// <param name="player"></param>
-    private void PlayerFound(Transform player)
+    private void PlayerFound(GameObject player)
     {
         isSearching = false;
     }

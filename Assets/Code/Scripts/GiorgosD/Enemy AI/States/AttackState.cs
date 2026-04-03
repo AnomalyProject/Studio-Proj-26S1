@@ -4,7 +4,7 @@ using UnityEngine;
 public class AttackState : BaseState
 {
     private Transform player;
-    public event Action<Transform> OnPlayerAttacked;
+    public event Action<GameObject> OnPlayerAttacked;
 
     public AttackState(EnemyBrain brain, EnemyPawn body, Transform player) : base(brain, body)
     {
@@ -13,7 +13,7 @@ public class AttackState : BaseState
 
     public override void Enter()
     {
-        //OnPlayerAttacked?.Invoke(player); //this if we want the attack event to happen even if not hit.
+        //OnPlayerAttacked?.Invoke(player.gameObject); //this if we want the attack event to happen even if not hit.
 
                     
         bool isHit = body.IsHitSuccess(player) ? DoAttack(player) : ChangeToChaseState();
@@ -32,23 +32,23 @@ public class AttackState : BaseState
         int randomIndex = UnityEngine.Random.Range(0, brain.RespawnPoints.Count);
         Transform targetPoint = brain.RespawnPoints[randomIndex];
 
-        var controller = player.GetComponent<CharacterController>();
+        var controller = player.gameObject.GetComponent<CharacterController>();
 
-        if(controller != null)
+        if (controller != null) 
         {
             controller.enabled = false;
         }
 
         player.position = targetPoint.position;
 
-        if(controller != null)
+        if(player != null)
         {
             controller.enabled = true;
         }
 
         Debug.Log("Player Attacked");
 
-        OnPlayerAttacked?.Invoke(player);   //this if we want event to happen only if hit is successful.
+        OnPlayerAttacked?.Invoke(player.gameObject);   //this if we want event to happen only if hit is successful.
 
         brain.ChangeState(new IdleState(brain, body));
 

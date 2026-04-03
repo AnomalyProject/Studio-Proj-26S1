@@ -29,7 +29,7 @@ public class EnemyPawn : MonoBehaviour
     #endregion
 
     #region Events
-    public event Action<Transform> OnPlayerSpotted;
+    public event Action<GameObject> OnPlayerSpotted;
     public event Action OnLostPlayer;
     #endregion
 
@@ -134,7 +134,7 @@ public class EnemyPawn : MonoBehaviour
             if (cachedPlayer == null || cachedPlayer != closestDetectedPlayer)
             {
                 cachedPlayer = closestDetectedPlayer;
-                OnPlayerSpotted?.Invoke(cachedPlayer);
+                OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
             }
         }

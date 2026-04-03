@@ -55,9 +55,9 @@ public class PatrolState : BaseState
         brain.ChangeState(new IdleState(brain, body));
     }
 
-    private void HandlePlayerSpotted(Transform player)
+    private void HandlePlayerSpotted(GameObject player)
     {
-        brain.ChangeState(new ChaseState(brain, body, player));
+        brain.ChangeState(new ChaseState(brain, body, player.transform));
     }
 
     public override void Exit()
