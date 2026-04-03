@@ -12,6 +12,7 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     // Checks
     private bool bEnoughPlayers, bIsAvailable;
     [SerializeField] private bool bHasAnomaly;
+    [SerializeField] bool noNetworkTesting = false;
 
     private HashSet<FPSController> playersInArea = new HashSet<FPSController>();
 
@@ -81,23 +82,20 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     private void CheckPlayersInArea()
     {
+        if (noNetworkTesting)
+        {
+            Debug.Log($"[FAKE MODE] Players in Area: {playersInArea.Count}/1. Can Interact: {CanInteract(null)}");
+            bEnoughPlayers = playersInArea.Count >= 1;
+
+            Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");
+            return;
+        }
+
         // Actual version
         Debug.Log($"SessionManagre is null: {SessionManager.Instance == null}");
         Debug.Log($"SessionManager CurrentSession is null: {SessionManager.Instance.CurrentSession == null}");
         Debug.Log($"SessionManager CurrentSession.Players is null: {SessionManager.Instance.CurrentSession.Players ==  null}");
         bEnoughPlayers = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
-        /*bEnoughPlayers = playersInArea.Count >= 1;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");*/
-        
-/*#if UNITY_EDITOR == false
-
-#else
-        //for testing purposes only
-
-    #endif*/
     }
 #endregion
 
