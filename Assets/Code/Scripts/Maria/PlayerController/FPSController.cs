@@ -1,11 +1,11 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// First Person Character Controller using Unity's New Input System.
-/// Handles body movement (walk, sprint, crouch) driven by FPSInputHandler.
+/// Attach to the Player root GameObject with a CharacterController component.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
-[RequireComponent(typeof(FPSInputHandler))]
 public class FPSController : MonoBehaviour
 {
     #region Inspector Configuration
@@ -31,12 +31,16 @@ public class FPSController : MonoBehaviour
 
     #region Private Fields
     private CharacterController character;
-    private FPSInputHandler input;
 
+    private Vector2 moveInput;
+    private bool sprintHeld;
+
+    // Physics state
     private Vector3 velocity; // world-space velocity (gravity accumulation)
     private bool isGrounded;
-    private bool isCrouching;
 
+    // Crouch state
+    private bool isCrouching = false;
     private float targetHeight;
     private float targetCameraLocalY;
 
@@ -48,7 +52,6 @@ public class FPSController : MonoBehaviour
     private void Awake()
     {
         character = GetComponent<CharacterController>();
-        input = GetComponent<FPSInputHandler>();
 
         // Store default height values
         character.height = standingHeight;
@@ -62,10 +65,10 @@ public class FPSController : MonoBehaviour
         //if (!input.isOwner) return;
         
         HandleGroundCheck();
-        HandleCrouchToggle();
-        HandleMovement();
+        ApplyMovement();
         HandleGravity();
         SmoothCrouchTransition();
+
     }
     #endregion
 
@@ -83,11 +86,12 @@ public class FPSController : MonoBehaviour
     #endregion
 
     #region Crouch Handling
-    private void HandleCrouchToggle()
+    public void HandleCrouch(InputAction.CallbackContext ctx)
     {
-        if (!input.CrouchTriggered) return;
+        if (!ctx.started) return;
 
         isCrouching = !isCrouching;
+        Debug.Log("Crouch toggled: " + isCrouching);
 
         if (isCrouching)
         {
@@ -137,23 +141,23 @@ public class FPSController : MonoBehaviour
     #endregion
 
     #region Movement
-    private void HandleMovement()
+    public void HandleMovement(InputAction.CallbackContext ctx)
     {
-        Vector2 inputDir = input.MoveInput;
+        moveInput = ctx.ReadValue<Vector2>();
+    }
 
-        // Determine speed
+    public void HandleSprint(InputAction.CallbackContext ctx)
+    {
+        sprintHeld = ctx.performed;
+    }
+    private void ApplyMovement()
+    {
         float speed;
-        if (isCrouching)
-            speed = crouchSpeed;
-        else if (input.SprintHeld && inputDir.y > 0f) // Sprint only when moving forward
-            speed = sprintSpeed;
-        else
-            speed = walkSpeed;
+        if (isCrouching) speed = crouchSpeed;
+        else if (sprintHeld && moveInput.y > 0f) speed = sprintSpeed;
+        else speed = walkSpeed;
 
-        // Build move vector in local space -> convert to world space
-        Vector3 move = transform.right * inputDir.x
-                     + transform.forward * inputDir.y;
-
+        Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         character.Move(move * (speed * Time.deltaTime));
     }
     #endregion

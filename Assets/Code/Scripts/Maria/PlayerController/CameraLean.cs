@@ -1,14 +1,17 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// First person Lean (Peek) Controller.
 /// Smoothly tilts the camera left and right based on FPSInputHandler.LeanInput, which is driven by player input.
-/// Attach to the CameraHolder GameObject
+/// Attach to the CameraHolder GameObject -- The same GameObject as FPSCameraController
 /// IA_PlayerInputActions asset wired via PlayerInput component → Invoke Unity Events
 /// </summary>
 public class CameraLean : MonoBehaviour
 {
     #region Inspector Configuration
+    [SerializeField] Transform cameraTransform;
+
     [Header("Lean Angle")]
     [SerializeField] private float leanAngle = 15f;
 
@@ -20,13 +23,10 @@ public class CameraLean : MonoBehaviour
     [Tooltip("Higher values = faster lean transition. Set to a very high value for instant lean (no smoothing, do not recommend :)).")]
     [SerializeField] private float leanSpeed = 7f;
 
-    [Header("References")]
-    [SerializeField] private Transform playerBody;
     #endregion
 
     #region Private Fields
-    private FPSInputHandler input;
-
+    private float leanInput; // -1 = left lean, 0 = neutral, 1 = right lean
     private float currentAngle;
     private float currentOffsetX;
     private float targetAngle;
@@ -37,14 +37,8 @@ public class CameraLean : MonoBehaviour
 
     #region Unity Lifecycle
     private void Awake()
-    {
-        input = playerBody != null ? playerBody.GetComponent<FPSInputHandler>() : GetComponentInParent<FPSInputHandler>();
-
-        if(input == null)
-            Debug.LogError("[CameraLean] could not find FPSInputHandler component on player body or parent." + 
-                "Ensure it is on the Player Root GameObject.");
-
-        neutralLocalPosition = transform.localPosition;
+    { 
+        neutralLocalPosition = cameraTransform.localPosition;
     }
 
     private void Update()
@@ -55,10 +49,21 @@ public class CameraLean : MonoBehaviour
     #endregion
 
     #region Lean
+    public void HandleLeanLeft(InputAction.CallbackContext ctx)
+    {
+        if(ctx.performed) leanInput -= 1f;
+        else if(ctx.canceled) leanInput += 1f;
+    }
+
+    public void HandleLeanRight(InputAction.CallbackContext ctx)
+    {
+        if(ctx.performed) leanInput += 1f;
+        else if(ctx.canceled) leanInput -= 1f;
+    }
     void CalculateTargets()
     {
         // LeanInput: -1 = left, 0 = neutral, 1 = right (clamped in case both held)
-        float lean = Mathf.Clamp(input.LeanInput, -1f, 1f);
+        float lean = Mathf.Clamp(leanInput, -1f, 1f);
 
         targetAngle = lean * -leanAngle; // negative = roll left, positive = roll right
         targetOffsetX = lean * leanDistance;
@@ -71,13 +76,13 @@ public class CameraLean : MonoBehaviour
         currentOffsetX = Mathf.Lerp(currentOffsetX, targetOffsetX, leanSpeed * Time.deltaTime);
 
         // Apply roll on top of whatever pitch FPSController has set
-        Vector3 currentEuler = transform.localEulerAngles;
-        transform.localEulerAngles = new Vector3(currentEuler.x, currentEuler.y, currentAngle);
+        Vector3 currentEuler = cameraTransform.localEulerAngles;
+        cameraTransform.localEulerAngles = new Vector3(currentEuler.x, currentEuler.y, currentAngle);
 
         // Shift the camera holder laterally
         Vector3 pos = neutralLocalPosition;
         pos.x += currentOffsetX;
-        transform.localPosition = pos;
+        cameraTransform.localPosition = pos;
     }
     #endregion
 }
