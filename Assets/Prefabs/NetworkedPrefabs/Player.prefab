@@ -300,10 +300,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07a5bc9b4b641e54fb594a4f1078a588, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraLean
+  cameraTransform: {fileID: 9205874294020368231}
   leanAngle: 15
   leanDistance: 0.5
   leanSpeed: 7
-  playerBody: {fileID: 3679284614733776610}
 --- !u!1 &4722490883632117968
 GameObject:
   m_ObjectHideFlags: 0
@@ -313,7 +313,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3679284614733776610}
-  - component: {fileID: 288975442859635402}
   - component: {fileID: 1494246198799042083}
   - component: {fileID: 3680812478694482278}
   - component: {fileID: 1076114148990449078}
@@ -346,27 +345,6 @@ Transform:
   - {fileID: 3368825690146679725}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &288975442859635402
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4722490883632117968}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 574834daf7dc62a42a3c6d0a72a5d070, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FPSInputHandler
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
 --- !u!114 &1494246198799042083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -499,9 +477,9 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 288975442859635402}
-        m_TargetAssemblyTypeName: FPSInputHandler, Assembly-CSharp
-        m_MethodName: OnMove
+      - m_Target: {fileID: 1494246198799042083}
+        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
+        m_MethodName: HandleMovement
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -531,9 +509,9 @@ MonoBehaviour:
     m_ActionName: 'Player/Look[/Mouse/delta,/DualShock4GamepadHID/rightStick]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 288975442859635402}
-        m_TargetAssemblyTypeName: FPSInputHandler, Assembly-CSharp
-        m_MethodName: OnSprint
+      - m_Target: {fileID: 1494246198799042083}
+        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
+        m_MethodName: HandleSprint
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -547,9 +525,9 @@ MonoBehaviour:
     m_ActionName: 'Player/Sprint[/Keyboard/leftShift,/DualShock4GamepadHID/leftStickPress]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 288975442859635402}
-        m_TargetAssemblyTypeName: FPSInputHandler, Assembly-CSharp
-        m_MethodName: OnCrouch
+      - m_Target: {fileID: 1494246198799042083}
+        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
+        m_MethodName: HandleCrouch
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -579,9 +557,9 @@ MonoBehaviour:
     m_ActionName: 'Player/Interact[/Keyboard/f]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 288975442859635402}
-        m_TargetAssemblyTypeName: FPSInputHandler, Assembly-CSharp
-        m_MethodName: OnLeanLeft
+      - m_Target: {fileID: 5223983998993346721}
+        m_TargetAssemblyTypeName: CameraLean, Assembly-CSharp
+        m_MethodName: HandleLeanLeft
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -595,9 +573,9 @@ MonoBehaviour:
     m_ActionName: 'Player/LeanLeft[/Keyboard/q,/XInputControllerWindows/leftTrigger]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 288975442859635402}
-        m_TargetAssemblyTypeName: FPSInputHandler, Assembly-CSharp
-        m_MethodName: OnLeanRight
+      - m_Target: {fileID: 5223983998993346721}
+        m_TargetAssemblyTypeName: CameraLean, Assembly-CSharp
+        m_MethodName: HandleLeanRight
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
