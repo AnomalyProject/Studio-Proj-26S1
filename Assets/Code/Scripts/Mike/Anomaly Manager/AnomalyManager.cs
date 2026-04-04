@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : MonoBehaviour
 {
     public enum RoomState 
@@ -12,27 +13,44 @@ public class AnomalyManager : MonoBehaviour
 
     public event System.Action<RoomState> OnStateChanged;
 
+    /// <summary>
+    /// Invoked after elevator interaction. Provides a boolean representing if the choice was correct or not.
+    /// </summary>
+    public event System.Action<bool> OnDecisionMade;
+
     [SerializeField] AnomalyMap[] mapCollection;
     [SerializeField, Tooltip("Weather to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool InstantiateMaps = true;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
-    [SerializeField] GameObject[] punishmentRooms;
-    [SerializeField] GameObject winRoom;
+    [SerializeField] GameMap[] punishmentRooms;
+    [SerializeField] GameMap winRoom;
     [SerializeField] bool pickMapOnAwake = true;
 
     AnomalyMap activeMap;
-    GameObject activeAnomalyGroup, activePunishmentRoom;
+    GameMap activePunishmentRoom;
+    GameObject activeAnomalyGroup;
     RoomState currentState;
+    MapOrientor mapOrientor;
 
     public RoomState CurrentState => currentState;
     public bool HasAnomaly => currentState == RoomState.AnomalyRoom;
 
     void Awake()
     {
+        mapOrientor = GetComponent<MapOrientor>();
+
         if(!InstantiateMaps)
         foreach (var map in mapCollection) map.DisableAll();
 
         if (pickMapOnAwake) TryPickMap();
     }
+
+    void Start() => mapOrientor.OnElevatorInteracted += RegisterDecision;
+    void OnDestroy()
+    {
+        if (mapOrientor != null)
+            mapOrientor.OnElevatorInteracted -= RegisterDecision;
+    }
+    void RegisterDecision(bool decision) => OnDecisionMade?.Invoke(decision == HasAnomaly);
 
     /// <summary>
     /// Modify the chance of anomalous room variations. The value is clamped between 0 and 1.
@@ -55,7 +73,7 @@ public class AnomalyManager : MonoBehaviour
     {
         if (activeMap == null && !TryPickMap()) return;
 
-        ClearActiveState(destroyGameObject: false);
+        ClearActiveState(destroyActiveMap: false);
 
         if (!withAnomalies)
         {
@@ -89,7 +107,7 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        ClearActiveState(destroyGameObject: false);
+        ClearActiveState(destroyActiveMap: false);
 
         int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
         activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
@@ -100,7 +118,8 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activePunishmentRoom?.SetActive(true);
+        mapOrientor.OrientMap(activePunishmentRoom);
+        activePunishmentRoom?.gameObject.SetActive(true);
         ChangeState(RoomState.PunishmentRoom);
     }
 
@@ -130,7 +149,7 @@ public class AnomalyManager : MonoBehaviour
             return false;
         }
 
-        ClearActiveState(destroyGameObject: InstantiateMaps);
+        ClearActiveState(destroyActiveMap: InstantiateMaps);
 
         if(!mapCollection[mapIndex])
         {
@@ -142,6 +161,7 @@ public class AnomalyManager : MonoBehaviour
         else activeMap = mapCollection[mapIndex];
 
         activeMap.DisableAll(keepBase: true);
+        mapOrientor.OrientMap(activeMap);
         ChangeState(RoomState.NormalRoom);
         return true;
     }
@@ -159,14 +179,15 @@ public class AnomalyManager : MonoBehaviour
 
         ClearActiveState(false);
 
-        winRoom?.SetActive(true);
+        mapOrientor.OrientMap(winRoom);
+        winRoom?.gameObject.SetActive(true);
         ChangeState(RoomState.WinRoom);
     }
-    void ClearActiveState(bool destroyGameObject)
+    void ClearActiveState(bool destroyActiveMap)
     {
         if (activeMap)
         {
-            if (destroyGameObject) Destroy(activeMap.gameObject);
+            if (destroyActiveMap) Destroy(activeMap.gameObject);
             else activeMap.DisableAll();
         }   
 
@@ -174,12 +195,12 @@ public class AnomalyManager : MonoBehaviour
 
         if (activePunishmentRoom)
         {
-            activePunishmentRoom.SetActive(false);
+            activePunishmentRoom.gameObject.SetActive(false);
             activePunishmentRoom = null;
         }
 
         if(winRoom)
-        winRoom.SetActive(false);
+        winRoom.gameObject.SetActive(false);
     }
     void ChangeState(RoomState newState)
     {
