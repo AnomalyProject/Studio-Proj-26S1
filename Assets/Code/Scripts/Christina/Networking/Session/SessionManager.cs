@@ -174,8 +174,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
-
-
+        
         sessionData = new SessionData
         {
             HostSteamID =  SteamUser.GetSteamID().m_SteamID,
@@ -208,10 +207,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnPlayerJoined_Client(steamID, displayName);
         OnSessionUpdated_Client(BuildClientSessionData());
         OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
-
-
+        
+        
         if (!isHost)
         {
+            // snapshot for the joining player. This guarantees they receive the full state even if the 
+            // ObserverRpc timing has issues.
+            SendSessionSnapshot(playerID, BuildClientSessionData());
+            
             // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
             SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
         }
@@ -264,6 +267,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 IsReady = p.IsReady,
                 IsHost = p.IsHost
             });
+        }
+        
+        var keys = new List<string>();
+        var values = new List<string>();
+        foreach (var kvp in sessionData.CustomProperties)
+        {
+            keys.Add(kvp.Key);
+            values.Add(kvp.Value);
         }
 
         return new ClientSessionData
@@ -474,6 +485,27 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnSessionUpdated_Client(BuildClientSessionData());
         Debug.Log("[SessionManager] Settings updated.");
     }
+    
+    /// <summary>
+    /// Client-to-server RPC: this exists in case a client ever gets into a state where their local data feels wrong,
+    /// they can tell via RequestSessionSnapshot() to get a fresh copy.
+    /// </summary>
+    /// <param name="info"></param>
+    [ServerRpc(requireOwnership: false)]
+    public void RequestSessionSnapshot(RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        if (!playerConnectionMap.ContainsKey(sender))
+        {
+            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
+            return;
+        }
+
+        SendSessionSnapshot(sender, BuildClientSessionData());
+        Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
+    }
+    
 
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
@@ -522,8 +554,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     private void HandleStateChanged(GameState currentState, GameState nextState)
     {
-        // todo: the first transition here does nothing, which is fine for now but should take a closer look later 
-        // on how to fix this
+        // note: the menu->lobby transition fires here before any clients are connected, so the loop body excecutes zero times.
+        // This is expected. The host doesn't need to send itseld a state change and no clients exist yet during initial
+        // host startup. Late-joining clients receive the current state vie SendStateChangeToClient in AddPlayerToSession.
         foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
         {
             SendStateChangeToClient(playerID.Key, nextState);
@@ -557,5 +590,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         var error = new SessionErrorResponse(code, message);
         SessionEvents.InvokeSessionError(error);
         Debug.LogWarning($"[SessionManager] [Client] Error received: {code} - {message}");
+    }
+    
+    [TargetRpc]
+    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
+    {
+        latestClientSession = clientData;
+        SessionEvents.InvokeSessionDataChanged();
+        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
 }
