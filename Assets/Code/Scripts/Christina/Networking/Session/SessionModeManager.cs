@@ -7,6 +7,7 @@ public class SessionModeManager : MonoBehaviour
     public static SessionModeManager Instance {get; private set;}
     private SessionMode currentMode = SessionMode.None;
     public SessionMode CurrentMode => currentMode;
+    [SerializeField] private string gameplaySceneName = "NetworkTestScene";
      
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -115,6 +116,17 @@ public class SessionModeManager : MonoBehaviour
         Debug.Log("[SessionModeManager] Starting Co-Op Host...");
 
         SetMode(SessionMode.CoOpHost);
+        
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+
+        SceneLoader.Instance.OnLoadFinished += OnHostSceneLoaded;
+        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
+    }
+    
+    private void OnHostSceneLoaded()
+    {
+        SceneLoader.Instance.OnLoadFinished -= OnHostSceneLoaded;
 
         SteamSessionBridge.Instance.BeginSteamListenHost();
     }

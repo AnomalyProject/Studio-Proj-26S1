@@ -14,8 +14,22 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
     [SerializeField] private CameraLean cameraLean;
     [SerializeField] private PlayerInteraction playerInteraction;
 
+    private void Start()
+    {
+        if (IsSoloMode())
+        {
+            ApplyOwnershipState(true);
+        }
+    }
+    
     protected override void OnSpawned(bool asServer)
     {
+        if (IsSoloMode())
+        {
+            ApplyOwnershipState(true);
+            return;
+        }
+        
         if (!asServer)
         {
             bool local = owner.HasValue && owner == localPlayer;
@@ -25,6 +39,12 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
 
     protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
     {
+        if (IsSoloMode())
+        {
+            ApplyOwnershipState(true);
+            return;
+        }
+        
         if (!asServer)
         {
             bool local = newOwner.HasValue && newOwner == localPlayer;
@@ -50,5 +70,10 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
         if (cameraLean) cameraLean.IsLocalPlayer = local;
     }
 
-    
+    private bool IsSoloMode()
+    {
+        return SessionModeManager.Instance != null &&
+               SessionModeManager.Instance.CurrentMode == SessionMode.Solo;
+    }
+
 }
