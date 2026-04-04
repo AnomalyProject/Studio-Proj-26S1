@@ -45,7 +45,7 @@ public class SessionModeManager : MonoBehaviour
     {
         if (mode == currentMode) return;
         
-        Debug.Log($"Mode: {currentMode} changed to {mode}.");
+        Debug.Log($"[SessionModeManager] Mode: {currentMode} changed to {mode}.");
 
         SessionMode previousMode = currentMode;
         currentMode = mode;
@@ -146,7 +146,7 @@ public class SessionModeManager : MonoBehaviour
     {
         if (status.Stage == JoinStartupStage.Failed)
         {
-            Debug.LogWarning($"Join failed: {status.Message}");
+            Debug.LogWarning($"[SessionModeManager] Join failed: {status.Message}");
             ReturnToMenu();
         }
     }
@@ -155,7 +155,7 @@ public class SessionModeManager : MonoBehaviour
     {
         if (status.Stage == HostStartupStage.Failed)
         {
-            Debug.LogWarning($"Host startup failed: {status.Message}");
+            Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
             ReturnToMenu();
         }
     }
