@@ -24,6 +24,7 @@ public class SpawnManager : MonoBehaviour
 
     //See what spawn point is assigned to what player
     private readonly Dictionary<PlayerID, SpawnPoint> playerSpawnPoints = new();
+    private readonly HashSet<SpawnPoint> occupiedPoints = new();
 
     private void Awake()
     {
@@ -60,22 +61,31 @@ public class SpawnManager : MonoBehaviour
         if (!playerid.HasValue) return;
 
         SpawnPoint point = GetNextSpawnPoint();
+        if (point == null)
+        {
+            Debug.LogError($"[SpawnManager] No spawn point available for {displayName}. Cannot spawn player.");
+            return;
+        }
         
         //Track which point is for what player
         playerSpawnPoints[playerID] = point;
+        occupiedPoints.Add(point);
         point.LastUsedTime = Time.time;
 
         GameObject gameObject = Instantiate(playerPrefab, point.transform.position, point.transform.rotation);
         NetworkIdentity networkIdentity = gameObject.GetComponent<NetworkIdentity>();
-        if (networkIdentity == null) return;
+        if (networkIdentity == null)
+        {
+            Debug.LogError($"[SpawnManager] Player prefab missing NetworkIdentity!");
+            return;
+        }
         
         spawnedPlayers[playerID] = networkIdentity;
         networkIdentity.GiveOwnership(playerID);
 
         var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
         if (nameplate != null) nameplate.SetName(displayName);
-
-        point.LastUsedTime = Time.time;
+        
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
     }
     
@@ -86,6 +96,7 @@ public class SpawnManager : MonoBehaviour
         if(playerSpawnPoints.TryGetValue(playerID, out SpawnPoint freedPoint))
         {
             playerSpawnPoints.Remove(playerID);
+            occupiedPoints.Remove(freedPoint);
             Debug.Log($"[SpawnManager] Spawn point is now free -> {freedPoint.name} <-");
         }
 
@@ -121,17 +132,29 @@ public class SpawnManager : MonoBehaviour
     {
         if(spawnPoints == null || spawnPoints.Length == 0)
         {
-            Debug.LogError("[SpawnManager] You forgor to put the spawn points in the scene!!!");
+            Debug.LogError("[SpawnManager] You forgot to put the spawn points in the scene!!!");
             return null;
         }
 
-        //Get all free poitns
+        //Get all free points
         List<SpawnPoint> availablePoints = new List<SpawnPoint>();
-        foreach (var pipi in spawnPoints)
+        
+        /*foreach (var pipi in spawnPoints)
         {
             if (!playerSpawnPoints.ContainsValue(pipi))
             {
                 availablePoints.Add(pipi);
+            }
+        }*/
+        
+        // note: changed the Dictionary(O(n)) to a HashSet (O(1)) because it's a better data structure for networking.
+        // Network code needs to be fast and predictable. If we have 6 points and 6 players that's 8 × 6 = 48 comparisons.
+        // It works for small numbers but it's the wrong data structure for the job.
+        foreach (var point in spawnPoints)
+        {
+            if (!occupiedPoints.Contains(point))
+            {
+                availablePoints.Add(point);
             }
         }
 
