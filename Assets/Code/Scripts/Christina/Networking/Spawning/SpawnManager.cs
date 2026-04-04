@@ -82,16 +82,6 @@ public class SpawnManager : MonoBehaviour
         
         spawnedPlayers[playerID] = networkIdentity;
         networkIdentity.GiveOwnership(playerID);
-        
-        Debug.Log($"[SpawnManager] Ownership given. playerID={playerID}, localPlayer={NetworkManager.main.localPlayer}, match={NetworkManager.main.isLocalPlayerReady && playerID == NetworkManager.main.localPlayer}");
-
-        if (NetworkManager.main.isLocalPlayerReady && playerID == NetworkManager.main.localPlayer)
-        {
-            var ownership = gameObject.GetComponent<PlayerOwnershipPresentation>();
-            Debug.Log($"[SpawnManager] Host player detected. OwnershipPresentation found: {ownership != null}");
-            if (ownership != null)
-                ownership.ApplyLocalOwnership();
-        }
 
         var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
         if (nameplate != null) nameplate.SetName(displayName);
