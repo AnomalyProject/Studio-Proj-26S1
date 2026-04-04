@@ -57,6 +57,10 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
         if (fpsController) fpsController.IsLocalPlayer = local;
         if (cameraLean) cameraLean.IsLocalPlayer = local;
     }
-
+    
+    public void ApplyLocalOwnership()
+    {
+        ApplyOwnershipState(true);
+    }
     
 }
