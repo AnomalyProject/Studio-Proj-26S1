@@ -5,9 +5,11 @@ using UnityEngine;
 
 public class AnomalyMap : GameMap
 {
+    [SerializeField, Tooltip("The normal version of the map, no anomalies.")] GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
    
     List<AnomalyGroup> usedAnomalies = new(), availableAnomalies = new();
+    public GameObject BaseMap => baseMap;
 
     protected override void Awake()
     {

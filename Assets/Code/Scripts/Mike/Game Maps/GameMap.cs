@@ -3,8 +3,6 @@ using UnityEngine;
 public class GameMap : MonoBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
-    [SerializeField] GameObject baseMap;
-    public GameObject BaseMap => baseMap;
     public Transform EntryPointAnchor => entryPointAnchor;
     public Transform ExitPointAnchor => exitPointAnchor;
 

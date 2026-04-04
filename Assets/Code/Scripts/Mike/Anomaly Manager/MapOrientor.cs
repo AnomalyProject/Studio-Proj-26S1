@@ -4,46 +4,46 @@ using UnityEngine;
 public class MapOrientor : MonoBehaviour
 {
     [SerializeField] LevelExitPoint entryElevator, exitElevator;
-    [SerializeField, Tooltip("If interacting with the entry exit means there is an anomaly in the room")] bool entryHasAnomaly;
-    public event Action<bool> OnElevatorInteracted;
+    public event Action<LevelExitPoint, bool> OnElevatorInteracted;
+    public LevelExitPoint EntryElevator => entryElevator;
+    public LevelExitPoint ExitElevator => exitElevator;
 
     void Awake()
     {
-        entryElevator.OnExitActivated += HandleExitPoint;
-        exitElevator.OnExitActivated += HandleExitPoint;
-
-        SetEntryPoint(entryElevator);
+        entryElevator.OnExitActivated += HandleExitActivation;
+        exitElevator.OnExitActivated += HandleExitActivation;
     }
 
     /// <summary>
-    /// Change provided map's orientation to match the elevators.
+    /// Change provided map's orientation and match it with the Map Orientor's exit points.
     /// </summary>
     /// <param name="map"></param>
-    public void OrientMap(GameMap map)
+    public void OrientMap(GameMap map) => OrientMap(map, entryElevator.transform, exitElevator.transform);
+
+    /// <summary>
+    /// Change map's orientation to match with the provided transforms.
+    /// </summary>
+    public static void OrientMap(GameMap map, Transform entryPoint, Transform exitPoint)
     {
         // Entry Point is the parent of the whole map, configured in GameMap's awake.
-        map.EntryPointAnchor.position = entryElevator.transform.position;
-        map.EntryPointAnchor.rotation = entryElevator.transform.rotation;
+        map.EntryPointAnchor.position = entryPoint.transform.position;
+        map.EntryPointAnchor.rotation = entryPoint.transform.rotation;
 
-        exitElevator.transform.position = map.ExitPointAnchor.position;
-        exitElevator.transform.rotation = map.ExitPointAnchor.rotation;
+        exitPoint.transform.position = map.ExitPointAnchor.position;
+        exitPoint.transform.rotation = map.ExitPointAnchor.rotation;
     }
-    void SetEntryPoint(LevelExitPoint newPoint)
+    void SetNewEntryPoint(LevelExitPoint newPoint)
     {
-        if (newPoint != entryElevator)
-        {
-            var temp = entryElevator;
-            entryElevator = newPoint;
-            exitElevator = temp;
-        }
+        if (newPoint == entryElevator) return;
 
-        entryElevator.SetChoice(entryHasAnomaly);
-        exitElevator.SetChoice(!entryHasAnomaly);
+        LevelExitPoint temp = entryElevator;
+        entryElevator = newPoint;
+        exitElevator = temp;
     }
 
-    void HandleExitPoint(LevelExitPoint exitPoint, bool decision)
+    void HandleExitActivation(LevelExitPoint exitPoint, bool decision)
     {
-        SetEntryPoint(exitPoint);
-        OnElevatorInteracted?.Invoke(decision);
+        SetNewEntryPoint(exitPoint);
+        OnElevatorInteracted?.Invoke(exitPoint, decision);
     }
 }
