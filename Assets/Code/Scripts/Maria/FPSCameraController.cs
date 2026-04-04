@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// First-Person Camera Controller.
 /// Handles vertical (pitch) rotation of the Camera and horizontal (yaw)
-/// rotation of the Player root, driven by FPSInputHandler.LookInput.
+/// Attach to the CameraHolder GameObject not the Camera itself.
 /// </summary>
 public class FPSCameraController : MonoBehaviour
 {
@@ -21,41 +21,43 @@ public class FPSCameraController : MonoBehaviour
     [Header("References")]
     [Tooltip("The Player root transform (rotates on Y axis).")]
     [SerializeField] private Transform playerBody;
+    Vector2 lookInput;
     #endregion
 
     #region Private Fields
-    private FPSInputHandler inputHandler;
     private float currentPitch = 0f;   // accumulated vertical rotation
     #endregion
 
     #region Unity Lifecycle
     private void Awake()
     {
-        // Input handler lives on the Player root
-        inputHandler = playerBody != null ? playerBody.GetComponent<FPSInputHandler>() : GetComponentInParent<FPSInputHandler>();
-
-        if (inputHandler == null)
-            Debug.LogError("[FPSCameraController] Could not find FPSInputHandler. " + "Ensure it is on the Player root GameObject.");
+        if (playerBody == null)
+            Debug.LogError("[FPSCameraController] Player Body reference is not assigned.");
     }
     private void Start()
     {
         LockCursor();
     }
 
+    void Update() => UpdateLook();
+
     #endregion
 
     #region Look
     public void ApplyLook(InputAction.CallbackContext ctx)
     {
-        if (inputHandler == null) return;
+        lookInput = ctx.ReadValue<Vector2>();
+    }
 
-        Vector2 look = ctx.ReadValue<Vector2>();
+    void UpdateLook()
+    {
+        if (playerBody == null) return;
 
         // Horizontal -> rotate the player body (yaw)
-        playerBody.Rotate(Vector3.up, look.x * mouseSensitivityX, Space.World);
+        playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX, Space.World);
 
         // Vertical -> rotate the camera holder (pitch), clamped
-        currentPitch -= look.y * mouseSensitivityY;
+        currentPitch -= lookInput.y * mouseSensitivityY;
         currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
         transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
     }
