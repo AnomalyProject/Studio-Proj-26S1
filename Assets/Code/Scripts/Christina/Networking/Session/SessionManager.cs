@@ -41,8 +41,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private ClientSessionData latestClientSession;
     public ClientSessionData LatestClientSession => latestClientSession;
     
-    private PlayerID? pendingHostConnection;
-    
     // server-side event fired when a player is added to the session.
     // carries the PlayerID directly so spawn systems don't need reverse-lookups.
     public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
@@ -79,45 +77,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
-
-            // If OnPlayerConnected already fired before us, register now
-            if (pendingHostConnection.HasValue)
+            
+            // register the host now instead of waiting for OnPlayerConnected(),
+            // because OnPlayerConnected() may fire before OnSpawned (race condition but happened and caused issues)
+            PlayerID? localId = NetworkManager.main?.localPlayer;
+            if (localId.HasValue && playerConnectionMap.Count == 0)
             {
-                RegisterHostPlayer(pendingHostConnection.Value);
-                pendingHostConnection = null;
+                hostPlayerID = localId.Value;
+                ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
+                string hostName = SteamFriends.GetPersonaName();
+                AddPlayerToSession(localId.Value, hostSteamID, hostName, isHost: true);
+                Debug.Log("[SessionManager] Host registered as first player in OnSpawned.");
             }
         }
         else
         {
             Debug.Log("[SessionManager] Client connected to host.");
         }
-    }
-    
-    public void OnPlayerConnected(PlayerID playerID, bool isReconnect, bool asServer)
-    {
-        if (!asServer) return;
-        Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
-
-        if (sessionData != null && playerConnectionMap.Count == 0)
-        {
-            // Session exists, register host with the REAL PlayerID
-            RegisterHostPlayer(playerID);
-        }
-        else if (sessionData == null && playerConnectionMap.Count == 0)
-        {
-            // OnSpawned hasn't fired yet — store for later
-            pendingHostConnection = playerID;
-            Debug.Log("[SessionManager] Storing pending host connection, waiting for session creation.");
-        }
-    }
-
-    private void RegisterHostPlayer(PlayerID playerID)
-    {
-        hostPlayerID = playerID;
-        ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-        string hostName = SteamFriends.GetPersonaName();
-        AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
-        Debug.Log($"[SessionManager] Host registered as first player with PlayerID {playerID}.");
     }
 
     /// <summary>
