@@ -639,7 +639,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void SendStateChangeToClient(PlayerID target, GameState stateToTransition)
     {
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
-
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
 

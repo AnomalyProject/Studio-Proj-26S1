@@ -152,7 +152,20 @@ public class SessionModeManager : MonoBehaviour
         Debug.Log("[SessionModeManager] Starting Co-Op Client join...");
 
         SetMode(SessionMode.CoOpClient);
+        
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+
+        SceneLoader.Instance.OnLoadFinished += OnJoinSceneLoaded;
+        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
     }
+    
+    private void OnJoinSceneLoaded()
+    {
+        SceneLoader.Instance.OnLoadFinished -= OnJoinSceneLoaded;
+        SteamSessionBridge.Instance.BeginPendingSteamJoin();
+    }
+    
     
     private void OnJoinStartupStatusChanged(JoinStartupStatus status)
     {

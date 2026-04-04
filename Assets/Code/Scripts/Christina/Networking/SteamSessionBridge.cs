@@ -116,11 +116,6 @@ public class SteamSessionBridge : MonoBehaviour
                     }
                     
                     SessionModeManager.Instance.StartJoining();
-                    SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
-
-                    SetJoinStage(
-                        JoinStartupStage.LobbyJoinRequested,
-                        $"Requested Steam lobby join for {lobbyId}.");
                 }
                 else
                 {
@@ -318,6 +313,25 @@ public class SteamSessionBridge : MonoBehaviour
         // instead of only logs in the console.
         OnHostStartupStatusChanged?.Invoke(currentHostStartupStatus);
     }
+    
+    public void BeginPendingSteamJoin()
+    {
+        if (!pendingJoinLobbyId.IsValid())
+        {
+            SetJoinStage(
+                JoinStartupStage.Failed,
+                "No pending Steam lobby ID was available after scene load.",
+                ConnectionFailureSource.Steam);
+            return;
+        }
+
+        SteamMatchmaking.JoinLobby(pendingJoinLobbyId);
+
+        SetJoinStage(
+            JoinStartupStage.LobbyJoinRequested,
+            $"Requested Steam lobby join for {pendingJoinLobbyId} after scene load.");
+    }
+
     
     /// <summary>
     /// Using a coroutine because we need to wait accross frames for:
@@ -792,12 +806,6 @@ public class SteamSessionBridge : MonoBehaviour
             "Leaving current Steam lobby before new join attempt.");
         
         SessionModeManager.Instance.StartJoining();
-        // after the checks now JoinLobby proceeds into a clean empty state
-        SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
-        
-        SetJoinStage(
-            JoinStartupStage.LobbyJoinRequested,
-            $"Requested Steam lobby join for {callback.m_steamIDLobby}.");
 
     }
     
