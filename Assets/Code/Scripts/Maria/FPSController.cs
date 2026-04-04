@@ -43,7 +43,8 @@ public class FPSController : MonoBehaviour
     private bool isCrouching = false;
     private float targetHeight;
     private float targetCameraLocalY;
-
+    public bool IsLocalPlayer { get; set; }
+    
     // Cached camera holder standing Y so crouch offset is relative
     private float cameraStandingLocalY;
     #endregion
@@ -62,7 +63,7 @@ public class FPSController : MonoBehaviour
 
     private void Update()
     {
-        //if (!input.isOwner) return;
+        if (!IsLocalPlayer) return;
         
         HandleGroundCheck();
         ApplyMovement();

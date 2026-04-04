@@ -10,6 +10,9 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private GameObject bodyVisuals;
     [SerializeField] private GameObject nameplateVisuals;
+    [SerializeField] private FPSController fpsController;
+    [SerializeField] private CameraLean cameraLean;
+    [SerializeField] private PlayerInteraction playerInteraction;
 
     protected override void OnSpawned(bool asServer)
     {
@@ -37,7 +40,13 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
         if (playerAudioListener) playerAudioListener.enabled = local;
         if (playerInput) playerInput.enabled = local;
         if (cameraController) cameraController.enabled = local;
+        if (fpsController) fpsController.enabled = local;
+        if (cameraLean) cameraLean.enabled = local;
+        if (playerInteraction) playerInteraction.enabled = local;
         if (bodyVisuals) bodyVisuals.SetActive(!local);
         if (nameplateVisuals) nameplateVisuals.SetActive(!local);
+        
+        if (fpsController) fpsController.IsLocalPlayer = local;
+        if (cameraLean) cameraLean.IsLocalPlayer = local;
     }
 }
