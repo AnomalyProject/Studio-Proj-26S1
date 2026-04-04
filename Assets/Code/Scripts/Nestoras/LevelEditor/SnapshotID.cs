@@ -5,7 +5,7 @@ using UnityEditor;
 [CustomEditor(typeof(SnapshotID))]
 public class SnapshotIDEditor : Editor
 {
-    public override void OnInspectorGUI() { } // Draw nothing — completely hides the component in Inspector
+    public override void OnInspectorGUI() { } // Draw nothing
 }
 #endif
 
