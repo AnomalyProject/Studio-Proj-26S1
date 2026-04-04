@@ -170,6 +170,13 @@ public class SessionModeManager : MonoBehaviour
             Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
             ReturnToMenu();
         }
+        
+        if (status.Stage == HostStartupStage.HostPublished)
+        {
+            GameStateManager.Instance.RequestStateChange(GameState.InGame);
+            Debug.Log("[SessionModeManager] Host startup complete. Transitioned to InGame.");
+        }
+        
     }
 
 }

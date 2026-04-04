@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using PurrNet;
+using System.Collections;
 using System.Collections.Generic;
 using Steamworks;
 
@@ -27,8 +28,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     // PurrNet ConnectionID for the Host. Used for authority checks in RPCs.
     // This is not like PlayerSessionInfo.IsHost -> that's for game logic. This one is for network authority.
     private PlayerID? hostPlayerID;
-    
     private PlayerID? pendingHostConnection;
+    
+    private Coroutine hostRegistrationCoroutine;
+    private const float hostRegistrationTimeoutSeconds = 5f;
 
     // this Dictionary maps PurrNet's PlayerID to Steam ulong IDs. This is nessecary because SessionData
     // only know SteamIDs, but RPCs only know PlayerIDs. Every RPC must look up Stem ID here first.
@@ -85,6 +88,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 RegisterHostPlayer(pendingHostConnection.Value, "pending OnPlayerConnected");
                 pendingHostConnection = null;
             }
+            else if (playerConnectionMap.Count == 0)
+            {
+                hostRegistrationCoroutine = StartCoroutine(WaitForLocalHostThenRegister());
+            }
         }
         else
         {
@@ -107,6 +114,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         sessionData = null;
         hostPlayerID = null;
         pendingHostConnection = null;
+        hostRegistrationCoroutine = null;
         playerConnectionMap.Clear();
         latestClientSession = default;
 
@@ -136,6 +144,37 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
+    
+    private IEnumerator WaitForLocalHostThenRegister()
+    {
+        float deadline = Time.realtimeSinceStartup + hostRegistrationTimeoutSeconds;
+
+        while (Time.realtimeSinceStartup < deadline)
+        {
+            if (playerConnectionMap.Count != 0)
+            {
+                hostRegistrationCoroutine = null;
+                yield break;
+            }
+
+            if (NetworkManager.main != null && NetworkManager.main.isLocalPlayerReady)
+            {
+                PlayerID localId = NetworkManager.main.localPlayer;
+
+                if (!localId.isServer)
+                {
+                    RegisterHostPlayer(localId, "WaitForLocalHostThenRegister");
+                    hostRegistrationCoroutine = null;
+                    yield break;
+                }
+            }
+
+            yield return null;
+        }
+
+        Debug.LogError("[SessionManager] Timed out waiting for a valid local host PlayerID.");
+        hostRegistrationCoroutine = null;
+    }
 
     /// <summary>
     /// PurrNet IPlayerEvents callback. Fires automatically when any player connects.
@@ -159,6 +198,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         RegisterHostPlayer(playerID, "OnPlayerConnected");
+        
+        if (hostRegistrationCoroutine != null)
+        {
+            StopCoroutine(hostRegistrationCoroutine);
+            hostRegistrationCoroutine = null;
+        }
+        
     }
 
     /// <summary>
