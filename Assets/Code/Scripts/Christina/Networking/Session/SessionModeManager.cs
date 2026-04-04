@@ -40,15 +40,6 @@ public class SessionModeManager : MonoBehaviour
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
         }
     }
-
-    private void OnHostStartupStatusChanged(HostStartupStatus status)
-    {
-        if (status.Stage == HostStartupStage.Failed && currentMode == SessionMode.CoOpHost)
-        {
-            Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
-            SetMode(SessionMode.None);
-        }
-    }
     
     public void SetMode(SessionMode mode)
     {
@@ -64,34 +55,31 @@ public class SessionModeManager : MonoBehaviour
 
     public void ReturnToMenu()
     {
-        if (currentMode == SessionMode.None)
-        {
-            Debug.LogWarning("[SessionModeManager] Already in None mode, skipping shutdown.");
-            return;
-        }
-
         NetworkManager netManager = NetworkManager.main;
         if (netManager != null)
         {
-            if (netManager.isServer)
-                netManager.StopServer();
+            if (netManager.isServer) netManager.StopServer();
+            if (netManager.isClient) netManager.StopClient();
+        }
 
-            if (netManager.isClient)
-                netManager.StopClient();
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.LeaveSteamLobby();
         }
         
-        if (SteamSessionBridge.Instance != null)
-            SteamSessionBridge.Instance.LeaveSteamLobby();
-        
+        SessionEvents.Reset(); 
         SetMode(SessionMode.None);
-        
-        if (GameStateManager.Instance != null)
-            GameStateManager.Instance.ForceStateChange(GameState.Menu);
-        
-        if (SceneLoader.Instance != null)
-            SceneLoader.Instance.LoadScene("MainMenu");
 
-        Debug.Log("[SessionModeManager] Shutdown complete. Back at menu.");
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.ForceStateChange(GameState.Menu);
+        }
+
+        if (SceneLoader.Instance != null)
+        {
+            SceneLoader.Instance.LoadScene("MainMenu");
+        }
+            
         
     }
     
@@ -156,10 +144,20 @@ public class SessionModeManager : MonoBehaviour
     
     private void OnJoinStartupStatusChanged(JoinStartupStatus status)
     {
-        if (status.Stage == JoinStartupStage.Failed && currentMode == SessionMode.CoOpClient)
+        if (status.Stage == JoinStartupStage.Failed)
         {
-            Debug.LogWarning($"[SessionModeManager] Join failed: {status.Message}");
-            SetMode(SessionMode.None);
+            Debug.LogWarning($"Join failed: {status.Message}");
+            ReturnToMenu();
         }
     }
+    
+    private void OnHostStartupStatusChanged(HostStartupStatus status)
+    {
+        if (status.Stage == HostStartupStage.Failed)
+        {
+            Debug.LogWarning($"Host startup failed: {status.Message}");
+            ReturnToMenu();
+        }
+    }
+
 }

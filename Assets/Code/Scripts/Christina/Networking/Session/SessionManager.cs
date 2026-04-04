@@ -103,7 +103,15 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
+        if (Instance == this)  // <-- ADD THIS BLOCK
+        {
+            Instance = null;
+        }
+        
         sessionData = null;
+        hostPlayerID = null;
+        playerConnectionMap.Clear();
+        latestClientSession = default;
 
         if (GameStateManager.Instance != null)
         {

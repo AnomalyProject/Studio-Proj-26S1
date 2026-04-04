@@ -17,6 +17,7 @@ public class SteamSessionBridge : MonoBehaviour
     private HostStartupStatus currentHostStartupStatus;
     private int hostStartupAttemptID = 0;
     private Coroutine hostStartupCoroutine;
+    private Coroutine joinCoroutine; 
     private const float clientConnectionTimeoutSeconds = 15f;
     
     public HostStartupStatus CurrentHostStartupStatus => currentHostStartupStatus;
@@ -101,6 +102,13 @@ public class SteamSessionBridge : MonoBehaviour
                         JoinStartupStage.JoinRequestReceived,
                         $"Join requested via launch argument for lobby {lobbyId}");
 
+                    if (SessionModeManager.Instance == null)
+                    {
+                        Debug.LogError("[SteamBridge] SessionModeManager missing during join startup.");
+                        LeaveSteamLobby();
+                        return;
+                    }
+                    
                     SessionModeManager.Instance.StartJoining();
                     SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
 
@@ -200,6 +208,19 @@ public class SteamSessionBridge : MonoBehaviour
     
     public void LeaveSteamLobby()
     {
+        if (hostStartupCoroutine != null)
+        {
+            StopCoroutine(hostStartupCoroutine);
+            hostStartupCoroutine = null;
+        }
+
+        if (joinCoroutine != null)
+        {
+            StopCoroutine(joinCoroutine);
+            joinCoroutine = null;
+        }
+
+        joinStartupInProgress = false;
         isCreatingLobby = false;
         
         if (isInLobby)
@@ -579,7 +600,7 @@ public class SteamSessionBridge : MonoBehaviour
         networkManager.StartClient();
         // we use coroutine because StartClient() is asynchronous.
         // we need to wait for the response to send RPCs
-        StartCoroutine(WaitForConnectionThenJoin());
+        joinCoroutine = StartCoroutine(WaitForConnectionThenJoin());
     }
     
     private IEnumerator WaitForConnectionThenJoin()
@@ -605,6 +626,8 @@ public class SteamSessionBridge : MonoBehaviour
 
                 joinStartupInProgress = false;
             }
+
+            joinCoroutine = null;
             yield break;
         }
 
@@ -626,7 +649,7 @@ public class SteamSessionBridge : MonoBehaviour
 
                 joinStartupInProgress = false;
             }
-
+            joinCoroutine = null;
             yield break;
         }
         var identity = SessionManager.Instance.GetComponent<NetworkIdentity>();
@@ -647,6 +670,7 @@ public class SteamSessionBridge : MonoBehaviour
 
                 joinStartupInProgress = false;
             }
+            joinCoroutine = null;
             yield break;
         }
 
@@ -669,6 +693,7 @@ public class SteamSessionBridge : MonoBehaviour
         
         SessionManager.Instance.RequestJoinSession(steamID, displayName);
         Debug.Log("[SteamBridge] PurrNet connected, session join requested");
+        joinCoroutine = null;
     }
 
     private void OnLobbyChatUpdate(LobbyChatUpdate_t callback)

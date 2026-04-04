@@ -111,7 +111,7 @@ public class NetworkTestUI : MonoBehaviour
 
         if (GUILayout.Button("HOST"))
         {
-            SteamSessionBridge.Instance.BeginSteamListenHost();
+            SessionModeManager.Instance.StartHosting();
         }
 
         /*if (GUILayout.Button("JOIN"))
@@ -127,16 +127,8 @@ public class NetworkTestUI : MonoBehaviour
 
         if (GUILayout.Button("Disconnect"))
         {
-            if (isHost)
-            {
-                NetworkManager.main.StopClient();
-                NetworkManager.main.StopServer();                
-            }
-            else
-            {
-                NetworkManager.main.StopClient();
-            }
-                
+            SessionModeManager.Instance.ReturnToMenu();
+            
         }
 
         GUILayout.Label("--- RPC Tests ---");
