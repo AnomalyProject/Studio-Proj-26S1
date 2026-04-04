@@ -15,13 +15,13 @@ public class AnomalyManager : MonoBehaviour
     public event System.Action<GameMap> OnMapChanged;
 
     [SerializeField] AnomalyMap[] mapCollection;
-    [SerializeField, Tooltip("Weather to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool InstantiateMaps = true;
     [SerializeField, Range(0,1)] float anomalyChance = .5f;
     [SerializeField] GameMap[] punishmentRooms;
     [SerializeField] GameMap winRoom;
+    [SerializeField, Tooltip("Weather to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool mapsArePrefabs = true;
 
     AnomalyMap activeMap;
-    GameMap activePunishmentRoom;
+    GameMap activePunishmentRoom, activeWinRoom;
     GameObject activeAnomalyGroup;
     RoomState currentState;
     MapOrientor mapOrientor;
@@ -35,7 +35,7 @@ public class AnomalyManager : MonoBehaviour
         mapOrientor = GetComponent<MapOrientor>();
         OnMapChanged += mapOrientor.OrientMap;
 
-        if(!InstantiateMaps)
+        if(!mapsArePrefabs)
         foreach (var map in mapCollection) map.DisableAll();
     }
 
@@ -98,16 +98,16 @@ public class AnomalyManager : MonoBehaviour
 
         ClearActiveState(destroyActiveMap: false);
 
-        int punishmentRoomIndex = Random.Range(0, punishmentRooms.Length);
-        activePunishmentRoom = punishmentRooms[punishmentRoomIndex];
+        int roomIndex = Random.Range(0, punishmentRooms.Length);
+        GameMap map = punishmentRooms[roomIndex];
+        activePunishmentRoom = CreateMap(map);
 
         if(activePunishmentRoom == null)
         {
-            Debug.LogWarning($"Tried to enable punishment room at index {punishmentRoomIndex} but it is null.");
+            Debug.LogWarning($"Tried to enable punishment room at index {roomIndex} but it is null.");
             return;
         }
 
-        activePunishmentRoom?.gameObject.SetActive(true);
         OnMapChanged?.Invoke(activePunishmentRoom);
         ChangeState(RoomState.PunishmentRoom);
     }
@@ -138,7 +138,7 @@ public class AnomalyManager : MonoBehaviour
             return false;
         }
 
-        ClearActiveState(destroyActiveMap: InstantiateMaps);
+        ClearActiveState(destroyActiveMap: mapsArePrefabs);
 
         if(!mapCollection[mapIndex])
         {
@@ -146,8 +146,8 @@ public class AnomalyManager : MonoBehaviour
             return false;
         }
 
-        if(InstantiateMaps) activeMap = Instantiate(mapCollection[mapIndex]);
-        else activeMap = mapCollection[mapIndex];
+        AnomalyMap map = mapCollection[mapIndex];
+        activeMap = CreateMap(map) as AnomalyMap;
 
         activeMap.DisableAll(keepBase: true);
         ChangeState(RoomState.NormalRoom);
@@ -167,8 +167,8 @@ public class AnomalyManager : MonoBehaviour
         }
 
         ClearActiveState(false);
-        winRoom?.gameObject.SetActive(true);
-        OnMapChanged?.Invoke(winRoom);
+        activeWinRoom = CreateMap(winRoom);
+        OnMapChanged?.Invoke(activeWinRoom);
         ChangeState(RoomState.WinRoom);
     }
     void ClearActiveState(bool destroyActiveMap)
@@ -181,18 +181,12 @@ public class AnomalyManager : MonoBehaviour
                 activeMap = null;
             }
             else activeMap.DisableAll();
-        }   
+        }
 
         activeAnomalyGroup = null;
 
-        if (activePunishmentRoom)
-        {
-            activePunishmentRoom.gameObject.SetActive(false);
-            activePunishmentRoom = null;
-        }
-
-        if(winRoom)
-        winRoom.gameObject.SetActive(false);
+        ReleaseMap(ref activePunishmentRoom);
+        ReleaseMap(ref activeWinRoom);
     }
     void ChangeState(RoomState newState)
     {
@@ -200,5 +194,23 @@ public class AnomalyManager : MonoBehaviour
 
         currentState = newState;
         OnStateChanged?.Invoke(newState);
+    }
+    GameMap CreateMap(GameMap map)
+    {
+        GameMap result;
+
+        if (mapsArePrefabs) result = Instantiate(map);
+        else result = map;
+
+        result.gameObject.SetActive(true);
+        return result;
+    }
+    void ReleaseMap(ref GameMap map)
+    {
+        if (!map) return;
+
+        if(mapsArePrefabs) Destroy(map.gameObject);
+        else map.gameObject.SetActive(false);
+        map = null;
     }
 }
