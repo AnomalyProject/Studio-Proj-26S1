@@ -11,6 +11,8 @@ public class MapOrientor : MonoBehaviour
     {
         entryElevator.OnExitActivated += HandleExitPoint;
         exitElevator.OnExitActivated += HandleExitPoint;
+
+        SetEntryPoint(entryElevator);
     }
 
     /// <summary>
