@@ -3,6 +3,12 @@ using UnityEngine.EventSystems;
 
 public class MainMenuManager : MonoBehaviour
 {
+    enum SceneLoadingMethod
+    {
+        WithString,
+        WithIndex
+    }
+
     [Header("References")]
     [SerializeField] GameObject mainMenuCanvas;
     [SerializeField] GameObject firstSelectedButton;
@@ -70,18 +76,8 @@ public class MainMenuManager : MonoBehaviour
 
     public void QuitGame()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
         Application.Quit();
-#endif
+        Debug.Log("Player has quit the game!");
     }
     #endregion
-}
-
-
-enum SceneLoadingMethod
-{
-    WithString,
-    WithIndex
 }
