@@ -25,12 +25,20 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
 
     protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
     {
-        if (!asServer)
+        bool local = newOwner.HasValue && newOwner == localPlayer;
+
+        if (asServer)
         {
-            bool local = newOwner.HasValue && newOwner == localPlayer;
-            Debug.Log($"[Ownership] OnOwnerChanged: newOwner={newOwner}, localPlayer={localPlayer}, local={local}");
-            ApplyOwnershipState(local);
+            // On the host's server path, GiveOwnership fires this immediately.
+            // Only enable for the local player — don't disable others here,
+            // the client path handles that.
+            if (local)
+                ApplyOwnershipState(true);
+            return;
         }
+
+        Debug.Log($"[Ownership] OnOwnerChanged: newOwner={newOwner}, localPlayer={localPlayer}, local={local}");
+        ApplyOwnershipState(local);
     }
 
     private void ApplyOwnershipState(bool local)
@@ -49,10 +57,6 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
         if (fpsController) fpsController.IsLocalPlayer = local;
         if (cameraLean) cameraLean.IsLocalPlayer = local;
     }
-    
-    public void ApplyLocalOwnership()
-    {
-        ApplyOwnershipState(true);
-    }
+
     
 }
