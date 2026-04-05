@@ -15,10 +15,6 @@ public class BugReporter : MonoBehaviour
 
     [Header("SMTP Configuration")]
     public string receiverEmail = "";
-    public string senderEmail = "";
-    public string senderPassword = "";
-    public string smtpHost = "";
-    public int smtpPort = 587;
     
     private bool isSending = false;
 
@@ -61,10 +57,8 @@ public class BugReporter : MonoBehaviour
     private void SendEmailReport()
     {
         MailMessage mail = new MailMessage();
-        mail.From = new MailAddress(senderEmail);
         mail.To.Add(receiverEmail);
         mail.Subject = $"{Application.productName} | Bug Report";
-        
         mail.Body = $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
                     $"Time: {DateTime.Now:HH:mm:ss}\n" +
                     $"OS: {SystemInfo.operatingSystem}\n\n" +
@@ -72,10 +66,6 @@ public class BugReporter : MonoBehaviour
 
         // We call the static class here
         MailService.SendEmail(
-            smtpHost, 
-            smtpPort, 
-            senderEmail, 
-            senderPassword, 
             mail,
             OnMailSuccess, // The success callback
             OnMailFailure  // The failure callback
