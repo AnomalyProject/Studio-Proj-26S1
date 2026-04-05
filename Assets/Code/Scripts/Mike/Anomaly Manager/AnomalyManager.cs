@@ -200,7 +200,7 @@ public class AnomalyManager : MonoBehaviour
         result.gameObject.SetActive(true);
         return result;
     }
-    void ReleaseMap<TMap>(ref TMap map) where TMap: GameMap
+    void ReleaseMap(ref GameMap map)
     {
         if (!map) return;
 
