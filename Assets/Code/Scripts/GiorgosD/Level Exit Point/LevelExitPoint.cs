@@ -6,8 +6,7 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 {
-    [Header("Settings")]
-    Collider col;
+    [Header("Settings")] Collider col;
 
     // Checks
     private bool bEnoughPlayers, bIsAvailable;
@@ -17,6 +16,11 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 
     // Events
     public UnityEvent<bool> OnActivateExit;
+
+    /// <summary>
+    /// Fires when an exit point is interacted with and the corresponding decision (Has Anomaly or not).
+    /// </summary>
+    public Action<LevelExitPoint, bool> OnExitActivated;
 
     void Awake()
     {
@@ -45,6 +49,7 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     {
         Debug.Log($"Exit Activated. Anomaly Presence: {bHasAnomaly}");
         OnActivateExit?.Invoke(bHasAnomaly);
+        OnExitActivated?.Invoke(this, bHasAnomaly);
     }
     #endregion
 
@@ -107,5 +112,6 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     /// <param name="active"></param>
     public void SetInteraction(bool active) => bIsAvailable = active;
+    public void SetChoice(bool hasAnomaly) => bHasAnomaly = hasAnomaly;
     #endregion
 }
