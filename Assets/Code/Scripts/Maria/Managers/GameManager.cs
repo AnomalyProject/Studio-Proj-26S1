@@ -4,32 +4,35 @@ using UnityEngine.Events;
 /// <summary>
 /// Single source of truth for the anomaly game flow.
 /// Plain MonoBehaviour for single-player / local testing.
+/// Listens to MapOrientor.OnElevatorInteracted to know which elevator the player used,
+/// then determines correctness and instructs AnomalyManager accordingly.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] AnomalyManager anomalyManager;
-
-    [Tooltip("The transform players are sent back to after each correct decision.")]
-    [SerializeField] Transform spawnPoint;
-
-    [Tooltip("The player transform to teleport to the spawn point.")]
-    [SerializeField] Transform playerTransform;
-
-    [Tooltip("All level exit points players can interact with to submit their decision.")]
-    [SerializeField] LevelExitPoint[] exitPoints;
+    [SerializeField] MapOrientor mapOrientor;
 
     [Header("Win Condition")]
     [Tooltip("How many correct decisions in a row are required to win.")]
     [SerializeField] int requiredCorrectDecisions = 5;
 
+    [Header("Decision Cooldown")]
+    [Tooltip("Seconds after a decision is made before another can be registered. Prevents spam.")]
+    [SerializeField, Min(0f)] float decisionCooldown = 2f;
+
     [Header("Debug / Testing")]
     [Tooltip("When true, logs a fake punishment-room activation instead of requiring a real scene object.")]
     [SerializeField] bool fakePunishmentRoom = false;
-
-    // State
     public int CurrentProgress { get; private set; }
-    public bool IsGameActive { get; private set; }
+    public bool IsGameActive => anomalyManager.CurrentState == AnomalyManager.RoomState.NormalRoom ||
+                                anomalyManager.CurrentState == AnomalyManager.RoomState.AnomalyRoom;
+
+    bool IsOnCoolDown;
+
+    // Snapshot of the entry elevator taken at the start of each round, before any swap.
+    LevelExitPoint cachedEntryElevator;
+
 
     // Events
     public UnityEvent<int> OnProgressChanged;
@@ -38,26 +41,17 @@ public class GameManager : MonoBehaviour
     public UnityEvent OnGameReset;
 
     void Awake() => ValidateDependencies();
-
-    void Start()
+    void OnEnable()
     {
-        foreach (LevelExitPoint exit in exitPoints)
-        {
-            if (exit != null)
-                exit.OnActivateExit.AddListener(HandlePlayerDecision);
-        }
-
-        InitialiseGame();
+        MapOrientor.OnElevatorInteracted += HandleElevatorInteracted;
+        anomalyManager.OnStateChanged += HandleStateChanged;
     }
-
-    void OnDestroy()
+    void OnDisable()
     {
-        foreach (LevelExitPoint exit in exitPoints)
-        {
-            if (exit != null)
-                exit.OnActivateExit.RemoveListener(HandlePlayerDecision);
-        }
-    }
+        MapOrientor.OnElevatorInteracted -= HandleElevatorInteracted;
+        anomalyManager.OnStateChanged -= HandleStateChanged;
+    } 
+    void Start() => InitialiseGame();
 
     /// <summary>
     /// Resets the game to its initial state: picks a fresh random map,
@@ -66,120 +60,150 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         CurrentProgress = 0;
-        IsGameActive = true;
+        IsOnCoolDown = false;
+        CancelInvoke(nameof(ResetCooldown));
 
         anomalyManager.TryPickMap();
         anomalyManager.DecideNextMapVariation(false);
 
-        // Open exits — bHasAnomaly on each exit is fixed in the Inspector (player's choice).
-        SetExitsAvailable(true);
-
-        TeleportPlayerToSpawn();
+        cachedEntryElevator = mapOrientor.EntryElevator;
+        SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
 
         OnProgressChanged?.Invoke(CurrentProgress);
         OnGameReset?.Invoke();
 
-        Debug.Log("[GameManager] Game reset. Progress: 0. Waiting for player decision.");
+        LogProgress("[GameManager] Game reset. Progress: 0. Waiting for player decision.");
     }
 
-    void HandlePlayerDecision(bool playerReportsAnomaly)
+    void HandleStateChanged(AnomalyManager.RoomState newState)
     {
-        if (!IsGameActive) return;
+        switch(newState)
+        {
+            case AnomalyManager.RoomState.NormalRoom:
+            case AnomalyManager.RoomState.AnomalyRoom:
+                SetElevatorInteraction(entryEnabled: true, exitEnabled: true);
+                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
+                break;
 
-        bool decisionIsCorrect = playerReportsAnomaly == anomalyManager.HasAnomaly;
-
-        Debug.Log($"[GameManager] Player decision: anomaly={playerReportsAnomaly} | " +
-                  $"Actual anomaly={anomalyManager.HasAnomaly} | Correct={decisionIsCorrect}");
-
-        SetExitsAvailable(false);
-
-        if (decisionIsCorrect)
-            HandleCorrectDecision();
-        else
-            HandleWrongDecision();
+            case AnomalyManager.RoomState.PunishmentRoom:
+                SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
+                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: true);
+                OnWrongDecision?.Invoke();
+                LogProgress("Wrong decision — punishment room. Use the exit elevator to resume");
+                break;
+            case AnomalyManager.RoomState.WinRoom:
+                SetElevatorInteraction(entryEnabled: true, exitEnabled: false);
+                OnGameWon?.Invoke();
+                break;
+        }
     }
+    void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
+    {
+        if (IsOnCoolDown) return;
 
+        IsOnCoolDown = true;
+        Invoke(nameof(ResetCooldown), decisionCooldown);
+
+        switch (anomalyManager.CurrentState)
+        {
+            case AnomalyManager.RoomState.NormalRoom:
+            case AnomalyManager.RoomState.AnomalyRoom:
+                HandleCoreLoopDecision(usedElevator);
+                break;
+
+            case AnomalyManager.RoomState.PunishmentRoom:
+                HandlePunishmentRoomExit();
+                break;
+
+            case AnomalyManager.RoomState.WinRoom:
+                HandleWinRoomExit();
+                break;
+        }
+    }
+    void HandleCoreLoopDecision(LevelExitPoint usedElevator)
+    {
+        bool usedEntryElevator = usedElevator == cachedEntryElevator;
+        bool decisionIsCorrect = usedEntryElevator == anomalyManager.HasAnomaly;
+
+        // Update cache now that MapOrientor has already swapped its references.
+        cachedEntryElevator = mapOrientor.EntryElevator;
+
+        Debug.Log($"[GameManager] Elevator: {usedElevator.name} | " +
+                  $"Used entry: {usedEntryElevator} | HasAnomaly: {anomalyManager.HasAnomaly} | Correct: {decisionIsCorrect}");
+
+        if (decisionIsCorrect) HandleCorrectDecision();
+        else HandleWrongDecision();
+    }
     void HandleCorrectDecision()
     {
         CurrentProgress++;
         OnProgressChanged?.Invoke(CurrentProgress);
 
-        Debug.Log($"[GameManager] Correct! Progress: {CurrentProgress}/{requiredCorrectDecisions}");
+        LogProgress($"[GameManager] Correct! Progress: {CurrentProgress}/{requiredCorrectDecisions}");
 
         if (CurrentProgress >= requiredCorrectDecisions)
         {
-            TriggerWin();
+            anomalyManager.EnableWinRoom();
             return;
         }
 
-        // Decide the next map variation (random, honours anomalyChance).
+        // Decide the next map variation - random, honours anomalyChance.
+        // MapOrientor.OrientMap is already subscribed to AnomalyManager.OnMapChanged,
+        // So new map will be positioned correctly relative to the elevators automatically.
         anomalyManager.DecideNextMapVariation();
 
-        SetExitsAvailable(true);
-
-        // Send the player back to the beginning of the level.
-        TeleportPlayerToSpawn();
+        Debug.Log($"[GameManager] Next variation decided. HasAnomaly: {anomalyManager.HasAnomaly}");
     }
 
     void HandleWrongDecision()
     {
-        IsGameActive = false;
-        OnWrongDecision?.Invoke();
-
         if (fakePunishmentRoom)
-            Debug.Log("[GameManager] FAKE punishment room activated (fakePunishmentRoom = true).");
-        else
-            anomalyManager.EnablePunishmentRoom();
-
-        TeleportPlayerToSpawn();
-
-        Debug.Log("[GameManager] Wrong decision — punishment room enabled. Call ResetGame() to restart.");
-    }
-
-    void TriggerWin()
-    {
-        IsGameActive = false;
-        anomalyManager.EnableWinRoom();
-        OnGameWon?.Invoke();
-
-        Debug.Log("[GameManager] Win condition met! Win room enabled.");
-    }
-
-    void InitialiseGame() => ResetGame();
-
-    void TeleportPlayerToSpawn()
-    {
-        if (spawnPoint == null || playerTransform == null)
         {
-            Debug.LogWarning("[GameManager] Spawn point or player transform not assigned — skipping teleport.");
+            HandleStateChanged(AnomalyManager.RoomState.PunishmentRoom);
+            Debug.Log("[GameManager] FAKE punishment room activated (fakePunishmentRoom = true).");
             return;
         }
 
-        playerTransform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
-        Debug.Log($"[GameManager] Teleported player to spawn: {spawnPoint.position}");
+        anomalyManager.EnablePunishmentRoom();
+        LogProgress("[GameManager] Wrong decision — punishment room enabled. Use the exit elevator to resume.");
     }
 
-    /// <summary>
-    /// Enables or disables interaction on all registered exit points.
-    /// </summary>
-    void SetExitsAvailable(bool available)
+    void HandlePunishmentRoomExit()
     {
-        foreach (var exit in exitPoints)
-            exit?.SetInteraction(available);
-    }
+        anomalyManager.TryPickMap();
+        anomalyManager.DecideNextMapVariation();
 
+        cachedEntryElevator = mapOrientor.EntryElevator;
+
+        LogProgress($"[GameManager] Resuming from punishment room. Progress kept at: {CurrentProgress}/{requiredCorrectDecisions}");
+    }
+    void HandleWinRoomExit()
+    {
+        LogProgress("Returning from Win room. Resetting progress to 0.");
+        ResetGame();
+    }
+    void InitialiseGame() => ResetGame();
+    void ResetCooldown() => IsOnCoolDown = false;
+    void SetElevatorInteraction(bool entryEnabled, bool exitEnabled)
+    {
+        mapOrientor.EntryElevator.SetInteraction(entryEnabled);
+        mapOrientor.ExitElevator.SetInteraction(exitEnabled);
+    }
+    void SetElevatorChoice(bool entryHasAnomaly, bool exitHasAnomaly)
+    {
+        mapOrientor.EntryElevator.SetChoice(entryHasAnomaly);
+        mapOrientor.ExitElevator.SetChoice(exitHasAnomaly);
+    }
+    void LogProgress(string context) => Debug.Log($"[GameManager] {context} | Progress: {CurrentProgress} / {requiredCorrectDecisions}");
     void ValidateDependencies()
     {
         if (anomalyManager == null)
             Debug.LogError("[GameManager] AnomalyManager reference is missing! Assign it in the Inspector.");
 
-        if (spawnPoint == null)
-            Debug.LogWarning("[GameManager] No spawn point assigned. Players won't be teleported on correct decisions.");
+        if (mapOrientor == null)
+            Debug.LogError("[GameManager] MapOrientor reference is missing! Assign it in the Inspector.");
 
-        if (playerTransform == null)
-            Debug.LogWarning("[GameManager] No player transform assigned. Players won't be teleported on correct decisions.");
-
-        if (exitPoints == null || exitPoints.Length == 0)
-            Debug.LogWarning("[GameManager] No LevelExitPoints assigned. Players won't be able to submit decisions.");
+        if(requiredCorrectDecisions <= 0)
+            Debug.LogWarning("[GameManager] Required correct decisions is 0 or less — the game will end immediately.");
     }
 }
