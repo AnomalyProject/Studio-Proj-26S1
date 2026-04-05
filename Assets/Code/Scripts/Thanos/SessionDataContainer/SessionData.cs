@@ -43,6 +43,10 @@ public struct ClientSessionData
     public int MaxPlayers;
     public int PlayerCount;
     public List<ClientPlayerInfo> Players;
+    
+    //workaround for serialization issues with Dictionaries
+    public List<string> CustomPropertyKeys;
+    public List<string> CustomPropertyValues;
 }
 
 [Serializable]

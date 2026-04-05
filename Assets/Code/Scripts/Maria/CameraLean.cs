@@ -33,6 +33,9 @@ public class CameraLean : MonoBehaviour
     private float targetOffsetX;
 
     private Vector3 neutralLocalPosition;
+    
+    public bool IsLocalPlayer { get; set; }
+    
     #endregion
 
     #region Unity Lifecycle
@@ -43,6 +46,8 @@ public class CameraLean : MonoBehaviour
 
     private void Update()
     {
+        if (!IsLocalPlayer) return;
+        
         CalculateTargets();
         ApplyLean();
     }
