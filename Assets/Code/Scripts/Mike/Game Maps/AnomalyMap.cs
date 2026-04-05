@@ -3,16 +3,19 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AnomalyMap : MonoBehaviour
+public class AnomalyMap : GameMap
 {
-
-    [SerializeField, Tooltip("The base map all anomaly variations are tied to.")] GameObject baseMap;
+    [SerializeField, Tooltip("The normal version of the map, no anomalies.")] GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
    
     List<AnomalyGroup> usedAnomalies = new(), availableAnomalies = new();
     public GameObject BaseMap => baseMap;
 
-    void Awake() => availableAnomalies.AddRange(anomalyVariations);
+    protected override void Awake()
+    {
+        base.Awake();
+        availableAnomalies.AddRange(anomalyVariations);
+    }
 
     /// <summary>
     /// Returns a random anomaly variation from the list, ensuring that all variations are used before any repeats occur.
@@ -43,9 +46,9 @@ public class AnomalyMap : MonoBehaviour
     /// <summary>
     /// Disables the base map and all anomaly variation GameObjects.
     /// </summary>
-    public void DisableAll()
+    public void DisableAll(bool keepBase = false)
     {
-        baseMap?.SetActive(false);
+        BaseMap?.SetActive(keepBase);
 
         foreach (var variation in availableAnomalies) variation?.GroupRoot.SetActive(false);
         foreach (var variation in usedAnomalies) variation?.GroupRoot.SetActive(false);
