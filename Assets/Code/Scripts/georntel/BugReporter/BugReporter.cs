@@ -1,10 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Net;
 using System.Net.Mail;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System;
 
 public class BugReporter : MonoBehaviour
@@ -22,6 +19,7 @@ public class BugReporter : MonoBehaviour
     public string senderPassword = "";
     public string smtpHost = "";
     public int smtpPort = 587;
+    
     private bool isSending = false;
 
     void Start()
@@ -36,26 +34,16 @@ public class BugReporter : MonoBehaviour
 
     void Update()
     {
-        // Press F12 to toggle the Bug Reporter
-        if (Input.GetKeyDown(KeyCode.F12))
-        {
-            ToggleReporter();
-        }
+        if (Input.GetKeyDown(KeyCode.F12)) ToggleReporter();
     }
 
     public void ToggleReporter()
     {
         bool isActive = !bugReporterPanel.activeSelf;
         bugReporterPanel.SetActive(isActive);
-        
-        // Auto hide the thank you message when the panel is closed
-        if (!isActive)
-        {
-            thankYouMessage.SetActive(false);
-        }
+        if (!isActive) thankYouMessage.SetActive(false);
     }
 
-    // Ensures the submit button is only clickable when there is text
     private void ValidateInput(string input)
     {
         submitButton.interactable = !string.IsNullOrWhiteSpace(input) && !isSending;
@@ -63,9 +51,7 @@ public class BugReporter : MonoBehaviour
 
     private void OnSubmitClicked()
     {
-        // Spam-proof check
         if (isSending) return;
-        
         isSending = true;
         submitButton.interactable = false; 
 
@@ -74,49 +60,42 @@ public class BugReporter : MonoBehaviour
 
     private void SendEmailReport()
     {
-        try
-        {
-            MailMessage mail = new MailMessage();
-            mail.From = new MailAddress(senderEmail);
-            mail.To.Add(receiverEmail);
-            mail.Subject = $"{Application.productName} | Bug Report";
-            string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string currentTime = DateTime.Now.ToString("HH:mm:ss");
-            string os = SystemInfo.operatingSystem;
-            string userDescription = descriptionInput.text;
+        MailMessage mail = new MailMessage();
+        mail.From = new MailAddress(senderEmail);
+        mail.To.Add(receiverEmail);
+        mail.Subject = $"{Application.productName} | Bug Report";
+        
+        mail.Body = $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
+                    $"Time: {DateTime.Now:HH:mm:ss}\n" +
+                    $"OS: {SystemInfo.operatingSystem}\n\n" +
+                    $"Player Description:\n{descriptionInput.text}";
 
-            mail.Body = $"Date: {currentDate}\n" +
-                        $"Time: {currentTime}\n" +
-                        $"OS: {os}\n\n" +
-                        $"Player Description:\n{userDescription}";
+        // We call the static class here
+        MailService.SendEmail(
+            smtpHost, 
+            smtpPort, 
+            senderEmail, 
+            senderPassword, 
+            mail,
+            OnMailSuccess, // The success callback
+            OnMailFailure  // The failure callback
+        );
+    }
 
-            // SMTP Client
-            SmtpClient smtpServer = new SmtpClient(smtpHost);
-            smtpServer.Port = smtpPort;
-            smtpServer.Credentials = new NetworkCredential(senderEmail, senderPassword) as ICredentialsByHost;
-            smtpServer.EnableSsl = true;
-            
-            ServicePointManager.ServerCertificateValidationCallback = 
-                delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) 
-                { return true; };
+    private void OnMailSuccess()
+    {
+        isSending = false;
+        descriptionInput.text = "";
+        thankYouMessage.SetActive(true);
+        Debug.Log("Bug report sent successfully.");
+        ValidateInput(descriptionInput.text);
+    }
 
-            smtpServer.Send(mail);
-
-            //  Clear text and show Thank You message when successfully submit
-            descriptionInput.text = "";
-            thankYouMessage.SetActive(true);
-            Debug.Log("Bug report sent successfully.");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to send bug report: {e.Message}");
-        }
-        finally
-        {
-            isSending = false;
-            //  Ensure the button stays disabled if the text was cleared
-            ValidateInput(descriptionInput.text); 
-        }
+    private void OnMailFailure(string errorMessage)
+    {
+        isSending = false;
+        Debug.LogError($"Failed to send bug report: {errorMessage}");
+        ValidateInput(descriptionInput.text);
     }
 
     private void CloseReporter()
