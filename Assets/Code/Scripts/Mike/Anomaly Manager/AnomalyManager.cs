@@ -145,7 +145,7 @@ public class AnomalyManager : MonoBehaviour
         }
 
         AnomalyMap map = mapCollection[mapIndex];
-        activeMap = CreateMap(map) as AnomalyMap;
+        activeMap = CreateMap(map);
 
         activeMap.DisableAll(keepBase: true);
         ChangeState(RoomState.NormalRoom);
@@ -190,9 +190,9 @@ public class AnomalyManager : MonoBehaviour
         currentState = newState;
         OnStateChanged?.Invoke(newState);
     }
-    GameMap CreateMap(GameMap map)
+    TMap CreateMap<TMap>(TMap map) where TMap : GameMap
     {
-        GameMap result;
+        TMap result;
 
         if (mapsArePrefabs) result = Instantiate(map);
         else result = map;
@@ -200,7 +200,7 @@ public class AnomalyManager : MonoBehaviour
         result.gameObject.SetActive(true);
         return result;
     }
-    void ReleaseMap(ref GameMap map)
+    void ReleaseMap<TMap>(ref TMap map) where TMap: GameMap
     {
         if (!map) return;
 
