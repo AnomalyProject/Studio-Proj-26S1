@@ -10,7 +10,7 @@ public class BatteryPickTest : MonoBehaviour
         Flashlight flashlight = other.GetComponent<Flashlight>();
         if (flashlight != null)
         {
-            flashlight.RechargeDurability(energyAmount);
+            flashlight.AffectDurability(energyAmount);
             Destroy(gameObject);
         }
     }
