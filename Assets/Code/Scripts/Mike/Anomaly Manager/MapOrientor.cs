@@ -4,7 +4,7 @@ using UnityEngine;
 public class MapOrientor : MonoBehaviour
 {
     [SerializeField] LevelExitPoint entryElevator, exitElevator;
-    public event Action<LevelExitPoint, bool> OnElevatorInteracted;
+    public static event Action<LevelExitPoint, bool> OnElevatorInteracted;
     public LevelExitPoint EntryElevator => entryElevator;
     public LevelExitPoint ExitElevator => exitElevator;
 
