@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using PurrNet;
+using System.Collections;
 using System.Collections.Generic;
 using Steamworks;
 
@@ -27,6 +28,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     // PurrNet ConnectionID for the Host. Used for authority checks in RPCs.
     // This is not like PlayerSessionInfo.IsHost -> that's for game logic. This one is for network authority.
     private PlayerID? hostPlayerID;
+    private PlayerID? pendingHostConnection;
+    
+    private Coroutine hostRegistrationCoroutine;
+    private const float hostRegistrationTimeoutSeconds = 5f;
 
     // this Dictionary maps PurrNet's PlayerID to Steam ulong IDs. This is nessecary because SessionData
     // only know SteamIDs, but RPCs only know PlayerIDs. Every RPC must look up Stem ID here first.
@@ -78,16 +83,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
             
-            // register the host now instead of waiting for OnPlayerConnected(),
-            // because OnPlayerConnected() may fire before OnSpawned (race condition but happened and caused issues)
-            PlayerID? localId = NetworkManager.main?.localPlayer;
-            if (localId.HasValue && playerConnectionMap.Count == 0)
+            if (pendingHostConnection.HasValue && playerConnectionMap.Count == 0)
             {
-                hostPlayerID = localId.Value;
-                ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-                string hostName = SteamFriends.GetPersonaName();
-                AddPlayerToSession(localId.Value, hostSteamID, hostName, isHost: true);
-                Debug.Log("[SessionManager] Host registered as first player in OnSpawned.");
+                RegisterHostPlayer(pendingHostConnection.Value, "pending OnPlayerConnected");
+                pendingHostConnection = null;
+            }
+            else if (playerConnectionMap.Count == 0)
+            {
+                hostRegistrationCoroutine = StartCoroutine(WaitForLocalHostThenRegister());
             }
         }
         else
@@ -103,12 +106,74 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
+        if (Instance == this)  // <-- ADD THIS BLOCK
+        {
+            Instance = null;
+        }
+        
         sessionData = null;
+        hostPlayerID = null;
+        pendingHostConnection = null;
+        hostRegistrationCoroutine = null;
+        playerConnectionMap.Clear();
+        latestClientSession = default;
 
         if (GameStateManager.Instance != null)
         {
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
         }
+    }
+    
+    private void RegisterHostPlayer(PlayerID playerID, string source)
+    {
+        if (playerConnectionMap.Count != 0)
+            return;
+
+        if (playerID.isServer)
+        {
+            Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
+            Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
+            return;
+        }
+
+        hostPlayerID = playerID;
+
+        ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
+        string hostName = SteamFriends.GetPersonaName();
+
+        AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
+        Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
+    }
+    
+    private IEnumerator WaitForLocalHostThenRegister()
+    {
+        float deadline = Time.realtimeSinceStartup + hostRegistrationTimeoutSeconds;
+
+        while (Time.realtimeSinceStartup < deadline)
+        {
+            if (playerConnectionMap.Count != 0)
+            {
+                hostRegistrationCoroutine = null;
+                yield break;
+            }
+
+            if (NetworkManager.main != null && NetworkManager.main.isLocalPlayerReady)
+            {
+                PlayerID localId = NetworkManager.main.localPlayer;
+
+                if (!localId.isServer)
+                {
+                    RegisterHostPlayer(localId, "WaitForLocalHostThenRegister");
+                    hostRegistrationCoroutine = null;
+                    yield break;
+                }
+            }
+
+            yield return null;
+        }
+
+        Debug.LogError("[SessionManager] Timed out waiting for a valid local host PlayerID.");
+        hostRegistrationCoroutine = null;
     }
 
     /// <summary>
@@ -123,15 +188,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
-        // check: Does an actual state exists? And is it empty / no one in it yet? Then we have our host 
-        if (sessionData != null && playerConnectionMap.Count == 0)
+        if (playerConnectionMap.Count != 0) return;
+        
+        if (sessionData == null)
         {
-            hostPlayerID = playerID;
-            ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-            string hostName = SteamFriends.GetPersonaName();
-            AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
-            Debug.Log("[SessionManager] Host registered as first player (fallback via OnPlayerConnected).");
+            pendingHostConnection = playerID;
+            Debug.Log("[SessionManager] Storing pending host connection until session exists.");
+            return;
         }
+
+        RegisterHostPlayer(playerID, "OnPlayerConnected");
+        
+        if (hostRegistrationCoroutine != null)
+        {
+            StopCoroutine(hostRegistrationCoroutine);
+            hostRegistrationCoroutine = null;
+        }
+        
     }
 
     /// <summary>
@@ -166,8 +239,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
-
-
+        
         sessionData = new SessionData
         {
             HostSteamID =  SteamUser.GetSteamID().m_SteamID,
@@ -179,7 +251,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
-        Debug.Log("[SessionManager] Session created, host registered as first player.");
+        Debug.Log("[SessionManager] Session created.");
     }
 
     /// <summary>
@@ -200,10 +272,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnPlayerJoined_Client(steamID, displayName);
         OnSessionUpdated_Client(BuildClientSessionData());
         OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
-
-
+        
+        
         if (!isHost)
         {
+            // snapshot for the joining player. This guarantees they receive the full state even if the 
+            // ObserverRpc timing has issues.
+            SendSessionSnapshot(playerID, BuildClientSessionData());
+            
             // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
             SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
         }
@@ -256,6 +332,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 IsReady = p.IsReady,
                 IsHost = p.IsHost
             });
+        }
+        
+        var keys = new List<string>();
+        var values = new List<string>();
+        foreach (var kvp in sessionData.CustomProperties)
+        {
+            keys.Add(kvp.Key);
+            values.Add(kvp.Value);
         }
 
         return new ClientSessionData
@@ -466,6 +550,27 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnSessionUpdated_Client(BuildClientSessionData());
         Debug.Log("[SessionManager] Settings updated.");
     }
+    
+    /// <summary>
+    /// Client-to-server RPC: this exists in case a client ever gets into a state where their local data feels wrong,
+    /// they can tell via RequestSessionSnapshot() to get a fresh copy.
+    /// </summary>
+    /// <param name="info"></param>
+    [ServerRpc(requireOwnership: false)]
+    public void RequestSessionSnapshot(RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        if (!playerConnectionMap.ContainsKey(sender))
+        {
+            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
+            return;
+        }
+
+        SendSessionSnapshot(sender, BuildClientSessionData());
+        Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
+    }
+    
 
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
@@ -514,8 +619,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     private void HandleStateChanged(GameState currentState, GameState nextState)
     {
-        // todo: the first transition here does nothing, which is fine for now but should take a closer look later 
-        // on how to fix this
+        // note: the menu->lobby transition fires here before any clients are connected, so the loop body excecutes zero times.
+        // This is expected. The host doesn't need to send itseld a state change and no clients exist yet during initial
+        // host startup. Late-joining clients receive the current state vie SendStateChangeToClient in AddPlayerToSession.
         foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
         {
             SendStateChangeToClient(playerID.Key, nextState);
@@ -533,7 +639,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void SendStateChangeToClient(PlayerID target, GameState stateToTransition)
     {
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
-
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
 
@@ -549,5 +654,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         var error = new SessionErrorResponse(code, message);
         SessionEvents.InvokeSessionError(error);
         Debug.LogWarning($"[SessionManager] [Client] Error received: {code} - {message}");
+    }
+    
+    [TargetRpc]
+    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
+    {
+        latestClientSession = clientData;
+        SessionEvents.InvokeSessionDataChanged();
+        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
 }

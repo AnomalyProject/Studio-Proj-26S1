@@ -38,12 +38,16 @@ public class PlayerInteraction : NetworkBehaviour
 
     public void InteractFocused(InputAction.CallbackContext ctx)
     {
+        if (!isOwner) return;
+        
         if(ctx.started)
         interactionSystem.TryInteractFocused();
     }
 
     void PerformScan()
     {
+        if (!isOwner) return;
+        
         switch (interactionMode)
         {
             case InteractionMode.Raycast: interactionSystem.RaycastScan(playerCamera, scanRange, scanLayer);
