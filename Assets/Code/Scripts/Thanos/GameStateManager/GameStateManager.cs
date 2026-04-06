@@ -73,4 +73,27 @@ public class GameStateManager : MonoBehaviour
             Debug.LogWarning("[GameStateManager]: Cannot make transition from " + CurrentState + " to " + newState);
         }
     }
+
+    public void ForceStateChange(GameState newState)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning("[GameStateManager]: Forced state change rejected. Transition already in progress.");
+            return;
+        }
+
+        isTransitioning = true;
+
+        try
+        {
+            Debug.Log($"[GameStateManager]: FORCED state change from {CurrentState} to {newState}");
+            GameState previousState = CurrentState;
+            CurrentState = newState;
+            OnStateChanged?.Invoke(previousState, newState);
+        }
+        finally
+        {
+            isTransitioning = false;
+        }
+    }
 }

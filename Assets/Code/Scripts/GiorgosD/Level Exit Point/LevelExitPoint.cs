@@ -6,17 +6,22 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 {
-    [Header("Settings")]
-    Collider col;
+    [Header("Settings")] Collider col;
 
     // Checks
     private bool bEnoughPlayers, bIsAvailable;
     [SerializeField] private bool bHasAnomaly;
+    [SerializeField] bool noNetworkTesting = false;
 
     private HashSet<FPSController> playersInArea = new HashSet<FPSController>();
 
     // Events
     public UnityEvent<bool> OnActivateExit;
+
+    /// <summary>
+    /// Fires when an exit point is interacted with and the corresponding decision (Has Anomaly or not).
+    /// </summary>
+    public Action<LevelExitPoint, bool> OnExitActivated;
 
     void Awake()
     {
@@ -45,6 +50,7 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     {
         Debug.Log($"Exit Activated. Anomaly Presence: {bHasAnomaly}");
         OnActivateExit?.Invoke(bHasAnomaly);
+        OnExitActivated?.Invoke(this, bHasAnomaly);
     }
     #endregion
 
@@ -81,23 +87,20 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     private void CheckPlayersInArea()
     {
+        if (noNetworkTesting)
+        {
+            Debug.Log($"[FAKE MODE] Players in Area: {playersInArea.Count}/1. Can Interact: {CanInteract(null)}");
+            bEnoughPlayers = playersInArea.Count >= 1;
+
+            Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");
+            return;
+        }
+
         // Actual version
         Debug.Log($"SessionManagre is null: {SessionManager.Instance == null}");
         Debug.Log($"SessionManager CurrentSession is null: {SessionManager.Instance.CurrentSession == null}");
         Debug.Log($"SessionManager CurrentSession.Players is null: {SessionManager.Instance.CurrentSession.Players ==  null}");
         bEnoughPlayers = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
-        /*bEnoughPlayers = playersInArea.Count >= 1;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");*/
-        
-/*#if UNITY_EDITOR == false
-
-#else
-        //for testing purposes only
-
-    #endif*/
     }
 #endregion
 
@@ -107,5 +110,6 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// </summary>
     /// <param name="active"></param>
     public void SetInteraction(bool active) => bIsAvailable = active;
+    public void SetChoice(bool hasAnomaly) => bHasAnomaly = hasAnomaly;
     #endregion
 }
