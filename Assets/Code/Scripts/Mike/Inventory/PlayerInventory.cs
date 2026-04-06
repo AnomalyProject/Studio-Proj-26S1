@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -68,36 +69,32 @@ public class PlayerInventory : MonoBehaviour
     #region Inventory Control
     public void NextItem()
     {
-        int current = focusedIndex + 1;
+        int current = focusedIndex;
 
-        while(current != focusedIndex)
+        for (int i = 0; i < Inventory.TotalSlots; i++)
         {
-            if(current >= Inventory.TotalSlots) current = 0;
-
-            if(Inventory.TryGet(current, out IReadOnlyItemStack stack))
-            {
-                ChangeFocused(current);
-                break;
-            }
-
-            current++;
-        }
-    }
-    public void PreviousItem()
-    {
-        int current = focusedIndex - 1;
-
-        while (current != focusedIndex)
-        {
-            if (current < 0) current = Inventory.TotalSlots - 1;
+            current = (current + 1) % Inventory.TotalSlots;
 
             if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
             {
                 ChangeFocused(current);
-                break;
+                return;
             }
+        }
+    }
+    public void PreviousItem()
+    {
+        int current = focusedIndex;
 
-            current--;
+        for (int i = 0; i < Inventory.TotalSlots; i++)
+        {
+            current = (current - 1 + Inventory.TotalSlots) % Inventory.TotalSlots;
+
+            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
+            {
+                ChangeFocused(current);
+                return;
+            }
         }
     }
     public void ChangeFocused(int focusAtIndex)
@@ -146,6 +143,22 @@ public class PlayerInventory : MonoBehaviour
 
         return success;
     }
+
+    #region Input Actions
+    public void UseFocused(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) TryUseFocused();
+    }
+    public void NextItem(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) NextItem();
+    }
+    public void PreviousItem(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) PreviousItem();
+    }
+    #endregion
+
     #endregion
 
     #region Helpers
