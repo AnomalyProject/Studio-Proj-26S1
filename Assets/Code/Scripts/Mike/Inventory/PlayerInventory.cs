@@ -9,62 +9,59 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField, Min(1)] int inventorySize = 5;
     [SerializeField] Transform itemHolder;
 
-    public Inventory inventory { get; private set; }
-    Dictionary<ItemData, GameObject> itemInstances = new();
+    public Inventory Inventory { get; private set; }
 
     int focusedIndex = 0;
     GameObject activeInstance;
+    Dictionary<IReadOnlyItemStack, GameObject> itemInstances = new();
 
     void Awake()
     {
-        inventory = new Inventory(inventorySize);
+        Inventory = new Inventory(inventorySize);
 
-        inventory.OnItemAdded += HandleItemAddition;
-        inventory.OnItemRemoved += HandleItemRemoval;
-        inventory.OnSlotsMoved += HandleSlotsMoved;
+        Inventory.OnSlotsMoved += HandleSlotsMoved;
+        Inventory.OnStackAdded += HandleStackCreation;
+        Inventory.OnStackRemoved += HandleStackRemoval;
     }
 
     #region Inventory Event Subscribers
     void HandleSlotsMoved()
     {
-        if (activeInstance == null) return;
-
-        if(inventory.TryGet(focusedIndex, out var stack) && itemInstances.TryGetValue(stack.GetItemData(), out GameObject actualInstance))
+        if(Inventory.TryGet(focusedIndex, out var stack))
         {
-            if(actualInstance != activeInstance)
+            GameObject itemInstance = itemInstances[stack];
+
+            if (itemInstance != activeInstance)
             {
-                activeInstance.SetActive(false);
-                activeInstance = actualInstance;
-                activeInstance.SetActive(true);
+                if (activeInstance != null) activeInstance.SetActive(false);
+                activeInstance = itemInstance;
+                if (activeInstance != null) activeInstance.SetActive(true);
             }
         }
     }
-    void HandleItemRemoval(ItemData data, int amount)
+    void HandleStackCreation(IReadOnlyItemStack stack, int slotIndex)
     {
-        if (!inventory.Contains(data) && itemInstances.TryGetValue(data, out GameObject instance))
-        {
-            if (instance == activeInstance) activeInstance = null;
-            Destroy(instance);
-            itemInstances.Remove(data);
-        }
-    }
-    void HandleItemAddition(ItemData data, int amount)
-    {
-        if (data.ItemPrefab == null) return;
+        if (stack.GetItemData().ItemPrefab == null) return;
 
-        if (!itemInstances.ContainsKey(data))
+        GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
+        itemInstances.Add(stack, itemObject);
+
+        if (activeInstance == null) ChangeFocused(slotIndex);
+        else itemObject.SetActive(false);
+    }
+    void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
+    {
+        if (!itemInstances.TryGetValue(stack, out GameObject itemInstance)) return;
+
+        if (activeInstance == itemInstance)
         {
-            var itemInstance = Instantiate(data.ItemPrefab, itemHolder);
-            itemInstances.Add(data, itemInstance);
-            
-            if(activeInstance == null)
-            {
-                int itemIndex;
-                inventory.TryGet(data, out IReadOnlyItemStack stack, out itemIndex);
-                ChangeFocused(itemIndex);
-            }
-            else itemInstance.SetActive(false);
+            activeInstance = null;
+
+            if (Inventory.UsedSlots > 0) NextItem();
         }
+
+        Destroy(itemInstance);
+        itemInstances.Remove(stack);
     }
     #endregion
 
@@ -75,9 +72,9 @@ public class PlayerInventory : MonoBehaviour
 
         while(current != focusedIndex)
         {
-            if(current >= inventory.TotalSlots) current = 0;
+            if(current >= Inventory.TotalSlots) current = 0;
 
-            if(inventory.TryGet(current, out IReadOnlyItemStack stack))
+            if(Inventory.TryGet(current, out IReadOnlyItemStack stack))
             {
                 ChangeFocused(current);
                 break;
@@ -92,9 +89,9 @@ public class PlayerInventory : MonoBehaviour
 
         while (current != focusedIndex)
         {
-            if (current < 0) current = inventory.TotalSlots - 1;
+            if (current < 0) current = Inventory.TotalSlots - 1;
 
-            if (inventory.TryGet(current, out IReadOnlyItemStack stack))
+            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
             {
                 ChangeFocused(current);
                 break;
@@ -108,40 +105,54 @@ public class PlayerInventory : MonoBehaviour
         bool differentIndex = focusedIndex != focusAtIndex;
 
         if (!differentIndex && activeInstance != null) return;
-        if (focusAtIndex >= inventory.TotalSlots || focusAtIndex < 0) return;
+        if (focusAtIndex >= Inventory.TotalSlots || focusAtIndex < 0) return;
 
         IReadOnlyItemStack stack;
+        GameObject itemObject = null;
 
-        if(differentIndex && inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetItemData(), out activeInstance))
+        if (differentIndex && Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
         {
-            activeInstance.SetActive(false);
+            itemObject?.SetActive(false);
         }
 
         focusedIndex = focusAtIndex;
 
-        if (inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetItemData(), out activeInstance))
+        if (Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
         {
-            activeInstance.SetActive(true);
+            itemObject?.SetActive(true);
         }
+
+        activeInstance = itemObject;
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
     public bool TryUseFocused()
     {
-        if (!inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        if (!itemInstances.TryGetValue(stack.GetItemData(), out GameObject instance)) return false; // Try get item's world instance
-        if (!InteractionSystem<MonoBehaviour>.TryGetInteractable(instance, out var interactable)) return false; // Check if its interactable
+        if(!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
+        GameObject itemInstance = itemInstances[stack];
+
+        if (itemInstance == null) return false; // Try get item's world instance
+        if (!InteractionSystem<MonoBehaviour>.TryGetInteractable(itemInstance, out var interactable)) return false; // Check if its interactable, could get refactored in the future
         
         bool success = interactable.TryInteract(this); // Try interact with instance.
+
         if(success)
         {
             if(stack.GetItemData().IsConsumable)
-            inventory.TryRemoveOne(stack.GetItemData()); // Deplete if consumable.
+            Inventory.TryRemoveOne(focusedIndex); // Deplete if consumable.
 
             OnItemUsed?.Invoke(stack.GetItemData());
         }
 
         return success;
+    }
+    #endregion
+
+    #region Helpers
+    public IReadOnlyItemStack GetFocusedItem()
+    {
+        Inventory.TryGet(focusedIndex, out var stack);
+        return stack;
     }
     #endregion
 }

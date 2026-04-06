@@ -10,7 +10,7 @@ public class InventoryTestUnit : MonoBehaviour
     Inventory inventory, inventory2;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Awake()
+    void Start()
     {
         inventory = new Inventory(inventorySize);
         inventory2 = new Inventory(inventorySize);
@@ -26,6 +26,9 @@ public class InventoryTestUnit : MonoBehaviour
         inventory.SwapSlots(0, inventory.TotalSlots - 1);
         Debug.Log(inventory.Contains(null));
         RunDebug();
+
+        playerInventory.Inventory.TryAddOne(testItem);
+        playerInventory.Inventory.TryAddOne(testItem);
     }
 
     void Update()
@@ -33,6 +36,7 @@ public class InventoryTestUnit : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.V)) playerInventory.TryUseFocused();
         if (Input.GetKeyDown(KeyCode.RightArrow)) playerInventory.NextItem();
         if (Input.GetKeyDown(KeyCode.LeftArrow)) playerInventory.PreviousItem();
+        if (Input.GetKeyDown(KeyCode.DownArrow)) playerInventory.Inventory.TryRemoveOne(testItem);
     }
 
     void RunDebug()
