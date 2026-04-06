@@ -11,8 +11,8 @@ using UnityEngine;
 /// </summary>
 public static class ExceptionLogger
 {
-    private static readonly string logFilePath = Path.Combine(Application.persistentDataPath, "Console.log");
-    private static readonly string oldLogFilePath = Path.Combine(Application.persistentDataPath, "Console-prev.log");
+    public static readonly string logFilePath = Path.Combine(Application.persistentDataPath, "Console.log");
+    public static readonly string oldLogFilePath = Path.Combine(Application.persistentDataPath, "Console-prev.log");
     private static readonly object fileLock = new();
     private static bool initialized = false;
 
