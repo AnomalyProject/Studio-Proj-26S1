@@ -66,7 +66,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hitInfo, maxDistance, layerMask))
         {
-            if(TryGetInteractable(hitInfo.collider, out var interactable) 
+            if(TryGetInteractable(hitInfo.collider.gameObject, out var interactable) 
                 && interactable.CanInteract(Interactor))
             {
                 ChangeFocused(interactable);
@@ -113,7 +113,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
-            if(TryGetInteractable(collider, out var interactable) && interactable.CanInteract(Interactor))
+            if(TryGetInteractable(collider.gameObject, out var interactable) && interactable.CanInteract(Interactor))
             {
                 Ray validationRay = new Ray(position, collider.transform.position - position);
                 float distance = Vector3.Distance(position, collider.transform.position);
@@ -157,9 +157,9 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         if (_focusedInteractable != null)
             OnFocusedInteractable?.Invoke(_focusedInteractable);
     }
-    bool TryGetInteractable(Collider collider, out IInteractable<TInteractor> result)
+    public static bool TryGetInteractable(GameObject gameObject, out IInteractable<TInteractor> result)
     {
-        foreach (MonoBehaviour comp in collider.GetComponents<MonoBehaviour>())
+        foreach (MonoBehaviour comp in gameObject.GetComponents<MonoBehaviour>())
         {
             if (comp is IInteractable<TInteractor> interactable)
             {

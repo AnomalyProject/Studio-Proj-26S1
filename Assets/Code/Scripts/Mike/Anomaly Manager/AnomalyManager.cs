@@ -185,7 +185,7 @@ public class AnomalyManager : MonoBehaviour
     }
     void ChangeState(RoomState newState)
     {
-        if(currentState == newState) return;
+        //if(currentState == newState) return;
 
         currentState = newState;
         OnStateChanged?.Invoke(newState);
