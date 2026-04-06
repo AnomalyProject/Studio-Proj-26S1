@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(FPSController))]
-public class PlayerInteraction : NetworkBehaviour
+public class PlayerInteraction : MonoBehaviour
 {
     enum InteractionMode
     {
@@ -38,7 +38,7 @@ public class PlayerInteraction : NetworkBehaviour
 
     public void InteractFocused(InputAction.CallbackContext ctx)
     {
-        if (!isOwner) return;
+        //if (!CanUseLocalInteraction()) return;
         
         if(ctx.started)
         interactionSystem.TryInteractFocused();
@@ -46,7 +46,7 @@ public class PlayerInteraction : NetworkBehaviour
 
     void PerformScan()
     {
-        if (!isOwner) return;
+        //if (!CanUseLocalInteraction()) return;
         
         switch (interactionMode)
         {
@@ -76,4 +76,14 @@ public class PlayerInteraction : NetworkBehaviour
                 break;
         }
     }
+
+    /*private bool CanUseLocalInteraction()
+    {
+        if (SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.Solo)
+        {
+            return true;
+        }
+        
+        return isOwner;
+    }*/
 }

@@ -1,10 +1,9 @@
+using System.Collections.Generic;
+using System.Collections;
 using System;
 using UnityEngine;
-using PurrNet;
-using System.Collections;
-using System.Collections.Generic;
 using Steamworks;
-
+using PurrNet;
 
 /// <summary>
 /// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
