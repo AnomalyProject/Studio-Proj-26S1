@@ -72,8 +72,20 @@ public class PlayerOwnershipPresentation : NetworkBehaviour
 
     private bool IsSoloMode()
     {
-        return SessionModeManager.Instance != null &&
-               SessionModeManager.Instance.CurrentMode == SessionMode.Solo;
+        if (SessionModeManager.Instance != null &&
+            SessionModeManager.Instance.CurrentMode == SessionMode.Solo)
+        {
+            return true;
+        }
+        
+        if (SessionModeManager.Instance == null && NetworkManager.main == null)
+        {
+            return true;
+        }
+
+        return false;
     }
+    
+    
 
 }
