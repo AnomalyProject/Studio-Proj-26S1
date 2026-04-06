@@ -106,7 +106,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        if (Instance == this)  // <-- ADD THIS BLOCK
+        // clear the singleton only if this is still the active instance, to avoid
+        // keeping a stale reference or overwriting a newer SessionManager.
+        if (Instance == this)
         {
             Instance = null;
         }
@@ -145,6 +147,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
+    /// <summary>
+    /// Waits briefly for the local networking player to become available, then
+    /// registers it as the host if no host-player mappins has already been created.
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator WaitForLocalHostThenRegister()
     {
         float deadline = Time.realtimeSinceStartup + hostRegistrationTimeoutSeconds;
@@ -318,6 +325,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return null;
     }
     
+    /// <summary>
+    /// Creates a client facing snapshot of the current session by coping only th e
+    /// public, serializable data the client needs from the authoritative session state.
+    /// </summary>
+    /// <returns></returns>
     private ClientSessionData BuildClientSessionData()
     {
         var players = new List<ClientPlayerInfo>();
