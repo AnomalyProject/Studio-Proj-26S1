@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -146,6 +147,22 @@ public class PlayerInventory : MonoBehaviour
 
         return success;
     }
+
+    #region Input Actions
+    public void UseFocused(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) TryUseFocused();
+    }
+    public void NextItem(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) NextItem();
+    }
+    public void PreviousItem(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) PreviousItem();
+    }
+    #endregion
+
     #endregion
 
     #region Helpers
