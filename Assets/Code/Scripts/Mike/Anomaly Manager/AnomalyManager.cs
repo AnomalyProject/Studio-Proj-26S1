@@ -21,8 +21,7 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField, Tooltip("Weather to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool mapsArePrefabs = true;
 
     AnomalyMap activeMap;
-    GameMap activePunishmentRoom, activeWinRoom;
-    GameObject activeAnomalyGroup;
+    GameMap activeUniqueRoom;
     RoomState currentState;
     MapOrientor mapOrientor;
 
@@ -78,9 +77,8 @@ public class AnomalyManager : MonoBehaviour
             return;
         }
 
-        activeAnomalyGroup = nextVariation.GroupRoot;
         activeMap.BaseMap.SetActive(!nextVariation.ReplacesBaseMap);
-        activeAnomalyGroup.SetActive(true);
+        nextVariation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
         ChangeState(RoomState.AnomalyRoom);
     }
@@ -100,15 +98,15 @@ public class AnomalyManager : MonoBehaviour
 
         int roomIndex = Random.Range(0, punishmentRooms.Length);
         GameMap map = punishmentRooms[roomIndex];
-        activePunishmentRoom = CreateMap(map);
+        activeUniqueRoom = CreateMap(map);
 
-        if(activePunishmentRoom == null)
+        if(activeUniqueRoom == null)
         {
             Debug.LogWarning($"Tried to enable punishment room at index {roomIndex} but it is null.");
             return;
         }
 
-        OnMapChanged?.Invoke(activePunishmentRoom);
+        OnMapChanged?.Invoke(activeUniqueRoom);
         ChangeState(RoomState.PunishmentRoom);
     }
 
@@ -147,7 +145,7 @@ public class AnomalyManager : MonoBehaviour
         }
 
         AnomalyMap map = mapCollection[mapIndex];
-        activeMap = CreateMap(map) as AnomalyMap;
+        activeMap = CreateMap(map);
 
         activeMap.DisableAll(keepBase: true);
         ChangeState(RoomState.NormalRoom);
@@ -167,8 +165,8 @@ public class AnomalyManager : MonoBehaviour
         }
 
         ClearActiveState(false);
-        activeWinRoom = CreateMap(winRoom);
-        OnMapChanged?.Invoke(activeWinRoom);
+        activeUniqueRoom = CreateMap(winRoom);
+        OnMapChanged?.Invoke(activeUniqueRoom);
         ChangeState(RoomState.WinRoom);
     }
     void ClearActiveState(bool destroyActiveMap)
@@ -183,21 +181,18 @@ public class AnomalyManager : MonoBehaviour
             else activeMap.DisableAll();
         }
 
-        activeAnomalyGroup = null;
-
-        ReleaseMap(ref activePunishmentRoom);
-        ReleaseMap(ref activeWinRoom);
+        ReleaseMap(ref activeUniqueRoom);
     }
     void ChangeState(RoomState newState)
     {
-        if(currentState == newState) return;
+        //if(currentState == newState) return;
 
         currentState = newState;
         OnStateChanged?.Invoke(newState);
     }
-    GameMap CreateMap(GameMap map)
+    TMap CreateMap<TMap>(TMap map) where TMap : GameMap
     {
-        GameMap result;
+        TMap result;
 
         if (mapsArePrefabs) result = Instantiate(map);
         else result = map;
@@ -205,7 +200,7 @@ public class AnomalyManager : MonoBehaviour
         result.gameObject.SetActive(true);
         return result;
     }
-    void ReleaseMap(ref GameMap map)
+    void ReleaseMap<TMap>(ref TMap map) where TMap: GameMap
     {
         if (!map) return;
 
