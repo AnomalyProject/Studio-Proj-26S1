@@ -42,6 +42,10 @@ public class SessionModeManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Updates the active session mode and notifies listeners when the mode actually changes
+    /// </summary>
+    /// <param name="mode"></param>
     public void SetMode(SessionMode mode)
     {
         if (mode == currentMode) return;
@@ -54,6 +58,10 @@ public class SessionModeManager : MonoBehaviour
         OnModeChanged?.Invoke(previousMode, currentMode);
     }
 
+    /// <summary>
+    /// Shuts down any active network session, leaves the Steam lobbyu, resets session state, and
+    /// returns the game to the main menu flow. 
+    /// </summary>
     public void ReturnToMenu()
     {
         NetworkManager netManager = NetworkManager.main;
@@ -84,6 +92,10 @@ public class SessionModeManager : MonoBehaviour
         
     }
     
+    /// <summary>
+    /// Begins a solo session by entering the required state flow and loading the requested gameplay scene.
+    /// </summary>
+    /// <param name="sceneName"></param>
     public void StartSolo(string sceneName)
     {
         if (currentMode != SessionMode.None)
@@ -105,6 +117,10 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.LoadSceneWithAsync(sceneName);
     }
     
+    /// <summary>
+    /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
+    /// host startuo begins.
+    /// </summary>
     public void StartHosting()
     {
         if (currentMode != SessionMode.None)
@@ -124,6 +140,9 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
     }
     
+    /// <summary>
+    /// Runs after the host scene finishes loading to start the Steam listen-host setup.
+    /// </summary>
     private void OnHostSceneLoaded()
     {
         SceneLoader.Instance.OnLoadFinished -= OnHostSceneLoaded;
@@ -131,6 +150,9 @@ public class SessionModeManager : MonoBehaviour
         SteamSessionBridge.Instance.BeginSteamListenHost();
     }
 
+    /// <summary>
+    /// Finalizes a solo scene load by unsubscribing from the load callback and transitioning the game into the InGame state.
+    /// </summary>
     private void OnSceneLoaded()
     {
         // unsubscribing immediately because the next time any scene loads through SceneLoader, 
@@ -141,6 +163,9 @@ public class SessionModeManager : MonoBehaviour
         Debug.Log("[SessionModeManager] Scene loaded. Transitioned to InGame");
     }
     
+    /// <summary>
+    /// Starts the co-op client join flow by entering lobby/loading states and loading the gameplay scene before joining begins.
+    /// </summary>
     public void StartJoining()
     {
         if (currentMode != SessionMode.None)
@@ -160,13 +185,19 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
     }
     
+    /// <summary>
+    ///  Runs after the join scene finishes loading to begin the pending Steam join process.
+    /// </summary>
     private void OnJoinSceneLoaded()
     {
         SceneLoader.Instance.OnLoadFinished -= OnJoinSceneLoaded;
         SteamSessionBridge.Instance.BeginPendingSteamJoin();
     }
     
-    
+    /// <summary>
+    /// Monitors join startup progress and returns to the menu if the join process fails.
+    /// </summary>
+    /// <param name="status"></param>
     private void OnJoinStartupStatusChanged(JoinStartupStatus status)
     {
         if (status.Stage == JoinStartupStage.Failed)
@@ -176,6 +207,10 @@ public class SessionModeManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Monitors host startup progress, returning to the menu on failure and switching to InGame once hosting is fully published.
+    /// </summary>
+    /// <param name="status"></param>
     private void OnHostStartupStatusChanged(HostStartupStatus status)
     {
         if (status.Stage == HostStartupStage.Failed)
