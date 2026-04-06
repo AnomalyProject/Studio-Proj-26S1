@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
+    public event Action<ItemData> OnFocusedChanged, OnItemUsed;
+
     [SerializeField, Min(1)] int inventorySize = 5;
     [SerializeField] Transform itemHolder;
 
@@ -25,6 +27,8 @@ public class PlayerInventory : MonoBehaviour
     #region Inventory Event Subscribers
     void HandleSlotsMoved()
     {
+        if (activeInstance == null) return;
+
         if(inventory.TryGet(focusedIndex, out var stack) && itemInstances.TryGetValue(stack.GetItemData(), out GameObject actualInstance))
         {
             if(actualInstance != activeInstance)
@@ -39,6 +43,7 @@ public class PlayerInventory : MonoBehaviour
     {
         if (!inventory.Contains(data) && itemInstances.TryGetValue(data, out GameObject instance))
         {
+            if (instance == activeInstance) activeInstance = null;
             Destroy(instance);
             itemInstances.Remove(data);
         }
@@ -51,7 +56,14 @@ public class PlayerInventory : MonoBehaviour
         {
             var itemInstance = Instantiate(data.ItemPrefab, itemHolder);
             itemInstances.Add(data, itemInstance);
-            itemInstance.SetActive(false);
+            
+            if(activeInstance == null)
+            {
+                int itemIndex;
+                inventory.TryGet(data, out IReadOnlyItemStack stack, out itemIndex);
+                ChangeFocused(itemIndex);
+            }
+            else itemInstance.SetActive(false);
         }
     }
     #endregion
@@ -93,12 +105,14 @@ public class PlayerInventory : MonoBehaviour
     }
     public void ChangeFocused(int focusAtIndex)
     {
-        if (focusedIndex == focusAtIndex) return;
+        bool differentIndex = focusedIndex != focusAtIndex;
+
+        if (!differentIndex && activeInstance != null) return;
         if (focusAtIndex >= inventory.TotalSlots || focusAtIndex < 0) return;
 
         IReadOnlyItemStack stack;
 
-        if(inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetItemData(), out activeInstance))
+        if(differentIndex && inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetItemData(), out activeInstance))
         {
             activeInstance.SetActive(false);
         }
@@ -109,6 +123,8 @@ public class PlayerInventory : MonoBehaviour
         {
             activeInstance.SetActive(true);
         }
+
+        if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
     public bool TryUseFocused()
     {
@@ -117,7 +133,13 @@ public class PlayerInventory : MonoBehaviour
         if (!InteractionSystem<MonoBehaviour>.TryGetInteractable(instance, out var interactable)) return false; // Check if its interactable
         
         bool success = interactable.TryInteract(this); // Try interact with instance.
-        if(success && stack.GetItemData().IsConsumable) inventory.TryRemoveOne(stack.GetItemData()); // Deplete if consumable.
+        if(success)
+        {
+            if(stack.GetItemData().IsConsumable)
+            inventory.TryRemoveOne(stack.GetItemData()); // Deplete if consumable.
+
+            OnItemUsed?.Invoke(stack.GetItemData());
+        }
 
         return success;
     }
