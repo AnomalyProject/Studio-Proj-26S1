@@ -1,8 +1,9 @@
-using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using TMPro;
+using UnityEngine;
 using System.Net.Mail;
 using System;
+using TMPro;
 
 public class BugReporter : MonoBehaviour
 {
@@ -38,6 +39,21 @@ public class BugReporter : MonoBehaviour
         bool isActive = !bugReporterPanel.activeSelf;
         bugReporterPanel.SetActive(isActive);
         if (!isActive) thankYouMessage.SetActive(false);
+
+        // FOR PROTOTYPE LIVE DEMO. REFACTOR PLZ
+        PlayerInput[] playerControls = FindObjectsByType<PlayerInput>(FindObjectsSortMode.None);
+        foreach (PlayerInput playerInput in playerControls) playerInput.enabled = !isActive;
+
+        if (isActive)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     private void ValidateInput(string input)

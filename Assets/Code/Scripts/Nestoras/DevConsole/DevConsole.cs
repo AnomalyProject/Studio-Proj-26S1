@@ -342,6 +342,10 @@ public class DevConsole : MonoBehaviour
         isOpen = !isOpen;
         root.SetActive(isOpen);
 
+        // FOR PROTOTYPE LIVE DEMO. REFACTOR PLZ
+        PlayerInput[] playerControls = FindObjectsByType<PlayerInput>(FindObjectsSortMode.None);
+        foreach (PlayerInput playerInput in playerControls) playerInput.enabled = !isOpen;
+
         if (isOpen)
         {
             cursorVisibleLastToggle = Cursor.visible;
