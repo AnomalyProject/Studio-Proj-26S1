@@ -132,6 +132,7 @@ pipeline {
                     if (fileExists(UNITY_LOG_PATH)) {
                     echo "Alfred: Dispatching the failure logs for investigation..."
                     bat "curl.exe -F \"file=@${UNITY_LOG_PATH}\" %ANOMALY_DISCORD_WEBHOOK_URL%"
+                }
             }
         }
     }
