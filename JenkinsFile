@@ -26,13 +26,14 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+       stage('Checkout') {
             steps {
                 cleanWs()
                 checkout scm
                 script{
-                    commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
-                    isMerge = parentHashes.tokenize('').size() > 1
+                    commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
+                    def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
+                    isMerge = parentHashes.tokenize(' ').size() > 1
                 }
             }
         }
