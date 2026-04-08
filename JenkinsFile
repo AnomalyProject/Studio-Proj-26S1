@@ -48,10 +48,14 @@ pipeline {
             }
             steps {
                 script {
+                    bat """
+                    curl.exe -H "Content-Type: application/json" -d "{\\\"content\\\": \\\"${programmerRole} - New merge detected!\\\"}" %ANOMALY_DISCORD_WEBHOOK_MERGE_URL%
+                    """
+
                     discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
                         description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
                         link: env.BUILD_URL,
-                        color: 3447003,
+                        result: ABORTED,
                         webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
             }
