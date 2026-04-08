@@ -7,6 +7,8 @@ def branchMap = [
 def steamBranch = "unknown"
 def commitMsg = "unknown"
 def isMerge = false
+def botsAdminRole = "<@1483456172567822378>"
+def programmerRole = "<@1476249214106472592>"
 
 pipeline {
     agent any
@@ -28,9 +30,11 @@ pipeline {
 
        stage('Checkout') {
             steps {
-                cleanWs()
                 checkout scm
+                
                 script{
+                    bat "git clean -fdx -e Library/"
+                    
                     commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
                     def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
                     isMerge = parentHashes.tokenize(' ').size() > 1
@@ -45,7 +49,7 @@ pipeline {
             steps {
                 script {
                     discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
-                        description: "Right away, Sir. A merge was detected on ${env.BRANCH_NAME} and the build pipeline has commenced.\n**Commit:** ${commitMsg}",
+                        description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
                         link: env.BUILD_URL,
                         result: 'SUCCESS',
                         webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
@@ -97,16 +101,6 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                if (fileExists(UNITY_LOG_PATH)) {
-                    echo "Dispatching the build logs to Discord, Sir..."
-                    bat """
-                    curl.exe -F "file=@${UNITY_LOG_PATH}" %ANOMALY_DISCORD_WEBHOOK_URL%
-                    """
-                }
-            }
-        }
         success {
             script {
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
@@ -130,10 +124,14 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "(${botsAdminRole}) Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+
+                    if (fileExists(UNITY_LOG_PATH)) {
+                    echo "Alfred: Dispatching the failure logs for investigation..."
+                    bat "curl.exe -F \"file=@${UNITY_LOG_PATH}\" %ANOMALY_DISCORD_WEBHOOK_URL%"
             }
         }
     }
