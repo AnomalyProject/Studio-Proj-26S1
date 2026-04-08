@@ -51,7 +51,6 @@ pipeline {
                     discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
                         description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
                         link: env.BUILD_URL,
-                        result: 'SUCCESS',
                         color: 3447003,
                         webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
@@ -107,7 +106,7 @@ pipeline {
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
                     description: "Splendid news Sir, the build and the Deployment to Steam (${env.BRANCH_NAME}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
-                    result: 'SUCCESS', //investigate why it does not print steam depo...
+                    result: 'SUCCESS',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
@@ -125,7 +124,7 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "(${botsAdminRole}) Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "(Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
