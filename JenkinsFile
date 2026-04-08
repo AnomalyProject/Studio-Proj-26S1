@@ -6,6 +6,7 @@ def branchMap = [
 
 def steamBranch = "unknown"
 def commitMsg = "unknown"
+def isMerge = false
 
 pipeline {
     agent any
@@ -19,6 +20,7 @@ pipeline {
         UNITY_PATH = '"C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.10f1\\Editor\\Unity.exe"'
         CREDS = credentials('MY_SECRET_ID') 
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
+        ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
     }
 
@@ -29,7 +31,23 @@ pipeline {
                 cleanWs()
                 checkout scm
                 script{
-                    commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                    commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                    isMerge = parentHashes.tokenize('').size() > 1
+                }
+            }
+        }
+
+        stage('Merge Notification') {
+            when {
+                expression { return isMerge }
+            }
+            steps {
+                script {
+                    discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
+                        description: "Right away, Sir. A merge was detected on ${env.BRANCH_NAME} and the build pipeline has commenced.\n**Commit:** ${commitMsg}",
+                        link: env.BUILD_URL,
+                        result: 'SUCCESS',
+                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
             }
         }
@@ -78,6 +96,16 @@ pipeline {
     }
 
     post {
+        always {
+            script {
+                if (fileExists(UNITY_LOG_PATH)) {
+                    echo "Dispatching the build logs to Discord, Sir..."
+                    bat """
+                    curl.exe -F "file=@${UNITY_LOG_PATH}" %ANOMALY_DISCORD_WEBHOOK_URL%
+                    """
+                }
+            }
+        }
         success {
             script {
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
