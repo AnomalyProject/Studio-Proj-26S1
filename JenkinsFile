@@ -52,6 +52,7 @@ pipeline {
                         description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
                         link: env.BUILD_URL,
                         result: 'SUCCESS',
+                        color: 3447003,
                         webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
             }
