@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 using static SnapshotUtility;
+using static UnityEngine.Rendering.DebugUI;
 
 [ExecuteAlways]
 public class Variation : MonoBehaviour
@@ -12,11 +12,13 @@ public class Variation : MonoBehaviour
     public LevelModification levelModification;
     private bool applied = false;
 
-    void OnEnable() => Apply();
+    private void OnValidate() => applied = gameObject.activeInHierarchy;
 
-    void OnDisable() => Revert();
+    private void OnEnable() => Apply();
 
-    void Apply()
+    private void OnDisable() => Revert();
+
+    private void Apply()
     {
         if (applied) return;
         applied = true;
@@ -71,56 +73,7 @@ public class Variation : MonoBehaviour
         }
     }
 
-    private void AddComponents(List<ComponentSnapshot> compsToAdd, GameObject go)
-    {
-        foreach (ComponentSnapshot compToAdd in compsToAdd)
-        {
-            Type compType = Type.GetType(compToAdd.type);
-            Component comp;
-            if (compType == typeof(Transform)) comp = go.GetComponent<Transform>();
-            else comp = go.AddComponent(compType);
-
-            SetComponentEnabled(comp, compToAdd.enabled);
-
-            foreach (FieldSnapshot fieldToAdd in compToAdd.fields) SetField(comp, fieldToAdd);
-        }
-    }
-    private void RemoveComponents(List<ComponentSnapshot> compsToRemove, GameObject go)
-    {
-        IEnumerable<IGrouping<string, ComponentSnapshot>> grouped = compsToRemove.GroupBy(c => c.type);
-
-        foreach (IGrouping<string, ComponentSnapshot> group in grouped)
-        {
-            List<Component> comps = go.GetComponents<Component>().Where(c => c != null && c.GetType().AssemblyQualifiedName == group.Key).ToList();
-
-            // Remove highest index first
-            foreach (ComponentSnapshot compToRemove in group.OrderByDescending(c => c.index))
-            {
-                if (compToRemove.index >= comps.Count) continue;
-                Component comp = comps[compToRemove.index];
-
-#if UNITY_EDITOR
-                DestroyImmediate(comp);
-#else
-                Destroy(comp);
-#endif
-            }
-        }
-    }
-    private void ModifyComponents(List<ComponentModification> componentModifications, GameObject go, bool revert = false)
-    {
-        foreach (ComponentModification modification in componentModifications)
-        {
-            Component component = FindComponent(go, modification.type, modification.index);
-            foreach (FieldModification fieldModification in modification.fieldModifications)
-            {
-                FieldSnapshot field = revert ? fieldModification.before : fieldModification.after;
-                SetField(component, field);
-            }
-        }
-    }
-
-    void Revert()
+    private void Revert()
     {
         if (!applied) return;
         applied = false;
@@ -174,6 +127,54 @@ public class Variation : MonoBehaviour
         }
     }
 
+    private void AddComponents(List<ComponentSnapshot> compsToAdd, GameObject go)
+    {
+        foreach (ComponentSnapshot compToAdd in compsToAdd)
+        {
+            Type compType = Type.GetType(compToAdd.type);
+            Component comp;
+            if (compType == typeof(Transform)) comp = go.GetComponent<Transform>();
+            else comp = go.AddComponent(compType);
+
+            SetComponentEnabled(comp, compToAdd.enabled);
+
+            foreach (FieldSnapshot fieldToAdd in compToAdd.fields) SetField(comp, fieldToAdd);
+        }
+    }
+    private void RemoveComponents(List<ComponentSnapshot> compsToRemove, GameObject go)
+    {
+        IEnumerable<IGrouping<string, ComponentSnapshot>> grouped = compsToRemove.GroupBy(c => c.type);
+
+        foreach (IGrouping<string, ComponentSnapshot> group in grouped)
+        {
+            List<Component> comps = go.GetComponents<Component>().Where(c => c != null && c.GetType().AssemblyQualifiedName == group.Key).ToList();
+
+            // Remove highest index first
+            foreach (ComponentSnapshot compToRemove in group.OrderByDescending(c => c.index))
+            {
+                if (compToRemove.index >= comps.Count) continue;
+                Component comp = comps[compToRemove.index];
+
+#if UNITY_EDITOR
+                DestroyImmediate(comp);
+#else
+                Destroy(comp);
+#endif
+            }
+        }
+    }
+    private void ModifyComponents(List<ComponentModification> componentModifications, GameObject go, bool revert = false)
+    {
+        foreach (ComponentModification modification in componentModifications)
+        {
+            Component component = FindComponent(go, modification.type, modification.index);
+            foreach (FieldModification fieldModification in modification.fieldModifications)
+            {
+                FieldSnapshot field = revert ? fieldModification.before : fieldModification.after;
+                SetField(component, field);
+            }
+        }
+    }
 
     #region Helpers
     private GameObject FindByGuid(string guid) => FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
@@ -190,53 +191,69 @@ public class Variation : MonoBehaviour
     }
     private void SetField(Component target, FieldSnapshot field)
     {
-        SerializedObject so = new SerializedObject(target);
-        SerializedProperty prop = so.FindProperty(field.path);
+        // Use authored apply logic for inaccessible fields
+        if (ComponentApplierRegistry.TryApply(target, field)) return;
 
-        if (prop == null)
+        // Fallback: try applying the change using reflections. (Should work for any component that isn't built-in)
+        string[] elements = field.path.Split('.');
+        object current = target;
+        Type currentType = target.GetType();
+        for (int i = 0; i < elements.Length; i++)
         {
-            Debug.LogWarning($"Property not found: {field.path} on {target}");
-            return;
-        }
+            string element = elements[i];
 
-        switch (field.type)
-        {
-            case SerializedValueType.Boolean:
-                prop.boolValue = field.boolValue;
-                break;
-            case SerializedValueType.Integer:
-                prop.intValue = field.intValue;
-                break;
-            case SerializedValueType.Float:
-                prop.floatValue = field.floatValue;
-                break;
-            case SerializedValueType.String:
-                prop.stringValue = field.stringValue;
-                break;
-            case SerializedValueType.Vector2:
-                prop.vector2Value = field.vector2Value;
-                break;
-            case SerializedValueType.Vector3:
-                prop.vector3Value = field.vector3Value;
-                break;
-            case SerializedValueType.Vector4:
-                prop.vector4Value = field.vector4Value;
-                break;
-            case SerializedValueType.Quaternion:
-                prop.quaternionValue = field.quaternionValue;
-                break;
-            case SerializedValueType.Color:
-                prop.colorValue = field.colorValue;
-                break;
-            case SerializedValueType.Enum:
-                prop.enumValueIndex = field.enumValueIndex;
-                break;
-            case SerializedValueType.ObjectReference:
-                prop.objectReferenceInstanceIDValue = field.objectReferenceInstanceID;
-                break;
-        }
+            // Handle arrays/lists: data[x]
+            if (element == "Array")
+            {
+                i++; // skip "data[x]"
+                int index = int.Parse(elements[i].Replace("data[", "").Replace("]", ""));
+                if (current is System.Collections.IList list)
+                {
+                    if (index >= list.Count) return;
+                    current = list[index];
+                    currentType = current.GetType();
+                    continue;
+                }
+                return;
+            }
 
-        so.ApplyModifiedProperties();
+            // Try getting field, then property if it fails
+            FieldInfo fieldInfo = currentType.GetField(element, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            PropertyInfo propertyInfo = null;
+            if (fieldInfo == null) propertyInfo = currentType.GetProperty(element, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            // Unity internal or unsupported path
+            if (fieldInfo == null && propertyInfo == null)
+            {
+                Debug.LogWarning($"Skipping unsupported path: {field.path}");
+                return;
+            }
+
+            // Set the value if you find the last element
+            if (i == elements.Length - 1)
+            {
+                object value = field.GetAsType(fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType);
+                if (fieldInfo != null) fieldInfo.SetValue(current, value);
+                else if (propertyInfo != null && propertyInfo.CanWrite) propertyInfo.SetValue(current, value);
+
+                Debug.Log($"Set Value for {currentType.Name}: {fieldInfo.FieldType} {value}");
+            }
+            else // Recurse
+            {
+                if (fieldInfo != null)
+                {
+                    current = fieldInfo.GetValue(current);
+                    currentType = fieldInfo.FieldType;
+                }
+                else
+                {
+                    current = propertyInfo.GetValue(current);
+                    currentType = propertyInfo.PropertyType;
+                }
+
+                if (current == null) return;
+            }
+        }
     }
     #endregion
 }

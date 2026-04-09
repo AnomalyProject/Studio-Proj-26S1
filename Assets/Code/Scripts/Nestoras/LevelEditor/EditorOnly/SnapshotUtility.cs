@@ -52,20 +52,21 @@ public static class SnapshotUtility
         public int objectReferenceInstanceID;
         public int enumValueIndex;
 
-        public object GetValueAsObject()
+        public object GetAsType(Type targetType)
         {
             return type switch
             {
+                SerializedValueType.Boolean => boolValue,
                 SerializedValueType.Integer => intValue,
                 SerializedValueType.Float => floatValue,
-                SerializedValueType.Boolean => boolValue,
                 SerializedValueType.String => stringValue,
                 SerializedValueType.Vector2 => vector2Value,
                 SerializedValueType.Vector3 => vector3Value,
                 SerializedValueType.Vector4 => vector4Value,
                 SerializedValueType.Quaternion => quaternionValue,
                 SerializedValueType.Color => colorValue,
-                SerializedValueType.Enum => enumValueIndex,
+                SerializedValueType.Enum => Enum.ToObject(targetType, enumValueIndex),
+                SerializedValueType.ObjectReference => objectReferenceInstanceID,
                 _ => null
             };
         }
