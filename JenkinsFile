@@ -42,6 +42,29 @@ pipeline {
             }
         }
 
+        stage('SonarQube Code Review') {
+            when {
+                changeRequest()
+            }
+            steps {
+                script {
+                    discordSend title: "🔎 Code Review: PR-${env.CHANGE_ID}",
+                        description: "${env.AUTHOR_PING} \nSir, I am running isolated SonarQube static analysis on your Pull Request #${env.CHANGE_ID}.",
+                        link: env.BUILD_URL,
+                        color: 16766720,
+                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+                    
+                    def scannerHome = tool 'SonarScanner' 
+                    
+                    withSonarQubeEnv('SonarCloud') { 
+                        bat """
+                        "${scannerHome}\\bin\\sonar-scanner.bat" -Dsonar.organization="anomalyproject-1" -Dsonar.projectKey="AnomalyProject_Studio-Proj-26S1" -Dsonar.projectName="Project Anomaly" -Dsonar.sources="Assets/Code/Scripts" -Dsonar.language=cs
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Merge Notification') {
             when {
                 expression { return isMerge }
@@ -126,7 +149,7 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "(Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
