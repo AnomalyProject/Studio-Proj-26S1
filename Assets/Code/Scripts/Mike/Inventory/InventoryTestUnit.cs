@@ -1,30 +1,42 @@
+using System;
 using UnityEngine;
 
 public class InventoryTestUnit : MonoBehaviour
 {
     [SerializeField] int inventorySize = 10;
     [SerializeField] ItemData testItem;
+    [SerializeField] PlayerInventory playerInventory;
 
     Inventory inventory, inventory2;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Awake()
+    void Start()
     {
         inventory = new Inventory(inventorySize);
         inventory2 = new Inventory(inventorySize);
 
-        ItemStack inputStack = new ItemStack(testItem, 16);
-        int totalAdded = inventory.Add(inputStack);
+        ItemStack inputStack = new ItemStack(testItem, 1);
+        int totalAdded = inventory.Add(inputStack, false);
+        totalAdded = inventory.Add(inputStack, false);
         Debug.Log("total added: " + totalAdded);
         Debug.Log("Input Stack Quantity: " + inputStack.Quantity);
         Debug.Log("Got item: " + inventory.TryGet(testItem, out var stack, out int slotIndex) + $" {stack.GetItemData().name} in index {slotIndex}");
         inventory.SwapSlots(1, inventory.TotalSlots - 1);
-        inventory.Remove(testItem, 5);
+        //inventory.Remove(testItem, 5);
         inventory.SwapSlots(0, inventory.TotalSlots - 1);
-        inventory.Transfer(testItem, 50, inventory2);
-        inventory.ClearSlot(0);
         Debug.Log(inventory.Contains(null));
         RunDebug();
+
+        playerInventory.Inventory.TryAddOne(testItem);
+        playerInventory.Inventory.TryAddOne(testItem);
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.V)) playerInventory.TryUseFocused();
+        if (Input.GetKeyDown(KeyCode.RightArrow)) playerInventory.NextItem();
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) playerInventory.PreviousItem();
+        if (Input.GetKeyDown(KeyCode.DownArrow)) playerInventory.Inventory.TryRemoveOne(testItem);
     }
 
     void RunDebug()
@@ -47,11 +59,5 @@ public class InventoryTestUnit : MonoBehaviour
         Debug.Log("1. Used Slots: " + inventory.UsedSlots);
         Debug.Log("1. Empty Slots: " + inventory.EmptySlots);
         Debug.Log("1. Total Slots: " + inventory.TotalSlots);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

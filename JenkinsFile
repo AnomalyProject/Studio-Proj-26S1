@@ -6,6 +6,9 @@ def branchMap = [
 
 def steamBranch = "unknown"
 def commitMsg = "unknown"
+def isMerge = false
+def botsAdminRole = "<@&1483456172567822378>"
+def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
     agent any
@@ -19,17 +22,39 @@ pipeline {
         UNITY_PATH = '"C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.10f1\\Editor\\Unity.exe"'
         CREDS = credentials('MY_SECRET_ID') 
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
+        ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
     }
 
     stages {
 
-        stage('Checkout') {
+       stage('Checkout') {
             steps {
-                cleanWs()
                 checkout scm
+                
                 script{
-                    commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                    bat "git clean -fdx -e Library/"
+                    
+                    commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
+                    def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
+                    isMerge = parentHashes.tokenize(' ').size() > 1
+                }
+            }
+        }
+
+        stage('Merge Notification') {
+            when {
+                expression { return isMerge }
+            }
+            steps {
+                script {
+                    bat """powershell -Command "Invoke-RestMethod -Uri '${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}' -Method Post -Body (@{content='${programmerRole} - Sir, a new merge has been detected on ${env.BRANCH_NAME}!'} | ConvertTo-Json) -ContentType 'application/json'" """
+
+                    discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
+                        description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
+                        link: env.BUILD_URL,
+                        result: 'ABORTED',
+                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
             }
         }
@@ -83,7 +108,7 @@ pipeline {
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
                     description: "Splendid news Sir, the build and the Deployment to Steam (${env.BRANCH_NAME}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
-                    result: 'SUCCESS', //investigate why it does not print steam depo...
+                    result: 'SUCCESS',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
@@ -101,10 +126,15 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "(Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+
+                    if (fileExists(UNITY_LOG_PATH)) {
+                    echo "Alfred: Dispatching the failure logs for investigation..."
+                    bat "curl.exe -F \"file=@${UNITY_LOG_PATH}\" %ANOMALY_DISCORD_WEBHOOK_URL%"
+                }
             }
         }
     }
