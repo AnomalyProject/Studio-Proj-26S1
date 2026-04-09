@@ -1,6 +1,7 @@
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
+using System.Linq;
 
 [CustomEditor(typeof(SnapshotID))]
 public class SnapshotIDEditor : Editor
@@ -14,9 +15,31 @@ public class SnapshotIDEditor : Editor
 public class SnapshotID : MonoBehaviour
 {
     public string guid;
+    private void Awake() => EnsureGuid();
 
-    void Awake()
+#if UNITY_EDITOR
+    // Runs in editor when object is created, duplicated, or modified
+    private void OnValidate() => EnsureGuid();
+#endif
+
+    void EnsureGuid()
     {
-        if (string.IsNullOrEmpty(guid)) guid = System.Guid.NewGuid().ToString();
+        // Always generate if empty
+        if (string.IsNullOrEmpty(guid))
+        {
+            guid = System.Guid.NewGuid().ToString();
+            return;
+        }
+
+#if UNITY_EDITOR
+        // Detect duplicates in the scene
+        SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool duplicateExists = all.Any(x => x != this && x.guid == guid);
+        if (duplicateExists)
+        {
+            guid = System.Guid.NewGuid().ToString();
+            EditorUtility.SetDirty(this); // Mark dirty so Unity saves the change
+        }
+#endif
     }
 }

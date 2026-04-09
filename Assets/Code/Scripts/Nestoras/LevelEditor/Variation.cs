@@ -1,0 +1,242 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine;
+using static SnapshotUtility;
+
+[ExecuteAlways]
+public class Variation : MonoBehaviour
+{
+    public LevelModification levelModification;
+    private bool applied = false;
+
+    void OnEnable() => Apply();
+
+    void OnDisable() => Revert();
+
+    void Apply()
+    {
+        if (applied) return;
+        applied = true;
+
+        // ADDITIONS
+        foreach (GameObjectSnapshot goToAdd in levelModification.added)
+        {
+            GameObject parent = FindByGuid(goToAdd.parentGuid);
+            if (parent == null) continue;
+
+            GameObject go = new GameObject(goToAdd.name);
+            go.transform.SetParent(parent.transform);
+
+            go.isStatic = goToAdd.isStatic;
+            go.SetActive(goToAdd.active);
+            go.tag = goToAdd.tag;
+            go.layer = goToAdd.layer;
+
+            AddComponents(goToAdd.components, go);
+        }
+
+        // REMOVALS
+        foreach (GameObjectSnapshot goToRemove in levelModification.removed)
+        {
+            GameObject obj = FindByGuid(goToRemove.guid);
+            if (obj == null) continue;
+
+#if UNITY_EDITOR
+            DestroyImmediate(obj);
+#else
+            Destroy(obj);
+#endif
+        }
+
+        // MODIFICATIONS
+        foreach (GameObjectModification goToModify in levelModification.modified)
+        {
+            GameObject go = FindByGuid(goToModify.guid);
+            if (go == null) continue;
+
+            if (goToModify.oldParentGuid != goToModify.newParentGuid) go.transform.parent = FindByGuid(goToModify.newParentGuid).transform;
+            if (goToModify.oldIsStatic != goToModify.newIsStatic) go.isStatic = goToModify.newIsStatic;
+            if (goToModify.oldName != goToModify.newName) go.name = goToModify.newName;
+            if (goToModify.oldActive != goToModify.newActive) go.SetActive(goToModify.newActive);
+            if (goToModify.oldTag != goToModify.newTag) go.tag = goToModify.newTag;
+            if (goToModify.oldLayer != goToModify.newLayer) go.layer = goToModify.newLayer;
+
+
+            AddComponents(goToModify.addedComponents, go);
+            RemoveComponents(goToModify.removedComponents, go);
+            ModifyComponents(goToModify.componentModifications, go);
+        }
+    }
+
+    private void AddComponents(List<ComponentSnapshot> compsToAdd, GameObject go)
+    {
+        foreach (ComponentSnapshot compToAdd in compsToAdd)
+        {
+            Type compType = Type.GetType(compToAdd.type);
+            Component comp;
+            if (compType == typeof(Transform)) comp = go.GetComponent<Transform>();
+            else comp = go.AddComponent(compType);
+
+            SetComponentEnabled(comp, compToAdd.enabled);
+
+            foreach (FieldSnapshot fieldToAdd in compToAdd.fields) SetField(comp, fieldToAdd);
+        }
+    }
+    private void RemoveComponents(List<ComponentSnapshot> compsToRemove, GameObject go)
+    {
+        IEnumerable<IGrouping<string, ComponentSnapshot>> grouped = compsToRemove.GroupBy(c => c.type);
+
+        foreach (IGrouping<string, ComponentSnapshot> group in grouped)
+        {
+            List<Component> comps = go.GetComponents<Component>().Where(c => c != null && c.GetType().AssemblyQualifiedName == group.Key).ToList();
+
+            // Remove highest index first
+            foreach (ComponentSnapshot compToRemove in group.OrderByDescending(c => c.index))
+            {
+                if (compToRemove.index >= comps.Count) continue;
+                Component comp = comps[compToRemove.index];
+
+#if UNITY_EDITOR
+                DestroyImmediate(comp);
+#else
+                Destroy(comp);
+#endif
+            }
+        }
+    }
+    private void ModifyComponents(List<ComponentModification> componentModifications, GameObject go, bool revert = false)
+    {
+        foreach (ComponentModification modification in componentModifications)
+        {
+            Component component = FindComponent(go, modification.type, modification.index);
+            foreach (FieldModification fieldModification in modification.fieldModifications)
+            {
+                FieldSnapshot field = revert ? fieldModification.before : fieldModification.after;
+                SetField(component, field);
+            }
+        }
+    }
+
+    void Revert()
+    {
+        if (!applied) return;
+        applied = false;
+
+        // ADDITIONS
+        foreach (GameObjectSnapshot goToAdd in levelModification.added)
+        {
+            GameObject obj = FindByGuid(goToAdd.guid);
+            if (obj == null) continue;
+
+#if UNITY_EDITOR
+            DestroyImmediate(obj);
+#else
+            Destroy(obj);
+#endif
+        }
+
+        // REMOVALS
+        foreach (GameObjectSnapshot goToRemove in levelModification.removed)
+        {
+            GameObject parent = FindByGuid(goToRemove.parentGuid);
+            if (parent == null) continue;
+
+            GameObject go = new GameObject(goToRemove.name);
+            go.transform.SetParent(parent.transform);
+
+            go.isStatic = goToRemove.isStatic;
+            go.SetActive(goToRemove.active);
+            go.tag = goToRemove.tag;
+            go.layer = goToRemove.layer;
+
+            AddComponents(goToRemove.components, go);
+        }
+
+        // MODIFICATIONS
+        foreach (GameObjectModification goToModify in levelModification.modified)
+        {
+            GameObject go = FindByGuid(goToModify.guid);
+            if (go == null) continue;
+
+            if (goToModify.oldParentGuid != goToModify.newParentGuid) go.transform.parent = FindByGuid(goToModify.oldParentGuid).transform;
+            if (goToModify.oldIsStatic != goToModify.newIsStatic) go.isStatic = goToModify.oldIsStatic;
+            if (goToModify.oldName != goToModify.newName) go.name = goToModify.oldName;
+            if (goToModify.oldActive != goToModify.newActive) go.SetActive(goToModify.oldActive);
+            if (goToModify.oldTag != goToModify.newTag) go.tag = goToModify.oldTag;
+            if (goToModify.oldLayer != goToModify.newLayer) go.layer = goToModify.oldLayer;
+
+            RemoveComponents(goToModify.addedComponents, go);
+            AddComponents(goToModify.removedComponents, go);
+            ModifyComponents(goToModify.componentModifications, go, true);
+        }
+    }
+
+
+    #region Helpers
+    private GameObject FindByGuid(string guid) => FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
+    private Component FindComponent(GameObject go, string type, int index)
+    {
+        List<Component> comps = go.GetComponents<Component>().Where(c => c.GetType().AssemblyQualifiedName == type).ToList();
+        return index < comps.Count ? comps[index] : null;
+    }
+    public static void SetComponentEnabled(Component component, bool enabled)
+    {
+        if (component is Behaviour behaviour) behaviour.enabled = enabled;
+        if (component is Renderer renderer) renderer.enabled = enabled;
+        if (component is Collider collider) collider.enabled = enabled;
+    }
+    private void SetField(Component target, FieldSnapshot field)
+    {
+        SerializedObject so = new SerializedObject(target);
+        SerializedProperty prop = so.FindProperty(field.path);
+
+        if (prop == null)
+        {
+            Debug.LogWarning($"Property not found: {field.path} on {target}");
+            return;
+        }
+
+        switch (field.type)
+        {
+            case SerializedValueType.Boolean:
+                prop.boolValue = field.boolValue;
+                break;
+            case SerializedValueType.Integer:
+                prop.intValue = field.intValue;
+                break;
+            case SerializedValueType.Float:
+                prop.floatValue = field.floatValue;
+                break;
+            case SerializedValueType.String:
+                prop.stringValue = field.stringValue;
+                break;
+            case SerializedValueType.Vector2:
+                prop.vector2Value = field.vector2Value;
+                break;
+            case SerializedValueType.Vector3:
+                prop.vector3Value = field.vector3Value;
+                break;
+            case SerializedValueType.Vector4:
+                prop.vector4Value = field.vector4Value;
+                break;
+            case SerializedValueType.Quaternion:
+                prop.quaternionValue = field.quaternionValue;
+                break;
+            case SerializedValueType.Color:
+                prop.colorValue = field.colorValue;
+                break;
+            case SerializedValueType.Enum:
+                prop.enumValueIndex = field.enumValueIndex;
+                break;
+            case SerializedValueType.ObjectReference:
+                prop.objectReferenceInstanceIDValue = field.objectReferenceInstanceID;
+                break;
+        }
+
+        so.ApplyModifiedProperties();
+    }
+    #endregion
+}
