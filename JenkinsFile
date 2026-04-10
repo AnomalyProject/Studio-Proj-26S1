@@ -44,7 +44,12 @@ pipeline {
 
         stage('SonarQube Code Review') {
             when {
-                changeRequest()
+                anyOf {
+                    changeRequest()
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
             }
             steps {
                 script {
@@ -83,6 +88,13 @@ pipeline {
         }
 
         stage('Unity Build') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
                 sleep time: 10, unit: 'SECONDS'
@@ -90,6 +102,13 @@ pipeline {
         }
 
         stage('Verify Build') {
+             when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 script {
                     def logFile = readFile(file: UNITY_LOG_PATH)
@@ -101,6 +120,13 @@ pipeline {
         }
 
         stage('Deploy to Steam') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 script {
                     steamBranch = branchMap.get(env.BRANCH_NAME, "internal_testing")
