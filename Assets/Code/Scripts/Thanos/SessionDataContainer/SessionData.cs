@@ -25,7 +25,7 @@ public struct PlayerSessionInfo
 
 }
 
-//That comment right here is a test for sonarQube setup + 1
+//That comment right here is a test for sonarQube setup + 2
 
 [Serializable]
 public struct ClientPlayerInfo
