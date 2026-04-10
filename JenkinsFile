@@ -56,9 +56,9 @@ pipeline {
                     
                     def scannerHome = tool 'SonarScanner' 
                     
-                    withSonarQubeEnv('SonarCloud') { 
+                    withSonarQubeEnv('SonarCloud') {
                         bat """
-                        "${scannerHome}\\bin\\sonar-scanner.bat" -Dsonar.organization="anomalyproject-1" -Dsonar.projectKey="AnomalyProject_Studio-Proj-26S1" -Dsonar.projectName="Project Anomaly" -Dsonar.sources="Assets/Code/Scripts" -Dsonar.language=cs
+                        "${scannerHome}\\bin\\sonar-scanner.bat" -Dsonar.organization="anomalyproject-1" -Dsonar.projectKey="AnomalyProject_Studio-Proj-26S1" -Dsonar.projectName="Project Anomaly" -Dsonar.sources="Assets/Code/Scripts" -Dsonar.language=cs -Dsonar.pullrequest.key="${env.CHANGE_ID}" -Dsonar.pullrequest.branch="${env.CHANGE_BRANCH}" -Dsonar.pullrequest.base="${env.CHANGE_TARGET}"
                         """
                     }
                 }
