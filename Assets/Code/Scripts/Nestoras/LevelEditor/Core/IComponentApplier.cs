@@ -5,5 +5,6 @@ using System;
 public interface IComponentApplier
 {
     public Type TargetType { get; }
+    public bool Supports(string path);
     public bool Apply(Component target, FieldSnapshot field);
 }

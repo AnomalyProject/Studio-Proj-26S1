@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -105,6 +105,14 @@ public static class SnapshotUtility
         ObjectReference,
         Enum
     }
+    private static HashSet<SerializedPropertyType> compositeTypes = new HashSet<SerializedPropertyType>()
+    {
+        SerializedPropertyType.Vector2,
+        SerializedPropertyType.Vector3,
+        SerializedPropertyType.Vector4,
+        SerializedPropertyType.Quaternion,
+        SerializedPropertyType.Color
+    };
     #endregion
 
     // Captures a full hierarchy snapshot
@@ -158,13 +166,22 @@ public static class SnapshotUtility
 
             SerializedObject so = new SerializedObject(component);
             SerializedProperty iterator = so.GetIterator();
+            SerializedProperty previous = null;
 
             List<FieldSnapshot> fields = new List<FieldSnapshot>();
 
             while (iterator.NextVisible(true))
             {
                 if (iterator.name == "m_Script") continue;
+
+                // Skip x,y,z fields of composite types like Vector3, since we already store the entire Vector3
+                if (previous != null && iterator.depth > previous.depth && compositeTypes.Contains(previous.propertyType)) continue;
+
+                // Warn if change can't be recreated at runtime
+                if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath)) Debug.LogWarning($"Attempting to capture unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
                 fields.Add(CaptureField(iterator));
+
+                previous = iterator.Copy();
             }
 
             result.Add(new ComponentSnapshot()

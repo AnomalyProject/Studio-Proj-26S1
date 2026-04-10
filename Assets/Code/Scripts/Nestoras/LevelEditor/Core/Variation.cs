@@ -235,8 +235,6 @@ public class Variation : MonoBehaviour
                 object value = field.GetAsType(fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType);
                 if (fieldInfo != null) fieldInfo.SetValue(current, value);
                 else if (propertyInfo != null && propertyInfo.CanWrite) propertyInfo.SetValue(current, value);
-
-                Debug.Log($"Set Value for {currentType.Name}: {fieldInfo.FieldType} {value}");
             }
             else // Recurse
             {
