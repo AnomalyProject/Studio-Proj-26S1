@@ -2,7 +2,7 @@ using PurrNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(FPSController))]
+[RequireComponent(typeof(PlayerBody))]
 public class PlayerInteraction : MonoBehaviour
 {
     enum InteractionMode
@@ -21,13 +21,13 @@ public class PlayerInteraction : MonoBehaviour
     [Header("Debug Options")]
     [SerializeField] bool debugGizmos = true;
 
-    FPSController playerController;
-    InteractionSystem<FPSController> interactionSystem;
+    PlayerBody playerBody;
+    InteractionSystem<PlayerBody> interactionSystem;
 
     void Awake()
     {
-        playerController = GetComponent<FPSController>();
-        interactionSystem = new InteractionSystem<FPSController>(playerController);
+        playerBody = GetComponent<PlayerBody>();
+        interactionSystem = new InteractionSystem<PlayerBody>(playerBody);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

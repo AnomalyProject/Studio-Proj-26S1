@@ -610,6 +610,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6949004394395045008, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: noNetworkTesting
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8660687802128819689, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
       propertyPath: m_Name
       value: Exit Elevator
@@ -635,7 +639,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &354598808
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -650,7 +654,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryTestUnit
   inventorySize: 10
   testItem: {fileID: 11400000, guid: 66d486fa154e2db49b94e82748db2b09, type: 2}
-  playerInventory: {fileID: 1960036454}
+  playerInventory: {fileID: 0}
 --- !u!4 &354598809
 Transform:
   m_ObjectHideFlags: 0
@@ -1455,6 +1459,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6949004394395045008, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: noNetworkTesting
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8660687802128819689, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
       propertyPath: m_Name
       value: Entry Elevator
@@ -1679,6 +1687,7 @@ GameObject:
   - component: {fileID: 768139565}
   - component: {fileID: 768139564}
   - component: {fileID: 768139563}
+  - component: {fileID: 768139566}
   m_Layer: 0
   m_Name: Network Manager
   m_TagString: Untagged
@@ -1715,7 +1724,7 @@ MonoBehaviour:
   _startClientFlags: 7
   _cookieScope: 1
   _dontDestroyOnLoad: 0
-  _transport: {fileID: 768139563}
+  _transport: {fileID: 768139566}
   _networkPrefabs: {fileID: 11400000, guid: 0fabbdcf850938741a22f4bf65319ec4, type: 2}
   _networkAssets: {fileID: 11400000, guid: 8a41eeed42a33fa4ea46e2f06e98e67a, type: 2}
   _networkRules: {fileID: 11400000, guid: d8799083b96579a42b8b2d03e4ceae98, type: 2}
@@ -1738,6 +1747,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &768139566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768139562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc64ff707d914a64e95f2ac0bf554c09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.UDPTransport
+  _automaticCloudSetups:
+    _adaptToEdgegap: 1
+  _serverPort: 5000
+  _maxConnections: 100
+  _address: 127.0.0.1
+  _timeoutInSeconds: 5
+  _pollEventsInUpdate: 0
 --- !u!1 &838655890 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2522358680788088093, guid: b3473b4945d21d84abf40a4540011ffc, type: 3}
@@ -2770,7 +2798,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1426750073
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2797,7 +2825,7 @@ Transform:
   m_GameObject: {fileID: 1426750072}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 22.43, y: 0, z: 3.49}
+  m_LocalPosition: {x: 21.56, y: 0.72, z: -1.28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3722,52 +3750,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1871990599}
   m_CullTransparentMesh: 1
---- !u!1 &1960036453
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1960036455}
-  - component: {fileID: 1960036454}
-  m_Layer: 0
-  m_Name: Player Inv Test
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1960036454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1960036453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0d6b021364b4b143830246a7357bad9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
-  inventorySize: 5
-  itemHolder: {fileID: 1960036455}
---- !u!4 &1960036455
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1960036453}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -38.25752, y: 0, z: 23.78556}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2062707093
 GameObject:
   m_ObjectHideFlags: 0
@@ -3910,4 +3892,3 @@ SceneRoots:
   - {fileID: 307951475}
   - {fileID: 768139565}
   - {fileID: 1426750074}
-  - {fileID: 1960036455}
