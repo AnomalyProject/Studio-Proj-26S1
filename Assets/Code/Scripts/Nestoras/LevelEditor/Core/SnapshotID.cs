@@ -19,6 +19,8 @@ public class SnapshotIDEditor : Editor
 [AddComponentMenu("")]
 public class SnapshotID : MonoBehaviour
 {
+    public Mesh[] meshes;
+    public string[] strings;
     public string guid;
     private void Awake() => EnsureGuid();
 

@@ -90,6 +90,7 @@ public static class SnapshotUtility
     }
     [Serializable] public enum SerializedValueType
     {
+        None,
         Boolean,
         Integer,
         Float,
@@ -178,12 +179,22 @@ public static class SnapshotUtility
                 previous = iterator.Copy();
 
                 // Skip default values
-                if (HasDefaultValue(iterator)) continue;
+                //if (HasDefaultValue(iterator)) continue;
 
                 fields.Add(CaptureField(iterator));
 
-                // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
-                if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath) && component is not MonoBehaviour) Debug.LogWarning($"Captured field without registered applier: {component.GetType().Name}.{iterator.propertyPath}");
+                
+                if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath))
+                {
+                    // Warn if field isn't serializable
+                    if (fields.Last().type == SerializedValueType.None)
+                    {
+                        Debug.LogWarning($"Skipping unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
+                        fields.RemoveAt(fields.Count - 1);
+                    }
+                    // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
+                    else if (component is not MonoBehaviour) Debug.LogWarning($"Captured field without registered applier: {component.GetType().Name}.{iterator.propertyPath}");
+                }
             }
 
             result.Add(new ComponentSnapshot()
@@ -213,6 +224,7 @@ public static class SnapshotUtility
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<bool>() { value = property.boolValue });
                 break;
             case SerializedPropertyType.Integer:
+            case SerializedPropertyType.ArraySize:
                 result.type = SerializedValueType.Integer;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.intValue });
                 break;
@@ -251,6 +263,9 @@ public static class SnapshotUtility
             case SerializedPropertyType.Enum:
                 result.type = SerializedValueType.Enum;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.enumValueIndex });
+                break;
+            default:
+                result.type = SerializedValueType.None;
                 break;
         };
 

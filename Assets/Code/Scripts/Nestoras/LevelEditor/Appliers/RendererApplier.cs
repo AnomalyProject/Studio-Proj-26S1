@@ -11,9 +11,9 @@ using UnityEngine;
 /// Applier script to translate set commands by <see cref="ModificationApplier"/> (SerializedProperty path and value) into actual API calls that work in standalone builds.
 /// </summary>
 [Preserve] // Avoid stripping type from build
-public class MeshRendererApplier : IComponentApplier
+public class RendererApplier : IComponentApplier
 {
-    public Type TargetType => typeof(MeshRenderer);
+    public Type TargetType => typeof(Renderer);
     public HashSet<string> supportedFields { get; } = new HashSet<string>()
     {
         "m_CastShadows",
@@ -21,10 +21,8 @@ public class MeshRendererApplier : IComponentApplier
         "m_MotionVectors",
         "m_LightProbeUsage",
         "m_RenderingLayerMask",
-
         "m_RendererPriority",
         "m_ProbeAnchor",
-
         "m_DynamicOccludee",
         "m_StaticShadowCaster",
         "m_ReflectionProbeUsage",
@@ -34,6 +32,7 @@ public class MeshRendererApplier : IComponentApplier
     private HashSet<string> ignoredFields { get; } = new HashSet<string>()
     {
         "m_Enabled",
+        "m_Materials",
 
         "m_RayTracingMode",
         "m_RayTraceProcedural",
@@ -54,8 +53,6 @@ public class MeshRendererApplier : IComponentApplier
         "m_LightmapParameters",
         "m_Materials.Array.size",
         "m_MaskInteraction",
-
-        "m_Materials",
     };
 
     public bool Supports(string path) => supportedFields.Contains(path) || ignoredFields.Contains(path) || path.StartsWith("m_Materials.Array.data[");
@@ -64,7 +61,7 @@ public class MeshRendererApplier : IComponentApplier
     {
         if (ignoredFields.Contains(field.path)) return true;
 
-        MeshRenderer r = (MeshRenderer)target;
+        Renderer r = (Renderer)target;
 
         switch (field.path)
         {
@@ -110,7 +107,7 @@ public class MeshRendererApplier : IComponentApplier
             int end = field.path.IndexOf(']');
             int index = int.Parse(field.path.Substring(start, end - start));
 
-            var mats = r.sharedMaterials;
+            Material[] mats = r.sharedMaterials;
 
             if (index >= mats.Length) Array.Resize(ref mats, index + 1);
 

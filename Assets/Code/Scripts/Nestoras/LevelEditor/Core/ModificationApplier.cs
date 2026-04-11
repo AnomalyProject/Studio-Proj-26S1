@@ -15,14 +15,23 @@ using UnityEngine;
 public class ModificationApplier : MonoBehaviour
 {
     public LevelModification levelModification;
-    private bool applied = false;
+    private bool applied;
 
     [Tooltip("Called after modification is applied.")]
     public UnityEvent onEnable;
     [Tooltip("Called before modification is reverted.")]
     public UnityEvent onDisable;
 
-    private void Awake() => applied = gameObject.activeInHierarchy;
+    private void Awake()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall += CheckActiveState; // Awake runs before scene fully loads, so activeInHierarchy is unreliable.
+#else
+        CheckActiveState();
+#endif
+    }
+
+    private void CheckActiveState() => applied = gameObject.activeInHierarchy;
 
     private void OnEnable()
     {
@@ -213,6 +222,7 @@ public class ModificationApplier : MonoBehaviour
         if (ComponentApplierRegistry.TryApply(target, field)) return;
 
         // Fallback: try applying the change using reflections. (Should work for any component that isn't built-in)
+        
         string[] elements = field.path.Split('.');
         object current = target;
         Type currentType = target.GetType();

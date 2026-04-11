@@ -17,10 +17,6 @@ public class BoxColliderApplier : IComponentApplier
     {
         "m_Center",
         "m_Size",
-        "m_IsTrigger",
-        "m_Material",
-        "m_ContactOffset",
-        "m_LayerOverridePriority",
     };
 
     private HashSet<string> ignoredFields { get; } = new HashSet<string>()
@@ -45,48 +41,8 @@ public class BoxColliderApplier : IComponentApplier
             case "m_Size":
                 c.size = field.GetAs<Vector3>();
                 return true;
-
-            case "m_IsTrigger":
-                c.isTrigger = field.GetAs<bool>();
-                return true;
-
-            case "m_Material":
-                c.sharedMaterial = ResolvePhysicMaterial(field);
-                return true;
-
-            case "m_ContactOffset":
-                c.contactOffset = field.GetAs<float>();
-                return true;
-
-            case "m_LayerOverridePriority":
-                c.layerOverridePriority = field.GetAs<int>();
-                return true;
-
-            case "m_IncludeLayers":
-                c.includeLayers = field.GetAs<int>();
-                return true;
-
-            case "m_ExcludeLayers":
-                c.excludeLayers = field.GetAs<int>();
-                return true;
-
-            case "m_ProvidesContacts":
-                c.providesContacts = field.GetAs<bool>();
-                return true;
         }
 
         return false;
     }
-
-    #region Helpers
-    private PhysicsMaterial ResolvePhysicMaterial(FieldSnapshot field)
-    {
-        return null;
-#if UNITY_EDITOR
-        //return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceGUID) as PhysicsMaterial;
-#else
-    return null; // runtime requires GUID/asset registry
-#endif
-    }
-    #endregion
 }

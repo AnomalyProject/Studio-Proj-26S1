@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using static SnapshotUtility;
 using UnityEngine;
+using static SnapshotUtility;
+using static UnityEngine.GraphicsBuffer;
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -52,21 +53,35 @@ public static class ComponentApplierRegistry
 
     public static bool TryApply(Component target, FieldSnapshot field)
     {
-        Type targetType = target.GetType();
-
-        // Only exact match OR most specific match
-        IComponentApplier best = null;
-        foreach (IComponentApplier applier in appliers.Values)
-        {
-            if (applier.TargetType == targetType) return applier.Apply(target, field);
-            if (applier.TargetType.IsInstanceOfType(target)) best = applier;
-        }
-        return best?.Apply(target, field) ?? false;
+        IComponentApplier applier = GetRelevantApplier(target.GetType(), field.path);
+        if (applier != null) return applier.Apply(target, field);
+        return false;
     }
 
     public static bool IsFieldSupported(Type componentType, string fieldPath)
     {
-        foreach (KeyValuePair<Type, IComponentApplier> applier in appliers) if (applier.Key.IsAssignableFrom(componentType)) return applier.Value.Supports(fieldPath);
+        IComponentApplier applier = GetRelevantApplier(componentType, fieldPath);
+        if (applier != null) return applier.Supports(fieldPath);
         return false;
+    }
+
+    private static IComponentApplier GetRelevantApplier(Type componentType, string fieldPath)
+    {
+        List<IComponentApplier> relevantAppliers = new List<IComponentApplier>();
+        relevantAppliers = appliers.Values.Where(a => a.TargetType.IsAssignableFrom(componentType)).OrderByDescending(a => GetInheritanceDepth(a.TargetType)).ToList();
+
+        // Find the applier that can deal with the given path and use it
+        foreach (IComponentApplier applier in relevantAppliers) if (applier.Supports(fieldPath)) return applier;
+        return null;
+    }
+    private static int GetInheritanceDepth(Type type)
+    {
+        int depth = 0;
+        while (type.BaseType != null)
+        {
+            depth++;
+            type = type.BaseType;
+        }
+        return depth;
     }
 }

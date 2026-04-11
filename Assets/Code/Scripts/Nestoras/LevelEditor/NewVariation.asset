@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: NewVariation
   m_EditorClassIdentifier: Assembly-CSharp::LevelModification
   addedGameObjects:
-  - guid: 21d0b572-bcc9-472e-b758-1ab67bfbc1ff
+  - guid: 1f4e925c-30e5-492c-85b7-58914c52f529
     parentGuid: 451b1594-801c-4323-838b-931adf60b411
     isStatic: 0
     name: GameObject (1)
@@ -27,20 +27,32 @@ MonoBehaviour:
       enabled: 1
       fields:
       - path: m_LocalRotation
-        type: 7
+        type: 8
         valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 6
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
       - path: m_LocalScale
-        type: 5
+        type: 6
         valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+      - path: m_ConstrainProportionsScale
+        type: 1
+        valueJson: '{"value":false}'
     - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
       index: 0
       enabled: 1
       fields:
+      - path: meshes.Array.size
+        type: 2
+        valueJson: '{"value":0}'
+      - path: strings.Array.size
+        type: 2
+        valueJson: '{"value":0}'
       - path: guid
-        type: 3
-        valueJson: '{"value":"21d0b572-bcc9-472e-b758-1ab67bfbc1ff"}'
+        type: 4
+        valueJson: '{"value":"1f4e925c-30e5-492c-85b7-58914c52f529"}'
   removedGameObjects:
-  - guid: e6b3b2d1-c0fc-4916-9685-ce9fc5969110
+  - guid: efdec3bb-a974-4c0d-8570-92162c744cc7
     parentGuid: 451b1594-801c-4323-838b-931adf60b411
     isStatic: 0
     name: Entry
@@ -54,108 +66,195 @@ MonoBehaviour:
       enabled: 1
       fields:
       - path: m_LocalRotation
-        type: 7
+        type: 8
         valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
       - path: m_LocalPosition
-        type: 5
-        valueJson: '{"value":{"x":-2.1723101139068605,"y":0.0,"z":-0.1412999927997589}}'
+        type: 6
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
       - path: m_LocalScale
-        type: 5
+        type: 6
         valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+      - path: m_ConstrainProportionsScale
+        type: 1
+        valueJson: '{"value":false}'
     - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
       index: 0
       enabled: 1
       fields:
       - path: m_Mesh
-        type: 9
-        valueJson: '{"value":"80104564-363a-4831-89e5-6c9f2b580f6a"}'
+        type: 10
+        valueJson: '{"value":"77471d95-6068-467b-879e-db051b14829c"}'
     - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
       index: 0
       enabled: 1
       fields:
       - path: m_CastShadows
-        type: 10
+        type: 11
         valueJson: '{"value":1}'
       - path: m_ReceiveShadows
-        type: 0
+        type: 1
         valueJson: '{"value":true}'
       - path: m_DynamicOccludee
-        type: 0
+        type: 1
         valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
       - path: m_MotionVectors
-        type: 10
+        type: 11
         valueJson: '{"value":1}'
       - path: m_LightProbeUsage
-        type: 1
+        type: 2
         valueJson: '{"value":1}'
       - path: m_ReflectionProbeUsage
-        type: 1
+        type: 2
         valueJson: '{"value":1}'
       - path: m_RayTracingMode
-        type: 1
+        type: 2
         valueJson: '{"value":2}'
-      - path: m_RayTracingAccelStructBuildFlags
+      - path: m_RayTraceProcedural
         type: 1
+        valueJson: '{"value":false}'
+      - path: m_RayTracingAccelStructBuildFlagsOverride
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_RayTracingAccelStructBuildFlags
+        type: 2
         valueJson: '{"value":1}'
       - path: m_SmallMeshCulling
-        type: 0
+        type: 1
         valueJson: '{"value":true}'
       - path: m_ForceMeshLod
-        type: 1
+        type: 2
         valueJson: '{"value":-1}'
+      - path: m_MeshLodSelectionBias
+        type: 3
+        valueJson: '{"value":0.0}'
       - path: m_RenderingLayerMask
-        type: 1
+        type: 2
         valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
       - path: m_Materials
         type: 0
         valueJson: 
       - path: m_Materials.Array.size
-        type: 0
-        valueJson: 
-      - path: 'm_Materials.Array.data[0]'
-        type: 9
-        valueJson: '{"value":"ba56dbee-e6a0-42c2-a0b6-11d43e68ff3f"}'
-      - path: m_ScaleInLightmap
         type: 2
+        valueJson: '{"value":1}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 10
+        valueJson: '{"value":"9e27e598-c52c-4b2b-896a-6d3c021b8a66"}'
+      - path: m_ProbeAnchor
+        type: 10
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 10
+        valueJson: '{"value":""}'
+      - path: m_ScaleInLightmap
+        type: 3
         valueJson: '{"value":1.0}'
       - path: m_ReceiveGI
-        type: 1
+        type: 2
         valueJson: '{"value":1}'
+      - path: m_PreserveUVs
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_IgnoreNormalsForChartDetection
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ImportantGI
+        type: 1
+        valueJson: '{"value":false}'
       - path: m_StitchLightmapSeams
-        type: 0
+        type: 1
         valueJson: '{"value":true}'
       - path: m_MinimumChartSize
-        type: 1
+        type: 2
         valueJson: '{"value":4}'
       - path: m_AutoUVMaxDistance
-        type: 2
+        type: 3
         valueJson: '{"value":0.5}'
       - path: m_AutoUVMaxAngle
-        type: 2
+        type: 3
         valueJson: '{"value":89.0}'
+      - path: m_LightmapParameters
+        type: 10
+        valueJson: '{"value":""}'
+      - path: m_MaskInteraction
+        type: 11
+        valueJson: '{"value":0}'
     - type: UnityEngine.BoxCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
         Culture=neutral, PublicKeyToken=null
       index: 0
       enabled: 1
       fields:
+      - path: m_Material
+        type: 10
+        valueJson: '{"value":""}'
       - path: m_IncludeLayers
         type: 0
         valueJson: 
       - path: m_ExcludeLayers
         type: 0
         valueJson: 
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
       - path: m_Size
-        type: 5
+        type: 6
         valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+      - path: m_Center
+        type: 6
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
     - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
       index: 0
       enabled: 1
       fields:
+      - path: meshes.Array.size
+        type: 2
+        valueJson: '{"value":6}'
+      - path: 'meshes.Array.data[0]'
+        type: 10
+        valueJson: '{"value":"77471d95-6068-467b-879e-db051b14829c"}'
+      - path: 'meshes.Array.data[1]'
+        type: 10
+        valueJson: '{"value":"da0e4a91-a9d1-407b-a262-4900ce9c8440"}'
+      - path: 'meshes.Array.data[2]'
+        type: 10
+        valueJson: '{"value":"944bca24-b0f7-448e-8fcf-fc70e267fc2c"}'
+      - path: 'meshes.Array.data[3]'
+        type: 10
+        valueJson: '{"value":"e1f1b755-a704-4980-82e3-d1b51299e7ee"}'
+      - path: 'meshes.Array.data[4]'
+        type: 10
+        valueJson: '{"value":"2144088b-b1b8-4814-a7d6-8d3e34308fa4"}'
+      - path: 'meshes.Array.data[5]'
+        type: 10
+        valueJson: '{"value":"a546b8cd-4661-46f1-8c92-e0916f935caf"}'
+      - path: strings.Array.size
+        type: 2
+        valueJson: '{"value":3}'
+      - path: 'strings.Array.data[0]'
+        type: 4
+        valueJson: '{"value":"one"}'
+      - path: 'strings.Array.data[1]'
+        type: 4
+        valueJson: '{"value":"two"}'
+      - path: 'strings.Array.data[2]'
+        type: 4
+        valueJson: '{"value":"three"}'
       - path: guid
-        type: 3
-        valueJson: '{"value":"e6b3b2d1-c0fc-4916-9685-ce9fc5969110"}'
+        type: 4
+        valueJson: '{"value":"efdec3bb-a974-4c0d-8570-92162c744cc7"}'
   gameObjectModifications:
   - guid: 9785f612-ba0c-45f0-90e0-699d67a3fd95
     oldParentGuid: 451b1594-801c-4323-838b-931adf60b411
@@ -181,9 +280,9 @@ MonoBehaviour:
       fieldModifications:
       - before:
           path: m_LocalPosition
-          type: 5
+          type: 6
           valueJson: '{"value":{"x":5.0,"y":0.0,"z":0.0}}'
         after:
           path: m_LocalPosition
-          type: 5
+          type: 6
           valueJson: '{"value":{"x":15.0,"y":0.0,"z":0.0}}'
