@@ -1,7 +1,9 @@
+using PurrNet;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 
 [RequireComponent(typeof(MapOrientor))]
-public class AnomalyManager : MonoBehaviour
+public class AnomalyManager : NetworkBehaviour
 {
     public enum RoomState 
     { 
@@ -9,6 +11,14 @@ public class AnomalyManager : MonoBehaviour
         AnomalyRoom, 
         PunishmentRoom, 
         WinRoom 
+    }
+
+    struct MapStateData
+    {
+        public int mapIndex;
+        public int anomalyIndex;
+        public RoomState roomState;
+        public int uniqueRoomIndex;
     }
 
     public event System.Action<RoomState> OnStateChanged;
@@ -22,11 +32,10 @@ public class AnomalyManager : MonoBehaviour
 
     AnomalyMap activeMap;
     GameMap activeUniqueRoom;
-    RoomState currentState;
     MapOrientor mapOrientor;
-
-    public RoomState CurrentState => currentState;
-    public bool HasAnomaly => currentState == RoomState.AnomalyRoom;
+    MapStateData currentMapState;
+    public RoomState CurrentState => currentMapState.roomState;
+    public bool HasAnomaly => currentMapState.roomState == RoomState.AnomalyRoom;
     public MapOrientor MapOrientor => mapOrientor;
 
     void Awake()
@@ -38,17 +47,49 @@ public class AnomalyManager : MonoBehaviour
         foreach (var map in mapCollection) map.DisableAll();
     }
 
-    /// <summary>
-    /// Modify the chance of anomalous room variations. The value is clamped between 0 and 1.
-    /// </summary>
-    /// <param name="percentage01"></param>
-    public void ChangeAnomalyChance(float percentage01) => anomalyChance = Mathf.Clamp01(percentage01);
+    #region Sync Methods
+    protected override void OnObserverAdded(PlayerID player)
+    {
+        base.OnObserverAdded(player);
 
+        if (isServer) SyncMapWithData_TargetRpc(player, currentMapState);
+    }
+    private void SyncMapWithData(MapStateData data)
+    {
+        // Handle Map Desync
+        bool mapIsNull = activeMap == null;
+        bool desyncedMap = currentMapState.mapIndex != data.mapIndex;
+        if (mapIsNull || desyncedMap) TryLoadMap(mapIndex: data.mapIndex);
+
+        switch (data.roomState)
+        {
+            case RoomState.NormalRoom:
+            case RoomState.AnomalyRoom:
+                ApplyMapVariation(data.anomalyIndex); break;
+
+            case RoomState.PunishmentRoom: EnablePunishmentRoom(data.uniqueRoomIndex); break;
+            case RoomState.WinRoom: EnableWinRoom(); break;
+        }
+
+        currentMapState = data;
+        OnStateChanged?.Invoke(data.roomState);
+    }
+    [ObserversRpc] private void SyncMapWithData_ObserversRpc(MapStateData data) => SyncMapWithData(data);
+    [TargetRpc] private void SyncMapWithData_TargetRpc(PlayerID player, MapStateData data) => SyncMapWithData(data);
+    private void ChangeState(RoomState newState)
+    {
+        if (!isServer) return;
+
+        currentMapState.roomState = newState;
+        if (isServer) SyncMapWithData_ObserversRpc(currentMapState);
+    }
+    #endregion
+
+    #region Authority Methods
     /// <summary>
     /// Randomly decides the next map variation based on the <see cref="anomalyChance"/>.
     /// </summary>
-    public void DecideNextMapVariation() => DecideNextMapVariation(Random.value <= anomalyChance);
-
+    public void DecideNextMapVariation() => DecideNextMapVariation(withAnomalies: Random.value <= anomalyChance);
     /// <summary>
     /// Changes the map variation based on the given parameter. 
     /// If <paramref name="withAnomalies"/> is false, it will simply enable the base map and disable any active anomaly variations. 
@@ -57,19 +98,67 @@ public class AnomalyManager : MonoBehaviour
     /// <param name="withAnomalies"></param>
     public void DecideNextMapVariation(bool withAnomalies)
     {
-        if (activeMap == null && !TryPickMap()) return;
+        if (!isServer) return;
 
-        ClearActiveState(destroyActiveMap: false);
+        if (activeMap == null)
+        {
+            Debug.LogError("Tried to decide on map variation but no active map!");
+            return;
+        }
 
         if (!withAnomalies)
         {
-            activeMap.BaseMap.SetActive(true);
+            currentMapState.anomalyIndex = -1;
             ChangeState(RoomState.NormalRoom);
+            return;
+        }
+
+        currentMapState.anomalyIndex = activeMap.GetRandomUnusedAnomalyIndex();
+        ChangeState(RoomState.AnomalyRoom);
+    }
+    /// <summary>
+    /// Enables a random punishment room from the <see cref="punishmentRooms"/>, disabling the active map and any active anomaly variations.
+    /// </summary>
+    public void EnablePunishmentRoom_Server()
+    {
+        if (!isServer) return;
+        currentMapState.uniqueRoomIndex = Random.Range(0, punishmentRooms.Length);
+        ChangeState(RoomState.PunishmentRoom);
+    }
+    /// <summary>
+    /// Enables the win room, disabling the active map and any active anomaly variations or punishment rooms.
+    /// </summary>
+    public void EnableWinRoom_Server()
+    {
+        if (!isServer) return;
+        ChangeState(RoomState.WinRoom);
+    }
+    /// <summary>
+    /// Picks a random map from the <see cref="mapCollection"/> and sets it as the active map.
+    /// </summary>
+    /// <returns>True if successful, otherwirse False.</returns>
+    public void PickMap_Server()
+    {
+        if (!isServer) return;
+        currentMapState.mapIndex = Random.Range(0, mapCollection.Length);
+        currentMapState.anomalyIndex = -1;
+        ChangeState(RoomState.NormalRoom);
+    }
+    #endregion
+
+    #region Map Manipulation Methods
+    private void ApplyMapVariation(int variationIndex)
+    {
+        ClearActiveState(destroyActiveMap: false);
+
+        if (variationIndex < 0)
+        {
+            activeMap.BaseMap.SetActive(true);
             OnMapChanged?.Invoke(activeMap);
             return;
         }
 
-        AnomalyGroup nextVariation = activeMap.GetNextAnomalyGroup();
+        AnomalyGroup nextVariation = activeMap.GetAnomalyGroupAtIndex(variationIndex);
 
         if (!nextVariation.GroupRoot)
         {
@@ -80,15 +169,10 @@ public class AnomalyManager : MonoBehaviour
         activeMap.BaseMap.SetActive(!nextVariation.ReplacesBaseMap);
         nextVariation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
-        ChangeState(RoomState.AnomalyRoom);
     }
-
-    /// <summary>
-    /// Enables a random punishment room from the <see cref="punishmentRooms"/>, disabling the active map and any active anomaly variations.
-    /// </summary>
-    public void EnablePunishmentRoom()
+    private void EnablePunishmentRoom(int atIndex)
     {
-        if(punishmentRooms.Length == 0)
+        if (punishmentRooms.Length == 0)
         {
             Debug.LogWarning("Tried to enable punishment room but there are no punishment rooms in the array.");
             return;
@@ -96,33 +180,25 @@ public class AnomalyManager : MonoBehaviour
 
         ClearActiveState(destroyActiveMap: false);
 
-        int roomIndex = Random.Range(0, punishmentRooms.Length);
-        GameMap map = punishmentRooms[roomIndex];
+        GameMap map = punishmentRooms[atIndex];
         activeUniqueRoom = CreateMap(map);
 
-        if(activeUniqueRoom == null)
+        if (activeUniqueRoom == null)
         {
-            Debug.LogWarning($"Tried to enable punishment room at index {roomIndex} but it is null.");
+            Debug.LogWarning($"Tried to enable punishment room at index {atIndex} but it is null.");
             return;
         }
 
+        currentMapState.uniqueRoomIndex = atIndex;
         OnMapChanged?.Invoke(activeUniqueRoom);
-        ChangeState(RoomState.PunishmentRoom);
     }
-
-    /// <summary>
-    /// Picks a random map from the <see cref="mapCollection"/> and sets it as the active map.
-    /// </summary>
-    /// <returns>True if successful, otherwirse False.</returns>
-    public bool TryPickMap() => TryPickMap(Random.Range(0, mapCollection.Length));
-    public void PickMap() => TryPickMap(); // just for the inspector lol
 
     /// <summary>
     /// Picks the map at the given index from the <see cref="mapCollection"/> and sets it as the active map.
     /// </summary>
     /// <returns>True if successful, otherwirse False.</returns>
     /// <param name="mapIndex"></param>
-    public bool TryPickMap(int mapIndex)
+    private bool TryLoadMap(int mapIndex)
     {
         if (mapCollection.Length == 0)
         {
@@ -130,7 +206,7 @@ public class AnomalyManager : MonoBehaviour
             return false;
         }
 
-        if(mapIndex < 0 || mapIndex >= mapCollection.Length)
+        if (mapIndex < 0 || mapIndex >= mapCollection.Length)
         {
             Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is out of bounds for the map collection.");
             return false;
@@ -138,7 +214,7 @@ public class AnomalyManager : MonoBehaviour
 
         ClearActiveState(destroyActiveMap: mapsArePrefabs);
 
-        if(!mapCollection[mapIndex])
+        if (!mapCollection[mapIndex])
         {
             Debug.LogWarning($"Tried to pick map at index {mapIndex} but it is null.");
             return false;
@@ -148,15 +224,10 @@ public class AnomalyManager : MonoBehaviour
         activeMap = CreateMap(map);
 
         activeMap.DisableAll(keepBase: true);
-        ChangeState(RoomState.NormalRoom);
         OnMapChanged?.Invoke(activeMap);
         return true;
     }
-
-    /// <summary>
-    /// Enables the win room, disabling the active map and any active anomaly variations or punishment rooms.
-    /// </summary>
-    public void EnableWinRoom()
+    private void EnableWinRoom()
     {
         if (!winRoom)
         {
@@ -167,9 +238,8 @@ public class AnomalyManager : MonoBehaviour
         ClearActiveState(false);
         activeUniqueRoom = CreateMap(winRoom);
         OnMapChanged?.Invoke(activeUniqueRoom);
-        ChangeState(RoomState.WinRoom);
     }
-    void ClearActiveState(bool destroyActiveMap)
+    private void ClearActiveState(bool destroyActiveMap)
     {
         if (activeMap)
         {
@@ -183,14 +253,15 @@ public class AnomalyManager : MonoBehaviour
 
         ReleaseMap(ref activeUniqueRoom);
     }
-    void ChangeState(RoomState newState)
-    {
-        //if(currentState == newState) return;
+    #endregion
 
-        currentState = newState;
-        OnStateChanged?.Invoke(newState);
-    }
-    TMap CreateMap<TMap>(TMap map) where TMap : GameMap
+    #region Helpers & Utils
+    /// <summary>
+    /// Modify the chance of anomalous room variations. The value is clamped between 0 and 1.
+    /// </summary>
+    /// <param name="percentage01"></param>
+    public void ChangeAnomalyChance(float percentage01) => anomalyChance = Mathf.Clamp01(percentage01);
+    private TMap CreateMap<TMap>(TMap map) where TMap : GameMap
     {
         TMap result;
 
@@ -200,7 +271,7 @@ public class AnomalyManager : MonoBehaviour
         result.gameObject.SetActive(true);
         return result;
     }
-    void ReleaseMap(ref GameMap map)
+    private void ReleaseMap(ref GameMap map)
     {
         if (!map) return;
 
@@ -208,4 +279,5 @@ public class AnomalyManager : MonoBehaviour
         else map.gameObject.SetActive(false);
         map = null;
     }
+    #endregion
 }
