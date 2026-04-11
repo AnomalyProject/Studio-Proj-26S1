@@ -943,6 +943,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d98fc868d825534a8285d4b2993391b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelExitPoint
+--- !u!1 &453870331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 453870333}
+  - component: {fileID: 453870332}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &453870332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453870331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a0f98b1c0127a0448ece703f8a1841f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  anomalyManager: {fileID: 532571676}
+  mapOrientor: {fileID: 532571678}
+  requiredCorrectDecisions: 5
+  decisionCooldown: 2
+  mapChangeDelay: 2
+  OnProgressChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnWrongDecision:
+    m_PersistentCalls:
+      m_Calls: []
+  OnGameWon:
+    m_PersistentCalls:
+      m_Calls: []
+  OnGameReset:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &453870333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453870331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 19.13927, y: -0.5, z: 0.48943}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &470095494
 GameObject:
   m_ObjectHideFlags: 0
@@ -1211,6 +1272,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2dd36ab1beb4b7438d647fa0b07e6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnomalyManager
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   mapCollection:
   - {fileID: 2994484015021799058, guid: 98a291562684ab4489fa4c12098862ed, type: 3}
   anomalyChance: 0.5
@@ -3892,3 +3962,4 @@ SceneRoots:
   - {fileID: 307951475}
   - {fileID: 768139565}
   - {fileID: 1426750074}
+  - {fileID: 453870333}
