@@ -1,9 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using System;
 using static SnapshotUtility;
-using static UnityEngine.GraphicsBuffer;
+using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -26,11 +28,11 @@ public static class ComponentApplierRegistry
 
     private static Dictionary<Type, IComponentApplier> appliers = new Dictionary<Type, IComponentApplier>();
 
-    static ComponentApplierRegistry()
-    {
-        AutoRegisterAllAppliers();
-    }
 
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod()]
+#endif
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void AutoRegisterAllAppliers()
     {
         IEnumerable<Type> applierTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).Where(t => typeof(IComponentApplier).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);

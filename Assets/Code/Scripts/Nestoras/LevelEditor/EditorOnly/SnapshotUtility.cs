@@ -58,6 +58,7 @@ public static class SnapshotUtility
             {
                 SerializedValueType.Boolean => GetAs<bool>(),
                 SerializedValueType.Integer => GetAs<int>(),
+                SerializedValueType.ArraySize => GetAs<int>(),
                 SerializedValueType.Float => GetAs<float>(),
                 SerializedValueType.String => GetAs<string>(),
                 SerializedValueType.Vector2 => GetAs<Vector2>(),
@@ -93,6 +94,7 @@ public static class SnapshotUtility
         None,
         Boolean,
         Integer,
+        ArraySize,
         Float,
         String,
         Vector2,
@@ -224,8 +226,11 @@ public static class SnapshotUtility
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<bool>() { value = property.boolValue });
                 break;
             case SerializedPropertyType.Integer:
-            case SerializedPropertyType.ArraySize:
                 result.type = SerializedValueType.Integer;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.intValue });
+                break;
+            case SerializedPropertyType.ArraySize:
+                result.type = SerializedValueType.ArraySize;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.intValue });
                 break;
             case SerializedPropertyType.Float:

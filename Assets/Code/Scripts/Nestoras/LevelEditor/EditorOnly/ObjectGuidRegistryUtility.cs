@@ -13,7 +13,8 @@ public static class ObjectGuidRegistryUtility
     private static ObjectGuidRegistry registry;
     private static string registryPath = "Assets/Resources/LevelEditor/ObjectGuidRegistry.asset";
 
-    static ObjectGuidRegistryUtility()
+    [InitializeOnLoadMethod()]
+    private static void InitializeRegistry()
     {
         registry = AssetDatabase.LoadAssetAtPath<ObjectGuidRegistry>(registryPath);
         if (registry == null) GenerateNewRegistry();
