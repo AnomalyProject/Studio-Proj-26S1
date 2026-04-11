@@ -4,6 +4,11 @@ using static SnapshotUtility;
 using UnityEngine.Scripting;
 using UnityEngine;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Applier script to translate set commands by <see cref="ModificationApplier"/> (SerializedProperty path and value) into actual API calls that work in standalone builds.
+/// </summary>
 [Preserve] // Avoid stripping type from build
 public class BoxColliderApplier : IComponentApplier
 {
@@ -34,15 +39,15 @@ public class BoxColliderApplier : IComponentApplier
         switch (field.path)
         {
             case "m_Center":
-                c.center = field.vector3Value;
+                c.center = field.GetAs<Vector3>();
                 return true;
 
             case "m_Size":
-                c.size = field.vector3Value;
+                c.size = field.GetAs<Vector3>();
                 return true;
 
             case "m_IsTrigger":
-                c.isTrigger = field.boolValue;
+                c.isTrigger = field.GetAs<bool>();
                 return true;
 
             case "m_Material":
@@ -50,23 +55,23 @@ public class BoxColliderApplier : IComponentApplier
                 return true;
 
             case "m_ContactOffset":
-                c.contactOffset = field.floatValue;
+                c.contactOffset = field.GetAs<float>();
                 return true;
 
             case "m_LayerOverridePriority":
-                c.layerOverridePriority = field.intValue;
+                c.layerOverridePriority = field.GetAs<int>();
                 return true;
 
             case "m_IncludeLayers":
-                c.includeLayers = field.intValue;
+                c.includeLayers = field.GetAs<int>();
                 return true;
 
             case "m_ExcludeLayers":
-                c.excludeLayers = field.intValue;
+                c.excludeLayers = field.GetAs<int>();
                 return true;
 
             case "m_ProvidesContacts":
-                c.providesContacts = field.boolValue;
+                c.providesContacts = field.GetAs<bool>();
                 return true;
         }
 
@@ -76,8 +81,9 @@ public class BoxColliderApplier : IComponentApplier
     #region Helpers
     private PhysicsMaterial ResolvePhysicMaterial(FieldSnapshot field)
     {
+        return null;
 #if UNITY_EDITOR
-        return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceInstanceID) as PhysicsMaterial;
+        //return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceGUID) as PhysicsMaterial;
 #else
     return null; // runtime requires GUID/asset registry
 #endif

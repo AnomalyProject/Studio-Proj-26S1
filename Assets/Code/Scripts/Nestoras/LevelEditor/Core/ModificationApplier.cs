@@ -1,22 +1,40 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using UnityEngine;
+using System.Linq;
+using System;
 using static SnapshotUtility;
-using static UnityEngine.Rendering.DebugUI;
+using UnityEngine.Events;
+using UnityEngine;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Script that handles applying and reverting level modifications.
+/// </summary>
 [ExecuteAlways]
-public class Variation : MonoBehaviour
+public class ModificationApplier : MonoBehaviour
 {
     public LevelModification levelModification;
     private bool applied = false;
 
-    private void OnValidate() => applied = gameObject.activeInHierarchy;
+    [Tooltip("Called after modification is applied.")]
+    public UnityEvent onEnable;
+    [Tooltip("Called before modification is reverted.")]
+    public UnityEvent onDisable;
 
-    private void OnEnable() => Apply();
+    private void Awake() => applied = gameObject.activeInHierarchy;
 
-    private void OnDisable() => Revert();
+    private void OnEnable()
+    {
+        if (levelModification != null) Apply();
+        onEnable?.Invoke();
+    }
+
+    private void OnDisable()
+    {
+        onDisable?.Invoke();
+        if (levelModification != null) Revert();
+    }
 
     private void Apply()
     {
@@ -24,7 +42,7 @@ public class Variation : MonoBehaviour
         applied = true;
 
         // ADDITIONS
-        foreach (GameObjectSnapshot goToAdd in levelModification.added)
+        foreach (GameObjectSnapshot goToAdd in levelModification.addedGameObjects)
         {
             GameObject parent = FindByGuid(goToAdd.parentGuid);
             if (parent == null) continue;
@@ -41,7 +59,7 @@ public class Variation : MonoBehaviour
         }
 
         // REMOVALS
-        foreach (GameObjectSnapshot goToRemove in levelModification.removed)
+        foreach (GameObjectSnapshot goToRemove in levelModification.removedGameObjects)
         {
             GameObject obj = FindByGuid(goToRemove.guid);
             if (obj == null) continue;
@@ -54,7 +72,7 @@ public class Variation : MonoBehaviour
         }
 
         // MODIFICATIONS
-        foreach (GameObjectModification goToModify in levelModification.modified)
+        foreach (GameObjectModification goToModify in levelModification.gameObjectModifications)
         {
             GameObject go = FindByGuid(goToModify.guid);
             if (go == null) continue;
@@ -79,7 +97,7 @@ public class Variation : MonoBehaviour
         applied = false;
 
         // ADDITIONS
-        foreach (GameObjectSnapshot goToAdd in levelModification.added)
+        foreach (GameObjectSnapshot goToAdd in levelModification.addedGameObjects)
         {
             GameObject obj = FindByGuid(goToAdd.guid);
             if (obj == null) continue;
@@ -92,7 +110,7 @@ public class Variation : MonoBehaviour
         }
 
         // REMOVALS
-        foreach (GameObjectSnapshot goToRemove in levelModification.removed)
+        foreach (GameObjectSnapshot goToRemove in levelModification.removedGameObjects)
         {
             GameObject parent = FindByGuid(goToRemove.parentGuid);
             if (parent == null) continue;
@@ -109,7 +127,7 @@ public class Variation : MonoBehaviour
         }
 
         // MODIFICATIONS
-        foreach (GameObjectModification goToModify in levelModification.modified)
+        foreach (GameObjectModification goToModify in levelModification.gameObjectModifications)
         {
             GameObject go = FindByGuid(goToModify.guid);
             if (go == null) continue;

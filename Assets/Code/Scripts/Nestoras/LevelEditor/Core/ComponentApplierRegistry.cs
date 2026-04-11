@@ -4,8 +4,25 @@ using System;
 using static SnapshotUtility;
 using UnityEngine;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Registry of all <see cref="IComponentApplier"/>s. Used to delegate the application and reversal of <see cref="LevelModification"/>s at runtime.
+/// </summary>
 public static class ComponentApplierRegistry
 {
+    public static ObjectGuidRegistry objectGuidRegistry
+    {
+        get
+        {
+#if UNITY_EDITOR
+            ObjectGuidRegistry registry = Resources.Load<ObjectGuidRegistry>("LevelEditor/ObjectGuidRegistry");
+            if (registry == null) ObjectGuidRegistryUtility.GenerateNewRegistry();
+#endif
+            return Resources.Load<ObjectGuidRegistry>("LevelEditor/ObjectGuidRegistry");
+        }
+    }
+
     private static Dictionary<Type, IComponentApplier> appliers = new Dictionary<Type, IComponentApplier>();
 
     static ComponentApplierRegistry()

@@ -4,6 +4,11 @@ using static SnapshotUtility;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Level editor window allowing the creation of <see cref="LevelModification"/>s using <see cref="SnapshotUtility"/>.
+/// </summary>
 public class AnomalyEditorWindow : EditorWindow
 {
     private GameObject root; // Root of the hierarchy being tracked

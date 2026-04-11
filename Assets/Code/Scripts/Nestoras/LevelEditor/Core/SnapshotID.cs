@@ -10,6 +10,11 @@ public class SnapshotIDEditor : Editor
 }
 #endif
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// A GUID wrapper for <see cref="GameObject"/>s that need to be tracked in <see cref="LevelModification"/>s.
+/// </summary>
 [ExecuteAlways]
 [AddComponentMenu("")]
 public class SnapshotID : MonoBehaviour
@@ -22,7 +27,7 @@ public class SnapshotID : MonoBehaviour
     private void OnValidate() => EnsureGuid();
 #endif
 
-    void EnsureGuid()
+    private void EnsureGuid()
     {
         // Always generate if empty
         if (string.IsNullOrEmpty(guid))

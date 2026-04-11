@@ -4,6 +4,11 @@ using static SnapshotUtility;
 using UnityEngine.Scripting;
 using UnityEngine;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Applier script to translate set commands by <see cref="ModificationApplier"/> (SerializedProperty path and value) into actual API calls that work in standalone builds.
+/// </summary>
 [Preserve] // Avoid stripping type from build
 public class TransformApplier : IComponentApplier
 {
@@ -31,13 +36,13 @@ public class TransformApplier : IComponentApplier
         switch (field.path)
         {
             case "m_LocalPosition":
-                t.localPosition = field.vector3Value;
+                t.localPosition = field.GetAs<Vector3>();
                 return true;
             case "m_LocalRotation":
-                t.localRotation = field.quaternionValue;
+                t.localRotation = field.GetAs<Quaternion>();
                 return true;
             case "m_LocalScale":
-                t.localScale = field.vector3Value;
+                t.localScale = field.GetAs<Vector3>();
                 return true;
         }
 

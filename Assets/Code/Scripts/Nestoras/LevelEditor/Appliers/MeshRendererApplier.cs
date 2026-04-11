@@ -5,6 +5,11 @@ using UnityEngine.Scripting;
 using UnityEngine.Rendering;
 using UnityEngine;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Applier script to translate set commands by <see cref="ModificationApplier"/> (SerializedProperty path and value) into actual API calls that work in standalone builds.
+/// </summary>
 [Preserve] // Avoid stripping type from build
 public class MeshRendererApplier : IComponentApplier
 {
@@ -64,50 +69,52 @@ public class MeshRendererApplier : IComponentApplier
         switch (field.path)
         {
             case "m_CastShadows":
-                r.shadowCastingMode = (ShadowCastingMode)field.intValue;
+                r.shadowCastingMode = (ShadowCastingMode)field.GetAs<int>();
                 return true;
             case "m_ReceiveShadows":
-                r.receiveShadows = field.boolValue;
+                r.receiveShadows = field.GetAs<bool>();
                 return true;
             case "m_RenderingLayerMask":
-                r.renderingLayerMask = (uint)field.intValue;
+                r.renderingLayerMask = (uint)field.GetAs<int>();
                 return true;
             case "m_RendererPriority":
-                r.rendererPriority = field.intValue;
+                r.rendererPriority = field.GetAs<int>();
                 return true;
             case "m_LightProbeUsage":
-                r.lightProbeUsage = (LightProbeUsage)field.intValue;
+                r.lightProbeUsage = (LightProbeUsage)field.GetAs<int>();
                 return true;
             case "m_ProbeAnchor":
-                r.probeAnchor = ResolveTransform(field);
+                r.probeAnchor = field.GetAsObject() as Transform;
                 return true;
             case "m_DynamicOccludee":
-                r.allowOcclusionWhenDynamic = field.boolValue;
+                r.allowOcclusionWhenDynamic = field.GetAs<bool>();
                 return true;
             case "m_StaticShadowCaster":
-                r.staticShadowCaster = field.boolValue;
+                r.staticShadowCaster = field.GetAs<bool>();
                 return true;
             case "m_MotionVectors":
-                r.motionVectorGenerationMode = (MotionVectorGenerationMode)field.intValue;
+                r.motionVectorGenerationMode = (MotionVectorGenerationMode)field.GetAs<int>();
                 return true;
             case "m_ReflectionProbeUsage":
-                r.reflectionProbeUsage = (ReflectionProbeUsage)field.intValue;
+                r.reflectionProbeUsage = (ReflectionProbeUsage)field.GetAs<int>();
                 return true;
             case "m_LightProbeVolumeOverride":
-                r.lightProbeProxyVolumeOverride = ResolveGameObject(field);
+                r.lightProbeProxyVolumeOverride = field.GetAsObject() as GameObject;
                 return true;
         }
 
         // Handle materials dynamically
         if (field.path.StartsWith("m_Materials.Array.data["))
         {
-            int index = ExtractIndex(field.path);
+            int start = field.path.IndexOf('[') + 1;
+            int end = field.path.IndexOf(']');
+            int index = int.Parse(field.path.Substring(start, end - start));
 
             var mats = r.sharedMaterials;
 
             if (index >= mats.Length) Array.Resize(ref mats, index + 1);
 
-            mats[index] = ResolveMaterial(field);
+            mats[index] = field.GetAsObject() as Material;
 
             r.sharedMaterials = mats;
 
@@ -116,40 +123,4 @@ public class MeshRendererApplier : IComponentApplier
 
         return false;
     }
-
-    #region Helpers
-    private int ExtractIndex(string path)
-    {
-        int start = path.IndexOf('[') + 1;
-        int end = path.IndexOf(']');
-        return int.Parse(path.Substring(start, end - start));
-    }
-
-    private Transform ResolveTransform(FieldSnapshot field)
-    {
-#if UNITY_EDITOR
-        return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceInstanceID) as Transform;
-#else
-    return null; // runtime-safe version needs GUID system
-#endif
-    }
-
-    private Material ResolveMaterial(FieldSnapshot field)
-    {
-#if UNITY_EDITOR
-        return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceInstanceID) as Material;
-#else
-    return null; // You need a better system for builds (see below)
-#endif
-    }
-
-    private GameObject ResolveGameObject(FieldSnapshot field)
-    {
-#if UNITY_EDITOR
-        return UnityEditor.EditorUtility.EntityIdToObject(field.objectReferenceInstanceID) as GameObject;
-#else
-    return null; // replace with GUID system later
-#endif
-    }
-    #endregion
 }

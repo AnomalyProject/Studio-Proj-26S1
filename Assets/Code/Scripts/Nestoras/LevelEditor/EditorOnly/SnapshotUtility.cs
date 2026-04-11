@@ -1,10 +1,18 @@
-#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Utility script for capturing a snapshot of the in-editor state of an entire hierarchy of GameObjects,
+/// Comparing snapshots to get all modified fields between them and their values,
+/// and Exporting these <see cref="LevelModification"/>s as scriptable objects, so that they can be applied and reverted at runtime by <see cref="ModificationApplier"/>s.
+/// </summary>
 public static class SnapshotUtility
 {
     #region Capturing
@@ -37,59 +45,48 @@ public static class SnapshotUtility
         public string path;
 
         public SerializedValueType type;
-
-        public bool boolValue;
-        public int intValue;
-        public float floatValue;
-        public string stringValue;
-
-        public Vector2 vector2Value;
-        public Vector3 vector3Value;
-        public Vector4 vector4Value;
-        public Quaternion quaternionValue;
-        public Color colorValue;
-
-        public int objectReferenceInstanceID;
-        public int enumValueIndex;
-
-        public object GetAsType(Type targetType)
-        {
-            return type switch
-            {
-                SerializedValueType.Boolean => boolValue,
-                SerializedValueType.Integer => intValue,
-                SerializedValueType.Float => floatValue,
-                SerializedValueType.String => stringValue,
-                SerializedValueType.Vector2 => vector2Value,
-                SerializedValueType.Vector3 => vector3Value,
-                SerializedValueType.Vector4 => vector4Value,
-                SerializedValueType.Quaternion => quaternionValue,
-                SerializedValueType.Color => colorValue,
-                SerializedValueType.Enum => Enum.ToObject(targetType, enumValueIndex),
-                SerializedValueType.ObjectReference => objectReferenceInstanceID,
-                _ => null
-            };
-        }
+        public string valueJson;
 
         public bool Equals(FieldSnapshot other)
         {
             if (type != other.type) return false;
+            return valueJson == other.valueJson;
+        }
+        public object GetAsType(Type targetType)
+        {
             return type switch
             {
-                SerializedValueType.Boolean => boolValue == other.boolValue,
-                SerializedValueType.Integer => intValue == other.intValue,
-                SerializedValueType.Float => Mathf.Approximately(floatValue, other.floatValue),
-                SerializedValueType.String => stringValue == other.stringValue,
-                SerializedValueType.Vector2 => vector2Value == other.vector2Value,
-                SerializedValueType.Vector3 => vector3Value == other.vector3Value,
-                SerializedValueType.Vector4 => vector4Value == other.vector4Value,
-                SerializedValueType.Quaternion => quaternionValue == other.quaternionValue,
-                SerializedValueType.Color => colorValue == other.colorValue,
-                SerializedValueType.ObjectReference => objectReferenceInstanceID == other.objectReferenceInstanceID,
-                SerializedValueType.Enum => enumValueIndex == other.enumValueIndex,
-                _ => false
+                SerializedValueType.Boolean => GetAs<bool>(),
+                SerializedValueType.Integer => GetAs<int>(),
+                SerializedValueType.Float => GetAs<float>(),
+                SerializedValueType.String => GetAs<string>(),
+                SerializedValueType.Vector2 => GetAs<Vector2>(),
+                SerializedValueType.Vector3 => GetAs<Vector3>(),
+                SerializedValueType.Vector4 => GetAs<Vector4>(),
+                SerializedValueType.Quaternion => GetAs<Quaternion>(),
+                SerializedValueType.Color => GetAs<Color>(),
+                SerializedValueType.Enum => Enum.ToObject(targetType, GetAs<int>()),
+                SerializedValueType.ObjectReference => GetAs<string>(),
+                _ => null
             };
         }
+        public UnityEngine.Object GetAsObject()
+        {
+            string guid = GetAs<string>();
+            if (string.IsNullOrEmpty(guid)) return null;
+            return ComponentApplierRegistry.objectGuidRegistry.Get(guid);
+        }
+        public T GetAs<T>()
+        {
+            if (string.IsNullOrEmpty(valueJson)) return default;
+            ValueWrapper<T> wrapper = JsonUtility.FromJson<ValueWrapper<T>>(valueJson);
+            if (wrapper == null) return default;
+            return wrapper.value;
+        }
+    }
+    [Serializable] public class ValueWrapper<T>
+    {
+        public T value;
     }
     [Serializable] public enum SerializedValueType
     {
@@ -105,6 +102,9 @@ public static class SnapshotUtility
         ObjectReference,
         Enum
     }
+    #endregion
+
+#if UNITY_EDITOR
     private static HashSet<SerializedPropertyType> compositeTypes = new HashSet<SerializedPropertyType>()
     {
         SerializedPropertyType.Vector2,
@@ -113,7 +113,6 @@ public static class SnapshotUtility
         SerializedPropertyType.Quaternion,
         SerializedPropertyType.Color
     };
-    #endregion
 
     // Captures a full hierarchy snapshot
     public static List<GameObjectSnapshot> Capture(GameObject root)
@@ -176,12 +175,15 @@ public static class SnapshotUtility
 
                 // Skip x,y,z fields of composite types like Vector3, since we already store the entire Vector3
                 if (previous != null && iterator.depth > previous.depth && compositeTypes.Contains(previous.propertyType)) continue;
+                previous = iterator.Copy();
 
-                // Warn if change can't be recreated at runtime
-                if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath)) Debug.LogWarning($"Attempting to capture unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
+                // Skip default values
+                if (HasDefaultValue(iterator)) continue;
+
                 fields.Add(CaptureField(iterator));
 
-                previous = iterator.Copy();
+                // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
+                if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath) && component is not MonoBehaviour) Debug.LogWarning($"Captured field without registered applier: {component.GetType().Name}.{iterator.propertyPath}");
             }
 
             result.Add(new ComponentSnapshot()
@@ -208,47 +210,47 @@ public static class SnapshotUtility
         {
             case SerializedPropertyType.Boolean:
                 result.type = SerializedValueType.Boolean;
-                result.boolValue = property.boolValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<bool>() { value = property.boolValue });
                 break;
             case SerializedPropertyType.Integer:
                 result.type = SerializedValueType.Integer;
-                result.intValue = property.intValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.intValue });
                 break;
             case SerializedPropertyType.Float:
                 result.type = SerializedValueType.Float;
-                result.floatValue = property.floatValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<float>() { value = property.floatValue });
                 break;
             case SerializedPropertyType.String:
                 result.type = SerializedValueType.String;
-                result.stringValue = property.stringValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = property.stringValue });
                 break;
             case SerializedPropertyType.Vector2:
                 result.type = SerializedValueType.Vector2;
-                result.vector2Value = property.vector2Value;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Vector2>() { value = property.vector2Value });
                 break;
             case SerializedPropertyType.Vector3:
                 result.type = SerializedValueType.Vector3;
-                result.vector3Value = property.vector3Value;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Vector3>() { value = property.vector3Value });
                 break;
             case SerializedPropertyType.Vector4:
                 result.type = SerializedValueType.Vector4;
-                result.vector4Value = property.vector4Value;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Vector4>() { value = property.vector4Value });
                 break;
             case SerializedPropertyType.Quaternion:
                 result.type = SerializedValueType.Quaternion;
-                result.quaternionValue = property.quaternionValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Quaternion>() { value = property.quaternionValue });
                 break;
             case SerializedPropertyType.Color:
                 result.type = SerializedValueType.Color;
-                result.colorValue = property.colorValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Color>() { value = property.colorValue });
                 break;
             case SerializedPropertyType.ObjectReference:
                 result.type = SerializedValueType.ObjectReference;
-                result.objectReferenceInstanceID = property.objectReferenceInstanceIDValue;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
                 break;
             case SerializedPropertyType.Enum:
                 result.type = SerializedValueType.Enum;
-                result.enumValueIndex = property.enumValueIndex;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.enumValueIndex });
                 break;
         };
 
@@ -273,10 +275,41 @@ public static class SnapshotUtility
         if (c is Collider collider) return collider.enabled; // Colliders
         return true; // Components without enabled state are always considered enabled
     }
+    private static bool HasDefaultValue(SerializedProperty property)
+    {
+        switch (property.propertyType)
+        {
+            case SerializedPropertyType.Boolean:
+                return property.boolValue == default;
+            case SerializedPropertyType.Integer:
+                return property.intValue == default;
+            case SerializedPropertyType.Float:
+                return property.floatValue == default;
+            case SerializedPropertyType.String:
+                return property.stringValue == default;
+            case SerializedPropertyType.Vector2:
+                return property.vector2Value == default;
+            case SerializedPropertyType.Vector3:
+                return property.vector3Value == default;
+            case SerializedPropertyType.Vector4:
+                return property.vector4Value == default;
+            case SerializedPropertyType.Quaternion:
+                return property.quaternionValue == default;
+            case SerializedPropertyType.Color:
+                return property.colorValue == default;
+            case SerializedPropertyType.ObjectReference:
+                return property.objectReferenceValue == default;
+            case SerializedPropertyType.Enum:
+                return property.enumValueIndex == default;
+            default: return false;
+        };
+    }
     #endregion
+#endif
     #endregion
 
     #region Diff System
+#if UNITY_EDITOR
     #region Structures
     public class DiffResult // Result container for hierarchy-level differences
     {
@@ -416,6 +449,7 @@ public static class SnapshotUtility
 
         return result;
     }
+#endif
     #endregion
 
     #region Exporting
@@ -465,6 +499,7 @@ public static class SnapshotUtility
     }
     #endregion
 
+#if UNITY_EDITOR
     public static LevelModification BuildLevelModification(DiffResult diff)
     {
         // GAMEOBJECTS
@@ -472,8 +507,8 @@ public static class SnapshotUtility
         LevelModification levelMod = ScriptableObject.CreateInstance<LevelModification>();
         
         // Keep entire snapshots for reconstruction
-        levelMod.added = diff.added;
-        levelMod.removed = diff.removed;
+        levelMod.addedGameObjects = diff.added;
+        levelMod.removedGameObjects = diff.removed;
 
         // Modified
         foreach ((GameObjectSnapshot objBefore, GameObjectSnapshot objAfter) in diff.changed)
@@ -539,10 +574,10 @@ public static class SnapshotUtility
                 }
                 goMod.componentModifications.Add(compMod);
             }
-            levelMod.modified.Add(goMod);
+            levelMod.gameObjectModifications.Add(goMod);
         }
         return levelMod;
     }
+#endif
     #endregion
 }
-#endif
