@@ -91,8 +91,7 @@ public class AnomalyManager : NetworkBehaviour
 
         currentMapState.roomState = newState;
         UpdateEntryPointData();
-
-        if (isServer) SyncMapWithData_ObserversRpc(currentMapState);
+        SyncMapWithData_ObserversRpc(currentMapState);
     }
     #endregion
 
