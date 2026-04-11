@@ -15,10 +15,16 @@ public class AnomalyManager : NetworkBehaviour
 
     struct MapStateData
     {
+        // Map Data
         public int mapIndex;
         public int anomalyIndex;
         public RoomState roomState;
         public int uniqueRoomIndex;
+
+        // Entry Point data.
+        public NetworkID entryPointID;
+        public Vector3 entryPosition;
+        public Quaternion entryRotation;
     }
 
     public event System.Action<RoomState> OnStateChanged;
@@ -56,6 +62,9 @@ public class AnomalyManager : NetworkBehaviour
     }
     private void SyncMapWithData(MapStateData data)
     {
+        // Sync entry elevator position, mainly for late joiners
+        if(!isServer) mapOrientor.SyncEntryPointWith(data.entryPointID, data.entryPosition, data.entryRotation);
+
         // Handle Map Desync
         bool mapIsNull = activeMap == null;
         bool desyncedMap = currentMapState.mapIndex != data.mapIndex;
@@ -76,11 +85,13 @@ public class AnomalyManager : NetworkBehaviour
     }
     [ObserversRpc] private void SyncMapWithData_ObserversRpc(MapStateData data) => SyncMapWithData(data);
     [TargetRpc] private void SyncMapWithData_TargetRpc(PlayerID player, MapStateData data) => SyncMapWithData(data);
-    private void ChangeState(RoomState newState)
+    private void RegisterState(RoomState newState)
     {
         if (!isServer) return;
 
         currentMapState.roomState = newState;
+        UpdateEntryPointData();
+
         if (isServer) SyncMapWithData_ObserversRpc(currentMapState);
     }
     #endregion
@@ -109,12 +120,12 @@ public class AnomalyManager : NetworkBehaviour
         if (!withAnomalies)
         {
             currentMapState.anomalyIndex = -1;
-            ChangeState(RoomState.NormalRoom);
+            RegisterState(RoomState.NormalRoom);
             return;
         }
 
         currentMapState.anomalyIndex = activeMap.GetRandomUnusedAnomalyIndex();
-        ChangeState(RoomState.AnomalyRoom);
+        RegisterState(RoomState.AnomalyRoom);
     }
     /// <summary>
     /// Enables a random punishment room from the <see cref="punishmentRooms"/>, disabling the active map and any active anomaly variations.
@@ -123,7 +134,7 @@ public class AnomalyManager : NetworkBehaviour
     {
         if (!isServer) return;
         currentMapState.uniqueRoomIndex = Random.Range(0, punishmentRooms.Length);
-        ChangeState(RoomState.PunishmentRoom);
+        RegisterState(RoomState.PunishmentRoom);
     }
     /// <summary>
     /// Enables the win room, disabling the active map and any active anomaly variations or punishment rooms.
@@ -131,7 +142,7 @@ public class AnomalyManager : NetworkBehaviour
     public void EnableWinRoom_Server()
     {
         if (!isServer) return;
-        ChangeState(RoomState.WinRoom);
+        RegisterState(RoomState.WinRoom);
     }
     /// <summary>
     /// Picks a random map from the <see cref="mapCollection"/> and sets it as the active map.
@@ -142,7 +153,7 @@ public class AnomalyManager : NetworkBehaviour
         if (!isServer) return;
         currentMapState.mapIndex = Random.Range(0, mapCollection.Length);
         currentMapState.anomalyIndex = -1;
-        ChangeState(RoomState.NormalRoom);
+        RegisterState(RoomState.NormalRoom);
     }
     #endregion
 
@@ -278,6 +289,13 @@ public class AnomalyManager : NetworkBehaviour
         if(mapsArePrefabs) Destroy(map.gameObject);
         else map.gameObject.SetActive(false);
         map = null;
+    }
+    private void UpdateEntryPointData()
+    {
+        LevelExitPoint entryElevator = mapOrientor.EntryElevator;
+        currentMapState.entryPointID = entryElevator.id.Value;
+        currentMapState.entryPosition = entryElevator.transform.position;
+        currentMapState.entryRotation = entryElevator.transform.rotation;
     }
     #endregion
 }
