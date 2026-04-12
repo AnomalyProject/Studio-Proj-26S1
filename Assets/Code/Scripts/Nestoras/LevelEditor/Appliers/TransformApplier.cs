@@ -13,39 +13,19 @@ using UnityEngine;
 public class TransformApplier : IComponentApplier
 {
     public Type TargetType => typeof(Transform);
-    private HashSet<string> supportedFields { get; } = new HashSet<string>()
+    private Dictionary<string, Action<Transform, FieldSnapshot>> supportedFields { get; } = new Dictionary<string, Action<Transform, FieldSnapshot>>()
     {
-        "m_LocalPosition",
-        "m_LocalRotation",
-        "m_LocalScale",
+        { "m_LocalPosition", (t, field) => t.localPosition = field.GetAs<Vector3>() },
+        { "m_LocalRotation", (t, field) => t.localRotation = field.GetAs<Quaternion>() },
+        { "m_LocalScale", (t, field) => t.localScale = field.GetAs<Vector3>() },
     };
-
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>()
-    {
-        "m_ConstrainProportionsScale",
-    };
-
-    public bool Supports(string path) => supportedFields.Contains(path) || ignoredFields.Contains(path);
-
+    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_ConstrainProportionsScale" };
+    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (ignoredFields.Contains(field.path)) return true;
-
-        Transform t = (Transform)target;
-
-        switch (field.path)
-        {
-            case "m_LocalPosition":
-                t.localPosition = field.GetAs<Vector3>();
-                return true;
-            case "m_LocalRotation":
-                t.localRotation = field.GetAs<Quaternion>();
-                return true;
-            case "m_LocalScale":
-                t.localScale = field.GetAs<Vector3>();
-                return true;
-        }
-
-        return false;
+        if (!supportedFields.ContainsKey(field.path)) return false;
+        supportedFields[field.path]((Transform)target, field);
+        return true;
     }
 }

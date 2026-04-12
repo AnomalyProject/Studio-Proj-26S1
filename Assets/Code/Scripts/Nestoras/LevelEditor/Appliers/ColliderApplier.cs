@@ -13,61 +13,23 @@ using UnityEngine;
 public class ColliderApplier : IComponentApplier
 {
     public Type TargetType => typeof(Collider);
-    public HashSet<string> supportedFields { get; } = new HashSet<string>()
+    private Dictionary<string, Action<Collider, FieldSnapshot>> supportedFields { get; } = new Dictionary<string, Action<Collider, FieldSnapshot>>()
     {
-        "m_IsTrigger",
-        "m_Material",
-        "m_ContactOffset",
-        "m_LayerOverridePriority",
-        "m_IncludeLayers",
-        "m_ExcludeLayers",
-        "m_ProvidesContacts",
+        { "m_IsTrigger", (c, field) => c.isTrigger = field.GetAs<bool>() },
+        { "m_Material", (c, field) => c.sharedMaterial = field.GetAsObject() as PhysicsMaterial },
+        { "m_ContactOffset", (c, field) => c.contactOffset = field.GetAs<float>() },
+        { "m_LayerOverridePriority", (c, field) => c.layerOverridePriority = field.GetAs<int>() },
+        { "m_IncludeLayers", (c, field) => c.includeLayers = field.GetAs<int>() },
+        { "m_ExcludeLayers", (c, field) => c.excludeLayers = field.GetAs<int>() },
+        { "m_ProvidesContacts", (c, field) => c.providesContacts = field.GetAs<bool>() },
     };
-
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>()
-    {
-
-    };
-
-    public bool Supports(string path) => supportedFields.Contains(path) || ignoredFields.Contains(path);
-
+    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_Enabled" };
+    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (ignoredFields.Contains(field.path)) return true;
-
-        Collider c = (Collider)target;
-
-        switch (field.path)
-        {
-            case "m_IsTrigger":
-                c.isTrigger = field.GetAs<bool>();
-                return true;
-
-            case "m_Material":
-                c.sharedMaterial = field.GetAsObject() as PhysicsMaterial;
-                return true;
-
-            case "m_ContactOffset":
-                c.contactOffset = field.GetAs<float>();
-                return true;
-
-            case "m_LayerOverridePriority":
-                c.layerOverridePriority = field.GetAs<int>();
-                return true;
-
-            case "m_IncludeLayers":
-                c.includeLayers = field.GetAs<int>();
-                return true;
-
-            case "m_ExcludeLayers":
-                c.excludeLayers = field.GetAs<int>();
-                return true;
-
-            case "m_ProvidesContacts":
-                c.providesContacts = field.GetAs<bool>();
-                return true;
-        }
-
-        return false;
+        if (!supportedFields.ContainsKey(field.path)) return false;
+        supportedFields[field.path]((Collider)target, field);
+        return true;
     }
 }

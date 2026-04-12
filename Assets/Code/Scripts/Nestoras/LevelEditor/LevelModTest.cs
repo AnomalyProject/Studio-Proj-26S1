@@ -13,4 +13,9 @@ public class LevelModTest : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.P)) variationToToggle.SetActive(!variationToToggle.activeInHierarchy);
     }
+
+    public void Test()
+    {
+
+    }
 }

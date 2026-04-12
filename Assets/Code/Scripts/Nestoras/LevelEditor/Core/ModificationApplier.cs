@@ -25,8 +25,6 @@ public class ModificationApplier : MonoBehaviour
     public UnityEvent onDisable;
 
     #region Triggers
-    private void Awake() => Debug.Log($"ModificationApplier Awake. Applied: {applied}");
-
     private void OnEnable()
     {
         if (applied) return;
@@ -222,6 +220,8 @@ public class ModificationApplier : MonoBehaviour
     #region Field Setting
     private void SetField(Component target, FieldSnapshot field)
     {
+        if (target == null) return;
+
         // Use authored apply logic for inaccessible fields
         if (ComponentApplierRegistry.TryApply(target, field)) return;
 
@@ -400,7 +400,7 @@ public class ModificationApplier : MonoBehaviour
             }
             else
             {
-                if (!f.FieldType.IsAssignableFrom(updatedNext.GetType())) Debug.LogWarning($"Type mismatch: {f.FieldType} <- {updatedNext?.GetType()}");
+                if (!f.FieldType.IsAssignableFrom(updatedNext.GetType())) Debug.LogWarning($"Type mismatch: {f.FieldType} <- {updatedNext?.GetType()} on {currentType}.{f.Name}");
                 else f.SetValue(current, updatedNext);
             }
         }

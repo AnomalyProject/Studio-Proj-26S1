@@ -14,26 +14,23 @@ using UnityEngine;
 public class RendererApplier : IComponentApplier
 {
     public Type TargetType => typeof(Renderer);
-    public HashSet<string> supportedFields { get; } = new HashSet<string>()
+    private Dictionary<string, Action<Renderer, FieldSnapshot>> supportedFields { get; } = new Dictionary<string, Action<Renderer, FieldSnapshot>>()
     {
-        "m_CastShadows",
-        "m_ReceiveShadows",
-        "m_MotionVectors",
-        "m_LightProbeUsage",
-        "m_RenderingLayerMask",
-        "m_RendererPriority",
-        "m_ProbeAnchor",
-        "m_DynamicOccludee",
-        "m_StaticShadowCaster",
-        "m_ReflectionProbeUsage",
-        "m_LightProbeVolumeOverride",
+        { "m_CastShadows", (r, field) => r.shadowCastingMode = (ShadowCastingMode)field.GetAs<int>() },
+        { "m_ReceiveShadows", (r, field) => r.receiveShadows = field.GetAs<bool>() },
+        { "m_MotionVectors", (r, field) => r.motionVectorGenerationMode = (MotionVectorGenerationMode)field.GetAs<int>() },
+        { "m_LightProbeUsage", (r, field) => r.lightProbeUsage = (LightProbeUsage)field.GetAs<int>() },
+        { "m_RenderingLayerMask", (r, field) => r.renderingLayerMask = (uint)field.GetAs<int>() },
+        { "m_RendererPriority", (r, field) => r.rendererPriority = field.GetAs<int>() },
+        { "m_ProbeAnchor", (r, field) => r.probeAnchor = field.GetAsObject() as Transform },
+        { "m_DynamicOccludee", (r, field) => r.allowOcclusionWhenDynamic = field.GetAs<bool>() },
+        { "m_StaticShadowCaster", (r, field) => r.staticShadowCaster = field.GetAs<bool>() },
+        { "m_ReflectionProbeUsage", (r, field) => r.reflectionProbeUsage = (ReflectionProbeUsage)field.GetAs<int>() },
+        { "m_LightProbeVolumeOverride", (r, field) => r.lightProbeProxyVolumeOverride = field.GetAsObject() as GameObject },
     };
-
     private HashSet<string> ignoredFields { get; } = new HashSet<string>()
     {
         "m_Enabled",
-        "m_Materials",
-
         "m_RayTracingMode",
         "m_RayTraceProcedural",
         "m_RayTracingAccelStructBuildFlagsOverride",
@@ -51,56 +48,17 @@ public class RendererApplier : IComponentApplier
         "m_AutoUVMaxDistance",
         "m_AutoUVMaxAngle",
         "m_LightmapParameters",
+        "m_Materials",
         "m_Materials.Array.size",
         "m_MaskInteraction",
     };
-
-    public bool Supports(string path) => supportedFields.Contains(path) || ignoredFields.Contains(path) || path.StartsWith("m_Materials.Array.data[");
-
+    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path) || path.StartsWith("m_Materials.Array.data[");
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (ignoredFields.Contains(field.path)) return true;
-
         Renderer r = (Renderer)target;
 
-        switch (field.path)
-        {
-            case "m_CastShadows":
-                r.shadowCastingMode = (ShadowCastingMode)field.GetAs<int>();
-                return true;
-            case "m_ReceiveShadows":
-                r.receiveShadows = field.GetAs<bool>();
-                return true;
-            case "m_RenderingLayerMask":
-                r.renderingLayerMask = (uint)field.GetAs<int>();
-                return true;
-            case "m_RendererPriority":
-                r.rendererPriority = field.GetAs<int>();
-                return true;
-            case "m_LightProbeUsage":
-                r.lightProbeUsage = (LightProbeUsage)field.GetAs<int>();
-                return true;
-            case "m_ProbeAnchor":
-                r.probeAnchor = field.GetAsObject() as Transform;
-                return true;
-            case "m_DynamicOccludee":
-                r.allowOcclusionWhenDynamic = field.GetAs<bool>();
-                return true;
-            case "m_StaticShadowCaster":
-                r.staticShadowCaster = field.GetAs<bool>();
-                return true;
-            case "m_MotionVectors":
-                r.motionVectorGenerationMode = (MotionVectorGenerationMode)field.GetAs<int>();
-                return true;
-            case "m_ReflectionProbeUsage":
-                r.reflectionProbeUsage = (ReflectionProbeUsage)field.GetAs<int>();
-                return true;
-            case "m_LightProbeVolumeOverride":
-                r.lightProbeProxyVolumeOverride = field.GetAsObject() as GameObject;
-                return true;
-        }
-
-        // Handle materials dynamically
+        // Small use of reflection to support material array elements, but trying to keep it speedy.
         if (field.path.StartsWith("m_Materials.Array.data["))
         {
             int start = field.path.IndexOf('[') + 1;
@@ -108,16 +66,14 @@ public class RendererApplier : IComponentApplier
             int index = int.Parse(field.path.Substring(start, end - start));
 
             Material[] mats = r.sharedMaterials;
-
             if (index >= mats.Length) Array.Resize(ref mats, index + 1);
-
             mats[index] = field.GetAsObject() as Material;
-
             r.sharedMaterials = mats;
-
             return true;
         }
 
-        return false;
+        if (!supportedFields.ContainsKey(field.path)) return false;
+        supportedFields[field.path]((Renderer)target, field);
+        return true;
     }
 }

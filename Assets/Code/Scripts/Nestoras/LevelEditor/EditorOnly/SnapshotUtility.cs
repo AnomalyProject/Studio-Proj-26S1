@@ -68,6 +68,16 @@ public static class SnapshotUtility
                 SerializedValueType.Color => GetAs<Color>(),
                 SerializedValueType.Enum => Enum.ToObject(targetType, GetAs<int>()),
                 SerializedValueType.ObjectReference => GetAs<string>(),
+                SerializedValueType.AnimationCurve => GetAs<AnimationCurve>(),
+                SerializedValueType.Gradient => GetAs<Gradient>(),
+                SerializedValueType.Rect => GetAs<Rect>(),
+                SerializedValueType.Bounds => GetAs<Bounds>(),
+                SerializedValueType.Vector2Int => GetAs<Vector2Int>(),
+                SerializedValueType.Vector3Int => GetAs<Vector3Int>(),
+                SerializedValueType.RectInt => GetAs<RectInt>(),
+                SerializedValueType.BoundsInt => GetAs<BoundsInt>(),
+                SerializedValueType.LayerMask => GetAs<int>(),
+                SerializedValueType.Character => GetAs<string>(),
                 _ => null
             };
         }
@@ -103,7 +113,17 @@ public static class SnapshotUtility
         Quaternion,
         Color,
         ObjectReference,
-        Enum
+        Enum,
+        AnimationCurve,
+        Gradient,
+        Rect,
+        Bounds,
+        Vector2Int,
+        Vector3Int,
+        RectInt,
+        BoundsInt,
+        LayerMask,
+        Character,
     }
     #endregion
 
@@ -111,10 +131,16 @@ public static class SnapshotUtility
     private static HashSet<SerializedPropertyType> compositeTypes = new HashSet<SerializedPropertyType>()
     {
         SerializedPropertyType.Vector2,
+        SerializedPropertyType.Vector2Int,
         SerializedPropertyType.Vector3,
+        SerializedPropertyType.Vector3Int,
         SerializedPropertyType.Vector4,
         SerializedPropertyType.Quaternion,
-        SerializedPropertyType.Color
+        SerializedPropertyType.Color,
+        SerializedPropertyType.Rect,
+        SerializedPropertyType.RectInt,
+        SerializedPropertyType.Bounds,
+        SerializedPropertyType.BoundsInt,
     };
 
     // Captures a full hierarchy snapshot
@@ -191,7 +217,8 @@ public static class SnapshotUtility
                     // Warn if field isn't serializable
                     if (fields.Last().type == SerializedValueType.None)
                     {
-                        Debug.LogWarning($"Skipping unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
+                        // Arrays / lists are handled either by reflections or by custom appliers. If it has visible children in the inspector, it's probably just a foldout menu.
+                        if (!iterator.isArray && !iterator.hasVisibleChildren) Debug.LogWarning($"Skipping unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
                         fields.RemoveAt(fields.Count - 1);
                     }
                     // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
@@ -261,13 +288,59 @@ public static class SnapshotUtility
                 result.type = SerializedValueType.Color;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<Color>() { value = property.colorValue });
                 break;
+            case SerializedPropertyType.Enum:
+                result.type = SerializedValueType.Enum;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.enumValueIndex });
+                break;
+            case SerializedPropertyType.AnimationCurve:
+                result.type = SerializedValueType.AnimationCurve;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<AnimationCurve>() { value = property.animationCurveValue });
+                break;
+            case SerializedPropertyType.Gradient:
+                result.type = SerializedValueType.Gradient;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Gradient>() { value = property.gradientValue });
+                break;
+            case SerializedPropertyType.Rect:
+                result.type = SerializedValueType.Rect;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Rect>() { value = property.rectValue });
+                break;
+            case SerializedPropertyType.Bounds:
+                result.type = SerializedValueType.Bounds;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Bounds>() { value = property.boundsValue });
+                break;
+            case SerializedPropertyType.LayerMask:
+                result.type = SerializedValueType.LayerMask;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.intValue });
+                break;
+            case SerializedPropertyType.Character:
+                result.type = SerializedValueType.Character;
+                // character often exposed as a single-char string in SerializedProperty
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = property.stringValue });
+                break;
+            case SerializedPropertyType.Vector2Int:
+                result.type = SerializedValueType.Vector2Int;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Vector2Int>() { value = property.vector2IntValue });
+                break;
+            case SerializedPropertyType.Vector3Int:
+                result.type = SerializedValueType.Vector3Int;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<Vector3Int>() { value = property.vector3IntValue });
+                break;
+            case SerializedPropertyType.RectInt:
+                result.type = SerializedValueType.RectInt;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<RectInt>() { value = property.rectIntValue });
+                break;
+            case SerializedPropertyType.BoundsInt:
+                result.type = SerializedValueType.BoundsInt;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<BoundsInt>() { value = property.boundsIntValue });
+                break;
             case SerializedPropertyType.ObjectReference:
                 result.type = SerializedValueType.ObjectReference;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
                 break;
-            case SerializedPropertyType.Enum:
-                result.type = SerializedValueType.Enum;
-                result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.enumValueIndex });
+            case SerializedPropertyType.ExposedReference:
+                // Treat exposed references like object references by storing referenced object's guid
+                result.type = SerializedValueType.ObjectReference;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
                 break;
             default:
                 result.type = SerializedValueType.None;

@@ -13,26 +13,16 @@ using UnityEngine;
 public class MeshFilterApplier : IComponentApplier
 {
     public Type TargetType => typeof(MeshFilter);
-    public HashSet<string> supportedFields { get; } = new HashSet<string>()
+    private Dictionary<string, Action<MeshFilter, FieldSnapshot>> supportedFields { get; } = new Dictionary<string, Action<MeshFilter, FieldSnapshot>>()
     {
-        "m_Mesh",
-        "m_SharedMesh",
+        { "m_Mesh", (f, field) => f.sharedMesh = field.GetAsObject() as Mesh },
+        { "m_SharedMesh", (f, field) => f.sharedMesh = field.GetAsObject() as Mesh },
     };
-
-    public bool Supports(string path) => supportedFields.Contains(path);
-
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
-        MeshFilter f = (MeshFilter)target;
-
-        switch (field.path)
-        {
-            case "m_Mesh":
-            case "m_SharedMesh":
-                f.sharedMesh = field.GetAsObject() as Mesh;
-                return true;
-        }
-
-        return false;
+        if (!supportedFields.ContainsKey(field.path)) return false;
+        supportedFields[field.path]((MeshFilter)target, field);
+        return true;
     }
 }
