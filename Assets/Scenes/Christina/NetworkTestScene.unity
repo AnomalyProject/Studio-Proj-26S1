@@ -1320,6 +1320,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2dd36ab1beb4b7438d647fa0b07e6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnomalyManager
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   mapCollection:
   - {fileID: 2994484015021799058, guid: 98a291562684ab4489fa4c12098862ed, type: 3}
   anomalyChance: 0.5
@@ -1596,17 +1605,23 @@ PrefabInstance:
       propertyPath: _transport
       value: 
       objectReference: {fileID: 9067903857306638136}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 9135404317110920904, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+    - {fileID: 5069873757964631812, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+    - {fileID: 4048040728350394396, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9067903857306638139}
   m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
 --- !u!114 &9067903857306638136 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
   m_PrefabInstance: {fileID: 9067903857306638135}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 9067903857306638138}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ccc454d6a19ac140b15f8d619d0fb5e, type: 3}
@@ -1617,6 +1632,23 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
   m_PrefabInstance: {fileID: 9067903857306638135}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &9067903857306638138 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+  m_PrefabInstance: {fileID: 9067903857306638135}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9067903857306638139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9067903857306638138}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfcb920b5e3b7924ea4f2b8a047e2edf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.LocalTransport
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
