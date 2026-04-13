@@ -10,7 +10,6 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     [Header("Settings")] Collider col;
 
     // Checks
-    [SerializeField] bool noNetworkTesting = false;
     [SerializeField] private SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
     private SyncVar<bool> bIsAvailable = new SyncVar<bool>(ownerAuth: false);
     private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
@@ -32,7 +31,6 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
 
         col = GetComponent<Collider>();
         col.isTrigger = true;
-        bIsAvailable.value = true;
     }
     public bool CanInteract(PlayerBody interactor) => HasEnoughPlayers() && bIsAvailable.value;
 
@@ -88,19 +86,10 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     /// </summary>
     private bool HasEnoughPlayers()
     {
-        if (noNetworkTesting)
-        {
-            Debug.Log($"[FAKE MODE] Players in Area: {playersInArea.Count}/1. Can Interact: {CanInteract(null)}");
-           
-
-            Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");
-            return playersInArea.Count >= 1; ;
-        }
-
         Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
         return playersInArea.Count >= NetworkManager.main.playerCount;
     }
-#endregion
+    #endregion
 
     #region Interactable Collider
     /// <summary>
