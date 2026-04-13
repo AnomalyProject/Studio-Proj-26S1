@@ -124,30 +124,7 @@ public class Inventory
     /// <returns>true if the entire quantity was added to the inventory. Otherwise, false.</returns>
     public bool TryAddExact(ItemData itemData, int quantity)
     {
-        if (IsInventoryFull() || quantity <= 0 || itemData == null) return false;
-
-        int totalRemaining = quantity;
-
-        List<int> sameItemSlots = FindSlotsWithItem(itemData);
-
-        for (int i = 0; i < sameItemSlots.Count && totalRemaining > 0; i++)
-        {
-            int index = sameItemSlots[i];
-            if (slots[index].IsFull()) continue;
-
-            int used = Mathf.Min(totalRemaining, slots[index].GetRemainingCapacity());
-            totalRemaining -= used;
-        }
-
-        if (totalRemaining <= 0)
-        {
-            Add(itemData, quantity);
-            return true;
-        }
-
-        int stacksNeeded = Mathf.CeilToInt((float)totalRemaining / itemData.MaxStackSize);
-
-        if (stacksNeeded > EmptySlots) return false;
+        if (!CanFit(itemData, quantity)) return false;
 
         Add(itemData, quantity);
         return true;
@@ -558,5 +535,32 @@ public class Inventory
     /// <param name="data">The item to locate in the collection. Cannot be null.</param>
     /// <returns>true if a slot containing the specified item with a quantity greater than zero is found; otherwise, false.</returns>
     public bool Contains(ItemData data) => slots.Any(s => s != null && s.ItemData == data && s.Quantity > 0);
+
+    /// <summary>
+    /// Determines whether the specified quantity of the given item can fit into the inventory, considering current
+    /// stack sizes and available slots.
+    /// </summary>
+    /// <remarks>This method accounts for partially filled stacks of the same item and available empty slots.
+    /// It does not modify the inventory.</remarks>
+    /// <param name="data">The item to check for available space in the inventory. Cannot be null.</param>
+    /// <param name="quantity">The number of items to check for available space. Must be greater than zero.</param>
+    /// <returns>true if the entire quantity of the item can fit into the inventory; otherwise, false.</returns>
+    public bool CanFit(ItemData data, int quantity)
+    {
+        if (quantity < 0 || data == null) return false;
+
+        int totalRemaining = quantity;
+        List<int> sameItemSlots = FindSlotsWithItem(data);
+        for (int i = 0; i < sameItemSlots.Count && totalRemaining > 0; i++)
+        {
+            int index = sameItemSlots[i];
+            if (slots[index].IsFull()) continue;
+            int used = Mathf.Min(totalRemaining, slots[index].GetRemainingCapacity());
+            totalRemaining -= used;
+        }
+        if (totalRemaining <= 0) return true;
+        int stacksNeeded = Mathf.CeilToInt((float)totalRemaining / data.MaxStackSize);
+        return stacksNeeded <= EmptySlots;
+    }
     #endregion
 }
