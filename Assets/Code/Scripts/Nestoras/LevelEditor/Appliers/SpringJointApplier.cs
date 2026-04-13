@@ -21,9 +21,8 @@ public class SpringJointApplier : IComponentApplier
         { "m_MaxDistance", (sj, field) => sj.maxDistance = field.GetAs<float>() },
         { "m_Tolerance", (sj, field) => sj.tolerance = field.GetAs<float>() },
     };
-
     public bool Supports(string path) => supportedFields.ContainsKey(path);
-
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (!supportedFields.ContainsKey(field.path)) return false;

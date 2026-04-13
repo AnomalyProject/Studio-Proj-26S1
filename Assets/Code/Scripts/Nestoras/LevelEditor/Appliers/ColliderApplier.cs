@@ -23,11 +23,10 @@ public class ColliderApplier : IComponentApplier
         { "m_ExcludeLayers", (c, field) => c.excludeLayers = field.GetAs<int>() },
         { "m_ProvidesContacts", (c, field) => c.providesContacts = field.GetAs<bool>() },
     };
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_Enabled" };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path) ;
+    public bool Ignores(string path) => path == "m_Enabled";
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Collider)target, field);
         return true;

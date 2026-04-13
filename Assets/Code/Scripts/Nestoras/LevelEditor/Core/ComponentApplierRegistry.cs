@@ -66,14 +66,20 @@ public static class ComponentApplierRegistry
         if (applier != null) return applier.Supports(fieldPath);
         return false;
     }
+    public static bool IsFieldIgnored(Type componentType, string fieldPath)
+    {
+        IComponentApplier applier = GetRelevantApplier(componentType, fieldPath, true);
+        if (applier != null) return applier.Ignores(fieldPath);
+        return false;
+    }
 
-    private static IComponentApplier GetRelevantApplier(Type componentType, string fieldPath)
+    private static IComponentApplier GetRelevantApplier(Type componentType, string fieldPath, bool ignoring = false)
     {
         List<IComponentApplier> relevantAppliers = new List<IComponentApplier>();
         relevantAppliers = appliers.Values.Where(a => a.TargetType.IsAssignableFrom(componentType)).OrderByDescending(a => GetInheritanceDepth(a.TargetType)).ToList();
 
         // Find the applier that can deal with the given path and use it
-        foreach (IComponentApplier applier in relevantAppliers) if (applier.Supports(fieldPath)) return applier;
+        foreach (IComponentApplier applier in relevantAppliers) if (ignoring ? applier.Ignores(fieldPath) : applier.Supports(fieldPath)) return applier;
         return null;
     }
     private static int GetInheritanceDepth(Type type)

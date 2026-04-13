@@ -50,11 +50,10 @@ public class CameraApplier : IComponentApplier
         { "m_StereoConvergence", (c, field) => c.stereoConvergence = field.GetAs<float>() },
         { "m_StereoSeparation", (c, field) => c.stereoSeparation = field.GetAs<float>() },
     };
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_FOVAxisMode" };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => path == "m_FOVAxisMode";
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Camera)target, field);
         return true;

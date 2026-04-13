@@ -19,6 +19,7 @@ public class MeshColliderApplier : IComponentApplier
         { "m_Convex", (c, field) => c.convex = field.GetAs<bool>() },
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (!supportedFields.ContainsKey(field.path)) return false;

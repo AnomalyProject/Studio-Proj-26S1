@@ -27,10 +27,10 @@ public class CanvasApplier : IComponentApplier
         { "m_UpdateRectTransformForStandalone", (c, field) => c.updateRectTransformForStandalone = (StandaloneRenderResize)field.GetAs<int>() },
     };
     private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_ReceivesEvents" };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Canvas)target, field);
         return true;

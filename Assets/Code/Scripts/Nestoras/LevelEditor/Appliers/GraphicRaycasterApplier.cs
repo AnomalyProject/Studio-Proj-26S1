@@ -14,13 +14,11 @@ public class GraphicRaycasterApplier : IComponentApplier
 {
     public Type TargetType => typeof(GraphicRaycaster);
     public bool Supports(string path) => path == "m_BlockingMask";
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (field.path == "m_BlockingMask")
-        { 
-            ((GraphicRaycaster)target).blockingObjects = (GraphicRaycaster.BlockingObjects)field.GetAs<int>();
-            return true; 
-        }
-        return false;
+        if (field.path != "m_BlockingMask") return false;
+        ((GraphicRaycaster)target).blockingObjects = (GraphicRaycaster.BlockingObjects)field.GetAs<int>();
+        return true;
     }
 }

@@ -11,5 +11,6 @@ public interface IComponentApplier
 {
     public Type TargetType { get; }
     public bool Supports(string path);
+    public bool Ignores(string path);
     public bool Apply(Component target, FieldSnapshot field);
 }

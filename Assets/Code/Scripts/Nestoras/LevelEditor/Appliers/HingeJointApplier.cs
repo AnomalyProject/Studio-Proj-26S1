@@ -32,11 +32,10 @@ public class HingeJointApplier : IComponentApplier
         { "m_Limits.bounceMinVelocity", (hj, field) => { JointLimits limits = hj.limits; limits.bounceMinVelocity = field.GetAs<float>(); hj.limits = limits; } },
         { "m_Limits.contactDistance", (hj, field) => { JointLimits limits = hj.limits; limits.contactDistance = field.GetAs<float>(); hj.limits = limits; } },
     };
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_ExtendedLimits" };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => path == "m_ExtendedLimits";
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((HingeJoint)target, field);
         return true;

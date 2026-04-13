@@ -19,6 +19,7 @@ public class BoxColliderApplier : IComponentApplier
         { "m_Size", (c, field) => c.size = field.GetAs<Vector3>() },
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (!supportedFields.ContainsKey(field.path)) return false;

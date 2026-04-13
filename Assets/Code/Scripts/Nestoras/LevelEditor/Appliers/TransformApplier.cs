@@ -19,11 +19,10 @@ public class TransformApplier : IComponentApplier
         { "m_LocalRotation", (t, field) => t.localRotation = field.GetAs<Quaternion>() },
         { "m_LocalScale", (t, field) => t.localScale = field.GetAs<Vector3>() },
     };
-    private HashSet<string> ignoredFields { get; } = new HashSet<string>() { "m_ConstrainProportionsScale" };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => path == "m_ConstrainProportionsScale";
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Transform)target, field);
         return true;

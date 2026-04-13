@@ -202,6 +202,9 @@ public static class SnapshotUtility
             {
                 if (iterator.name == "m_Script") continue;
 
+                // Skip ignored fields based on registry
+                if (ComponentApplierRegistry.IsFieldIgnored(component.GetType(), iterator.propertyPath)) continue;
+
                 // Skip x,y,z fields of composite types like Vector3, since we already store the entire Vector3
                 if (previous != null && iterator.depth > previous.depth && compositeTypes.Contains(previous.propertyType)) continue;
                 previous = iterator.Copy();
@@ -211,7 +214,6 @@ public static class SnapshotUtility
 
                 fields.Add(CaptureField(iterator));
 
-                
                 if (!ComponentApplierRegistry.IsFieldSupported(component.GetType(), iterator.propertyPath))
                 {
                     // Warn if field isn't serializable
@@ -222,7 +224,7 @@ public static class SnapshotUtility
                         fields.RemoveAt(fields.Count - 1);
                     }
                     // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
-                    else if (component is not MonoBehaviour) Debug.LogWarning($"Captured field without registered applier: {component.GetType().Name}.{iterator.propertyPath}");
+                    else if (component is not MonoBehaviour) ModificationEditorWindow.capturedNativeFieldWithoutApplier = true;
                 }
             }
 
@@ -241,11 +243,7 @@ public static class SnapshotUtility
     // Captures all serialized properties on a Component
     private static FieldSnapshot CaptureField(SerializedProperty property)
     {
-        FieldSnapshot result = new FieldSnapshot()
-        {
-            path = property.propertyPath,
-        };
-
+        FieldSnapshot result = new FieldSnapshot() { path = property.propertyPath};
         switch (property.propertyType)
         {
             case SerializedPropertyType.Boolean:
@@ -288,6 +286,15 @@ public static class SnapshotUtility
                 result.type = SerializedValueType.Color;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<Color>() { value = property.colorValue });
                 break;
+            case SerializedPropertyType.ObjectReference:
+                result.type = SerializedValueType.ObjectReference;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
+                break;
+            case SerializedPropertyType.ExposedReference:
+                // Treat exposed references like object references by storing referenced object's guid
+                result.type = SerializedValueType.ObjectReference;
+                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
+                break;
             case SerializedPropertyType.Enum:
                 result.type = SerializedValueType.Enum;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<int>() { value = property.enumValueIndex });
@@ -314,7 +321,7 @@ public static class SnapshotUtility
                 break;
             case SerializedPropertyType.Character:
                 result.type = SerializedValueType.Character;
-                // character often exposed as a single-char string in SerializedProperty
+                // Character often exposed as a single-char string in SerializedProperty
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = property.stringValue });
                 break;
             case SerializedPropertyType.Vector2Int:
@@ -333,20 +340,10 @@ public static class SnapshotUtility
                 result.type = SerializedValueType.BoundsInt;
                 result.valueJson = JsonUtility.ToJson(new ValueWrapper<BoundsInt>() { value = property.boundsIntValue });
                 break;
-            case SerializedPropertyType.ObjectReference:
-                result.type = SerializedValueType.ObjectReference;
-                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
-                break;
-            case SerializedPropertyType.ExposedReference:
-                // Treat exposed references like object references by storing referenced object's guid
-                result.type = SerializedValueType.ObjectReference;
-                result.valueJson = JsonUtility.ToJson(new ValueWrapper<string>() { value = ObjectGuidRegistryUtility.GetOrCreateGuid(property.objectReferenceValue) });
-                break;
             default:
                 result.type = SerializedValueType.None;
                 break;
         };
-
         return result;
     }
 
@@ -375,10 +372,14 @@ public static class SnapshotUtility
             case SerializedPropertyType.Boolean:
                 return property.boolValue == default;
             case SerializedPropertyType.Integer:
+            case SerializedPropertyType.LayerMask:
                 return property.intValue == default;
+            case SerializedPropertyType.ArraySize:
+                return property.arraySize == default;
             case SerializedPropertyType.Float:
                 return property.floatValue == default;
             case SerializedPropertyType.String:
+            case SerializedPropertyType.Character:
                 return property.stringValue == default;
             case SerializedPropertyType.Vector2:
                 return property.vector2Value == default;
@@ -394,6 +395,24 @@ public static class SnapshotUtility
                 return property.objectReferenceValue == default;
             case SerializedPropertyType.Enum:
                 return property.enumValueIndex == default;
+            case SerializedPropertyType.AnimationCurve:
+                return property.animationCurveValue == default;
+            case SerializedPropertyType.Gradient:
+                return property.gradientValue == default;
+            case SerializedPropertyType.Rect:
+                return property.rectValue == default;
+            case SerializedPropertyType.Bounds:
+                return property.boundsValue == default;
+            case SerializedPropertyType.Vector2Int:
+                return property.vector2IntValue == default;
+            case SerializedPropertyType.Vector3Int:
+                return property.vector3IntValue == default;
+            case SerializedPropertyType.RectInt:
+                return property.rectIntValue == default;
+            case SerializedPropertyType.BoundsInt:
+                return property.boundsIntValue == default;
+            case SerializedPropertyType.ExposedReference:
+                return property.exposedReferenceValue == default;
             default: return false;
         };
     }
@@ -408,7 +427,7 @@ public static class SnapshotUtility
     {
         public List<GameObjectSnapshot> added = new List<GameObjectSnapshot>();
         public List<GameObjectSnapshot> removed = new List<GameObjectSnapshot>();
-        public List<(GameObjectSnapshot before, GameObjectSnapshot after)> changed = new List<(GameObjectSnapshot before, GameObjectSnapshot after)>();
+        public List<(GameObjectSnapshot before, GameObjectSnapshot after)> modified = new List<(GameObjectSnapshot before, GameObjectSnapshot after)>();
     }
     public class GameObjectDiff // Result container for GameObject-level differences
     {
@@ -418,13 +437,13 @@ public static class SnapshotUtility
         public (bool before, bool after) active;
         public (string before, string after) tag;
         public (int before, int after) layer;
-        public List<ComponentSnapshot> added = new List<ComponentSnapshot>();
-        public List<ComponentSnapshot> removed = new List<ComponentSnapshot>();
-        public List<(ComponentSnapshot before, ComponentSnapshot after)> modified = new List<(ComponentSnapshot before, ComponentSnapshot after)>();
+        public List<ComponentSnapshot> addedComponents = new List<ComponentSnapshot>();
+        public List<ComponentSnapshot> removedComponents = new List<ComponentSnapshot>();
+        public List<(ComponentSnapshot before, ComponentSnapshot after)> modifiedComponents = new List<(ComponentSnapshot before, ComponentSnapshot after)>();
     }
     public class ComponentDiff // Result container for Component-level differences
     {
-        public List<(FieldSnapshot before, FieldSnapshot after)> modified = new List<(FieldSnapshot before, FieldSnapshot after)>();
+        public List<(FieldSnapshot before, FieldSnapshot after)> modifiedFields = new List<(FieldSnapshot before, FieldSnapshot after)>();
     }
     #endregion
 
@@ -451,9 +470,11 @@ public static class SnapshotUtility
 
             GameObjectSnapshot before = go.Value;
             GameObjectSnapshot after = modMap[go.Key];
-            if (GameObjectHasChanged(before, after)) result.changed.Add((before, after));
+            if (GameObjectHasChanged(before, after)) result.modified.Add((before, after));
         }
 
+        // Return null if no changes detected
+        if (result.added.Count == 0 && result.removed.Count == 0 && result.modified.Count == 0) return null;
         return result;
     }
     private static bool GameObjectHasChanged(GameObjectSnapshot a, GameObjectSnapshot b)
@@ -463,7 +484,7 @@ public static class SnapshotUtility
 
         // Delegate deeper comparison to component diff
         GameObjectDiff diff = GameObjectDiffByComponents(a.components, b.components);
-        return diff.added.Count > 0 || diff.removed.Count > 0 || diff.modified.Count > 0;
+        return diff.addedComponents.Count > 0 || diff.removedComponents.Count > 0 || diff.modifiedComponents.Count > 0;
     }
 
     // Converts GameObjectSnapshot list into a dictionary keyed by GUID
@@ -485,7 +506,7 @@ public static class SnapshotUtility
         Dictionary<string, ComponentSnapshot> mapB = ToComponentMap(b);
 
         // Detect added components
-        foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB) if (!mapA.ContainsKey(comp.Key)) result.added.Add(comp.Value);
+        foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB) if (!mapA.ContainsKey(comp.Key)) result.addedComponents.Add(comp.Value);
 
         // Detect modified components
         foreach (KeyValuePair<string, ComponentSnapshot> comp in mapA)
@@ -493,13 +514,13 @@ public static class SnapshotUtility
             // Track removed components
             if (!mapB.ContainsKey(comp.Key))
             {
-                result.removed.Add(comp.Value);
+                result.removedComponents.Add(comp.Value);
                 continue;
             }
 
             ComponentSnapshot compA = comp.Value;
             ComponentSnapshot compB = mapB[comp.Key];
-            if (HasComponentChanged(compA, compB)) result.modified.Add((compA, compB));
+            if (HasComponentChanged(compA, compB)) result.modifiedComponents.Add((compA, compB));
         }
 
         return result;
@@ -507,7 +528,7 @@ public static class SnapshotUtility
     private static bool HasComponentChanged(ComponentSnapshot a, ComponentSnapshot b)
     {
         if (a.enabled != b.enabled) return true;
-        return ComponentDiffByFields(a.fields, b.fields).modified.Count > 0;
+        return ComponentDiffByFields(a.fields, b.fields).modifiedFields.Count > 0;
     }
 
     // Converts ComponentSnapshot list into a dictionary keyed by component type and ordinal, seperated by '#'
@@ -537,7 +558,7 @@ public static class SnapshotUtility
         {
             FieldSnapshot fieldA = field.Value;
             FieldSnapshot fieldB = mapB[field.Key];
-            if (!fieldA.Equals(fieldB)) result.modified.Add((fieldA, fieldB));
+            if (!fieldA.Equals(fieldB)) result.modifiedFields.Add((fieldA, fieldB));
         }
 
         return result;
@@ -604,7 +625,7 @@ public static class SnapshotUtility
         levelMod.removedGameObjects = diff.removed;
 
         // Modified
-        foreach ((GameObjectSnapshot objBefore, GameObjectSnapshot objAfter) in diff.changed)
+        foreach ((GameObjectSnapshot objBefore, GameObjectSnapshot objAfter) in diff.modified)
         {
             GameObjectModification goMod = new GameObjectModification()
             {
@@ -634,11 +655,11 @@ public static class SnapshotUtility
             GameObjectDiff componentDifferences = GameObjectDiffByComponents(objBefore.components, objAfter.components);
 
             // Keep entire snapshots for reconstruction
-            goMod.addedComponents = componentDifferences.added;
-            goMod.removedComponents = componentDifferences.removed;
+            goMod.addedComponents = componentDifferences.addedComponents;
+            goMod.removedComponents = componentDifferences.removedComponents;
 
             // Modified
-            foreach((ComponentSnapshot compBefore, ComponentSnapshot compAfter) in componentDifferences.modified)
+            foreach((ComponentSnapshot compBefore, ComponentSnapshot compAfter) in componentDifferences.modifiedComponents)
             {
                 ComponentModification compMod = new ComponentModification()
                 {
@@ -653,7 +674,7 @@ public static class SnapshotUtility
 
                 ComponentDiff fieldDifferences = ComponentDiffByFields(compBefore.fields, compAfter.fields);
 
-                foreach ((FieldSnapshot fieldBefore, FieldSnapshot fieldAfter) in fieldDifferences.modified)
+                foreach ((FieldSnapshot fieldBefore, FieldSnapshot fieldAfter) in fieldDifferences.modifiedFields)
                 {
                     if (!fieldBefore.Equals(fieldAfter))
                     {

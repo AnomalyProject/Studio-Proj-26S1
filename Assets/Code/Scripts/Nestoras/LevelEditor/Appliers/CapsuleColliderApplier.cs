@@ -21,6 +21,7 @@ public class CapsuleColliderApplier : IComponentApplier
         { "m_Direction", (c, field) => c.direction = field.GetAs<int>() },
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (!supportedFields.ContainsKey(field.path)) return false;

@@ -59,10 +59,10 @@ public class LightApplier : IComponentApplier
         "m_DrawHalo",
         "m_ShadowRenderingLayersMask",
     };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path) || path.StartsWith("m_Shadows.m_CullingMatrixOverride") || path.StartsWith("m_BakingOutput.");
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => ignoredFields.Contains(path) || path.StartsWith("m_Shadows.m_CullingMatrixOverride") || path.StartsWith("m_BakingOutput.");
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path) || field.path.StartsWith("m_Shadows.m_CullingMatrixOverride") || field.path.StartsWith("m_BakingOutput.")) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Light)target, field);
         return true;

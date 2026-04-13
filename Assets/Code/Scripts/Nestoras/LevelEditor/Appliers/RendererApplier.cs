@@ -52,13 +52,12 @@ public class RendererApplier : IComponentApplier
         "m_Materials.Array.size",
         "m_MaskInteraction",
     };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path) || path.StartsWith("m_Materials.Array.data[");
+    public bool Supports(string path) => supportedFields.ContainsKey(path) || path.StartsWith("m_Materials.Array.data[");
+    public bool Ignores(string path) => ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
-        Renderer r = (Renderer)target;
-
         // Small use of reflection to support material array elements, but trying to keep it speedy.
+        Renderer r = (Renderer)target;
         if (field.path.StartsWith("m_Materials.Array.data["))
         {
             int start = field.path.IndexOf('[') + 1;

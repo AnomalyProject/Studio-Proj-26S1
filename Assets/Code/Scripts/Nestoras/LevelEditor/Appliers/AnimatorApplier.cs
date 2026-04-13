@@ -32,12 +32,12 @@ public class AnimatorApplier : IComponentApplier
         "m_HasTransformHierarchy",
         "m_AllowConstantClipSamplingOptimization",
     };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
-        Animator a = (Animator)target;
-        supportedFields[field.path](a, field);
-        return false;
+        if (!supportedFields.ContainsKey(field.path)) return false;
+        supportedFields[field.path]((Animator)target, field);
+        return true;
     }
 }

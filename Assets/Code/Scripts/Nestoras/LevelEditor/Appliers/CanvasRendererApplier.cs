@@ -13,13 +13,11 @@ public class CanvasRendererApplier : IComponentApplier
 {
     public Type TargetType => typeof(CanvasRenderer);
     public bool Supports(string path) => path == "m_CullTransparentMesh";
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (field.path == "m_CullTransparentMesh")
-        {
-            ((CanvasRenderer)target).cullTransparentMesh = field.GetAs<bool>();
-            return true;
-        }
-        return false;
+        if (field.path != "m_CullTransparentMesh") return false;
+        ((CanvasRenderer)target).cullTransparentMesh = field.GetAs<bool>();
+        return true;
     }
 }

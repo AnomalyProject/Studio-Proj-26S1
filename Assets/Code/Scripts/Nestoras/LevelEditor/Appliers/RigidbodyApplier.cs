@@ -37,10 +37,10 @@ public class RigidbodyApplier : IComponentApplier
         "m_ImplicitCom",
         "m_ImplicitTensor",
     };
-    public bool Supports(string path) => supportedFields.ContainsKey(path) || ignoredFields.Contains(path);
+    public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => ignoredFields.Contains(path);
     public bool Apply(Component target, FieldSnapshot field)
     {
-        if (ignoredFields.Contains(field.path)) return true;
         if (!supportedFields.ContainsKey(field.path)) return false;
         supportedFields[field.path]((Rigidbody)target, field);
         return true;

@@ -24,6 +24,7 @@ public class CharacterControllerApplier : IComponentApplier
         { "m_Center", (c, field) => c.center = field.GetAs<Vector3>() },
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
+    public bool Ignores(string path) => false;
     public bool Apply(Component target, FieldSnapshot field)
     {
         if (!supportedFields.ContainsKey(field.path)) return false;
