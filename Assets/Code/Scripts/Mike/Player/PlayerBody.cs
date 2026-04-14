@@ -1,0 +1,68 @@
+using PurrNet;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class PlayerBody : NetworkBehaviour
+{
+    [Header("Body Components")]
+    [SerializeField] private PlayerInventory playerInventory;
+    [SerializeField] private FPSController movement;
+    [SerializeField] private FPSCameraController cameraController;
+    [SerializeField] private PlayerInteraction interaction;
+    [SerializeField] private PlayerInput playerInput;
+    [SerializeField] private GameObject bodyVisuals;
+    
+    [Header("Local Player")]
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private AudioListener playerAudioListener;
+    [SerializeField] private CameraLean playerCameraLean;
+    [SerializeField] private GameObject nameplateVisuals;
+
+    public Inventory Inventory => playerInventory.Inventory;
+    public FPSController Movement => movement;
+    public FPSCameraController CameraController => cameraController;
+    public PlayerInteraction Interaction => interaction;
+
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+
+        if (asServer) return;
+        if (!TryApplyOwnership(isOwner)) return;
+    }
+
+    protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
+    {
+        base.OnOwnerChanged(oldOwner, newOwner, asServer);
+
+        if (asServer) return;
+
+        bool local = newOwner.HasValue && newOwner == localPlayer;
+        if (!TryApplyOwnership(local)) return;
+    }
+
+    private bool TryApplyOwnership(bool local)
+    {
+        Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
+        
+        if(local) playerInput.ActivateInput();
+        else playerInput.DeactivateInput();
+        
+        playerCamera.enabled = local;
+        playerAudioListener.enabled = local;
+        cameraController.enabled = local;
+        
+        movement.enabled = local;
+        movement.IsLocalPlayer = local;
+        
+        playerCameraLean.enabled = local;
+        playerCameraLean.IsLocalPlayer = local;
+
+        if (bodyVisuals) bodyVisuals.SetActive(!local);
+        interaction.enabled = local;
+        
+        if(nameplateVisuals) nameplateVisuals.SetActive(!local);
+
+        return local;
+    }
+}

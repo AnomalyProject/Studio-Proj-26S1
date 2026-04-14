@@ -70,7 +70,7 @@ public class GameManager : MonoBehaviour
         IsOnCoolDown = false;
         CancelInvoke(nameof(ResetCooldown));
 
-        anomalyManager.TryPickMap();
+        anomalyManager.PickMap_Server();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
         OnProgressChanged?.Invoke(CurrentProgress);
@@ -174,7 +174,7 @@ public class GameManager : MonoBehaviour
 
         if (CurrentProgress >= requiredCorrectDecisions)
         {
-            anomalyManager.EnableWinRoom();
+            anomalyManager.EnableWinRoom_Server();
             return;
         }
 
@@ -194,7 +194,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void HandleWrongDecision()
     {
-        anomalyManager.EnablePunishmentRoom();
+        anomalyManager.EnablePunishmentRoom_Server();
         LogProgress("Wrong decision — punishment room enabled. Use the exit elevator to resume.");
     }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+[RequireComponent(typeof(PlayerBody))]
 public class PlayerInventory : MonoBehaviour
 {
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
@@ -15,9 +17,11 @@ public class PlayerInventory : MonoBehaviour
     int focusedIndex = 0;
     GameObject activeInstance;
     Dictionary<IReadOnlyItemStack, GameObject> itemInstances = new();
+    PlayerBody playerBody;
 
     void Awake()
     {
+        playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
 
         Inventory.OnSlotsMoved += HandleSlotsMoved;
@@ -129,9 +133,9 @@ public class PlayerInventory : MonoBehaviour
         GameObject itemInstance = itemInstances[stack];
 
         if (itemInstance == null) return false; // Try get item's world instance
-        if (!InteractionSystem<MonoBehaviour>.TryGetInteractable(itemInstance, out var interactable)) return false; // Check if its interactable, could get refactored in the future
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future
         
-        bool success = interactable.TryInteract(this); // Try interact with instance.
+        bool success = interactable.TryInteract(playerBody); // Try interact with instance.
 
         if(success)
         {

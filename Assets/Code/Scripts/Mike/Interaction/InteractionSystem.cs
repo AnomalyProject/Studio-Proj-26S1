@@ -66,7 +66,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hitInfo, maxDistance, layerMask))
         {
-            if(TryGetInteractable(hitInfo.collider.gameObject, out var interactable) 
+            if(InteractionUtils.TryGetInteractable<TInteractor>(hitInfo.collider.gameObject, out var interactable) 
                 && interactable.CanInteract(Interactor))
             {
                 ChangeFocused(interactable);
@@ -113,7 +113,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
-            if(TryGetInteractable(collider.gameObject, out var interactable) && interactable.CanInteract(Interactor))
+            if(InteractionUtils.TryGetInteractable<TInteractor>(collider.gameObject, out var interactable) && interactable.CanInteract(Interactor))
             {
                 Ray validationRay = new Ray(position, collider.transform.position - position);
                 float distance = Vector3.Distance(position, collider.transform.position);
@@ -157,9 +157,15 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         if (_focusedInteractable != null)
             OnFocusedInteractable?.Invoke(_focusedInteractable);
     }
-    public static bool TryGetInteractable(GameObject gameObject, out IInteractable<TInteractor> result)
+
+    #endregion
+
+}
+public static class InteractionUtils
+{
+    public static bool TryGetInteractable<TInteractor>(GameObject fromGameObject, out IInteractable<TInteractor> result) where TInteractor : MonoBehaviour
     {
-        foreach (MonoBehaviour comp in gameObject.GetComponents<MonoBehaviour>())
+        foreach (MonoBehaviour comp in fromGameObject.GetComponents<MonoBehaviour>())
         {
             if (comp is IInteractable<TInteractor> interactable)
             {
@@ -171,7 +177,4 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         result = null;
         return false;
     }
-
-    #endregion
-
 }

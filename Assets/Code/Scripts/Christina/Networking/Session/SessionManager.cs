@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using UnityEngine;
-using Steamworks;
 using PurrNet;
 
 /// <summary>
@@ -133,16 +132,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (playerID.isServer)
         {
             Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
-            Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
             return;
         }
 
         hostPlayerID = playerID;
+        var hostIdentity = LocalIdentity.ResolveHost();
 
-        ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-        string hostName = SteamFriends.GetPersonaName();
-
-        AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
+        AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
@@ -245,10 +241,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
+
+        var hostIdentity = LocalIdentity.ResolveHost();
         
         sessionData = new SessionData
         {
-            HostSteamID =  SteamUser.GetSteamID().m_SteamID,
+            HostSteamID =  hostIdentity.steamID,
             MapName = "Default",
             GameMode = "Default",
             MaxPlayers = 4
