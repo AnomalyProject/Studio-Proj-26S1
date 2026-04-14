@@ -38,15 +38,12 @@ public class LightApplier : IComponentApplier
         { "m_CullingMask", (l, field) => l.cullingMask = field.GetAs<int>() },
         { "m_RenderMode", (l, field) => l.renderMode = (LightRenderMode)field.GetAs<int>() },
         { "m_RenderingLayerMask", (l, field) => l.renderingLayerMask = field.GetAs<int>() },
-        { "m_Lightmapping", (l, field) => l.lightmapBakeType = (LightmapBakeType)field.GetAs<int>() },
         { "m_LightShadowCasterMode", (l, field) => l.lightShadowCasterMode = (LightShadowCasterMode)field.GetAs<int>() },
         { "m_AreaSize", (l, field) => l.areaSize = field.GetAs<Vector2>() },
         { "m_BoundingSphereOverride", (l, field) => l.boundingSphereOverride = field.GetAs<Vector4>() },
         { "m_UseBoundingSphereOverride", (l, field) => l.useBoundingSphereOverride = field.GetAs<bool>() },
         { "m_UseViewFrustumForShadowCasterCull", (l, field) => l.useViewFrustumForShadowCasterCull = field.GetAs<bool>() },
         { "m_ForceVisible", (l, field) => l.forceVisible = field.GetAs<bool>() },
-        { "m_ShadowRadius", (l, field) => l.shadowRadius = field.GetAs<float>() },
-        { "m_ShadowAngle", (l, field) => l.shadowAngle = field.GetAs<float>() },
         { "m_LightUnit", (l, field) => l.lightUnit = (LightUnit)field.GetAs<int>() },
         { "m_LuxAtDistance", (l, field) => l.luxAtDistance = field.GetAs<float>() },
         { "m_EnableSpotReflector", (l, field) => l.enableSpotReflector = field.GetAs<bool>() },
@@ -58,6 +55,10 @@ public class LightApplier : IComponentApplier
     {
         "m_DrawHalo",
         "m_ShadowRenderingLayersMask",
+        "m_Lightmapping",
+        "m_ShadowAngle",
+        "m_ShadowRadius",
+
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
     public bool Ignores(string path) => ignoredFields.Contains(path) || path.StartsWith("m_Shadows.m_CullingMatrixOverride") || path.StartsWith("m_BakingOutput.");
