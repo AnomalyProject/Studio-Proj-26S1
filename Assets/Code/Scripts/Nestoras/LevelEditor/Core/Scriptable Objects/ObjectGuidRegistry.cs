@@ -26,7 +26,7 @@ public class ObjectGuidRegistry : ScriptableObject
         if (lookup == null)
         {
             lookup = new Dictionary<string, Object>();
-            foreach (Entry e in entries) if (!lookup.ContainsKey(e.guid)) lookup[e.guid] = e.obj;
+            foreach (Entry entry in entries) if (!lookup.ContainsKey(entry.guid)) lookup[entry.guid] = entry.obj;
         }
 
         if (guid == null) return null;

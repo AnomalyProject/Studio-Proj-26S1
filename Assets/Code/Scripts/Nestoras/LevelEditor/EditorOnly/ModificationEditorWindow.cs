@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using static SnapshotUtility;
-using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -14,22 +13,26 @@ using UnityEditor;
 /// </summary>
 public class ModificationEditorWindow : EditorWindow
 {
-    private GameObject lastRoot;
     private GameObject root; // Root of the hierarchy being tracked
-    private Transform modificationsRoot; // Parent of modification objects.
+    private GameObject lastRoot; // For detecting changes in the root object and clearing baseline/modifications
+    private Transform modificationsRoot; // Parent of modification objects
 
-    private string modificationName;
-    private string lastSaveLocation;
+    private static List<GameObjectSnapshot> baseline; // Original state of the hierarchy
+    private static LevelModification lastModification; // Difference between the baseline and the latest captured state of the hierarchy
 
-    private static List<GameObjectSnapshot> baseline;
-    private static LevelModification lastModification;
+    private string modificationName; // For modification asset naming and corresponding applier gameobject naming
+    private string lastSaveLocation; // For remembering the last save location when saving multiple modifications
 
+    // For warning
+    private static bool baselineHasNativeFieldWithoutApplier;
+    public static bool capturedNativeFieldWithoutApplier;
+
+    // Diagram UI
     private Vector2 scroll;
     private static GUIStyle rightAlignedLabel;
     private static GUIStyle overflowLabel;
-
-    private static bool baselineHasNativeFieldWithoutApplier;
-    public static bool capturedNativeFieldWithoutApplier;
+    private bool darkerBackground;
+    private static Color dark = new Color(0.1647059f, 0.1647059f, 0.1647059f);
 
     // Foldout state caches
     private Dictionary<string, bool> gameObjectFoldouts = new Dictionary<string, bool>();
@@ -90,18 +93,43 @@ public class ModificationEditorWindow : EditorWindow
             capturedNativeFieldWithoutApplier = false;
             lastModification = Diff(baseline, Capture(root));
         }
+
         EditorGUILayout.EndHorizontal();
 
         // Draw Diagram
+        bool GUIenabled = GUI.enabled;
+        GUI.enabled = true;
         DrawDiff();
 
-        GUI.enabled &= modificationsRoot != null;
         EditorGUILayout.BeginHorizontal();
+
+        // Info button
+        GUIContent infoButtonContent = new GUIContent(EditorGUIUtility.IconContent("d_UnityEditor.InspectorWindow").image, "Info");
+        Rect infoRect = GUILayoutUtility.GetRect(infoButtonContent, EditorStyles.iconButton);
+        infoRect.y += 2.5f; // Align with text field and other buttons
+        if (GUI.Button(infoRect, infoButtonContent, EditorStyles.iconButton)) ModificationEditorInfoPopup.ShowWindow();
+
+        // Clean ObjectGUIDRegistry button
+        GUIContent cleanButtonContent = new GUIContent(ObjectGuidRegistryUtility.registryIcon, "Clean ObjectGUIDRegistry of unused entries");
+        Rect cleanRect = GUILayoutUtility.GetRect(cleanButtonContent, EditorStyles.iconButton);
+        cleanRect.y += 2.5f; // Align with text field and other buttons
+        cleanRect.x -= 1;
+        if (GUI.Button(cleanRect, cleanButtonContent, EditorStyles.iconButton)) ObjectGuidRegistryUtility.CleanRegistry();
+        float iconOffset = EditorGUIUtility.singleLineHeight - 10f;
+        cleanRect.x += iconOffset;
+        cleanRect.y += iconOffset;
+        cleanRect.width /= 1.5f;
+        cleanRect.height /= 1.5f;
+        GUI.DrawTexture(cleanRect, EditorGUIUtility.IconContent("d_TreeEditor.Trash").image);
+
+        // Name of the modification to be saved, defaulting to "Modification n" based on the number of children on the modifications root.
+        GUI.enabled = GUIenabled && modificationsRoot != null;
         modificationName = EditorGUILayout.TextField(string.IsNullOrWhiteSpace(modificationName) ? (modificationsRoot == null ? string.Empty : $"Modification {modificationsRoot.childCount + 1}") : modificationName, GUILayout.ExpandWidth(true));
+
+        // Save asset
         GUI.enabled &= lastModification != null;
         if (GUILayout.Button("Save Asset", GUILayout.Width(80)))
         {
-            // Save file
             string path = EditorUtility.SaveFilePanelInProject("Save Modification", modificationName, "asset", "Choose location", lastSaveLocation ?? "Assets/Scenes");
             if (!string.IsNullOrEmpty(path))
             {
@@ -109,24 +137,21 @@ public class ModificationEditorWindow : EditorWindow
                 AssetDatabase.CreateAsset(lastModification, lastSaveLocation);
                 AssetDatabase.SaveAssets();
 
-                // Create new modification applier
+                // Create new modification applier gameobject and wait a frame before assigning the asset to avoid immediate application.
                 GameObject modificationObject = new GameObject(modificationName);
                 modificationObject.transform.parent = modificationsRoot;
+                modificationObject.transform.localPosition = Vector3.zero;
                 ModificationApplier modificationApplier = modificationObject.AddComponent<ModificationApplier>();
                 EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
             }
         }
-
         EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
         GUI.enabled = true;
     }
 
     private void DrawDiff()
     {
-        Color defaultColor = GUI.contentColor;
-        bool GUIenabled = GUI.enabled;
-        GUI.enabled = true;
-
         EditorGUILayout.Space();
         GUIContent labelContent = lastModification != null && baselineHasNativeFieldWithoutApplier != capturedNativeFieldWithoutApplier ? new GUIContent("Modifications", EditorGUIUtility.IconContent("console.warnicon").image, "Captured fields of native components without custom appliers: setting these values via reflection may fail.") : new GUIContent("Modifications");
         EditorGUILayout.LabelField(labelContent, EditorStyles.boldLabel);
@@ -135,6 +160,8 @@ public class ModificationEditorWindow : EditorWindow
         if (lastModification == null) EditorGUILayout.HelpBox("No modifications captured yet.\nCapture a baseline and modifications to view changes.", MessageType.Info);
         else
         {
+            Color defaultColor = GUI.contentColor;
+
             // Added
             if (lastModification.addedGameObjects.Count > 0)
             {
@@ -194,6 +221,7 @@ public class ModificationEditorWindow : EditorWindow
                     gameObjectFoldouts[goKey] = goOpen;
                     if (goOpen)
                     {
+                        darkerBackground = true;
                         EditorGUI.indentLevel++;
 
                         // Show GameObject-level modifications
@@ -261,13 +289,13 @@ public class ModificationEditorWindow : EditorWindow
             }
         }
         EditorGUILayout.EndScrollView();
-        GUI.enabled = GUIenabled;
     }
 
     #region Helpers
     // Drawers
     private void DrawGameObjectSnapshotDetails(GameObjectSnapshot snapshot, bool showAllFields)
     {
+        darkerBackground = true;
         DrawAlignedProperty("Name", snapshot.name, true);
         DrawAlignedProperty("Parent", GetParentNameFromGuid(snapshot.parentGuid), true);
         DrawAlignedProperty("Static", snapshot.isStatic.ToString(), true);
@@ -313,33 +341,40 @@ public class ModificationEditorWindow : EditorWindow
     private void DrawAlignedModification(string name, string before, string after, bool explicitlySupportedByApplier = false, bool fromMonoBehaviour = false) => DrawAlignedProperty(name, $"{before} -> {after}", explicitlySupportedByApplier, fromMonoBehaviour);
     private void DrawAlignedProperty(string name, string value, bool explicitlySupportedByApplier = false, bool reflectionMayFail = false)
     {
-        if (rightAlignedLabel == null) rightAlignedLabel = new GUIStyle(EditorStyles.label) { alignment = TextAnchor.MiddleRight, clipping = TextClipping.Overflow };
+        if (rightAlignedLabel == null) rightAlignedLabel = new GUIStyle(EditorStyles.label) { alignment = TextAnchor.MiddleRight, clipping = TextClipping.Overflow, padding = new RectOffset(0, 30, 0, 0) };
         if (overflowLabel == null) overflowLabel = new GUIStyle(EditorStyles.label) { clipping = TextClipping.Overflow };
 
+        // Draw background
+        Rect rowRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+        if (darkerBackground && Event.current.type == EventType.Repaint) EditorGUI.DrawRect(rowRect, dark);
+        darkerBackground = !darkerBackground;
+
+
         bool drawWarning = false;
-        string tooltip = null;
+        GUIContent pathLabelContent = new GUIContent(name);
 
         Color guiColor = GUI.contentColor;
         if (value.Contains("<unsupported>") || value.Contains("<error>"))
         {
-            tooltip = "Field type cannot be serialized / captured.";
+            pathLabelContent.tooltip = "Field type cannot be serialized / captured.";
             GUI.contentColor = Color.red;
         }
         else if (explicitlySupportedByApplier)
         {
-            tooltip = "Field is supported by a custom applier: it will be set via explicit API calls in standalone builds.";
+            pathLabelContent.tooltip = "Field is supported by a custom applier: it will be set via explicit API calls in standalone builds.";
             GUI.contentColor = Color.lightGreen;
         }
         else if (reflectionMayFail)
         {
             drawWarning = true;
-            tooltip = "Native component field without custom applier: setting this value via reflection may fail.";
+            pathLabelContent.tooltip = "Native component field without custom applier: setting this value via reflection may fail.";
             GUI.contentColor = Color.yellowNice;
         }
 
         EditorGUILayout.BeginHorizontal();
-        Rect labelRect = GUILayoutUtility.GetRect(new GUIContent(name), overflowLabel);
-        EditorGUI.LabelField(labelRect, new GUIContent(name, tooltip), overflowLabel);
+        Rect labelRect = rowRect;
+        labelRect.width *= 0.5f;
+        EditorGUI.LabelField(labelRect, pathLabelContent, overflowLabel);
         if (drawWarning)
         {
             float iconSize = EditorGUIUtility.singleLineHeight - 5;
@@ -347,7 +382,9 @@ public class ModificationEditorWindow : EditorWindow
             GUI.DrawTexture(iconRect, EditorGUIUtility.IconContent("console.warnicon").image);
         }
         GUILayout.FlexibleSpace();
-        EditorGUILayout.LabelField(value, rightAlignedLabel);
+        Rect valueRect = rowRect;
+        valueRect.xMin = labelRect.xMax;
+        EditorGUI.LabelField(valueRect, value, rightAlignedLabel);
         EditorGUILayout.EndHorizontal();
         GUI.contentColor = guiColor;
     }
@@ -388,10 +425,7 @@ public class ModificationEditorWindow : EditorWindow
                     return $"({FormatFloat(color.r)}, {FormatFloat(color.g)}, {FormatFloat(color.b)}, {FormatFloat(color.a)})";
                 case SerializedValueType.ObjectReference:
                     string guid = field.GetAs<string>();
-                    if (string.IsNullOrEmpty(guid)) return "<null>";
-                    Object obj = null;
-                    try { obj = ComponentApplierRegistry.objectGuidRegistry.Get(guid); } catch { obj = null; }
-                    return obj != null ? $"{obj.name} ({obj.GetType().Name})" : guid;
+                    return GetObjectNameFromGuid(guid);
                 case SerializedValueType.AnimationCurve:
                     AnimationCurve ac = field.GetAs<AnimationCurve>();
                     return ac != null ? "<animation curve>" : "<null>";
@@ -426,13 +460,9 @@ public class ModificationEditorWindow : EditorWindow
     private string GetObjectNameFromGuid(string guid)
     {
         if (string.IsNullOrEmpty(guid)) return "<none>";
-        try
-        {
-            Object obj = ComponentApplierRegistry.objectGuidRegistry.Get(guid);
-            if (obj != null) return obj.name;
-            return guid;
-        }
-        catch { return guid; }
+        Object obj = ComponentApplierRegistry.GetRegistry().Get(guid);
+        if (obj != null) return $"{obj.name} ({obj.GetType().Name})";
+        return guid;
     }
     private string GetParentNameFromGuid(string guid)
     {

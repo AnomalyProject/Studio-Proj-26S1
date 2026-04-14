@@ -85,7 +85,7 @@ public static class SnapshotUtility
         {
             string guid = GetAs<string>();
             if (string.IsNullOrEmpty(guid)) return null;
-            return ComponentApplierRegistry.objectGuidRegistry.Get(guid);
+            return ComponentApplierRegistry.GetRegistry().Get(guid);
         }
         public T GetAs<T>()
         {
@@ -208,9 +208,6 @@ public static class SnapshotUtility
                 // Skip x,y,z fields of composite types like Vector3, since we already store the entire Vector3
                 if (previous != null && iterator.depth > previous.depth && compositeTypes.Contains(previous.propertyType)) continue;
                 previous = iterator.Copy();
-
-                // Skip default values
-                //if (HasDefaultValue(iterator)) continue;
 
                 fields.Add(CaptureField(iterator));
 
@@ -364,57 +361,6 @@ public static class SnapshotUtility
         if (c is Renderer renderer) return renderer.enabled; // Renderers
         if (c is Collider collider) return collider.enabled; // Colliders
         return true; // Components without enabled state are always considered enabled
-    }
-    private static bool HasDefaultValue(SerializedProperty property)
-    {
-        switch (property.propertyType)
-        {
-            case SerializedPropertyType.Boolean:
-                return property.boolValue == default;
-            case SerializedPropertyType.Integer:
-            case SerializedPropertyType.LayerMask:
-                return property.intValue == default;
-            case SerializedPropertyType.ArraySize:
-                return property.arraySize == default;
-            case SerializedPropertyType.Float:
-                return property.floatValue == default;
-            case SerializedPropertyType.String:
-            case SerializedPropertyType.Character:
-                return property.stringValue == default;
-            case SerializedPropertyType.Vector2:
-                return property.vector2Value == default;
-            case SerializedPropertyType.Vector3:
-                return property.vector3Value == default;
-            case SerializedPropertyType.Vector4:
-                return property.vector4Value == default;
-            case SerializedPropertyType.Quaternion:
-                return property.quaternionValue == default;
-            case SerializedPropertyType.Color:
-                return property.colorValue == default;
-            case SerializedPropertyType.ObjectReference:
-                return property.objectReferenceValue == default;
-            case SerializedPropertyType.Enum:
-                return property.enumValueIndex == default;
-            case SerializedPropertyType.AnimationCurve:
-                return property.animationCurveValue == default;
-            case SerializedPropertyType.Gradient:
-                return property.gradientValue == default;
-            case SerializedPropertyType.Rect:
-                return property.rectValue == default;
-            case SerializedPropertyType.Bounds:
-                return property.boundsValue == default;
-            case SerializedPropertyType.Vector2Int:
-                return property.vector2IntValue == default;
-            case SerializedPropertyType.Vector3Int:
-                return property.vector3IntValue == default;
-            case SerializedPropertyType.RectInt:
-                return property.rectIntValue == default;
-            case SerializedPropertyType.BoundsInt:
-                return property.boundsIntValue == default;
-            case SerializedPropertyType.ExposedReference:
-                return property.exposedReferenceValue == default;
-            default: return false;
-        };
     }
     #endregion
 #endif

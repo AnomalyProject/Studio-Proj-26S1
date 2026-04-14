@@ -14,16 +14,13 @@ using UnityEditor;
 /// </summary>
 public static class ComponentApplierRegistry
 {
-    public static ObjectGuidRegistry objectGuidRegistry
+    private static ObjectGuidRegistry objectGuidRegistry;
+    public static void SetRegistry(ObjectGuidRegistry registry) => objectGuidRegistry = registry;
+    public static ObjectGuidRegistry GetRegistry()
     {
-        get
-        {
-#if UNITY_EDITOR
-            ObjectGuidRegistry registry = Resources.Load<ObjectGuidRegistry>("LevelEditor/ObjectGuidRegistry");
-            if (registry == null) ObjectGuidRegistryUtility.GenerateNewRegistry();
-#endif
-            return Resources.Load<ObjectGuidRegistry>("LevelEditor/ObjectGuidRegistry");
-        }
+        if (objectGuidRegistry != null) return objectGuidRegistry;
+        objectGuidRegistry = Resources.Load<ObjectGuidRegistry>("LevelEditor/ObjectGuidRegistry");
+        return objectGuidRegistry;
     }
 
     private static Dictionary<Type, IComponentApplier> appliers = new Dictionary<Type, IComponentApplier>();

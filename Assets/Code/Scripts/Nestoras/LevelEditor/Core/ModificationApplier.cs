@@ -92,7 +92,6 @@ public class ModificationApplier : MonoBehaviour
             if (goToModify.oldTag != goToModify.newTag) go.tag = goToModify.newTag;
             if (goToModify.oldLayer != goToModify.newLayer) go.layer = goToModify.newLayer;
 
-
             AddComponents(goToModify.addedComponents, go);
             RemoveComponents(goToModify.removedComponents, go);
             ModifyComponents(goToModify.componentModifications, go);
@@ -152,38 +151,38 @@ public class ModificationApplier : MonoBehaviour
         }
     }
 
-    private void AddComponents(List<ComponentSnapshot> compsToAdd, GameObject go)
+    private void AddComponents(List<ComponentSnapshot> componentsToAdd, GameObject go)
     {
-        foreach (ComponentSnapshot compToAdd in compsToAdd)
+        foreach (ComponentSnapshot componentToAdd in componentsToAdd)
         {
-            Type compType = Type.GetType(compToAdd.type);
+            Type compType = Type.GetType(componentToAdd.type);
             Component comp;
             if (compType == typeof(Transform)) comp = go.GetComponent<Transform>();
             else comp = go.AddComponent(compType);
 
-            SetComponentEnabled(comp, compToAdd.enabled);
+            SetComponentEnabled(comp, componentToAdd.enabled);
 
-            foreach (FieldSnapshot fieldToAdd in compToAdd.fields) SetField(comp, fieldToAdd);
+            foreach (FieldSnapshot fieldToAdd in componentToAdd.fields) SetField(comp, fieldToAdd);
         }
     }
-    private void RemoveComponents(List<ComponentSnapshot> compsToRemove, GameObject go)
+    private void RemoveComponents(List<ComponentSnapshot> componentsToRemove, GameObject go)
     {
-        IEnumerable<IGrouping<string, ComponentSnapshot>> grouped = compsToRemove.GroupBy(c => c.type);
+        IEnumerable<IGrouping<string, ComponentSnapshot>> grouped = componentsToRemove.GroupBy(c => c.type);
 
         foreach (IGrouping<string, ComponentSnapshot> group in grouped)
         {
-            List<Component> comps = go.GetComponents<Component>().Where(c => c != null && c.GetType().AssemblyQualifiedName == group.Key).ToList();
+            List<Component> components = go.GetComponents<Component>().Where(c => c != null && c.GetType().AssemblyQualifiedName == group.Key).ToList();
 
             // Remove highest index first
             foreach (ComponentSnapshot compToRemove in group.OrderByDescending(c => c.index))
             {
-                if (compToRemove.index >= comps.Count) continue;
-                Component comp = comps[compToRemove.index];
+                if (compToRemove.index >= components.Count) continue;
+                Component component = components[compToRemove.index];
 
 #if UNITY_EDITOR
-                DestroyImmediate(comp);
+                DestroyImmediate(component);
 #else
-                Destroy(comp);
+                Destroy(component);
 #endif
             }
         }
