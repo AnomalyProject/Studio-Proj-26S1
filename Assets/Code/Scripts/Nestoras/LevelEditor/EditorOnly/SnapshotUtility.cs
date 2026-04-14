@@ -421,152 +421,6 @@ public static class SnapshotUtility
     #endregion
 
     #region Diff System
-#if UNITY_EDITOR
-    #region Structures
-    public class DiffResult // Result container for hierarchy-level differences
-    {
-        public List<GameObjectSnapshot> added = new List<GameObjectSnapshot>();
-        public List<GameObjectSnapshot> removed = new List<GameObjectSnapshot>();
-        public List<(GameObjectSnapshot before, GameObjectSnapshot after)> modified = new List<(GameObjectSnapshot before, GameObjectSnapshot after)>();
-    }
-    public class GameObjectDiff // Result container for GameObject-level differences
-    {
-        public (string before, string after) parentGuid;
-        public (bool before, bool after) isStatic;
-        public (string before, string after) name;
-        public (bool before, bool after) active;
-        public (string before, string after) tag;
-        public (int before, int after) layer;
-        public List<ComponentSnapshot> addedComponents = new List<ComponentSnapshot>();
-        public List<ComponentSnapshot> removedComponents = new List<ComponentSnapshot>();
-        public List<(ComponentSnapshot before, ComponentSnapshot after)> modifiedComponents = new List<(ComponentSnapshot before, ComponentSnapshot after)>();
-    }
-    public class ComponentDiff // Result container for Component-level differences
-    {
-        public List<(FieldSnapshot before, FieldSnapshot after)> modifiedFields = new List<(FieldSnapshot before, FieldSnapshot after)>();
-    }
-    #endregion
-
-    // Compares the GameObjects of a hierarchy's snapshots
-    public static DiffResult Diff(List<GameObjectSnapshot> original, List<GameObjectSnapshot> modified)
-    {
-        DiffResult result = new DiffResult();
-
-        Dictionary<string, GameObjectSnapshot> origMap = ToGameObjectMap(original);
-        Dictionary<string, GameObjectSnapshot> modMap = ToGameObjectMap(modified);
-
-        // Detect added objects
-        foreach (KeyValuePair<string, GameObjectSnapshot> go in modMap) if (!origMap.ContainsKey(go.Key)) result.added.Add(go.Value);
-
-        // Detect modified objects
-        foreach (KeyValuePair<string, GameObjectSnapshot> go in origMap)
-        {
-            // Track removed objects
-            if (!modMap.ContainsKey(go.Key))
-            {
-                result.removed.Add(go.Value);
-                continue;
-            }
-
-            GameObjectSnapshot before = go.Value;
-            GameObjectSnapshot after = modMap[go.Key];
-            if (GameObjectHasChanged(before, after)) result.modified.Add((before, after));
-        }
-
-        // Return null if no changes detected
-        if (result.added.Count == 0 && result.removed.Count == 0 && result.modified.Count == 0) return null;
-        return result;
-    }
-    private static bool GameObjectHasChanged(GameObjectSnapshot a, GameObjectSnapshot b)
-    {
-        // Detect non-component changes
-        if (a.parentGuid != b.parentGuid || a.isStatic != b.isStatic || a.name != b.name || a.active != b.active || a.tag != b.tag || a.layer != b.layer) return true;
-
-        // Delegate deeper comparison to component diff
-        GameObjectDiff diff = GameObjectDiffByComponents(a.components, b.components);
-        return diff.addedComponents.Count > 0 || diff.removedComponents.Count > 0 || diff.modifiedComponents.Count > 0;
-    }
-
-    // Converts GameObjectSnapshot list into a dictionary keyed by GUID
-    private static Dictionary<string, GameObjectSnapshot> ToGameObjectMap(List<GameObjectSnapshot> list)
-    {
-        Dictionary<string, GameObjectSnapshot> map = new Dictionary<string, GameObjectSnapshot>();
-        foreach (GameObjectSnapshot item in list) map[item.guid] = item;
-        return map;
-    }
-
-
-
-    // Compares the components of a GameObject's snapshots
-    private static GameObjectDiff GameObjectDiffByComponents(List<ComponentSnapshot> a, List<ComponentSnapshot> b)
-    {
-        GameObjectDiff result = new GameObjectDiff();
-
-        Dictionary<string, ComponentSnapshot> mapA = ToComponentMap(a);
-        Dictionary<string, ComponentSnapshot> mapB = ToComponentMap(b);
-
-        // Detect added components
-        foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB) if (!mapA.ContainsKey(comp.Key)) result.addedComponents.Add(comp.Value);
-
-        // Detect modified components
-        foreach (KeyValuePair<string, ComponentSnapshot> comp in mapA)
-        {
-            // Track removed components
-            if (!mapB.ContainsKey(comp.Key))
-            {
-                result.removedComponents.Add(comp.Value);
-                continue;
-            }
-
-            ComponentSnapshot compA = comp.Value;
-            ComponentSnapshot compB = mapB[comp.Key];
-            if (HasComponentChanged(compA, compB)) result.modifiedComponents.Add((compA, compB));
-        }
-
-        return result;
-    }
-    private static bool HasComponentChanged(ComponentSnapshot a, ComponentSnapshot b)
-    {
-        if (a.enabled != b.enabled) return true;
-        return ComponentDiffByFields(a.fields, b.fields).modifiedFields.Count > 0;
-    }
-
-    // Converts ComponentSnapshot list into a dictionary keyed by component type and ordinal, seperated by '#'
-    private static Dictionary<string, ComponentSnapshot> ToComponentMap(List<ComponentSnapshot> list)
-    {
-        Dictionary<string, ComponentSnapshot> map = new Dictionary<string, ComponentSnapshot>();
-        foreach (ComponentSnapshot component in list)
-        {
-            // Key combines type + index to distinguish duplicates
-            string key = component.type + "#" + component.index;
-            map[key] = component;
-        }
-        return map;
-    }
-
-
-
-    // Compares the serialized fields of a component's snapshots
-    private static ComponentDiff ComponentDiffByFields(List<FieldSnapshot> a, List<FieldSnapshot> b)
-    {
-        ComponentDiff result = new ComponentDiff();
-
-        Dictionary<string, FieldSnapshot> mapA = a.ToDictionary(x => x.path);
-        Dictionary<string, FieldSnapshot> mapB = b.ToDictionary(x => x.path);
-
-        foreach (KeyValuePair<string, FieldSnapshot> field in mapA)
-        {
-            FieldSnapshot fieldA = field.Value;
-            FieldSnapshot fieldB = mapB[field.Key];
-            if (!fieldA.Equals(fieldB)) result.modifiedFields.Add((fieldA, fieldB));
-        }
-
-        return result;
-    }
-#endif
-    #endregion
-
-    #region Exporting
     #region Structures
     [Serializable] public class GameObjectModification // A group of changes regarding a specific GameObject
     {
@@ -612,86 +466,145 @@ public static class SnapshotUtility
         public FieldSnapshot after;
     }
     #endregion
-
 #if UNITY_EDITOR
-    public static LevelModification BuildLevelModification(DiffResult diff)
+
+    // Compares the GameObjects of a hierarchy's snapshots
+    public static LevelModification Diff(List<GameObjectSnapshot> original, List<GameObjectSnapshot> modified)
     {
-        // GAMEOBJECTS
+        LevelModification result = ScriptableObject.CreateInstance<LevelModification>();
 
-        LevelModification levelMod = ScriptableObject.CreateInstance<LevelModification>();
-        
-        // Keep entire snapshots for reconstruction
-        levelMod.addedGameObjects = diff.added;
-        levelMod.removedGameObjects = diff.removed;
+        Dictionary<string, GameObjectSnapshot> origMap = ToGameObjectMap(original);
+        Dictionary<string, GameObjectSnapshot> modMap = ToGameObjectMap(modified);
 
-        // Modified
-        foreach ((GameObjectSnapshot objBefore, GameObjectSnapshot objAfter) in diff.modified)
+        // Detect added objects
+        foreach (KeyValuePair<string, GameObjectSnapshot> go in modMap) if (!origMap.ContainsKey(go.Key)) result.addedGameObjects.Add(go.Value);
+
+        // Detect modified objects
+        foreach (KeyValuePair<string, GameObjectSnapshot> go in origMap)
         {
-            GameObjectModification goMod = new GameObjectModification()
+            // Track removed objects
+            if (!modMap.ContainsKey(go.Key))
             {
-                guid = objBefore.guid
+                result.removedGameObjects.Add(go.Value);
+                continue;
+            }
+
+            GameObjectSnapshot before = go.Value;
+            GameObjectSnapshot after = modMap[go.Key];
+
+            // Component-level diff for this GameObject
+            GameObjectModification goModification = new GameObjectModification()
+            {
+                guid = before.guid,
+                oldParentGuid = before.parentGuid,
+                newParentGuid = after.parentGuid,
+                oldIsStatic = before.isStatic,
+                newIsStatic = after.isStatic,
+                oldName = before.name,
+                newName = after.name,
+                oldActive = before.active,
+                newActive = after.active,
+                oldTag = before.tag,
+                newTag = after.tag,
+                oldLayer = before.layer,
+                newLayer = after.layer,
             };
 
-            goMod.oldParentGuid = objBefore.parentGuid;
-            goMod.newParentGuid = objAfter.parentGuid;
+            Dictionary<string, ComponentSnapshot> mapA = ToComponentMap(before.components);
+            Dictionary<string, ComponentSnapshot> mapB = ToComponentMap(after.components);
 
-            goMod.oldIsStatic = objBefore.isStatic;
-            goMod.newIsStatic = objAfter.isStatic;
+            // Detect added components
+            foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB) if (!mapA.ContainsKey(comp.Key)) goModification.addedComponents.Add(comp.Value);
 
-            goMod.oldName = objBefore.name;
-            goMod.newName = objAfter.name;
-
-            goMod.oldActive = objBefore.active;
-            goMod.newActive = objAfter.active;
-
-            goMod.oldTag = objBefore.tag;
-            goMod.newTag = objAfter.tag;
-
-            goMod.oldLayer = objBefore.layer;
-            goMod.newLayer = objAfter.layer;
-            
-            // COMPONENTS
-
-            GameObjectDiff componentDifferences = GameObjectDiffByComponents(objBefore.components, objAfter.components);
-
-            // Keep entire snapshots for reconstruction
-            goMod.addedComponents = componentDifferences.addedComponents;
-            goMod.removedComponents = componentDifferences.removedComponents;
-
-            // Modified
-            foreach((ComponentSnapshot compBefore, ComponentSnapshot compAfter) in componentDifferences.modifiedComponents)
+            // Detect modified components
+            foreach (KeyValuePair<string, ComponentSnapshot> comp in mapA)
             {
-                ComponentModification compMod = new ComponentModification()
+                // Track removed components
+                if (!mapB.ContainsKey(comp.Key))
                 {
-                    type = compBefore.type,
-                    index = compBefore.index
-                };
-
-                compMod.oldEnabled = compBefore.enabled;
-                compMod.newEnabled = compAfter.enabled;
-
-                // FIELDS
-
-                ComponentDiff fieldDifferences = ComponentDiffByFields(compBefore.fields, compAfter.fields);
-
-                foreach ((FieldSnapshot fieldBefore, FieldSnapshot fieldAfter) in fieldDifferences.modifiedFields)
-                {
-                    if (!fieldBefore.Equals(fieldAfter))
-                    {
-                        FieldModification fieldMod = new FieldModification()
-                        {
-                            before = fieldBefore,
-                            after = fieldAfter
-                        };
-                        compMod.fieldModifications.Add(fieldMod);
-                    }
+                    goModification.removedComponents.Add(comp.Value);
+                    continue;
                 }
-                goMod.componentModifications.Add(compMod);
+
+                ComponentSnapshot compA = comp.Value;
+                ComponentSnapshot compB = mapB[comp.Key];
+
+
+                // Field-level diff for this component
+                ComponentModification componentModification = new ComponentModification();
+
+                Dictionary<string, FieldSnapshot> compMapA = compA.fields.ToDictionary(x => x.path);
+                Dictionary<string, FieldSnapshot> compMapB = compB.fields.ToDictionary(x => x.path);
+
+                foreach (KeyValuePair<string, FieldSnapshot> field in compMapA)
+                {
+                    FieldSnapshot fieldA = field.Value;
+                    FieldSnapshot fieldB = compMapB[field.Key];
+
+                    // Skip field if values are the same
+                    if (fieldA.Equals(fieldB)) continue;
+
+                    // Add field to ComponentModification if change detected
+                    componentModification.fieldModifications.Add(new FieldModification()
+                    {
+                        before = fieldA,
+                        after = fieldB
+                    });
+                }
+
+                // Skip component if all properties are the same
+                if (compA.enabled == compB.enabled &&
+                    componentModification.fieldModifications.Count == 0)
+                    continue;
+
+                // Add component to GameObjectModification if any changes detected
+                goModification.componentModifications.Add(new ComponentModification()
+                {
+                    type = compA.type,
+                    index = compA.index,
+                    oldEnabled = compA.enabled,
+                    newEnabled = compB.enabled,
+                    fieldModifications = componentModification.fieldModifications
+                });
             }
-            levelMod.gameObjectModifications.Add(goMod);
+
+            // Skip GameObject if all properties are the same
+            if (before.parentGuid == after.parentGuid &&
+                before.isStatic == after.isStatic &&
+                before.name == after.name &&
+                before.active == after.active &&
+                before.tag == after.tag &&
+                before.layer == after.layer &&
+                goModification.addedComponents.Count == 0 &&
+                goModification.removedComponents.Count == 0 &&
+                goModification.componentModifications.Count == 0)
+                continue;
+
+            // Add GameObject to modified list if any changes detected
+            result.gameObjectModifications.Add(goModification);
         }
-        return levelMod;
+
+        // Return null if no changes detected
+        if (result.addedGameObjects.Count == 0 && result.removedGameObjects.Count == 0 && result.gameObjectModifications.Count == 0) return null;
+        return result;
     }
+
+    // Converts GameObjectSnapshot list into a dictionary keyed by GUID
+    private static Dictionary<string, GameObjectSnapshot> ToGameObjectMap(List<GameObjectSnapshot> list)
+    {
+        Dictionary<string, GameObjectSnapshot> map = new Dictionary<string, GameObjectSnapshot>();
+        foreach (GameObjectSnapshot item in list) map[item.guid] = item;
+        return map;
+    }
+
+    // Converts ComponentSnapshot list into a dictionary keyed by component type and ordinal to distinguish duplicates
+    private static Dictionary<string, ComponentSnapshot> ToComponentMap(List<ComponentSnapshot> list)
+    {
+        Dictionary<string, ComponentSnapshot> map = new Dictionary<string, ComponentSnapshot>();
+        foreach (ComponentSnapshot component in list) map[component.type + component.index] = component;
+        return map;
+    }
+
 #endif
     #endregion
 }

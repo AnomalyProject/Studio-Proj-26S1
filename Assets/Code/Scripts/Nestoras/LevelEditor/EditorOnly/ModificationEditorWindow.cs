@@ -22,7 +22,7 @@ public class ModificationEditorWindow : EditorWindow
     private string lastSaveLocation;
 
     private static List<GameObjectSnapshot> baseline;
-    private static DiffResult lastDiff;
+    private static LevelModification lastModification;
 
     private Vector2 scroll;
     private static GUIStyle rightAlignedLabel;
@@ -52,7 +52,7 @@ public class ModificationEditorWindow : EditorWindow
         if (root != null && lastRoot != root)
         {
             baseline = null;
-            lastDiff = null;
+            lastModification = null;
             baselineHasNativeFieldWithoutApplier = false;
             capturedNativeFieldWithoutApplier = false;
         }
@@ -77,7 +77,7 @@ public class ModificationEditorWindow : EditorWindow
         if (GUILayout.Button("Capture Baseline"))
         {
             baseline = Capture(root);
-            lastDiff = null;
+            lastModification = null;
             baselineHasNativeFieldWithoutApplier = capturedNativeFieldWithoutApplier;
             capturedNativeFieldWithoutApplier = false;
         }
@@ -88,7 +88,7 @@ public class ModificationEditorWindow : EditorWindow
         if (GUILayout.Button("Capture Modifications"))
         {
             capturedNativeFieldWithoutApplier = false;
-            lastDiff = Diff(baseline, Capture(root));
+            lastModification = Diff(baseline, Capture(root));
         }
         EditorGUILayout.EndHorizontal();
 
@@ -98,23 +98,22 @@ public class ModificationEditorWindow : EditorWindow
         GUI.enabled &= modificationsRoot != null;
         EditorGUILayout.BeginHorizontal();
         modificationName = EditorGUILayout.TextField(string.IsNullOrWhiteSpace(modificationName) ? (modificationsRoot == null ? string.Empty : $"Modification {modificationsRoot.childCount + 1}") : modificationName, GUILayout.ExpandWidth(true));
-        GUI.enabled &= lastDiff != null;
+        GUI.enabled &= lastModification != null;
         if (GUILayout.Button("Save Asset", GUILayout.Width(80)))
         {
             // Save file
-            LevelModification modification = BuildLevelModification(lastDiff);
             string path = EditorUtility.SaveFilePanelInProject("Save Modification", modificationName, "asset", "Choose location", lastSaveLocation ?? "Assets/Scenes");
             if (!string.IsNullOrEmpty(path))
             {
                 lastSaveLocation = path;
-                AssetDatabase.CreateAsset(modification, lastSaveLocation);
+                AssetDatabase.CreateAsset(lastModification, lastSaveLocation);
                 AssetDatabase.SaveAssets();
 
                 // Create new modification applier
-                GameObject modificationObject = Instantiate(new GameObject(), modificationsRoot);
-                modificationObject.name = modificationName;
+                GameObject modificationObject = new GameObject(modificationName);
+                modificationObject.transform.parent = modificationsRoot;
                 ModificationApplier modificationApplier = modificationObject.AddComponent<ModificationApplier>();
-                EditorApplication.delayCall += () => modificationApplier.levelModification = modification;
+                EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
             }
         }
 
@@ -129,20 +128,20 @@ public class ModificationEditorWindow : EditorWindow
         GUI.enabled = true;
 
         EditorGUILayout.Space();
-        GUIContent labelContent = lastDiff != null && baselineHasNativeFieldWithoutApplier != capturedNativeFieldWithoutApplier ? new GUIContent("Modifications", EditorGUIUtility.IconContent("console.warnicon").image, "Captured fields of native components without custom appliers: setting these values via reflection may fail.") : new GUIContent("Modifications");
+        GUIContent labelContent = lastModification != null && baselineHasNativeFieldWithoutApplier != capturedNativeFieldWithoutApplier ? new GUIContent("Modifications", EditorGUIUtility.IconContent("console.warnicon").image, "Captured fields of native components without custom appliers: setting these values via reflection may fail.") : new GUIContent("Modifications");
         EditorGUILayout.LabelField(labelContent, EditorStyles.boldLabel);
 
         scroll = EditorGUILayout.BeginScrollView(scroll, false, false, GUILayout.ExpandHeight(true));
-        if (lastDiff == null) EditorGUILayout.HelpBox("No modifications captured yet.\nCapture a baseline and modifications to view changes.", MessageType.Info);
+        if (lastModification == null) EditorGUILayout.HelpBox("No modifications captured yet.\nCapture a baseline and modifications to view changes.", MessageType.Info);
         else
         {
             // Added
-            if (lastDiff.added.Count > 0)
+            if (lastModification.addedGameObjects.Count > 0)
             {
                 GUI.contentColor = Color.green;
                 EditorGUILayout.LabelField("+ Added GameObjects", EditorStyles.boldLabel);
                 GUI.contentColor = defaultColor;
-                foreach (GameObjectSnapshot added in lastDiff.added)
+                foreach (GameObjectSnapshot added in lastModification.addedGameObjects)
                 {
                     string goKey = $"added:{added.guid}";
                     gameObjectFoldouts.TryGetValue(goKey, out bool open);
@@ -159,12 +158,12 @@ public class ModificationEditorWindow : EditorWindow
             }
 
             // Removed
-            if (lastDiff.removed.Count > 0)
+            if (lastModification.removedGameObjects.Count > 0)
             {
                 GUI.contentColor = Color.red;
                 EditorGUILayout.LabelField("- Removed GameObjects", EditorStyles.boldLabel);
                 GUI.contentColor = defaultColor;
-                foreach (GameObjectSnapshot removed in lastDiff.removed)
+                foreach (GameObjectSnapshot removed in lastModification.removedGameObjects)
                 {
                     string goKey = $"removed:{removed.guid}";
                     gameObjectFoldouts.TryGetValue(goKey, out bool open);
@@ -181,116 +180,76 @@ public class ModificationEditorWindow : EditorWindow
             }
 
             // Modified
-            if (lastDiff.modified.Count > 0)
+            if (lastModification.gameObjectModifications.Count > 0)
             {
                 GUI.contentColor = Color.yellowNice;
                 EditorGUILayout.LabelField("* Modified GameObjects", EditorStyles.boldLabel);
                 GUI.contentColor = defaultColor;
-                foreach ((GameObjectSnapshot before, GameObjectSnapshot after) in lastDiff.modified)
+                foreach (GameObjectModification goModification in lastModification.gameObjectModifications)
                 {
-                    string guid = before.guid;
+                    string guid = goModification.guid;
                     string goKey = $"changed:{guid}";
                     gameObjectFoldouts.TryGetValue(goKey, out bool goOpen);
-                    goOpen = EditorGUILayout.Foldout(goOpen, $"* {after.name}", true);
+                    goOpen = EditorGUILayout.Foldout(goOpen, $"* {goModification.newName}", true);
                     gameObjectFoldouts[goKey] = goOpen;
                     if (goOpen)
                     {
                         EditorGUI.indentLevel++;
 
                         // Show GameObject-level modifications
-                        DrawGameObjectPropertyIfChanged("name", before.name, after.name);
-                        DrawGameObjectPropertyIfChanged("isStatic", before.isStatic, after.isStatic);
-                        DrawGameObjectPropertyIfChanged("active", before.active, after.active);
-                        DrawGameObjectPropertyIfChanged("tag", before.tag, after.tag);
-                        DrawGameObjectPropertyIfChanged("layer", before.layer, after.layer);
+                        DrawGameObjectPropertyIfChanged("name", goModification.oldName, goModification.newName);
+                        DrawGameObjectPropertyIfChanged("isStatic", goModification.oldIsStatic, goModification.newIsStatic);
+                        DrawGameObjectPropertyIfChanged("active", goModification.oldActive, goModification.newActive);
+                        DrawGameObjectPropertyIfChanged("tag", goModification.oldTag, goModification.newTag);
+                        DrawGameObjectPropertyIfChanged("layer", goModification.oldLayer, goModification.newLayer);
                         // Check for difference in parent GUID, not just name.
-                        if (before.parentGuid != after.parentGuid) DrawAlignedModification("parent", GetParentNameFromGuid(before.parentGuid), GetParentNameFromGuid(after.parentGuid), true);
-
-                        // Compare components
-                        Dictionary<string, ComponentSnapshot> mapA = before.components.ToDictionary(component => component.type + "#" + component.index);
-                        Dictionary<string, ComponentSnapshot> mapB = after.components.ToDictionary(component => component.type + "#" + component.index);
+                        if (goModification.oldParentGuid != goModification.newParentGuid) DrawAlignedModification("parent", GetParentNameFromGuid(goModification.oldParentGuid), GetParentNameFromGuid(goModification.newParentGuid), true);
 
                         // Added components
-                        foreach (KeyValuePair<string, ComponentSnapshot> component in mapB)
+                        foreach (ComponentSnapshot component in goModification.addedComponents)
                         {
-                            if (!mapA.ContainsKey(component.Key))
-                            {
-                                // New component
-                                string componentKey = $"{guid}:component:{component.Key}";
-                                componentFoldouts.TryGetValue(componentKey, out bool componentOpen);
-                                componentOpen = EditorGUILayout.Foldout(componentOpen, $"+ {System.Type.GetType(component.Value.type).ToString().Split('.')[^1]} #{component.Value.index + 1}", true);
-                                componentFoldouts[componentKey] = componentOpen;
-                                if (componentOpen)
-                                {
-                                    EditorGUI.indentLevel++;
-                                    DrawComponentSnapshotDetails(component.Value, showAllFields: true);
-                                    EditorGUI.indentLevel--;
-                                }
-                            }
-                        }
-
-                        // Removed components
-                        foreach (KeyValuePair<string, ComponentSnapshot> component in mapA)
-                        {
-                            if (!mapB.ContainsKey(component.Key))
-                            {
-                                string componentKey = $"{guid}:component:{component.Key}";
-                                componentFoldouts.TryGetValue(componentKey, out bool componentOpen);
-                                componentOpen = EditorGUILayout.Foldout(componentOpen, $"- {System.Type.GetType(component.Value.type).ToString().Split('.')[^1]} #{component.Value.index + 1}", true);
-                                componentFoldouts[componentKey] = componentOpen;
-                                if (componentOpen)
-                                {
-                                    EditorGUI.indentLevel++;
-                                    DrawComponentSnapshotDetails(component.Value, showAllFields: true);
-                                    EditorGUI.indentLevel--;
-                                }
-                            }
-                        }
-
-                        // Modified components and their fields
-                        foreach (KeyValuePair<string, ComponentSnapshot> component in mapA)
-                        {
-                            if (!mapB.TryGetValue(component.Key, out ComponentSnapshot snapshotB)) continue;
-                            ComponentSnapshot snapshotA = component.Value;
-
-                            // Compare field lists
-                            Dictionary<string, FieldSnapshot> fieldMapA = snapshotA.fields.ToDictionary(field => field.path);
-                            Dictionary<string, FieldSnapshot> fieldMapB = snapshotB.fields.ToDictionary(field => field.path);
-
-                            // Check whether any field has been modified
-                            List<string> modifiedPaths = new List<string>();
-                            foreach (string path in fieldMapA.Keys)
-                            {
-                                if (!fieldMapB.ContainsKey(path)) modifiedPaths.Add(path);
-                                else if (!fieldMapA[path].Equals(fieldMapB[path])) modifiedPaths.Add(path);
-                            }
-                            foreach (string path in fieldMapB.Keys) if (!fieldMapA.ContainsKey(path)) modifiedPaths.Add(path);
-
-                            // Skip if no modifications are found
-                            if (modifiedPaths.Count == 0 && snapshotA.enabled == snapshotB.enabled) continue;
-
-                            string componentKey = $"{guid}:component:{component.Key}";
+                            // New component
+                            string componentKey = $"{guid}:component:{component.type}{component.index}";
                             componentFoldouts.TryGetValue(componentKey, out bool componentOpen);
-                            componentOpen = EditorGUILayout.Foldout(componentOpen, $"* {System.Type.GetType(component.Value.type).ToString().Split('.')[^1]} #{component.Value.index + 1}", true);
+                            componentOpen = EditorGUILayout.Foldout(componentOpen, $"+ {System.Type.GetType(component.type).ToString().Split('.')[^1]} #{component.index + 1}", true);
                             componentFoldouts[componentKey] = componentOpen;
                             if (componentOpen)
                             {
                                 EditorGUI.indentLevel++;
+                                DrawComponentSnapshotDetails(component, showAllFields: true);
+                                EditorGUI.indentLevel--;
+                            }
+                        }
 
+                        // Removed components
+                        foreach (ComponentSnapshot component in goModification.removedComponents)
+                        {
+                            string componentKey = $"{guid}:component:{component.type}{component.index}";
+                            componentFoldouts.TryGetValue(componentKey, out bool componentOpen);
+                            componentOpen = EditorGUILayout.Foldout(componentOpen, $"- {System.Type.GetType(component.type).ToString().Split('.')[^1]} #{component.index + 1}", true);
+                            componentFoldouts[componentKey] = componentOpen;
+                            if (componentOpen)
+                            {
+                                EditorGUI.indentLevel++;
+                                DrawComponentSnapshotDetails(component, showAllFields: true);
+                                EditorGUI.indentLevel--;
+                            }
+                        }
+
+                        // Modified components and their fields
+                        foreach (ComponentModification component in goModification.componentModifications)
+                        {
+                            string componentKey = $"{guid}:component:{component.type}{component.index}";
+                            componentFoldouts.TryGetValue(componentKey, out bool componentOpen);
+                            componentOpen = EditorGUILayout.Foldout(componentOpen, $"* {System.Type.GetType(component.type).ToString().Split('.')[^1]} #{component.index + 1}", true);
+                            componentFoldouts[componentKey] = componentOpen;
+                            if (componentOpen)
+                            {
+                                EditorGUI.indentLevel++;
                                 // Explicitly check enabled state since it's not part of the field list
-                                if (snapshotA.enabled != snapshotB.enabled) DrawAlignedModification("Enabled", snapshotA.enabled.ToString(), snapshotB.enabled.ToString());
-
-                                // Check each field
-                                foreach (string path in modifiedPaths)
-                                {
-                                    fieldMapA.TryGetValue(path, out FieldSnapshot fieldB);
-                                    string beforeValue = fieldB != null ? FieldSnapshotToDisplayString(fieldB) : "<missing>";
-                                    fieldMapB.TryGetValue(path, out FieldSnapshot fieldA);
-                                    string afterValue = fieldA != null ? FieldSnapshotToDisplayString(fieldA) : "<missing>";
-
-                                    DrawAlignedModification(path, beforeValue, afterValue, ComponentApplierRegistry.IsFieldSupported(System.Type.GetType(snapshotA.type), path), !System.Type.GetType(snapshotA.type).IsSubclassOf(typeof(MonoBehaviour)));
-                                }
-
+                                if (component.oldEnabled != component.newEnabled) DrawAlignedModification("Enabled", component.oldEnabled.ToString(), component.newEnabled.ToString());
+                                // Draw each field modification with optional warnings / green text to indicate support by custom appliers in standalone builds
+                                foreach (FieldModification field in component.fieldModifications) DrawAlignedModification(field.before.path, FieldSnapshotToDisplayString(field.before), FieldSnapshotToDisplayString(field.after), ComponentApplierRegistry.IsFieldSupported(System.Type.GetType(component.type), field.before.path), !System.Type.GetType(component.type).IsSubclassOf(typeof(MonoBehaviour)));
                                 EditorGUI.indentLevel--;
                             }
                         }
