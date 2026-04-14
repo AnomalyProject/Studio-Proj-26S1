@@ -119,37 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &126797376
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 126797377}
-  m_Layer: 0
-  m_Name: SoloSpawnPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &126797377
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 126797376}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5931207, y: 0.24999982, z: -12.445055}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &203844586
 GameObject:
   m_ObjectHideFlags: 0
@@ -841,52 +810,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d98fc868d825534a8285d4b2993391b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelExitPoint
---- !u!1 &1121653798
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1121653800}
-  - component: {fileID: 1121653799}
-  m_Layer: 0
-  m_Name: SoloPlayerBootstrap
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1121653799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1121653798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c24ff58e8a713b40b8896f3ee8cb84d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SoloPlayerBootstrap
-  soloPlayerPrefab: {fileID: 4722490883632117968, guid: 9164479b30441674a8ebc800a00f8bb6, type: 3}
-  soloSpawnPoint: {fileID: 126797377}
---- !u!4 &1121653800
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1121653798}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 795.65466, y: 0.00001, z: 1184.145}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1127403066
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1320,6 +1243,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2dd36ab1beb4b7438d647fa0b07e6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnomalyManager
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   mapCollection:
   - {fileID: 2994484015021799058, guid: 98a291562684ab4489fa4c12098862ed, type: 3}
   anomalyChance: 0.5
@@ -1596,17 +1528,23 @@ PrefabInstance:
       propertyPath: _transport
       value: 
       objectReference: {fileID: 9067903857306638136}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 9135404317110920904, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+    - {fileID: 5069873757964631812, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+    - {fileID: 4048040728350394396, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9067903857306638139}
   m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
 --- !u!114 &9067903857306638136 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 359836382515732334, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
   m_PrefabInstance: {fileID: 9067903857306638135}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 9067903857306638138}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ccc454d6a19ac140b15f8d619d0fb5e, type: 3}
@@ -1617,6 +1555,23 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5730802832951919032, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
   m_PrefabInstance: {fileID: 9067903857306638135}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &9067903857306638138 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+  m_PrefabInstance: {fileID: 9067903857306638135}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9067903857306638139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9067903857306638138}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfcb920b5e3b7924ea4f2b8a047e2edf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.LocalTransport
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1628,7 +1583,5 @@ SceneRoots:
   - {fileID: 434718061}
   - {fileID: 1367826330}
   - {fileID: 2142280321}
-  - {fileID: 1121653800}
-  - {fileID: 126797377}
   - {fileID: 998261845}
   - {fileID: 334683441}
