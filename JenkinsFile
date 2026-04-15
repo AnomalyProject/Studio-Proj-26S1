@@ -7,7 +7,7 @@ def branchMap = [
 def steamBranch = "unknown"
 def commitMsg = "unknown"
 def isMerge = false
-def botsAdminRole = "<@&1483456172567822378>"  //Reminder to remove this later if i dont need to get pinged
+def botsAdminRole = "<@&1483456172567822378>"
 def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
@@ -91,8 +91,6 @@ pipeline {
             }
             steps {
                 script {
-                    //Commenting this thing out for discord merge test, if it works we yeet it , if not we keep it
-                    //bat """powershell -Command "Invoke-RestMethod -Uri '${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}' -Method Post -Body (@{content='${programmerRole} - Sir, a new merge has been detected on ${env.BRANCH_NAME}!'} | ConvertTo-Json) -ContentType 'application/json'" """
 
                     discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
                         description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
