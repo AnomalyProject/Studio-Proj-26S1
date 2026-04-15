@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using static SnapshotUtility;
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -21,7 +22,7 @@ public class ModificationEditorWindow : EditorWindow
     private static LevelModification lastModification; // Difference between the baseline and the latest captured state of the hierarchy
 
     private string modificationName; // For modification asset naming and corresponding applier gameobject naming
-    private string lastSaveLocation; // For remembering the last save location when saving multiple modifications
+    private static string lastSaveLocation; // For remembering the last save location when saving multiple modifications
 
     // For warning
     private static bool baselineHasNativeFieldWithoutApplier;
@@ -52,12 +53,13 @@ public class ModificationEditorWindow : EditorWindow
     private void OnGUI()
     {
         // Clear snapshots when changing objects
-        if (root != null && lastRoot != root)
+        if (lastRoot != root)
         {
             baseline = null;
             lastModification = null;
             baselineHasNativeFieldWithoutApplier = false;
             capturedNativeFieldWithoutApplier = false;
+            modificationName = null;
         }
         lastRoot = root;
 
@@ -134,15 +136,33 @@ public class ModificationEditorWindow : EditorWindow
             if (!string.IsNullOrEmpty(path))
             {
                 lastSaveLocation = path;
-                AssetDatabase.CreateAsset(lastModification, lastSaveLocation);
-                AssetDatabase.SaveAssets();
+                try // If saving the same modifications on the same path, AssetDatabase.CreateAsset will throw an error
+                {
+                    AssetDatabase.CreateAsset(lastModification, lastSaveLocation);
+                    AssetDatabase.SaveAssets();
 
-                // Create new modification applier gameobject and wait a frame before assigning the asset to avoid immediate application.
-                GameObject modificationObject = new GameObject(modificationName);
-                modificationObject.transform.parent = modificationsRoot;
-                modificationObject.transform.localPosition = Vector3.zero;
-                ModificationApplier modificationApplier = modificationObject.AddComponent<ModificationApplier>();
-                EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
+                    // Try to assign the new asset to any existing ModificationApplier with the same name, so that you can more easily update old modifications.
+                    ModificationApplier modificationApplier = null;
+                    foreach (ModificationApplier applier in modificationsRoot.GetComponentsInChildren<ModificationApplier>(true))
+                    {
+                        if (applier.gameObject.name == modificationName)
+                        {
+                            modificationApplier = applier;
+                            applier.levelModification = lastModification;
+                            break;
+                        }
+                    }
+                    if (modificationApplier == null)
+                    {
+                        // Create new modification applier gameobject and wait a frame before assigning the asset to avoid immediate application.
+                        GameObject modificationObject = new GameObject(modificationName);
+                        modificationObject.transform.parent = modificationsRoot;
+                        modificationObject.transform.localPosition = Vector3.zero;
+                        modificationApplier = modificationObject.AddComponent<ModificationApplier>();
+                        EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
+                    }
+                }
+                catch { }
             }
         }
         EditorGUILayout.EndHorizontal();
