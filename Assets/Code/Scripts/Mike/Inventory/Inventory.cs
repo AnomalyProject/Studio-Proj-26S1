@@ -29,6 +29,7 @@ public class Inventory
     #region Constructor
     public Inventory(int size, params ItemStack[] startingItems)
     {
+        size = Math.Max(size, 1);
         slots = new ItemStack[size];
 
         OnItemAdded += (itemData, amount) => OnInventoryChanged?.Invoke();
@@ -173,6 +174,29 @@ public class Inventory
         slotIndex = sameItemSlots[0];
         itemStack = slots[slotIndex];
         return true;
+    }
+
+    /// <summary>
+    /// Attempts to retrieve the next available item stack cycling after the specified index.
+    /// </summary>
+    /// <param name="fromIndex">The zero-based index from which to start the search for the next item stack.</param>
+    /// <param name="stack">When this method returns, contains the next available item stack, if found; otherwise, null.</param>
+    /// <param name="itemIndex">When this method returns, contains the index of the next available item stack, if found; otherwise, -1.</param>
+    /// <returns><see langword="true"/> if a next item stack is found; otherwise, <see langword="false"/>.</returns>
+    public bool TryGetNext(int fromIndex, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        return TryGetInDirection(fromIndex, direction: 1, out stack, out itemIndex);
+    }
+    /// <summary>
+    /// Attempts to retrieve the next available item stack, cycling the contents backwards.
+    /// </summary>
+    /// <param name="fromIndex">The zero-based index from which to search backward for the previous item stack.</param>
+    /// <param name="stack">When this method returns, contains the previous item stack if found; otherwise, <see langword="null"/>.</param>
+    /// <param name="itemIndex">When this method returns, contains the index of the previous item stack if found; otherwise, -1.</param>
+    /// <returns><see langword="true"/> if a previous item stack is found; otherwise, <see langword="false"/>.</returns>
+    public bool TryGetPrevious(int fromIndex, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        return TryGetInDirection(fromIndex, direction: -1, out stack, out itemIndex);
     }
 
     /// <summary>
@@ -436,7 +460,30 @@ public class Inventory
     #endregion
 
     #region Helper Methods
-    bool TryFindEmptySlot(out int index)
+    private bool TryGetInDirection(int fromIndex, int direction, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        itemIndex = fromIndex;
+        stack = null;
+
+        bool invalidIndex = itemIndex < 0 || itemIndex >= TotalSlots;
+
+        if (invalidIndex)
+        {
+            itemIndex = -1;
+            return false;
+        }
+
+        for (int i = 0; i < TotalSlots; i++)
+        {
+            itemIndex = (itemIndex + direction + TotalSlots) % TotalSlots;
+
+            if (TryGet(itemIndex, out stack)) return true;
+        }
+
+        itemIndex = -1;
+        return false;
+    }
+    private bool TryFindEmptySlot(out int index)
     {
         index = -1;
 
@@ -521,7 +568,7 @@ public class Inventory
     /// <param name="toSlot">The zero-based index of the destination slot of the other inventory to move or combine items to. Must be within the valid range of slot
     /// indices.</param>
     public void SwapSlots(int fromSlot, Inventory toInventory, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, toInventory, toSlot);
-    void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
+    private void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
     {
         if (invA == null || invB == null) return;
         if (indexA < 0 || indexA >= invA.slots.Length) return;

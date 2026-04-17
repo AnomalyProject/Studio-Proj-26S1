@@ -73,32 +73,18 @@ public class PlayerInventory : MonoBehaviour
     #region Inventory Control
     public void NextItem()
     {
-        int current = focusedIndex;
-
-        for (int i = 0; i < Inventory.TotalSlots; i++)
+        if (Inventory.TryGetNext(focusedIndex, out var stack, out int nextIndex))
         {
-            current = (current + 1) % Inventory.TotalSlots;
-
-            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
-            {
-                ChangeFocused(current);
-                return;
-            }
+            ChangeFocused(nextIndex);
+            return;
         }
     }
     public void PreviousItem()
     {
-        int current = focusedIndex;
-
-        for (int i = 0; i < Inventory.TotalSlots; i++)
+        if (Inventory.TryGetPrevious(focusedIndex, out IReadOnlyItemStack stack, out int nextIndex))
         {
-            current = (current - 1 + Inventory.TotalSlots) % Inventory.TotalSlots;
-
-            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
-            {
-                ChangeFocused(current);
-                return;
-            }
+            ChangeFocused(nextIndex);
+            return;
         }
     }
     public void ChangeFocused(int focusAtIndex)
