@@ -358,7 +358,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameMode = sessionData.GameMode,
             MaxPlayers = sessionData.MaxPlayers,
             PlayerCount = sessionData.Players.Count,
-            Players = players
+            Players = players,
+            CustomPropertyKeys = keys,
+            CustomPropertyValues = values
         };
     }
 
