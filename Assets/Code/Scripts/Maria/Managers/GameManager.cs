@@ -1,10 +1,11 @@
 using System.Collections;
+using PurrNet;
 using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
 /// Single source of truth for the anomaly game flow.
-/// Plain MonoBehaviour for single-player / local testing.
+/// Server authority over game state, listens to player decisions and room state changes to react accordingly.
 /// Listens to <see cref="MapOrientor.OnElevatorInteracted"/> for player decisions,
 /// and to <see cref="AnomalyManager.OnStateChanged"/> to react to room transitions.
 ///
@@ -12,7 +13,7 @@ using UnityEngine.Events;
 ///   - Anomaly present  → player takes the ENTRY elevator (goes back)
 ///   - No anomaly       → player takes the EXIT elevator (continues forward)
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     #region Inspector 
     [Header("Dependencies")]
@@ -26,12 +27,21 @@ public class GameManager : MonoBehaviour
     [Header("Decision Cooldown")]
     [Tooltip("Seconds after a decision is made before another can be registered. Prevents spam.")]
     [SerializeField, Min(1)] float decisionCooldown = 2f;
+
+    [Tooltip("Seconds between elevator interaction and map change. Allows time for animations, feedback, etc.")]
     [SerializeField, Min(.5f)] float mapChangeDelay = 2;
+
+    [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
+    [SerializeField, Min(1f)] float punishmentTimeLimit = 10; 
     #endregion
 
     #region State
     public int CurrentProgress { get; private set; }
-    bool IsOnCoolDown;
+    bool ElevatorCoolDown;
+    bool isFirstRoom => CurrentProgress == 0;
+
+    Coroutine punishmentTimerCoroutine;
+    Coroutine mapChangeCoroutine;
     #endregion
 
     #region Events
@@ -44,7 +54,13 @@ public class GameManager : MonoBehaviour
 
     #region Unity Lifecycle
     void Awake() => ValidateDependencies();
-    void Start() => NewGame();
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+
+        if (!asServer) return;
+        NewGame();
+    }
 
     void OnEnable()
     {
@@ -66,9 +82,17 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void NewGame()
     {
+        if(!isServer) return;
+
         CurrentProgress = 0;
-        IsOnCoolDown = false;
-        CancelInvoke(nameof(ResetCooldown));
+        ElevatorCoolDown = false;
+
+        StopPunishmentTimer();
+        if(mapChangeCoroutine != null)
+        {
+            StopCoroutine(mapChangeCoroutine);
+            mapChangeCoroutine = null;
+        }
 
         anomalyManager.PickMap_Server();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
@@ -88,22 +112,29 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void HandleStateChanged(AnomalyManager.RoomState newState)
     {
+        if(!isServer) return;
+
         switch(newState)
         {
             case AnomalyManager.RoomState.NormalRoom:
+                bool entryEnabled = !isFirstRoom;
+                SetElevatorInteraction(entryEnabled, exitEnabled: true);
+                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
+                break;
+
             case AnomalyManager.RoomState.AnomalyRoom:
                 SetElevatorInteraction(entryEnabled: true, exitEnabled: true);
                 SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
                 break;
 
             case AnomalyManager.RoomState.PunishmentRoom:
-                SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
-                OnWrongDecision?.Invoke();
-                LogProgress("Wrong decision — punishment room. Use the exit elevator to resume");
+                HandlePunishmentRoomEntry();
                 break;
+
             case AnomalyManager.RoomState.WinRoom:
                 SetElevatorInteraction(entryEnabled: true, exitEnabled: false);
                 OnGameWon?.Invoke();
+                LogProgress("Game won! Use the entry elevator to play again!");
                 break;
         }
     }
@@ -115,10 +146,11 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
     {
-        if (!TryStartCooldown()) return;
+
+        if (!isServer || !TryStartCooldown()) return;
 
         usedElevator.SetInteraction(false);
-        StartCoroutine(PerformMapChange());
+        mapChangeCoroutine = StartCoroutine(PerformMapChange());
 
         IEnumerator PerformMapChange()
         {
@@ -142,6 +174,7 @@ public class GameManager : MonoBehaviour
                     break;
             }
 
+            mapChangeCoroutine = null;
             TryStartCooldown();
         }
     }
@@ -192,10 +225,22 @@ public class GameManager : MonoBehaviour
     /// Instructs <see cref="AnomalyManager"/> to enable a punishment room.
     /// Elevator configuration is handled reactively via <see cref="HandleStateChanged"/>.
     /// </summary>
-    void HandleWrongDecision()
+    void HandleWrongDecision() => anomalyManager.EnablePunishmentRoom_Server();
+
+    /// <summary>
+    /// Handles the logic for entering the punishment room after a wrong decision is made.
+    /// </summary>
+    /// <remarks>Disables elevator entry, enables elevator exit, and starts the punishment room timer.
+    /// Triggers the wrong decision event and logs progress. Call this method when the user must be sent to the
+    /// punishment room as a result of an incorrect action.</remarks>
+    void HandlePunishmentRoomEntry()
     {
-        anomalyManager.EnablePunishmentRoom_Server();
-        LogProgress("Wrong decision — punishment room enabled. Use the exit elevator to resume.");
+        SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
+        BeginPunishmentRoomTimer(punishmentTimeLimit);
+
+        OnWrongDecision?.Invoke();
+        LogProgress($"Wrong decision — punishment room. Use the exit elevator to resume." +
+            $"{punishmentTimeLimit}s to reach the exit elevator.");
     }
 
     /// <summary>
@@ -204,7 +249,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void HandlePunishmentRoomExit()
     {
-        anomalyManager.DecideNextMapVariation();
+        StopPunishmentTimer();
+        if(isServer) anomalyManager.DecideNextMapVariation();
 
         LogProgress("Resuming from punishment room.");
     }
@@ -217,6 +263,58 @@ public class GameManager : MonoBehaviour
     {
         LogProgress("Returning from Win room. Resetting progress to 0.");
         NewGame();
+    }
+    #endregion
+
+    #region Punishment Timer
+    /// <summary>
+    /// Starts or restarts the punishment room timer with the specified time limit.
+    /// </summary>
+    /// <remarks>If a punishment timer is already running, it will be stopped and restarted with the new time
+    /// limit.</remarks>
+    /// <param name="timeLimit">The duration, in seconds, for which the punishment room timer should run. Must be greater than zero.</param>
+    [ObserversRpc] void BeginPunishmentRoomTimer(float timeLimit)
+    {
+        if (punishmentTimerCoroutine != null)
+        {
+            Debug.LogWarning("[GameManager] Punishment timer already running. Restarting with new time limit.");
+            StopCoroutine(punishmentTimerCoroutine);
+        }
+
+        punishmentTimerCoroutine = StartCoroutine(PunishmentTimer(timeLimit));
+    }
+    /// <summary>
+    /// Runs a countdown timer for the punishment phase and resets game progress when the time limit expires.
+    /// </summary>
+    /// <remarks>This coroutine should be started using StartCoroutine in a Unity MonoBehaviour. When the
+    /// timer completes, game progress is reset. The timer logs the remaining time at one-second intervals.</remarks>
+    /// <param name="timeLimit">The duration, in seconds, for the punishment timer. Must be greater than zero.</param>
+    /// <returns>An enumerator that yields once per second until the timer expires.</returns>
+    IEnumerator PunishmentTimer(float timeLimit)
+    {
+        float timeRemaining = timeLimit;
+
+        while(timeRemaining > 0)
+        {
+            yield return new WaitForSeconds(1f);
+            timeRemaining -= 1f;
+            Debug.Log($"[GameManager] Punishment Room - {timeRemaining}s remaining");
+        }
+
+        LogProgress("Punishment timer expired - resetting progress to 0");
+        NewGame();
+    }
+    /// <summary>
+    /// Stops the currently running punishment timer, if one is active.
+    /// </summary>
+    /// <remarks>This method has no effect if no punishment timer is running. Intended to be called remotely
+    /// on all observers in a networked environment.</remarks>
+    [ObserversRpc] void StopPunishmentTimer()
+    {
+        if(punishmentTimerCoroutine == null) return;
+
+        StopCoroutine(punishmentTimerCoroutine);
+        punishmentTimerCoroutine = null;
     }
     #endregion
 
@@ -250,13 +348,13 @@ public class GameManager : MonoBehaviour
     /// </summary>
     bool TryStartCooldown()
     {
-        if (IsOnCoolDown) return false;
+        if (ElevatorCoolDown) return false;
 
-        IsOnCoolDown = true;
+        ElevatorCoolDown = true;
         Invoke(nameof(ResetCooldown), decisionCooldown);
         return true;
     }
-    void ResetCooldown() => IsOnCoolDown = false;
+    void ResetCooldown() => ElevatorCoolDown = false;
     void LogProgress(string context) => Debug.Log($"[GameManager] {context} | Progress: {CurrentProgress} / {requiredCorrectDecisions}");
     void ValidateDependencies()
     {
