@@ -130,9 +130,8 @@ public class PlayerInventory : MonoBehaviour
     public bool TryUseFocused()
     {
         if(!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        GameObject itemInstance = itemInstances[stack];
+        if(!itemInstances.TryGetValue(stack, out GameObject itemInstance)) return false; // Try get item's world instance
 
-        if (itemInstance == null) return false; // Try get item's world instance
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future
         
         bool success = interactable.TryInteract(playerBody); // Try interact with instance.

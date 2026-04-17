@@ -3,8 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
-public class Inventory 
+public class Inventory
 {
     #region Events
     /// <summary>
@@ -58,9 +57,9 @@ public class Inventory
     /// <param name="stack">The item stack to add to the inventory. The stack's quantity must be greater than zero.</param>
     public int Add(ItemStack stack, bool modifyInputStack = true)
     {
-        if(stack == null || stack.Quantity <= 0) return 0;
+        if (stack == null || stack.Quantity <= 0) return 0;
         int totalAdded = Add(stack.ItemData, stack.Quantity);
-        if(modifyInputStack) stack.RemoveFromStack(totalAdded);
+        if (modifyInputStack) stack.RemoveFromStack(totalAdded);
         return totalAdded;
     }
     /// <summary>
@@ -196,7 +195,7 @@ public class Inventory
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] != null)  
+            if (slots[i] != null)
                 yield return slots[i].Clone();
         }
     }
@@ -228,7 +227,7 @@ public class Inventory
         amount = Mathf.Min(amount, slots[fromIndex].Quantity);
 
         int amountTransfered = toInventory.Add(stackToTransfer.ItemData, amount);
-        if(amountTransfered == 0) return 0;
+        if (amountTransfered == 0) return 0;
 
         stackToTransfer.RemoveFromStack(amountTransfered);
         OnItemRemoved?.Invoke(stackToTransfer.ItemData, amountTransfered);
@@ -273,7 +272,7 @@ public class Inventory
             int amountToTransfer = Mathf.Min(amount, slots[index].Quantity);
             int successfullyTransfered = toInventory.Add(slots[index].ItemData, amountToTransfer);
 
-            if(successfullyTransfered == 0) break; // break if transaction was unsuccessful (other inventory full)
+            if (successfullyTransfered == 0) break; // break if transaction was unsuccessful (other inventory full)
 
             slots[index].RemoveFromStack(successfullyTransfered);
             totalTransfered += successfullyTransfered;
@@ -283,7 +282,7 @@ public class Inventory
             if (amount <= 0) break; // break if nothing left to transfer
         }
 
-        if(totalTransfered > 0) OnItemRemoved?.Invoke(itemData, totalTransfered);
+        if (totalTransfered > 0) OnItemRemoved?.Invoke(itemData, totalTransfered);
         return totalTransfered;
     }
 
@@ -322,7 +321,7 @@ public class Inventory
     /// <returns>The total number of items actually removed. Returns 0 if no items were removed.</returns>
     public int Remove(ItemData itemData, int quantity)
     {
-        if(quantity <= 0 || itemData == null) return 0;
+        if (quantity <= 0 || itemData == null) return 0;
 
         List<int> sameItemSlots = FindSlotsWithItem(itemData);
         int totalAmountRemoved = 0;
@@ -336,8 +335,8 @@ public class Inventory
             quantity -= removed;
         }
 
-        if(totalAmountRemoved > 0)
-        OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
+        if (totalAmountRemoved > 0)
+            OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
 
         return totalAmountRemoved;
     }
@@ -369,7 +368,7 @@ public class Inventory
     /// to remove.</param>
     /// <returns>The number of items that were actually removed from the collection. This value may be less than the requested
     /// quantity if insufficient items are available.</returns>
-    public int Remove(ItemStack stack) => stack != null? Remove(stack.ItemData, stack.Quantity) : 0;
+    public int Remove(ItemStack stack) => stack != null ? Remove(stack.ItemData, stack.Quantity) : 0;
 
     /// <summary>
     /// Removes one of the specified item from the collection.
@@ -441,7 +440,7 @@ public class Inventory
     {
         index = -1;
 
-        for(int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null)
             {
@@ -462,9 +461,9 @@ public class Inventory
     public List<int> FindSlotsWithItem(ItemData itemData)
     {
         List<int> indices = new List<int>();
-        if(itemData == null) return indices;
+        if (itemData == null) return indices;
 
-        for(int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] != null && slots[i].ItemData == itemData)
             {
@@ -485,6 +484,9 @@ public class Inventory
     /// false.</returns>
     public bool EnoughQuantity(ItemData itemData, int quantity)
     {
+        if (quantity < 0 || itemData == null) return false;
+        if (quantity == 0) return true;
+
         List<int> sameItemSlots = FindSlotsWithItem(itemData);
         int totalQuantity = 0;
         for (int i = 0; i < sameItemSlots.Count; i++)
@@ -521,10 +523,10 @@ public class Inventory
     public void SwapSlots(int fromSlot, Inventory toInventory, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, toInventory, toSlot);
     void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
     {
-        if(invA == null || invB == null) return;
-        if(indexA < 0 || indexA >= invA.slots.Length) return;
-        if(indexB < 0 || indexB >= invB.slots.Length) return;
-        if(invA == invB && indexA == indexB) return;
+        if (invA == null || invB == null) return;
+        if (indexA < 0 || indexA >= invA.slots.Length) return;
+        if (indexB < 0 || indexB >= invB.slots.Length) return;
+        if (invA == invB && indexA == indexB) return;
 
         var stackA = invA.slots[indexA];
         var stackB = invB.slots[indexB];
