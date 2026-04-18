@@ -162,6 +162,7 @@ public class SteamSessionBridge : MonoBehaviour
         {
             case GameState.Menu:
                 SteamFriends.SetRichPresence("steam_display", "#Status_InMenu");
+                status = "In Menu";
                 break;
             case GameState.Lobby:
                 if (string.IsNullOrEmpty(mapName))
@@ -177,6 +178,7 @@ public class SteamSessionBridge : MonoBehaviour
                 break;
             case GameState.Loading:
                 SteamFriends.SetRichPresence("steam_display", "#Status_Loading");
+                status = "Loading...";
                 break;
             case GameState.InGame:
                 if (string.IsNullOrEmpty(mapName))
@@ -192,6 +194,7 @@ public class SteamSessionBridge : MonoBehaviour
                 break;
             case GameState.PostGame:
                 SteamFriends.SetRichPresence("steam_display", "#Status_PostGame");
+                status = "Post Game..";
                 break;
             default:
                 status = "Unknown";
