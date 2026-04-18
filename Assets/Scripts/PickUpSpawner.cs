@@ -1,9 +1,10 @@
 using NUnit.Framework;
+using PurrNet;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class PickUpSpawner : MonoBehaviour
+public class PickUpSpawner : NetworkBehaviour
 {
     private enum SpawnMode
     {
@@ -25,21 +26,29 @@ public class PickUpSpawner : MonoBehaviour
 
     private void OnEnable()
     {
-        if (onEnable)
-            SpawnItems();
+        if (onEnable && isServer) SpawnItems();
     }
     private void OnDisable()
     {
         ClearItemsSpawned();
     }
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         ClearItemsSpawned();
+    }
+
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+        if(enabled && onEnable && asServer) SpawnItems();
     }
 
 
     public void SpawnItems()
     {
+        if (!isServer) return;
+
         ClearItemsSpawned();
 
         if (Items.Count == 0 || spawnPoints.Count == 0)
@@ -73,18 +82,20 @@ public class PickUpSpawner : MonoBehaviour
 
             availablePoints.RemoveAt(randomPoint);                //Remove point so it cannot be used again
 
-            GameObject newItem = Instantiate(itemsToSpawn[i], chosenPoint.position, chosenPoint.rotation);
+            GameObject newItem = Instantiate(itemsToSpawn[i], chosenPoint.position, chosenPoint.rotation, transform);
             spawnedItems.Add(newItem);                 //Cache spawned item for later cleanup
         }
     }
 
     private void ClearItemsSpawned()
     {
+        if (!isServer) return;
+
         foreach (GameObject item in spawnedItems)
         {
             if (item != null)
             {
-                Destroy(item);
+                Destroy(item.gameObject);
             }
         }
         spawnedItems.Clear();
