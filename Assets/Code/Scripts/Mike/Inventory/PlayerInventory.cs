@@ -24,7 +24,11 @@ public class PlayerInventory : NetworkBehaviour
     {
         playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
+    }
 
+    protected override void OnSpawned()
+    {
+        if (!isOwner) return;
         Inventory.OnSlotsMoved += HandleSlotsMoved;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
