@@ -1,54 +1,45 @@
+using PurrNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class CompositeVendor : VendorBase
 {
-    [SerializeField] private VendorButton[] itemButtons;
-    private Queue<IReadOnlyItemStack> unusedItems = new();
-
-    protected override void Awake()
+    public event Action<int> OnSlotChanged;
+    bool TryPerformTransfer(int slotIndex, Inventory toInventory)
     {
-        OnRestock.AddListener(OnRestockHandle);
-        base.Awake();
-    }
-    public bool TryPerformTransfer(VendorButton button, Inventory toInventory)
-    {
-        if(button.HeldItem == null || button.HeldItem.GetQuantity() <= 0) return false;
+        if (!itemStash.TryGet(slotIndex, out IReadOnlyItemStack stack)) return false;
+        if (!CheckPrice(slotIndex, toInventory)) return false;
 
-        bool success = itemStash.TryTransferExact(button.HeldItem.GetItemData(), button.HeldItem.GetQuantity(), toInventory);
+        bool success = itemStash.Transfer(slotIndex, toInventory) > 0;
 
         if (success)
         {
-            toInventory.Remove(CurrencyItem, button.HeldItem.GetItemData().VendorPrice);
-            SetNewButtonContent(button);
+            Debug.Log("Transfer Success");
+            toInventory.Remove(CurrencyItem, stack.GetItemData().VendorPrice);
+            InvokeOnSlotChanged(slotIndex);
         }
         return success;
     }
 
-    public bool CheckPrice(VendorButton button, Inventory buyerInventory)
+    public bool CheckPrice(int itemIndex, Inventory buyerInventory)
     {
-        if (button.HeldItem == null) return false;
-        int price = button.HeldItem.GetItemData().VendorPrice;
-        return buyerInventory.EnoughQuantity(CurrencyItem, price);
+        if(!itemStash.TryGet(itemIndex, out IReadOnlyItemStack stack)) return false;
+        int price = stack.GetItemData().VendorPrice;
+        bool success = buyerInventory.EnoughQuantity(CurrencyItem, price);
+        return success;
     }
 
-    private void OnRestockHandle()
+    public ItemData GetDataFromSlot(int slotIndex)
     {
-        unusedItems.Clear();
-
-        foreach(var item in itemStash.GetNonEmptyEnumeration()) unusedItems.Enqueue(item);
-        foreach(var button in itemButtons) SetNewButtonContent(button);
+        if (!itemStash.TryGet(slotIndex, out var stack)) return null;
+        return stack.GetItemData();
     }
 
-    private void SetNewButtonContent(VendorButton button)
+    [ServerRpc] public void RequestTransfer(int slotIndex, Inventory inventory)
     {
-        if(unusedItems.TryDequeue(out var stack))
-        {
-            button.SetItemAndVendor(itemStack: stack, vendor: this);
-            return;
-        }
-
-        button.SetItemAndVendor(itemStack: null, vendor: this);
+        TryPerformTransfer(slotIndex, inventory);
     }
+    [ObserversRpc] private void InvokeOnSlotChanged(int slot) => OnSlotChanged?.Invoke(slot);
 }

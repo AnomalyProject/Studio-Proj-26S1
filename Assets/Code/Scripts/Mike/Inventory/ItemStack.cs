@@ -6,6 +6,7 @@ public class ItemStack : IReadOnlyItemStack
     #region Fields and Properties
     public ItemData ItemData { get; }
     public int Quantity  { get; private set; }
+    public string Id { get; } = Guid.NewGuid().ToString();
 
     #endregion
 
@@ -82,6 +83,7 @@ public class ItemStack : IReadOnlyItemStack
     public bool IsEmpty() => Quantity <= 0;
     public int GetRemainingCapacity() => ItemData.MaxStackSize - Quantity;
     public int GetMaxCapacity() => ItemData.MaxStackSize;
+    public string GetID() => Id;
     #endregion
 }
 [Serializable] public class InspectorItemStack
@@ -109,6 +111,7 @@ public class ItemStack : IReadOnlyItemStack
 
 public interface IReadOnlyItemStack
 {
+    string GetID();
     int GetQuantity();
     ItemData GetItemData();
     bool IsFull();

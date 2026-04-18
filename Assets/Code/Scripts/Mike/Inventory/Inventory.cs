@@ -1,9 +1,10 @@
+using PurrNet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-public class Inventory
+public class Inventory : NetworkModule
 {
     #region Events
     /// <summary>
@@ -15,11 +16,20 @@ public class Inventory
     /// </summary>
     public event Action<IReadOnlyItemStack, int> OnStackAdded, OnStackRemoved;
     public event Action OnInventoryFull, OnSlotsMoved, OnInventoryChanged;
+
+    [ObserversRpc] private void InvokeInventoryChanged() => OnInventoryChanged?.Invoke();
+    [ObserversRpc] private void InvokeInventoryFull() => OnInventoryFull?.Invoke();
+    [ObserversRpc] private void InvokeSlotsMoved() => OnSlotsMoved?.Invoke();
+    [ObserversRpc] private void InvokeItemAdded(ItemData itemData, int amount) => OnItemAdded?.Invoke(itemData, amount);
+    [ObserversRpc] private void InvokeItemRemoved(ItemData itemData, int amount) => OnItemRemoved?.Invoke(itemData, amount);
+    [ObserversRpc] private void InvokeStackAdded(IReadOnlyItemStack stack, int slotIndex) => OnStackAdded?.Invoke(stack, slotIndex);
+    [ObserversRpc] private void InvokeStackRemoved(IReadOnlyItemStack stack, int slotIndex) => OnStackRemoved?.Invoke(stack, slotIndex);
+
     #endregion
 
     #region Fields and Properties
 
-    ItemStack[] slots;
+    SyncArray<ItemStack> slots;
     public int EmptySlots => slots.Count(slot => slot == null);
     public int UsedSlots => slots.Count(slot => slot != null);
     public int TotalSlots => slots.Length;
@@ -30,11 +40,11 @@ public class Inventory
     public Inventory(int size, params ItemStack[] startingItems)
     {
         size = Math.Max(size, 1);
-        slots = new ItemStack[size];
+        slots = new(size, ownerAuth: false);
 
-        OnItemAdded += (itemData, amount) => OnInventoryChanged?.Invoke();
-        OnItemRemoved += (itemData, amount) => OnInventoryChanged?.Invoke();
-        OnSlotsMoved += () => OnInventoryChanged?.Invoke();
+        OnItemAdded += (itemData, amount) => InvokeInventoryChanged();
+        OnItemRemoved += (itemData, amount) => InvokeInventoryChanged();
+        OnSlotsMoved += () => InvokeInventoryChanged();
 
         for (int i = 0; i < startingItems.Length && !IsInventoryFull(); i++)
         {
@@ -94,15 +104,14 @@ public class Inventory
         {
             int possibleToAdd = Mathf.Min(quantity, itemData.MaxStackSize);
             slots[emptySlotIndex] = new ItemStack(itemData, possibleToAdd);
-            OnStackAdded?.Invoke(slots[emptySlotIndex], emptySlotIndex);
+            InvokeStackAdded(slots[emptySlotIndex], emptySlotIndex);
             totalAmountAdded += possibleToAdd;
             quantity -= possibleToAdd;
         }
 
-        if (totalAmountAdded > 0) OnItemAdded?.Invoke(itemData, totalAmountAdded);
+        if (totalAmountAdded > 0) InvokeItemAdded(itemData, totalAmountAdded);
 
-        if (IsInventoryFull())
-            OnInventoryFull?.Invoke();
+        if (IsInventoryFull()) InvokeInventoryFull();
 
         return totalAmountAdded;
     }
@@ -254,7 +263,7 @@ public class Inventory
         if (amountTransfered == 0) return 0;
 
         stackToTransfer.RemoveFromStack(amountTransfered);
-        OnItemRemoved?.Invoke(stackToTransfer.ItemData, amountTransfered);
+        InvokeItemRemoved(stackToTransfer.ItemData, amountTransfered);
 
         if (stackToTransfer.Quantity <= 0) ClearSlot(fromIndex);
 
@@ -306,7 +315,7 @@ public class Inventory
             if (amount <= 0) break; // break if nothing left to transfer
         }
 
-        if (totalTransfered > 0) OnItemRemoved?.Invoke(itemData, totalTransfered);
+        if (totalTransfered > 0) InvokeItemRemoved(itemData, totalTransfered);
         return totalTransfered;
     }
 
@@ -359,8 +368,7 @@ public class Inventory
             quantity -= removed;
         }
 
-        if (totalAmountRemoved > 0)
-            OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
+        if (totalAmountRemoved > 0) InvokeItemRemoved(itemData, totalAmountRemoved);
 
         return totalAmountRemoved;
     }
@@ -371,7 +379,7 @@ public class Inventory
 
         int removed = stack.RemoveFromStack(quantity);
 
-        if (notify) OnItemRemoved?.Invoke(stack.GetItemData(), removed);
+        if (notify) InvokeItemRemoved(stack.GetItemData(), removed);
         if (stack.IsEmpty()) ClearSlot(index);
 
         return removed;
@@ -434,7 +442,7 @@ public class Inventory
     public void ClearSlot(int slotIndex)
     {
         ClearSlotSilent(slotIndex);
-        OnInventoryChanged?.Invoke();
+        InvokeInventoryChanged();
     }
 
     void ClearSlotSilent(int slotIndex)
@@ -442,7 +450,7 @@ public class Inventory
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
         ItemStack stackToRemove = slots[slotIndex];
         slots[slotIndex] = null;
-        OnStackRemoved?.Invoke(stackToRemove, slotIndex);
+        InvokeStackRemoved(stackToRemove, slotIndex);
     }
 
     /// <summary>
@@ -453,7 +461,7 @@ public class Inventory
     public void Clear()
     {
         for (int i = 0; i < slots.Length; i++) ClearSlotSilent(i);
-        OnInventoryChanged?.Invoke();
+        InvokeInventoryChanged();
     }
     #endregion
 
@@ -595,9 +603,9 @@ public class Inventory
             invB.slots[indexB] = stackA;
         }
 
-        invA.OnSlotsMoved?.Invoke();
+        invA.InvokeSlotsMoved();
 
-        if (invA != invB) invB.OnSlotsMoved?.Invoke();
+        if (invA != invB) invB.InvokeSlotsMoved();
     }
 
     /// <summary>

@@ -1,49 +1,48 @@
+using PurrNet;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class CycleVendor : InteractableVendor
 {
+    public UnityEvent<IReadOnlyItemStack> OnUpdateFocused;
     [SerializeField, Min(.1f)] float cycleRatio = 0.5f;
-    IReadOnlyItemStack _focusedItem;
+
+    private IReadOnlyItemStack _focusedItem;
     public IReadOnlyItemStack FocusedItem
     {
         get => _focusedItem;
         private set
         {
+            if (_focusedItem == value) return;
+
             _focusedItem = value;
-            if (FocusedItem != null) OnUpdateFocused?.Invoke(FocusedItem);
+            if (FocusedItem != null) OnUpdateFocused?.Invoke(value);
         }
     }
-    public UnityEvent<IReadOnlyItemStack> OnUpdateFocused;
-    int focusedIndex = 0;
+    private int focusedIndex = 0;
 
-    void Start() => InvokeRepeating(nameof(Cycle), 0f, cycleRatio);
+    protected override void OnObserverAdded(PlayerID player)
+    {
+        base.OnObserverAdded(player);
+        StartCycle(player, cycleRatio);
+    }
+
+    [TargetRpc] private void StartCycle(PlayerID playerID, float ratio) => InvokeRepeating(nameof(Cycle), 0f, ratio);
     protected override bool TryInteractBehaviour(PlayerBody interactor)
     {
         if (FocusedItem == null) return false;
-        return itemStash.TryTransferExact(FocusedItem.GetItemData(), FocusedItem.GetQuantity(), interactor.Inventory);
+        return itemStash.Transfer(focusedIndex, interactor.Inventory) > 0;
     }
 
-    void Cycle()
+    private void Cycle()
     {
-        if(itemStash.UsedSlots == 0)
+        if(itemStash.TryGetNext(focusedIndex, out IReadOnlyItemStack newFocused, out int newIndex))
         {
-            FocusedItem = null;
-            return;
+            FocusedItem = newFocused;
+            focusedIndex = newIndex;
+            DebugFocused();
         }
-
-        int startingIndex = focusedIndex;
-        focusedIndex = (focusedIndex + 1) % itemStash.TotalSlots;
-        IReadOnlyItemStack newFocused;
-
-        while (!itemStash.TryGet(focusedIndex, out newFocused))
-        {
-            focusedIndex = (focusedIndex + 1) % itemStash.TotalSlots;
-            if (focusedIndex == startingIndex) break;
-        }
-
-        FocusedItem = newFocused;
     }
     public void DebugFocused()
     {

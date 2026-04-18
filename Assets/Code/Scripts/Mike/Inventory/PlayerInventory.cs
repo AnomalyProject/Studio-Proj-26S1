@@ -1,3 +1,4 @@
+using PurrNet;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(PlayerBody))]
-public class PlayerInventory : MonoBehaviour
+public class PlayerInventory : NetworkBehaviour
 {
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
 
@@ -16,7 +17,7 @@ public class PlayerInventory : MonoBehaviour
 
     int focusedIndex = 0;
     GameObject activeInstance;
-    Dictionary<IReadOnlyItemStack, GameObject> itemInstances = new();
+    Dictionary<string, GameObject> itemInstances = new();
     PlayerBody playerBody;
 
     void Awake()
@@ -27,6 +28,22 @@ public class PlayerInventory : MonoBehaviour
         Inventory.OnSlotsMoved += HandleSlotsMoved;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
+        Inventory.OnInventoryChanged += DebugInventory;
+    }
+
+    void DebugInventory()
+    {
+        foreach(var item in Inventory.GetEnumeration())
+        {
+            if (item == null) Debug.Log("Empty Slot");
+            else Debug.Log($"Item: {item.GetItemData().name}, Quantity: {item.GetQuantity()}");
+        }
+
+        foreach(var item in itemInstances)
+        {
+            if (item.Value == null) Debug.Log("Empty Slot");
+            else Debug.Log($"Instances: Item Key: {item.Key}, Item Object: {item.Value.name}");
+        }
     }
 
     #region Inventory Event Subscribers
@@ -34,7 +51,7 @@ public class PlayerInventory : MonoBehaviour
     {
         if(Inventory.TryGet(focusedIndex, out var stack))
         {
-            GameObject itemInstance = itemInstances[stack];
+            GameObject itemInstance = itemInstances[stack.GetID()];
 
             if (itemInstance != activeInstance)
             {
@@ -49,14 +66,14 @@ public class PlayerInventory : MonoBehaviour
         if (stack.GetItemData().ItemPrefab == null) return;
 
         GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
-        itemInstances.Add(stack, itemObject);
+        itemInstances.Add(stack.GetID(), itemObject);
 
         if (activeInstance == null) ChangeFocused(slotIndex);
         else itemObject.SetActive(false);
     }
     void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
-        if (!itemInstances.TryGetValue(stack, out GameObject itemInstance)) return;
+        if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return;
 
         if (activeInstance == itemInstance)
         {
@@ -66,13 +83,14 @@ public class PlayerInventory : MonoBehaviour
         }
 
         Destroy(itemInstance);
-        itemInstances.Remove(stack);
+        itemInstances.Remove(stack.GetID());
     }
     #endregion
 
     #region Inventory Control
     public void NextItem()
     {
+        DebugInventory();
         if (Inventory.TryGetNext(focusedIndex, out var stack, out int nextIndex))
         {
             ChangeFocused(nextIndex);
@@ -97,14 +115,14 @@ public class PlayerInventory : MonoBehaviour
         IReadOnlyItemStack stack;
         GameObject itemObject = null;
 
-        if (differentIndex && Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
+        if (differentIndex && Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(false);
         }
 
         focusedIndex = focusAtIndex;
 
-        if (Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
+        if (Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(true);
         }
@@ -116,7 +134,7 @@ public class PlayerInventory : MonoBehaviour
     public bool TryUseFocused()
     {
         if(!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        if(!itemInstances.TryGetValue(stack, out GameObject itemInstance)) return false; // Try get item's world instance
+        if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
 
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future
         
