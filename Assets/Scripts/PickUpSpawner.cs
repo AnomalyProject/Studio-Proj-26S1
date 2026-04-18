@@ -48,33 +48,33 @@ public class PickUpSpawner : MonoBehaviour
             return;
         }
 
-        List<Transform> availablePoints = new List<Transform>(spawnPoints);
-        List<GameObject> itemsToSpawn = new List<GameObject>();
+        List<Transform> availablePoints = new List<Transform>(spawnPoints);    //Copy spawnPoints in a temporary list so we can remove used points
+        List<GameObject> itemsToSpawn = new List<GameObject>();                //List of prefabs that will actually be spawned
 
         if (spawnMode == SpawnMode.SpawnAll)
         {
-            itemsToSpawn.AddRange(Items);
+            itemsToSpawn.AddRange(Items);                  //Spawn all items once
         }
         else if (spawnMode == SpawnMode.RandomSpawn)
         {
-            for (int i = 0; i < randomSpawnAmount; i++)
+            for (int i = 0; i < randomSpawnAmount; i++)              //Pick random items from the collection
             {
                 int randomItemIndex = Random.Range(0, Items.Count);
                 itemsToSpawn.Add(Items[randomItemIndex]);
             }
         }
 
-        int totalToSpawn = Mathf.Min(itemsToSpawn.Count, availablePoints.Count);
+        int totalToSpawn = Mathf.Min(itemsToSpawn.Count, availablePoints.Count);      //Prevent spawning more items than we have spawn points
 
         for (int i = 0; i < totalToSpawn; i++)
         {
             int randomPoint = Random.Range(0, availablePoints.Count);
             Transform chosenPoint = availablePoints[randomPoint];
 
-            availablePoints.RemoveAt(randomPoint);
+            availablePoints.RemoveAt(randomPoint);                //Remove point so it cannot be used again
 
             GameObject newItem = Instantiate(itemsToSpawn[i], chosenPoint.position, chosenPoint.rotation);
-            spawnedItems.Add(newItem);
+            spawnedItems.Add(newItem);                 //Cache spawned item for later cleanup
         }
     }
 
