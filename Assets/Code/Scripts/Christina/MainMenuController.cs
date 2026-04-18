@@ -5,7 +5,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject modePanel;
     [SerializeField] private GameObject coopPanel;
-    [SerializeField] private string gameplaySceneName = "NetworkTestScene";
+    [SerializeField] private string soloGameplayScene = "NetworkTestScene";
 
     public void OnStartPressed()
     {
@@ -15,7 +15,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSinglePlayerPressed()
     {
-        SessionModeManager.Instance.StartSolo(gameplaySceneName);
+        SessionModeManager.Instance.StartSolo(soloGameplayScene);
     }
 
     public void OnMultiplayerPressed()

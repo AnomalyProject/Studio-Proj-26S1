@@ -65,6 +65,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
@@ -74,8 +75,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnSpawned(bool asServer)
     {
-        DontDestroyOnLoad(gameObject);
-
         if (asServer)
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
