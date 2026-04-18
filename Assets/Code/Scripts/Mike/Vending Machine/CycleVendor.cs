@@ -25,6 +25,8 @@ public class CycleVendor : InteractableVendor
     protected override void OnObserverAdded(PlayerID player)
     {
         base.OnObserverAdded(player);
+
+        if (!isServer) return;
         StartCycle(player, cycleRatio);
     }
 
