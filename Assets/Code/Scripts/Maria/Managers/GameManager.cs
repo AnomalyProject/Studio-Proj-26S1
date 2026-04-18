@@ -47,7 +47,8 @@ public class GameManager : NetworkBehaviour
     #region Events
     // Events
     public UnityEvent<int> OnProgressChanged;
-    public UnityEvent OnWrongDecision;
+    public UnityEvent<float> OnPunishmentTimerTick;
+    public UnityEvent OnWrongDecision, OnPunishmentTimerExpired;
     public UnityEvent OnGameWon;
     public UnityEvent OnGameReset;
     #endregion
@@ -298,10 +299,12 @@ public class GameManager : NetworkBehaviour
         {
             yield return new WaitForSeconds(1f);
             timeRemaining -= 1f;
+            OnPunishmentTimerTick.Invoke(timeRemaining);
             Debug.Log($"[GameManager] Punishment Room - {timeRemaining}s remaining");
         }
 
         LogProgress("Punishment timer expired - resetting progress to 0");
+        if(isServer) InvokeOnPunishmentTimerExpired();
         NewGame();
     }
     /// <summary>
@@ -316,6 +319,8 @@ public class GameManager : NetworkBehaviour
         StopCoroutine(punishmentTimerCoroutine);
         punishmentTimerCoroutine = null;
     }
+
+    [ObserversRpc] void InvokeOnPunishmentTimerExpired() => OnPunishmentTimerExpired?.Invoke();
     #endregion
 
     #region Elevator Control
