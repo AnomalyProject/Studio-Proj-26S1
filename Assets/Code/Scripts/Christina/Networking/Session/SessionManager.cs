@@ -513,8 +513,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
+        if (SessionModeManager.Instance == null)
+        {
+            Debug.LogError("[SessionManager] SessionModeManager missing during start-match. Cannot load gameplay scene.");
+            return;
+        }
 
+        SessionModeManager.Instance.LoadGameplayScene();
+        
         Debug.Log("[SessionManager] Game starting...");
+        
     }
 
     /// <summary>

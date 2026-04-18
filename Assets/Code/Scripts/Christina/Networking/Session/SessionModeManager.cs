@@ -192,6 +192,41 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.OnLoadFinished -= OnSoloSceneLoaded;
         StartCoroutine(BeginLocalListenHost());
     }
+    
+    /// <summary>
+    /// server only method. Loads the gameplay scene through PurrNet's scene module which replicates
+    /// the load to every connected client automatically.
+    /// </summary>
+    public void LoadGameplayScene()
+    {
+        if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
+        
+        var settings = new PurrSceneSettings {
+            isPublic = true, // note: public true means that every connecte player gets pulled into the scene
+            mode = LoadSceneMode.Single
+        };
+
+        var op = NetworkManager.main.sceneModule.LoadSceneAsync(gameplaySceneName, settings);
+        SceneLoader.Instance.PerformAsyncOperation(op); 
+        
+        StartCoroutine(WaitForGameplayLoadThenInGame(op));
+    }
+
+    private IEnumerator WaitForGameplayLoadThenInGame(AsyncOperation op)
+    {
+        while (op != null && !op.isDone) yield return null;
+
+        if (GameStateManager.Instance.CurrentState == GameState.Loading)
+        {
+            GameStateManager.Instance.RequestStateChange(GameState.InGame);
+            Debug.Log("[SessionModeManager] Gameplay scene loaded. Transitioned to InGame.");
+        }
+        else
+        {
+            Debug.LogWarning($"[SessionModeManager] Gameplay scene loaded but state was {GameStateManager.Instance.CurrentState}, not Loading. InGame transition skipped.");
+        }
+            
+    }
 
     private IEnumerator BeginSoloFlow()
     {
