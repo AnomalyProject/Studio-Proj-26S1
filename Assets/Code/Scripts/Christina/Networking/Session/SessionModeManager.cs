@@ -4,17 +4,20 @@ using UnityEngine;
 using System.Collections;
 using PurrNet.Steam;
 using PurrNet.Transports;
+using PurrNet.Modules;
+using UnityEngine.SceneManagement;
 
 public class SessionModeManager : MonoBehaviour
 {
-    public static SessionModeManager Instance {get; private set;}
+    public static SessionModeManager Instance { get; private set; }
     private SessionMode currentMode = SessionMode.None;
     public SessionMode CurrentMode => currentMode;
     [SerializeField] private string gameplaySceneName = "NetworkTestScene";
-    
+    [SerializeField] private string lobbySceneName = "Lobby";
+
     private const float hostReadyTimeoutSeconds = 10f;
     private const float sessionReadyTimeoutSeconds = 5f;
-     
+
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
     private void Awake()
@@ -29,9 +32,12 @@ public class SessionModeManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
     private void OnEnable()
     {
+        // todelete
+        Debug.Log($"[SessionModeManager] OnEnable — Bridge.Instance is {(SteamSessionBridge.Instance == null ? "NULL" : "SET")}");
+        
         if (SteamSessionBridge.Instance != null)
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
@@ -47,7 +53,25 @@ public class SessionModeManager : MonoBehaviour
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
         }
     }
+
+    private void Start()
+    {
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+        }
+    }
     
+    private void OnDestroy()
+    {
+        if (SteamSessionBridge.Instance != null)
+        {
+            SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
+            SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
+        }
+    }
+
     /// <summary>
     /// Updates the active session mode and notifies listeners when the mode actually changes
     /// </summary>
@@ -55,7 +79,7 @@ public class SessionModeManager : MonoBehaviour
     public void SetMode(SessionMode mode)
     {
         if (mode == currentMode) return;
-        
+
         Debug.Log($"[SessionModeManager] Mode: {currentMode} changed to {mode}.");
 
         SessionMode previousMode = currentMode;
@@ -81,8 +105,8 @@ public class SessionModeManager : MonoBehaviour
         {
             SteamSessionBridge.Instance.LeaveSteamLobby();
         }
-        
-        SessionEvents.Reset(); 
+
+        SessionEvents.Reset();
         SetMode(SessionMode.None);
 
         if (GameStateManager.Instance != null)
@@ -94,10 +118,10 @@ public class SessionModeManager : MonoBehaviour
         {
             SceneLoader.Instance.LoadScene("MainMenuChristina");
         }
-            
-        
+
+
     }
-    
+
     /// <summary>
     /// Begins a solo session by entering the required state flow and loading the requested gameplay scene.
     /// </summary>
@@ -110,19 +134,21 @@ public class SessionModeManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("[SessionModeManager] Starting Solo session...");
-        
+        StartCoroutine(BeginSoloFlow());
+
+        /*Debug.Log("[SessionModeManager] Starting Solo session...");
+
         SetMode(SessionMode.Solo);
 
         // in Solo mode we don't need a Lobby phase. But we still go through it because
-        // GameStateManager requires that path. 
+        // GameStateManager requires that path.
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
-        
+
         SceneLoader.Instance.OnLoadFinished += OnSoloSceneLoaded;
-        SceneLoader.Instance.LoadSceneWithAsync(sceneName);
+        SceneLoader.Instance.LoadSceneWithAsync(sceneName);*/
     }
-    
+
     /// <summary>
     /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
     /// host startuo begins.
@@ -138,14 +164,16 @@ public class SessionModeManager : MonoBehaviour
         Debug.Log("[SessionModeManager] Starting Co-Op Host...");
 
         SetMode(SessionMode.CoOpHost);
-        
-        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        SceneLoader.Instance.OnLoadFinished += OnHostSceneLoaded;
-        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        //GameStateManager.Instance.RequestStateChange(GameState.Loading);
+
+        /*SceneLoader.Instance.OnLoadFinished += OnHostSceneLoaded;
+        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);*/
+        
+        SteamSessionBridge.Instance.BeginSteamListenHost();
     }
-    
+
     /// <summary>
     /// Runs after the host scene finishes loading to start the Steam listen-host setup.
     /// </summary>
@@ -163,6 +191,54 @@ public class SessionModeManager : MonoBehaviour
     {
         SceneLoader.Instance.OnLoadFinished -= OnSoloSceneLoaded;
         StartCoroutine(BeginLocalListenHost());
+    }
+
+    private IEnumerator BeginSoloFlow()
+    {
+        NetworkManager netManager = NetworkManager.main;
+
+        if (netManager == null)
+        {
+            Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
+            ReturnToMenu();
+        }
+        
+        // swaping to local transport
+        LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+        SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+
+        localTransport.enabled = true;
+        steamTransport.enabled = false;
+
+        netManager.StartHost();
+        
+        float deadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+        while (!netManager.isHost && Time.realtimeSinceStartup < deadline) yield return null;
+
+        if (!netManager.isHost)
+        {
+            Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
+            ReturnToMenu();
+        }
+
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < deadline) yield return null;
+
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+        {
+            Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
+            ReturnToMenu();
+        }
+        
+        // loading gameplay scene through PurrNet
+        var settings = new PurrSceneSettings { isPublic = true, mode = LoadSceneMode.Single };
+        var op = netManager.sceneModule.LoadSceneAsync(gameplaySceneName, settings);
+        SceneLoader.Instance.PerformAsyncOperation(op);
+
+        // waiting for the load to actually finish
+        while (op != null && !op.isDone) yield return null;
+
+        GameStateManager.Instance.RequestStateChange(GameState.InGame);
     }
 
     /// <summary>
@@ -248,12 +324,9 @@ public class SessionModeManager : MonoBehaviour
         Debug.Log("[SessionModeManager] Starting Co-Op Client join...");
 
         SetMode(SessionMode.CoOpClient);
-        
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        SceneLoader.Instance.OnLoadFinished += OnJoinSceneLoaded;
-        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
+        SteamSessionBridge.Instance.BeginPendingSteamJoin();
     }
     
     /// <summary>
@@ -284,16 +357,20 @@ public class SessionModeManager : MonoBehaviour
     /// <param name="status"></param>
     private void OnHostStartupStatusChanged(HostStartupStatus status)
     {
+        //todelete
+        Debug.Log($"[SessionModeManager] OnHostStartupStatusChanged fired: {status.Stage}");
         if (status.Stage == HostStartupStage.Failed)
         {
             Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
             ReturnToMenu();
+            return;
         }
         
         if (status.Stage == HostStartupStage.HostPublished)
         {
-            GameStateManager.Instance.RequestStateChange(GameState.InGame);
-            Debug.Log("[SessionModeManager] Host startup complete. Transitioned to InGame.");
+            var settings = new PurrSceneSettings{ isPublic = true, mode = LoadSceneMode.Single };
+            var op = NetworkManager.main.sceneModule.LoadSceneAsync(lobbySceneName, settings);
+            SceneLoader.Instance.PerformAsyncOperation(op);
         }
         
     }

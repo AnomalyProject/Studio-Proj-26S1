@@ -252,7 +252,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created.");
     }
