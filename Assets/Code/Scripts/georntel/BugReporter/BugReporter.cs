@@ -12,7 +12,7 @@ public class BugReporter : MonoBehaviour
     public GameObject bugReporterPanel;
     public TMP_InputField descriptionInput;
     public TMP_Dropdown frequencyDropdown; 
-    public TMP_Dropdown impactDropdown;
+    public TMP_Dropdown typeDropdown;
     public Button submitButton;
     public Button closeButton;
     public GameObject thankYouMessage;
@@ -55,7 +55,7 @@ public class BugReporter : MonoBehaviour
         if (isSending) return;
         isSending = true;
         submitButton.interactable = false; 
-        StartCoroutine(CaptureScreenshotAndSend());
+       
     }
     
     private IEnumerator CaptureScreenshotAndSend()
@@ -87,13 +87,16 @@ public class BugReporter : MonoBehaviour
         mail.Subject = $"{Application.productName} v{Application.version} | Bug Report";
         
         // Harware info
-        string hardwareInfo = $"CPU: {SystemInfo.processorType}\n" +
-                              $"GPU: {SystemInfo.graphicsDeviceName}\n" +
+        string hardwareInfo = $"Device Model: {SystemInfo.deviceModel}\r\n" +
+                              $"Device Type: {SystemInfo.deviceType}\r\n" +
+                              $"Resolution: {Screen.currentResolution.width} x {Screen.currentResolution.height}\r\n" +
+                              $"CPU: {SystemInfo.processorType}\r\n" +
+                              $"GPU: {SystemInfo.graphicsDeviceName}\r\n" +
                               $"RAM: {SystemInfo.systemMemorySize} MB";
         
         // Severity
         string frequency = frequencyDropdown.options[frequencyDropdown.value].text;
-        string impact = impactDropdown.options[impactDropdown.value].text;
+        string impact = typeDropdown.options[typeDropdown.value].text;
         
         
         mail.Body = $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
@@ -106,8 +109,7 @@ public class BugReporter : MonoBehaviour
                     $"Impact: {impact}\n\n" +
                     $"Player Description:\n{descriptionInput.text}";
         
-        // Check if the screenshot was captured successfully before trying to attach it
-        if (File.Exists(tempScreenshotPath))
+        if (!string.IsNullOrEmpty(tempScreenshotPath) && File.Exists(tempScreenshotPath))
         {
             mail.Attachments.Add(new Attachment(tempScreenshotPath));
         }
@@ -130,12 +132,6 @@ public class BugReporter : MonoBehaviour
             OnMailSuccess, // The success callback
             OnMailFailure  // The failure callback
         );
-        
-        // CLEAN UP
-        mail.Dispose();
-        // Delete the temporary files
-        if (File.Exists(tempScreenshotPath)) File.Delete(tempScreenshotPath);
-        if (File.Exists(tempLogPath)) File.Delete(tempLogPath);
     }
 
     private void OnMailSuccess()
@@ -144,7 +140,7 @@ public class BugReporter : MonoBehaviour
         descriptionInput.text = "";
         
         frequencyDropdown.value = 0;
-        impactDropdown.value = 0;
+        typeDropdown.value = 0;
         
         thankYouMessage.SetActive(true);
         Debug.Log("Bug report sent successfully.");
@@ -157,7 +153,7 @@ public class BugReporter : MonoBehaviour
         Debug.LogError($"Failed to send bug report: {errorMessage}");
         ValidateInput(descriptionInput.text);
     }
-
+    
     private void CloseReporter()
     {
         bugReporterPanel.SetActive(false);
