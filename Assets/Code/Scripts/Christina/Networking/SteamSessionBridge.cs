@@ -145,6 +145,7 @@ public class SteamSessionBridge : MonoBehaviour
         lobbyCreatedCallResult.Set(apiCall);
     }
     
+    //todo: Friends list display requires "steam_display" + partner registered localization tokens.
     public bool UpdateRichPresence(GameState state)
     {
         if (!SteamManager.Initialized) return false;
@@ -160,19 +161,37 @@ public class SteamSessionBridge : MonoBehaviour
         switch (state)
         {
             case GameState.Menu:
-                status = "In Menu";
+                SteamFriends.SetRichPresence("steam_display", "#Status_InMenu");
                 break;
             case GameState.Lobby:
-                status =  string.IsNullOrEmpty(mapName) ? "In Lobby" : $"In Lobby — {mapName}";
+                if (string.IsNullOrEmpty(mapName))
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InLobby");
+                }
+                else
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InLobbyWithMap");
+                    SteamFriends.SetRichPresence("map", mapName);
+                }
+                status = string.IsNullOrEmpty(mapName) ? "In Lobby" : $"In Lobby — {mapName}";
                 break;
             case GameState.Loading:
-                status = "Loading...";
+                SteamFriends.SetRichPresence("steam_display", "#Status_Loading");
                 break;
             case GameState.InGame:
-                status = string.IsNullOrEmpty(mapName) ? "Playing" : $"Playing — {mapName}";
+                if (string.IsNullOrEmpty(mapName))
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InGame");
+                }
+                else
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InGameWithMap");
+                    SteamFriends.SetRichPresence("map", mapName);
+                }
+                status = string.IsNullOrEmpty(mapName) ? "In Game" : $"In Game — {mapName}";
                 break;
             case GameState.PostGame:
-                status = "Post-Game Results";
+                SteamFriends.SetRichPresence("steam_display", "#Status_PostGame");
                 break;
             default:
                 status = "Unknown";
