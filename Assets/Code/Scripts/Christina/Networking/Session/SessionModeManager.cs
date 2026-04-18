@@ -12,6 +12,9 @@ public class SessionModeManager : MonoBehaviour
     public static SessionModeManager Instance { get; private set; }
     private SessionMode currentMode = SessionMode.None;
     public SessionMode CurrentMode => currentMode;
+
+    private bool isLocallyInitiatedTeardown = false;
+    
     [SerializeField] private string gameplaySceneName = "NetworkTestScene";
     [SerializeField] private string lobbySceneName = "Lobby";
 
@@ -61,6 +64,11 @@ public class SessionModeManager : MonoBehaviour
             SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
         }
+
+        if (NetworkManager.main)
+        {
+            NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
+        }
     }
     
     private void OnDestroy()
@@ -69,6 +77,11 @@ public class SessionModeManager : MonoBehaviour
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
+        }
+        
+        if (NetworkManager.main)
+        {
+            NetworkManager.main.onClientConnectionState -= OnClientConnectionStateChanged;
         }
     }
 
@@ -94,6 +107,9 @@ public class SessionModeManager : MonoBehaviour
     /// </summary>
     public void ReturnToMenu()
     {
+        if (isLocallyInitiatedTeardown) return; 
+        isLocallyInitiatedTeardown = true;
+        
         NetworkManager netManager = NetworkManager.main;
         if (netManager != null)
         {
@@ -106,7 +122,6 @@ public class SessionModeManager : MonoBehaviour
             SteamSessionBridge.Instance.LeaveSteamLobby();
         }
 
-        SessionEvents.Reset();
         SetMode(SessionMode.None);
 
         if (GameStateManager.Instance != null)
@@ -408,6 +423,18 @@ public class SessionModeManager : MonoBehaviour
             SceneLoader.Instance.PerformAsyncOperation(op);
         }
         
+    }
+
+    private void OnClientConnectionStateChanged(ConnectionState state)
+    {
+        if (state != ConnectionState.Disconnected) return;
+        if (currentMode != SessionMode.CoOpClient) return;
+        if (isLocallyInitiatedTeardown) return;
+        
+        Debug.LogWarning("[SessionModeManager] Client disconnected unexpectedly — host likely left. Returning to menu.");
+
+        SessionEvents.InvokeHostMigrationStarted(null);
+        ReturnToMenu();
     }
 
 }
