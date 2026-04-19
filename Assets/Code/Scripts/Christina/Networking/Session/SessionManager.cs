@@ -103,7 +103,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        // to delete
+        // clear the singleton only if this is still the active instance, to avoid
+        // keeping a stale reference or overwriting a newer SessionManager.
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+        
         sessionData = null;
         hostPlayerID = null;
         pendingHostConnection = null;
