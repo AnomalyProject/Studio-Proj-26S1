@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 /// <summary>
 /// Door class that implements an interaction interface , basically open and close door
@@ -11,20 +12,16 @@ public class Door : MonoBehaviour, IInteractable<MonoBehaviour>
     private bool isOpen = false;// Checks if door is currently open
     private bool isAnimating = false; // Prevents interaction while animation is playing
 
-    public bool CanInteract(MonoBehaviour Interactor)
+    public Task<bool> CanInteract(MonoBehaviour Interactor)
     {
-        return !isAnimating;  // Interaction is only allowed if not animating
+        return Task.FromResult(!isAnimating);  // Interaction is only allowed if not animating
     }
     // Attempts to interact with the door
-    public bool TryInteract(MonoBehaviour Interactor) 
+    public Task<bool> TryInteract(MonoBehaviour Interactor) 
     {
-        if(!CanInteract(Interactor))
-        {
-            return false; 
-        }
         Debug.Log("Door Interacted with by " + Interactor.name);
         PlayAnimation();//Animation PLay
-        return true;
+        return Task.FromResult(true);
     }
     // Handles playing the animation forward or backward
     private void PlayAnimation()

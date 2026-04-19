@@ -1,18 +1,19 @@
+using PurrNet;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(Collider))]
-public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
+public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
 {
     [Header("Settings")] Collider col;
 
     // Checks
-    private bool bEnoughPlayers, bIsAvailable;
-    [SerializeField] private bool bHasAnomaly;
-
-    private HashSet<FPSController> playersInArea = new HashSet<FPSController>();
+    [SerializeField] private SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
+    private SyncVar<bool> bIsAvailable = new SyncVar<bool>(ownerAuth: false);
+    private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
     public UnityEvent<bool> OnActivateExit;
@@ -31,21 +32,20 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
 
         col = GetComponent<Collider>();
         col.isTrigger = true;
-        bIsAvailable = true;
     }
-    public bool CanInteract(FPSController interactor) => bEnoughPlayers && bIsAvailable;
-
-    public bool TryInteract(FPSController interactor)
+    public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(HasEnoughPlayers() && bIsAvailable.value);
+    public Task<bool> TryInteract(PlayerBody interactor)
     {
+        Debug.Log("Interacted with exit");
         Exit();
-        return true;
+        return Task.FromResult(true);
     }
 
     #region Exit
     /// <summary>
     /// notifies the game with an event weather there is an anomaly or not.
     /// </summary>
-    private void Exit()
+    [ObserversRpc(requireServer: false)] private void Exit()
     {
         Debug.Log($"Exit Activated. Anomaly Presence: {bHasAnomaly}");
         OnActivateExit?.Invoke(bHasAnomaly);
@@ -60,22 +60,22 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
-            if (other.TryGetComponent(out FPSController player))
-            {
-                playersInArea.Add(player);
+        if (!isServer) return;
 
-                CheckPlayersInArea();
-            }
+        if (other.TryGetComponent(out PlayerBody player) && player.id.HasValue)
+        {
+            playersInArea.Add(player.id.Value);
+        }
     }
 
     // See OnTriggerEnter summary.
     private void OnTriggerExit(Collider other)
     {
-        if (other.TryGetComponent(out FPSController player))
-        {
-            playersInArea.Remove(player);
+        if(!isServer) return;
 
-            CheckPlayersInArea();
+        if (other.TryGetComponent(out PlayerBody player) && player.id.HasValue)
+        {
+            playersInArea.Remove(player.id.Value);
         }
     }
     #endregion
@@ -84,34 +84,19 @@ public class LevelExitPoint : MonoBehaviour, IInteractable<FPSController>
     /// <summary>
     /// Checks if all players are in the area.
     /// </summary>
-    private void CheckPlayersInArea()
+    private bool HasEnoughPlayers()
     {
-        // Actual version
-        Debug.Log($"SessionManagre is null: {SessionManager.Instance == null}");
-        Debug.Log($"SessionManager CurrentSession is null: {SessionManager.Instance.CurrentSession == null}");
-        Debug.Log($"SessionManager CurrentSession.Players is null: {SessionManager.Instance.CurrentSession.Players ==  null}");
-        bEnoughPlayers = playersInArea.Count >= SessionManager.Instance.CurrentSession.Players.Count;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{SessionManager.Instance.CurrentSession.Players.Count}. Can Interact: {CanInteract(null)}");
-        /*bEnoughPlayers = playersInArea.Count >= 1;
-
-        Debug.Log($"Players in Area: {playersInArea.Count}/{1}. Can Interact: {CanInteract(null)}");*/
-        
-/*#if UNITY_EDITOR == false
-
-#else
-        //for testing purposes only
-
-    #endif*/
+        Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
+        return playersInArea.Count >= NetworkManager.main.playerCount;
     }
-#endregion
+    #endregion
 
     #region Interactable Collider
     /// <summary>
     /// Enables/Disables the interaction mode.
     /// </summary>
     /// <param name="active"></param>
-    public void SetInteraction(bool active) => bIsAvailable = active;
-    public void SetChoice(bool hasAnomaly) => bHasAnomaly = hasAnomaly;
+    [ServerRpc] public void SetInteraction(bool active) => bIsAvailable.value = active;
+    [ServerRpc] public void SetChoice(bool hasAnomaly) => bHasAnomaly.value = hasAnomaly;
     #endregion
 }

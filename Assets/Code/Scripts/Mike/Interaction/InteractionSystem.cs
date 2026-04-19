@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
@@ -37,11 +38,12 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     /// <remarks>Use this method to perform an interaction with the object currently in focus. If there is no
     /// focused interactable or it cannot be interacted with, the method returns false.</remarks>
     /// <returns>true if the focused interactable object exists and the interaction succeeds; otherwise, false.</returns>
-    public bool TryInteractFocused()
+    public async Task<bool> TryInteractFocused()
     {
-        if (_focusedInteractable != null && _focusedInteractable.CanInteract(Interactor))
+        bool canInteract = await _focusedInteractable.CanInteract(Interactor);
+        if (_focusedInteractable != null && canInteract)
         {
-            bool success = _focusedInteractable.TryInteract(Interactor);
+            bool success = await _focusedInteractable.TryInteract(Interactor);
             OnInteractionAttempted?.Invoke(_focusedInteractable, success);
             return success;
         }
@@ -60,14 +62,13 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     /// <remarks>If an interactable object is detected and can be interacted with, it becomes the currently
     /// focused interactable. Otherwise, the focus is cleared. This method is typically used to update the current
     /// target for interaction based on the user's aim or viewpoint.</remarks>
-    public void RaycastScan(Ray ray, float maxDistance, LayerMask layerMask)
+    public async void RaycastScan(Ray ray, float maxDistance, LayerMask layerMask)
     {
         if(maxDistance < 0) return;
 
         if (Physics.Raycast(ray, out RaycastHit hitInfo, maxDistance, layerMask))
         {
-            if(TryGetInteractable(hitInfo.collider, out var interactable) 
-                && interactable.CanInteract(Interactor))
+            if(InteractionUtils.TryGetInteractable<TInteractor>(hitInfo.collider.gameObject, out var interactable) && await interactable.CanInteract(Interactor))
             {
                 ChangeFocused(interactable);
                 return;
@@ -104,7 +105,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     /// <remarks>If multiple interactable objects are found, the closest valid one along an unobstructed line
     /// of sight is selected as the focused interactable. If no valid interactable is found, the focus is
     /// cleared.</remarks>
-    public void OverlapSphereScan(Vector3 position, float radius, LayerMask layerMask)
+    public async void OverlapSphereScan(Vector3 position, float radius, LayerMask layerMask)
     {
         if(radius < 0) return;
 
@@ -113,7 +114,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
-            if(TryGetInteractable(collider, out var interactable) && interactable.CanInteract(Interactor))
+            if(InteractionUtils.TryGetInteractable<TInteractor>(collider.gameObject, out var interactable) && await interactable.CanInteract(Interactor))
             {
                 Ray validationRay = new Ray(position, collider.transform.position - position);
                 float distance = Vector3.Distance(position, collider.transform.position);
@@ -157,9 +158,15 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         if (_focusedInteractable != null)
             OnFocusedInteractable?.Invoke(_focusedInteractable);
     }
-    bool TryGetInteractable(Collider collider, out IInteractable<TInteractor> result)
+
+    #endregion
+
+}
+public static class InteractionUtils
+{
+    public static bool TryGetInteractable<TInteractor>(GameObject fromGameObject, out IInteractable<TInteractor> result) where TInteractor : MonoBehaviour
     {
-        foreach (MonoBehaviour comp in collider.GetComponents<MonoBehaviour>())
+        foreach (MonoBehaviour comp in fromGameObject.GetComponents<MonoBehaviour>())
         {
             if (comp is IInteractable<TInteractor> interactable)
             {
@@ -171,7 +178,4 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         result = null;
         return false;
     }
-
-    #endregion
-
 }

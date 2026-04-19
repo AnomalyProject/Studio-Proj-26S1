@@ -1,7 +1,8 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
-public class ExitInteractable : MonoBehaviour, IInteractable<FPSController>
+public class ExitInteractable : MonoBehaviour, IInteractable<PlayerBody>
 {
     [SerializeField] LevelExitPoint exitPoint;
 
@@ -15,6 +16,6 @@ public class ExitInteractable : MonoBehaviour, IInteractable<FPSController>
             if (exitPoint == null) Debug.LogError($"{gameObject.name}: No LevelExitPoint found for interaction. Please assign one.");
         }
     }
-    public bool CanInteract(FPSController interactor) => exitPoint.CanInteract(interactor);
-    public bool TryInteract(FPSController interactor) => exitPoint.TryInteract(interactor);
+    public Task<bool> CanInteract(PlayerBody interactor) => exitPoint.CanInteract(interactor);
+    public Task<bool> TryInteract(PlayerBody interactor) => exitPoint.TryInteract(interactor);
 }

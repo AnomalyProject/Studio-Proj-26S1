@@ -1,10 +1,11 @@
+using PurrNet;
 using System;
 using UnityEngine;
 
 public class MapOrientor : MonoBehaviour
 {
     [SerializeField] LevelExitPoint entryElevator, exitElevator;
-    public event Action<LevelExitPoint, bool> OnElevatorInteracted;
+    public static event Action<LevelExitPoint, bool> OnElevatorInteracted;
     public LevelExitPoint EntryElevator => entryElevator;
     public LevelExitPoint ExitElevator => exitElevator;
 
@@ -45,5 +46,22 @@ public class MapOrientor : MonoBehaviour
     {
         SetNewEntryPoint(exitPoint);
         OnElevatorInteracted?.Invoke(exitPoint, decision);
+    }
+    public void SyncEntryPointWith(NetworkID entryID, Vector3 entryPosition, Quaternion entryRotation)
+    {
+        if (entryElevator.id != entryID)
+        {
+            if (exitElevator.id == entryID)
+            {
+                SetNewEntryPoint(exitElevator);
+            }
+            else
+            {
+                Debug.LogWarning("Entry ID does not match any known elevator.");
+                return;
+            }
+        }
+
+        entryElevator.transform.SetPositionAndRotation(entryPosition, entryRotation);
     }
 }

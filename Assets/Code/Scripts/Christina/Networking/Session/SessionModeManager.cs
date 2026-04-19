@@ -1,6 +1,9 @@
 using System;
 using PurrNet;
 using UnityEngine;
+using System.Collections;
+using PurrNet.Steam;
+using PurrNet.Transports;
 
 public class SessionModeManager : MonoBehaviour
 {
@@ -8,6 +11,9 @@ public class SessionModeManager : MonoBehaviour
     private SessionMode currentMode = SessionMode.None;
     public SessionMode CurrentMode => currentMode;
     [SerializeField] private string gameplaySceneName = "NetworkTestScene";
+    
+    private const float hostReadyTimeoutSeconds = 10f;
+    private const float sessionReadyTimeoutSeconds = 5f;
      
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -42,6 +48,10 @@ public class SessionModeManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Updates the active session mode and notifies listeners when the mode actually changes
+    /// </summary>
+    /// <param name="mode"></param>
     public void SetMode(SessionMode mode)
     {
         if (mode == currentMode) return;
@@ -54,6 +64,10 @@ public class SessionModeManager : MonoBehaviour
         OnModeChanged?.Invoke(previousMode, currentMode);
     }
 
+    /// <summary>
+    /// Shuts down any active network session, leaves the Steam lobbyu, resets session state, and
+    /// returns the game to the main menu flow. 
+    /// </summary>
     public void ReturnToMenu()
     {
         NetworkManager netManager = NetworkManager.main;
@@ -84,6 +98,10 @@ public class SessionModeManager : MonoBehaviour
         
     }
     
+    /// <summary>
+    /// Begins a solo session by entering the required state flow and loading the requested gameplay scene.
+    /// </summary>
+    /// <param name="sceneName"></param>
     public void StartSolo(string sceneName)
     {
         if (currentMode != SessionMode.None)
@@ -101,10 +119,14 @@ public class SessionModeManager : MonoBehaviour
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
         
-        SceneLoader.Instance.OnLoadFinished += OnSceneLoaded;
+        SceneLoader.Instance.OnLoadFinished += OnSoloSceneLoaded;
         SceneLoader.Instance.LoadSceneWithAsync(sceneName);
     }
     
+    /// <summary>
+    /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
+    /// host startuo begins.
+    /// </summary>
     public void StartHosting()
     {
         if (currentMode != SessionMode.None)
@@ -124,6 +146,9 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
     }
     
+    /// <summary>
+    /// Runs after the host scene finishes loading to start the Steam listen-host setup.
+    /// </summary>
     private void OnHostSceneLoaded()
     {
         SceneLoader.Instance.OnLoadFinished -= OnHostSceneLoaded;
@@ -131,16 +156,87 @@ public class SessionModeManager : MonoBehaviour
         SteamSessionBridge.Instance.BeginSteamListenHost();
     }
 
-    private void OnSceneLoaded()
+    /// <summary>
+    /// Runs after the solo scene finishes loading to kick off the local listen-host startup coroutine.
+    /// </summary>
+    private void OnSoloSceneLoaded()
     {
-        // unsubscribing immediately because the next time any scene loads through SceneLoader, 
-        // OnSceneLoaded fires again and tries to transition to InGame from Menu. 
-        SceneLoader.Instance.OnLoadFinished -= OnSceneLoaded;
-        
-        GameStateManager.Instance.RequestStateChange(GameState.InGame);
-        Debug.Log("[SessionModeManager] Scene loaded. Transitioned to InGame");
+        SceneLoader.Instance.OnLoadFinished -= OnSoloSceneLoaded;
+        StartCoroutine(BeginLocalListenHost());
     }
-    
+
+    /// <summary>
+    /// Boots a solo session as a Purrnet listen-host over LocalTransport.
+    /// Flips the NetworkManager's active transport from Steam to Local, starts the host, and waits for
+    /// both listen-host readiness and session creation before transitioning to InGame. Returns
+    /// to the main menu if any step times out.
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator BeginLocalListenHost()
+    {
+        // wait so the new scene's Start method can run.
+        // Otherwhise network manager is null. 
+        float readyDeadline = Time.realtimeSinceStartup + 2f;
+        while (NetworkManager.main == null && Time.realtimeSinceStartup < readyDeadline)
+            yield return null;
+        
+        NetworkManager netManager = NetworkManager.main;
+
+        if (netManager == null)
+        {
+            Debug.LogError("[SessionModeManager] NetworkManager.main not found after solo scene load.");
+            ReturnToMenu();
+            yield break;
+        }
+        
+        LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+        if (localTransport == null)
+        {
+            Debug.LogError("[SessionModeManager] LocalTransport component missing on NetworkManager GameObject.");
+            ReturnToMenu();
+            yield break;
+        }
+        
+        SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+
+        localTransport.enabled = true;
+        if(steamTransport != null) steamTransport.enabled = false;
+        netManager.transport = localTransport;
+        
+        Debug.Log($"[SessionModeManager] Solo transport set to {netManager.transport.GetType().Name}. Starting host....");
+        netManager.StartHost();
+        
+        float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+        while (!netManager.isHost && Time.realtimeSinceStartup < hostDeadline)
+            yield return null;
+
+        if (!netManager.isHost)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for solo listen-host to become ready.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+               && Time.realtimeSinceStartup < sessionDeadline)
+            yield return null;
+
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for SessionManager to create the solo session.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        GameStateManager.Instance.RequestStateChange(GameState.InGame);
+        Debug.Log("[SessionModeManager] Solo host ready. -> Transitioned to InGame");
+    }
+
+
+    /// <summary>
+    /// Starts the co-op client join flow by entering lobby/loading states and loading the gameplay scene before joining begins.
+    /// </summary>
     public void StartJoining()
     {
         if (currentMode != SessionMode.None)
@@ -160,13 +256,19 @@ public class SessionModeManager : MonoBehaviour
         SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);
     }
     
+    /// <summary>
+    ///  Runs after the join scene finishes loading to begin the pending Steam join process.
+    /// </summary>
     private void OnJoinSceneLoaded()
     {
         SceneLoader.Instance.OnLoadFinished -= OnJoinSceneLoaded;
         SteamSessionBridge.Instance.BeginPendingSteamJoin();
     }
     
-    
+    /// <summary>
+    /// Monitors join startup progress and returns to the menu if the join process fails.
+    /// </summary>
+    /// <param name="status"></param>
     private void OnJoinStartupStatusChanged(JoinStartupStatus status)
     {
         if (status.Stage == JoinStartupStage.Failed)
@@ -176,6 +278,10 @@ public class SessionModeManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Monitors host startup progress, returning to the menu on failure and switching to InGame once hosting is fully published.
+    /// </summary>
+    /// <param name="status"></param>
     private void OnHostStartupStatusChanged(HostStartupStatus status)
     {
         if (status.Stage == HostStartupStage.Failed)

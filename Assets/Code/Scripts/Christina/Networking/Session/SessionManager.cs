@@ -1,10 +1,8 @@
+using System.Collections.Generic;
+using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
-using System.Collections;
-using System.Collections.Generic;
-using Steamworks;
-
 
 /// <summary>
 /// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
@@ -106,7 +104,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        if (Instance == this)  // <-- ADD THIS BLOCK
+        // clear the singleton only if this is still the active instance, to avoid
+        // keeping a stale reference or overwriting a newer SessionManager.
+        if (Instance == this)
         {
             Instance = null;
         }
@@ -132,19 +132,21 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (playerID.isServer)
         {
             Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
-            Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
             return;
         }
 
         hostPlayerID = playerID;
+        var hostIdentity = LocalIdentity.ResolveHost();
 
-        ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-        string hostName = SteamFriends.GetPersonaName();
-
-        AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
+        AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
+    /// <summary>
+    /// Waits briefly for the local networking player to become available, then
+    /// registers it as the host if no host-player mappins has already been created.
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator WaitForLocalHostThenRegister()
     {
         float deadline = Time.realtimeSinceStartup + hostRegistrationTimeoutSeconds;
@@ -239,10 +241,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
+
+        var hostIdentity = LocalIdentity.ResolveHost();
         
         sessionData = new SessionData
         {
-            HostSteamID =  SteamUser.GetSteamID().m_SteamID,
+            HostSteamID =  hostIdentity.steamID,
             MapName = "Default",
             GameMode = "Default",
             MaxPlayers = 4
@@ -318,6 +322,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return null;
     }
     
+    /// <summary>
+    /// Creates a client facing snapshot of the current session by coping only th e
+    /// public, serializable data the client needs from the authoritative session state.
+    /// </summary>
+    /// <returns></returns>
     private ClientSessionData BuildClientSessionData()
     {
         var players = new List<ClientPlayerInfo>();

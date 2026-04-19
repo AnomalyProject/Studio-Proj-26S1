@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class AnomalyMap : GameMap
@@ -8,13 +9,13 @@ public class AnomalyMap : GameMap
     [SerializeField, Tooltip("The normal version of the map, no anomalies.")] GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
    
-    List<AnomalyGroup> usedAnomalies = new(), availableAnomalies = new();
+    List<int> availableIndices = new();
     public GameObject BaseMap => baseMap;
 
     protected override void Awake()
     {
         base.Awake();
-        availableAnomalies.AddRange(anomalyVariations);
+        ResetAvailableIndices();
     }
 
     /// <summary>
@@ -23,24 +24,36 @@ public class AnomalyMap : GameMap
     /// <returns>The <see cref="GameObject"/> reference of the Anomaly variation.</returns>
     public AnomalyGroup GetNextAnomalyGroup()
     {
+        int index = GetRandomUnusedAnomalyIndex();
+        return GetAnomalyGroupAtIndex(index);
+    }
+    public AnomalyGroup GetAnomalyGroupAtIndex(int index)
+    {
+        if (index < 0 || index >= anomalyVariations.Count) return null;
+        return anomalyVariations[index];
+    }
+
+    public int GetRandomUnusedAnomalyIndex()
+    {
         if (anomalyVariations.Count == 0)
         {
-            Debug.LogWarning($"{name}: Anomaly map has no variations assigned.");
-            return null;
+            Debug.LogWarning($"{name}: No variations.");
+            return -1;
         }
 
-        if(availableAnomalies.Count == 0)
-        {
-            availableAnomalies.AddRange(usedAnomalies);
-            usedAnomalies.Clear();
-        }
+        if (availableIndices.Count == 0) ResetAvailableIndices();
 
-        int index = UnityEngine.Random.Range(0, availableAnomalies.Count);
-        AnomalyGroup nextAnomaly = availableAnomalies[index];
+        int rand = UnityEngine.Random.Range(0, availableIndices.Count);
+        int index = availableIndices[rand];
 
-        usedAnomalies.Add(nextAnomaly);
-        availableAnomalies.RemoveAt(index);
-        return nextAnomaly;
+        availableIndices.RemoveAt(rand);
+
+        return index;
+    }
+    public void ResetAvailableIndices()
+    {
+        availableIndices.Clear();
+        for (int i = 0; i < anomalyVariations.Count; i++) availableIndices.Add(i);
     }
 
     /// <summary>
@@ -50,7 +63,9 @@ public class AnomalyMap : GameMap
     {
         BaseMap?.SetActive(keepBase);
 
-        foreach (var variation in availableAnomalies) variation?.GroupRoot.SetActive(false);
-        foreach (var variation in usedAnomalies) variation?.GroupRoot.SetActive(false);
+        foreach (var variation in anomalyVariations)
+        {
+            variation.GroupRoot?.SetActive(false);
+        }
     }
 }
