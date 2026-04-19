@@ -110,6 +110,13 @@ public class ItemStack : IReadOnlyItemStack
         if (cache) _cachedStack = newStack;
         return newStack;
     }
+
+    /// <summary>
+    /// Validates the current quantity value, ensuring it is within the allowed range for the associated item.
+    /// </summary>
+    /// <remarks>If the associated item data is null, the quantity is reset to zero. Otherwise, the quantity
+    /// is clamped between 1 and the item's maximum stack size. This method should be called after modifying the
+    /// quantity or item data to maintain valid state.</remarks>
     public void Validate()
     {
         if (itemData == null)

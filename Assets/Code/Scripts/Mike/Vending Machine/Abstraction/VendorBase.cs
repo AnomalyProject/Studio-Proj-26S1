@@ -8,7 +8,7 @@ public abstract class VendorBase : NetworkBehaviour
     [SerializeField] private int stashSize = 5;
     [SerializeField] private bool randomizeStashContent = true;
     [SerializeField, Tooltip("What will be requested by the player to pay.")] private ItemData currencyItem;
-    [SerializeField] private ItemData[] itemsForSale;
+    [SerializeField] private InspectorItemStack[] itemsForSale;
     public UnityEvent OnRestock;
     public event System.Action OnSpawnedEvent;
 
@@ -30,6 +30,14 @@ public abstract class VendorBase : NetworkBehaviour
         else OnSpawnedEvent?.Invoke();
     }
 
+    private void OnValidate()
+    {
+        foreach(var item in itemsForSale)
+        {
+            item.Validate();
+        }
+    }
+
     public virtual void Restock()
     {
         if (!isServer || itemsForSale.Length == 0) return;
@@ -39,9 +47,9 @@ public abstract class VendorBase : NetworkBehaviour
         for(int i = 0; i < itemStash.TotalSlots; i++ )
         {
             int itemIndex = randomizeStashContent? Random.Range(0, itemsForSale.Length) : i % itemsForSale.Length;
-            ItemData item = itemsForSale[itemIndex];
+            var item = itemsForSale[itemIndex];
 
-            int amountAdded = itemStash.Add(item, item.MaxStackSize);
+            int amountAdded = itemStash.Add(item.Data, item.Quantity);
 
             if (amountAdded == 0)
             {
