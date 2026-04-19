@@ -13,7 +13,7 @@ public static class ExceptionLogger
 {
     public static readonly string logFilePath = Path.Combine(Application.persistentDataPath, "Console.log");
     public static readonly string oldLogFilePath = Path.Combine(Application.persistentDataPath, "Console-prev.log");
-    private static readonly object fileLock = new();
+    private static readonly object fileLock = new object();
     private static bool initialized = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -23,6 +23,9 @@ public static class ExceptionLogger
         initialized = true;
 
         RotateLogs();
+
+        // Initialize the log file to ensure it exists
+        WriteToFile($"SESSION START: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
         TaskScheduler.UnobservedTaskException += HandleTaskException;

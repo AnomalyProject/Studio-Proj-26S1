@@ -198,12 +198,16 @@ public class DevConsole : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void FetchIcons()
     {
-        icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/log"));
-        icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/warning"));
-        Sprite error = Resources.Load<Sprite>("DevConsole/error");
-        icons.Add(LogType.Error, error);
-        icons.Add(LogType.Exception, error);
-        icons.Add(LogType.Assert, error);
+        try
+        {
+            icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/log"));
+            icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/warning"));
+            Sprite error = Resources.Load<Sprite>("DevConsole/error");
+            icons.Add(LogType.Error, error);
+            icons.Add(LogType.Exception, error);
+            icons.Add(LogType.Assert, error);
+        }
+        catch { }
     }
 
     // Register some basic internal commands

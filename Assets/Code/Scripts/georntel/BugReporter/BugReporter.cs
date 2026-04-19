@@ -1,6 +1,8 @@
-using UnityEngine.InputSystem;
-using UnityEngine.UI;
+using System.IO;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using System.Net.Mail;
 using System;
 using TMPro;
@@ -10,17 +12,25 @@ public class BugReporter : MonoBehaviour
     [Header("UI Components")]
     public GameObject bugReporterPanel;
     public TMP_InputField descriptionInput;
+    public TMP_Dropdown frequencyDropdown; 
+    public TMP_Dropdown typeDropdown;
     public Button submitButton;
     public Button closeButton;
     public GameObject thankYouMessage;
+    public Toggle includeScreenshotToggle;
 
     [Header("SMTP Configuration")]
-    public string receiverEmail = "";
     
+    public string receiverEmail = "";
     private bool isSending = false;
+    private string tempScreenshotPath;
+    private string tempLogPath;
 
-    void Start()
+    private void Start()
     {
+        tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "Screenshot.png");
+        tempLogPath = Path.Combine(Application.temporaryCachePath, "Console.log");
+
         bugReporterPanel.SetActive(false);
         thankYouMessage.SetActive(false);
         submitButton.interactable = false;
@@ -29,7 +39,7 @@ public class BugReporter : MonoBehaviour
         closeButton.onClick.AddListener(CloseReporter);
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.F12)) ToggleReporter();
     }
@@ -66,6 +76,36 @@ public class BugReporter : MonoBehaviour
         if (isSending) return;
         isSending = true;
         submitButton.interactable = false; 
+       
+        //  Screenshot toggle
+        if (includeScreenshotToggle != null && includeScreenshotToggle.isOn)
+        {
+            StopAllCoroutines(); // Stop any ongoing screenshot deletion attempts
+            StartCoroutine(CaptureScreenshotAndSend());
+        }
+        else
+        {
+            SendEmailReport();
+        }
+    }
+    
+    private IEnumerator CaptureScreenshotAndSend()
+    {
+        // Hide the Bug Reporter UI
+        bugReporterPanel.SetActive(false);
+
+        // Wait for the end of the frame so the UI completely disappears
+        yield return new WaitForEndOfFrame();
+
+        // Screenshot 
+        Texture2D screenImage = ScreenCapture.CaptureScreenshotAsTexture();
+        byte[] imageBytes = screenImage.EncodeToPNG();
+        Destroy(screenImage);
+
+        File.WriteAllBytes(tempScreenshotPath, imageBytes);
+
+        // Restore the Bug Reporter UI 
+        bugReporterPanel.SetActive(true);
 
         SendEmailReport();
     }
@@ -74,11 +114,41 @@ public class BugReporter : MonoBehaviour
     {
         MailMessage mail = new MailMessage();
         mail.To.Add(receiverEmail);
-        mail.Subject = $"{Application.productName} | Bug Report";
-        mail.Body = $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
+        mail.Subject = $"{Application.productName} v{Application.version} | Bug Report";
+        
+        // Harware info
+        string hardwareInfo = $"Device Model: {SystemInfo.deviceModel}\n" +
+                              $"Device Type: {SystemInfo.deviceType}\n" +
+                              $"Resolution: {Screen.currentResolution}\n" +
+                              $"CPU: {SystemInfo.processorType}\n" +
+                              $"GPU: {SystemInfo.graphicsDeviceName}\n" +
+                              $"RAM: {SystemInfo.systemMemorySize} MB";
+        
+        // Bug info
+        string type = typeDropdown.options[typeDropdown.value].text;
+        string frequency = frequencyDropdown.options[frequencyDropdown.value].text;
+        
+        mail.Body = $"Type: {type}\n" +
+                    $"Frequency: {frequency}\n\n" +
+                    $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
                     $"Time: {DateTime.Now:HH:mm:ss}\n" +
+                    $"Version: {Application.version}\n" +
                     $"OS: {SystemInfo.operatingSystem}\n\n" +
+                    $"HARDWARE\n{hardwareInfo}\n\n" +
                     $"Player Description:\n{descriptionInput.text}";
+
+        // Attach screenshot only if path is valid
+        if (File.Exists(tempScreenshotPath))
+        {
+            mail.Attachments.Add(new Attachment(tempScreenshotPath));
+        }
+
+        // Attach log only if path is valid
+        if (File.Exists(ExceptionLogger.logFilePath))
+        {
+            File.Copy(ExceptionLogger.logFilePath, tempLogPath, true);
+            mail.Attachments.Add(new Attachment(tempLogPath));
+        }
 
         // We call the static class here
         MailService.SendEmail(
@@ -88,13 +158,38 @@ public class BugReporter : MonoBehaviour
         );
     }
 
+
+    // Keep trying to delete the temp screenshot until it's gone
+    private IEnumerator DeleteTempFiles()
+    {
+        while (File.Exists(tempScreenshotPath))
+        {
+            try
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                File.Delete(tempScreenshotPath);
+                File.Delete(tempLogPath);
+            }
+            catch { }
+
+            yield return null;
+        }
+    }
+
     private void OnMailSuccess()
     {
         isSending = false;
         descriptionInput.text = "";
+        
+        frequencyDropdown.value = 0;
+        typeDropdown.value = 0;
+        
         thankYouMessage.SetActive(true);
         Debug.Log("Bug report sent successfully.");
         ValidateInput(descriptionInput.text);
+        StartCoroutine(DeleteTempFiles());
     }
 
     private void OnMailFailure(string errorMessage)
@@ -102,8 +197,9 @@ public class BugReporter : MonoBehaviour
         isSending = false;
         Debug.LogError($"Failed to send bug report: {errorMessage}");
         ValidateInput(descriptionInput.text);
+        StartCoroutine(DeleteTempFiles());
     }
-
+    
     private void CloseReporter()
     {
         bugReporterPanel.SetActive(false);

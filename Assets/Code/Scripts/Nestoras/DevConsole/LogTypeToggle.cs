@@ -37,11 +37,15 @@ public class LogTypeToggle : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void FetchIcons()
     {
-        g_icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/g_log"));
-        g_icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/g_warning"));
-        Sprite error = Resources.Load<Sprite>("DevConsole/g_error");
-        g_icons.Add(LogType.Error, error);
-        g_icons.Add(LogType.Exception, error);
-        g_icons.Add(LogType.Assert, error);
+        try
+        {
+            g_icons.Add(LogType.Log, Resources.Load<Sprite>("DevConsole/g_log"));
+            g_icons.Add(LogType.Warning, Resources.Load<Sprite>("DevConsole/g_warning"));
+            Sprite error = Resources.Load<Sprite>("DevConsole/g_error");
+            g_icons.Add(LogType.Error, error);
+            g_icons.Add(LogType.Exception, error);
+            g_icons.Add(LogType.Assert, error);
+        }
+        catch { }
     }
 }
