@@ -146,13 +146,17 @@ public class PlayerInventory : NetworkBehaviour
 
         if(success)
         {
-            if(stack.GetItemData().IsConsumable)
-            Inventory.TryRemoveOne(focusedIndex); // Deplete if consumable.
-
+            RegisterUsage_ServerRpc(focusedIndex);
             OnItemUsed?.Invoke(stack.GetItemData());
         }
 
         return success;
+    }
+
+    [ServerRpc] void RegisterUsage_ServerRpc(int slotIndex)
+    {
+        if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
+        if (stack.GetItemData().IsConsumable) Inventory.TryRemoveOne(slotIndex);
     }
 
     #region Input Actions
