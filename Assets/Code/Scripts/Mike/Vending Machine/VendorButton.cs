@@ -34,7 +34,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
     }
 
     void UpdateContent() => UpdateContent(SlotIndex);
-    void UpdateContent(int slot)
+    void UpdateContent(int slot) // will be used for whatever visuals needed
     {
         Debug.Log("Update Content called");
         if (vendorHost == null || slot != SlotIndex) return;

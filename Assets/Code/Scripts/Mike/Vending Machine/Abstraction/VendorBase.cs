@@ -38,6 +38,7 @@ public abstract class VendorBase : NetworkBehaviour
         }
     }
 
+    [ContextMenu("Restock")]
     public virtual void Restock()
     {
         if (!isServer || itemsForSale.Length == 0) return;
