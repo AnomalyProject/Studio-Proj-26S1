@@ -90,7 +90,10 @@ public class ItemStack : IReadOnlyItemStack
 {
     [SerializeField] ItemData itemData;
     [SerializeField, Min(1)] int quantity;
-    ItemStack _cachedStack;
+    private ItemStack _cachedStack;
+
+    public ItemData Data => itemData;
+    public int Quantity => quantity;
 
     /// <summary>
     /// Gets or creates an <see cref="ItemStack"/> instance based on the data stored in this <see cref="InspectorItemStack"/> and internally caches it.
@@ -106,6 +109,16 @@ public class ItemStack : IReadOnlyItemStack
         ItemStack newStack = new ItemStack(itemData, quantity);
         if (cache) _cachedStack = newStack;
         return newStack;
+    }
+    public void Validate()
+    {
+        if (itemData == null)
+        {
+            quantity = 0;
+            return;
+        }
+
+        quantity = Mathf.Clamp(quantity, 1, itemData.MaxStackSize);
     }
 }
 
