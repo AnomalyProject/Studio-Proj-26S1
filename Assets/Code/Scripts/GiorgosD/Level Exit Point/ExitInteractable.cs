@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
@@ -15,6 +16,6 @@ public class ExitInteractable : MonoBehaviour, IInteractable<PlayerBody>
             if (exitPoint == null) Debug.LogError($"{gameObject.name}: No LevelExitPoint found for interaction. Please assign one.");
         }
     }
-    public bool CanInteract(PlayerBody interactor) => exitPoint.CanInteract(interactor);
-    public bool TryInteract(PlayerBody interactor) => exitPoint.TryInteract(interactor);
+    public Task<bool> CanInteract(PlayerBody interactor) => exitPoint.CanInteract(interactor);
+    public Task<bool> TryInteract(PlayerBody interactor) => exitPoint.TryInteract(interactor);
 }

@@ -33,7 +33,7 @@ public class InventoryTestUnit : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.V)) playerInventory.TryUseFocused();
+        if (Input.GetKeyDown(KeyCode.V)) _ = playerInventory.TryUseFocused();
         if (Input.GetKeyDown(KeyCode.RightArrow)) playerInventory.NextItem();
         if (Input.GetKeyDown(KeyCode.LeftArrow)) playerInventory.PreviousItem();
         if (Input.GetKeyDown(KeyCode.DownArrow)) playerInventory.Inventory.TryRemoveOne(testItem);
