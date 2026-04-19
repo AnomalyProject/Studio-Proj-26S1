@@ -96,6 +96,8 @@ public class Inventory : NetworkModule
             if (slots[index].IsFull()) continue;
 
             int added = slots[index].AddToStack(quantity);
+
+            if(added > 0) slots.SetDirty(index);
             totalAmountAdded += added;
             quantity -= added;
         }
@@ -233,16 +235,12 @@ public class Inventory : NetworkModule
         if (toInventory == null) return 0;
         if (slots[fromIndex] == null) return 0;
 
-        ItemStack stackToTransfer = slots[fromIndex];
         amount = Mathf.Min(amount, slots[fromIndex].Quantity);
 
-        int amountTransfered = toInventory.Add(stackToTransfer.ItemData, amount);
+        int amountTransfered = toInventory.Add(slots[fromIndex].ItemData, amount);
         if (amountTransfered == 0) return 0;
 
-        stackToTransfer.RemoveFromStack(amountTransfered);
-        InvokeItemRemoved(stackToTransfer.ItemData, amountTransfered);
-
-        if (stackToTransfer.Quantity <= 0) ClearSlot(fromIndex);
+        Remove(fromIndex, amountTransfered);
 
         return amountTransfered;
     }
@@ -284,7 +282,8 @@ public class Inventory : NetworkModule
 
             if (successfullyTransfered == 0) break; // break if transaction was unsuccessful (other inventory full)
 
-            slots[index].RemoveFromStack(successfullyTransfered);
+            Remove(index, successfullyTransfered, notify: false);
+
             totalTransfered += successfullyTransfered;
             amount -= successfullyTransfered;
 
@@ -370,9 +369,10 @@ public class Inventory : NetworkModule
     int Remove(int index, int quantity, bool notify)
     {
         var stack = slots[index];
-        if (stack == null) return 0;
+        if (stack == null || quantity <= 0) return 0;
 
         int removed = stack.RemoveFromStack(quantity);
+        if(removed > 0) slots.SetDirty(index);
 
         if (notify) InvokeItemRemoved(stack.GetItemData(), removed);
         if (stack.IsEmpty()) ClearSlot(index);
@@ -589,6 +589,12 @@ public class Inventory : NetworkModule
         {
             int added = stackB.AddToStack(stackA.Quantity);
             stackA.RemoveFromStack(added);
+
+            if (added > 0)
+            {
+                invB.slots.SetDirty(indexB);
+                invA.slots.SetDirty(indexA);
+            }
 
             if (stackA.Quantity <= 0) invA.ClearSlot(indexA);
         }
