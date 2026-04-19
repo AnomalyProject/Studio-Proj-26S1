@@ -318,6 +318,24 @@ public class Inventory : NetworkModule
         return true;
     }
 
+    /// <summary>
+    /// Attempts to transfer the entire item stack from the specified slot to the target inventory, requiring an exact
+    /// fit.
+    /// </summary>
+    /// <remarks>The transfer only succeeds if the target inventory can accept the full quantity of the item
+    /// stack without modification. If the transfer is successful, the source slot is cleared.</remarks>
+    /// <param name="fromSlot">The zero-based index of the slot containing the item stack to transfer.</param>
+    /// <param name="toInventory">The inventory to which the item stack will be transferred. Cannot be null.</param>
+    /// <returns>true if the entire item stack was successfully transferred to the target inventory; otherwise, false.</returns>
+    public bool TryTransferExact(int fromSlot, Inventory toInventory)
+    {
+        if (toInventory == null) return false;
+        if(!TryGet(fromSlot, out IReadOnlyItemStack stack)) return false;
+        if(!toInventory.TryAddExact(stack.GetItemData(), stack.GetQuantity())) return false;
+        ClearSlot(fromSlot);
+        return true;
+    }
+
     #endregion
 
     #region Remove Methods

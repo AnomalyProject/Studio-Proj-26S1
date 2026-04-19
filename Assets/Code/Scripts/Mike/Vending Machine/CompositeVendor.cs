@@ -9,13 +9,25 @@ public class CompositeVendor : VendorBase
 {
     public event Action<int> OnSlotChanged;
 
-    public bool CheckPrice(int itemIndex, Inventory buyerInventory)
+    public bool CanBuyerAfford(int itemIndex, Inventory buyerInventory)
     {
         if(!itemStash.TryGet(itemIndex, out IReadOnlyItemStack stack)) return false;
-        int price = stack.GetItemData().VendorPrice;
-        bool success = buyerInventory.EnoughQuantity(CurrencyItem, price);
+       return CanBuyerAfford(stack, buyerInventory, out _);
+    }
+
+    private bool CanBuyerAfford(IReadOnlyItemStack stack, Inventory buyerInventory, out int stackPrice)
+    {
+        stackPrice = GetStackPrice(stack);
+        bool success = buyerInventory.EnoughQuantity(CurrencyItem, stackPrice);
         return success;
     }
+
+    public int GetStackPrice(int itemIndex)
+    {
+        if (!itemStash.TryGet(itemIndex, out IReadOnlyItemStack stack)) return 0;
+        return GetStackPrice(stack);
+    }
+    private int GetStackPrice(IReadOnlyItemStack stack) => stack.GetItemData().PricePerUnit * stack.GetQuantity();
 
     public ItemData GetDataFromSlot(int slotIndex)
     {
@@ -23,19 +35,19 @@ public class CompositeVendor : VendorBase
         return stack.GetItemData();
     }
 
-    [ServerRpc] public async Task<bool> RequestTransfer_Server(int slotIndex, Inventory toInventory)
+    [ServerRpc] public Task<bool> RequestTransfer_Server(int slotIndex, Inventory toInventory)
     {
-        if (!itemStash.TryGet(slotIndex, out IReadOnlyItemStack stack)) return await Task.FromResult(false);
-        if (!CheckPrice(slotIndex, toInventory)) return await Task.FromResult(false);
-        bool success = itemStash.Transfer(slotIndex, toInventory) > 0;
+        if (!itemStash.TryGet(slotIndex, out IReadOnlyItemStack stack)) return Task.FromResult(false);
+        if (!CanBuyerAfford(stack, toInventory, out int stackPrice)) return Task.FromResult(false);
+        bool success = itemStash.TryTransferExact(slotIndex, toInventory);
 
         if (success)
         {
             Debug.Log("Transfer Success");
-            toInventory.Remove(CurrencyItem, stack.GetItemData().VendorPrice);
+            toInventory.Remove(CurrencyItem, stackPrice);
             InvokeOnSlotChanged(slotIndex);
         }
-        return success;
+        return Task.FromResult(success);
     }
     [ObserversRpc] private void InvokeOnSlotChanged(int slot) => OnSlotChanged?.Invoke(slot);
 }

@@ -16,6 +16,6 @@ public class ItemData : ScriptableObject
     public Sprite ItemIcon => _itemIcon;
     public bool IsConsumable => _isConsumable;
     public int MaxStackSize => _maxStackSize;
-    public int VendorPrice => _vendorPrice;
+    public int PricePerUnit => _vendorPrice;
     public GameObject ItemPrefab => _itemPrefab;
 }

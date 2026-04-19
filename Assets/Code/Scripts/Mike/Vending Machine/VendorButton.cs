@@ -29,7 +29,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
     {
         if (vendorHost == null) return Task.FromResult(false);
 
-        bool result = SlotIndex >= 0 && vendorHost.CheckPrice(SlotIndex, interactor.Inventory);
+        bool result = SlotIndex >= 0 && vendorHost.CanBuyerAfford(SlotIndex, interactor.Inventory);
         return Task.FromResult(result);
     }
 
