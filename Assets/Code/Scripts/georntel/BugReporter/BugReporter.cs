@@ -16,6 +16,7 @@ public class BugReporter : MonoBehaviour
     public Button submitButton;
     public Button closeButton;
     public GameObject thankYouMessage;
+    public Toggle includeScreenshotToggle;
 
     [Header("SMTP Configuration")]
     
@@ -56,6 +57,17 @@ public class BugReporter : MonoBehaviour
         isSending = true;
         submitButton.interactable = false; 
        
+        //  Screenshot toggle
+        if (includeScreenshotToggle != null && includeScreenshotToggle.isOn)
+        {
+            StartCoroutine(CaptureScreenshotAndSend());
+        }
+        else
+        {
+            // Clear the old path so we don't accidentally send a previous screenshot
+            tempScreenshotPath = null; 
+            SendEmailReport();
+        }
     }
     
     private IEnumerator CaptureScreenshotAndSend()
