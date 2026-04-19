@@ -103,6 +103,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
+        // to delete
         sessionData = null;
         hostPlayerID = null;
         pendingHostConnection = null;
