@@ -24,10 +24,12 @@ public class BugReporter : MonoBehaviour
     public string receiverEmail = "";
     private bool isSending = false;
     private string tempScreenshotPath;
+    private string tempLogPath;
 
-    void Start()
+    private void Start()
     {
-        tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "BugReport_Screenshot.png");
+        tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "Screenshot.png");
+        tempLogPath = Path.Combine(Application.temporaryCachePath, "Console.log");
 
         bugReporterPanel.SetActive(false);
         thankYouMessage.SetActive(false);
@@ -37,7 +39,7 @@ public class BugReporter : MonoBehaviour
         closeButton.onClick.AddListener(CloseReporter);
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.F12)) ToggleReporter();
     }
@@ -100,23 +102,11 @@ public class BugReporter : MonoBehaviour
         byte[] imageBytes = screenImage.EncodeToPNG();
         Destroy(screenImage);
 
+        File.WriteAllBytes(tempScreenshotPath, imageBytes);
+
         // Restore the Bug Reporter UI 
         bugReporterPanel.SetActive(true);
 
-        // Keep trying to write the screenshot until it's successful
-        bool writtenNewScreenshot = false;
-        while (!writtenNewScreenshot)
-        {
-            try
-            {
-                File.WriteAllBytes(tempScreenshotPath, imageBytes);
-                writtenNewScreenshot = true;
-            }
-            catch { }
-
-            yield return null;
-        }
-        
         SendEmailReport();
     }
 
@@ -152,11 +142,12 @@ public class BugReporter : MonoBehaviour
         {
             mail.Attachments.Add(new Attachment(tempScreenshotPath));
         }
-        
+
         // Attach log only if path is valid
         if (File.Exists(ExceptionLogger.logFilePath))
         {
-            mail.Attachments.Add(new Attachment(ExceptionLogger.logFilePath));
+            File.Copy(ExceptionLogger.logFilePath, tempLogPath, true);
+            mail.Attachments.Add(new Attachment(tempLogPath));
         }
 
         // We call the static class here
@@ -169,13 +160,17 @@ public class BugReporter : MonoBehaviour
 
 
     // Keep trying to delete the temp screenshot until it's gone
-    private IEnumerator DeleteTempScreenshot()
+    private IEnumerator DeleteTempFiles()
     {
         while (File.Exists(tempScreenshotPath))
         {
             try
             {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
                 File.Delete(tempScreenshotPath);
+                File.Delete(tempLogPath);
             }
             catch { }
 
@@ -194,7 +189,7 @@ public class BugReporter : MonoBehaviour
         thankYouMessage.SetActive(true);
         Debug.Log("Bug report sent successfully.");
         ValidateInput(descriptionInput.text);
-        StartCoroutine(DeleteTempScreenshot());
+        StartCoroutine(DeleteTempFiles());
     }
 
     private void OnMailFailure(string errorMessage)
@@ -202,7 +197,7 @@ public class BugReporter : MonoBehaviour
         isSending = false;
         Debug.LogError($"Failed to send bug report: {errorMessage}");
         ValidateInput(descriptionInput.text);
-        StartCoroutine(DeleteTempScreenshot());
+        StartCoroutine(DeleteTempFiles());
     }
     
     private void CloseReporter()

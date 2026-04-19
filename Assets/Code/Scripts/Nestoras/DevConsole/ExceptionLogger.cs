@@ -13,7 +13,7 @@ public static class ExceptionLogger
 {
     public static readonly string logFilePath = Path.Combine(Application.persistentDataPath, "Console.log");
     public static readonly string oldLogFilePath = Path.Combine(Application.persistentDataPath, "Console-prev.log");
-    private static readonly object fileLock = new();
+    private static readonly object fileLock = new object();
     private static bool initialized = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
