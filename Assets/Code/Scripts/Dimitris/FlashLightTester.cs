@@ -17,7 +17,7 @@ public class FlashLightTester : MonoBehaviour
     {
         if (input.Player.ToggleFlashlight.triggered)
         {
-            flashlight.TryInteract(this);
+            _ = flashlight.TryInteract(this);
         }
 
         if (input.Player.FullRecharge.triggered)
