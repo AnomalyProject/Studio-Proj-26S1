@@ -24,6 +24,9 @@ public static class ExceptionLogger
 
         RotateLogs();
 
+        // Initialize the log file to ensure it exists
+        WriteToFile($"SESSION START: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
         AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
         TaskScheduler.UnobservedTaskException += HandleTaskException;
         Application.logMessageReceivedThreaded += HandleUnityLog;

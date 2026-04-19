@@ -26,6 +26,8 @@ public class BugReporter : MonoBehaviour
 
     void Start()
     {
+        tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "BugReport_Screenshot.png");
+
         bugReporterPanel.SetActive(false);
         thankYouMessage.SetActive(false);
         submitButton.interactable = false;
@@ -60,12 +62,11 @@ public class BugReporter : MonoBehaviour
         //  Screenshot toggle
         if (includeScreenshotToggle != null && includeScreenshotToggle.isOn)
         {
+            StopAllCoroutines(); // Stop any ongoing screenshot deletion attempts
             StartCoroutine(CaptureScreenshotAndSend());
         }
         else
         {
-            // Clear the old path so we don't accidentally send a previous screenshot
-            tempScreenshotPath = null; 
             SendEmailReport();
         }
     }
@@ -81,13 +82,24 @@ public class BugReporter : MonoBehaviour
         // Screenshot 
         Texture2D screenImage = ScreenCapture.CaptureScreenshotAsTexture();
         byte[] imageBytes = screenImage.EncodeToPNG();
-        Destroy(screenImage); 
-
-        tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "BugReport_Screenshot.png");
-        File.WriteAllBytes(tempScreenshotPath, imageBytes);
+        Destroy(screenImage);
 
         // Restore the Bug Reporter UI 
         bugReporterPanel.SetActive(true);
+
+        // Keep trying to write the screenshot until it's successful
+        bool writtenNewScreenshot = false;
+        while (!writtenNewScreenshot)
+        {
+            try
+            {
+                File.WriteAllBytes(tempScreenshotPath, imageBytes);
+                writtenNewScreenshot = true;
+            }
+            catch { }
+
+            yield return null;
+        }
         
         SendEmailReport();
     }
@@ -99,43 +111,36 @@ public class BugReporter : MonoBehaviour
         mail.Subject = $"{Application.productName} v{Application.version} | Bug Report";
         
         // Harware info
-        string hardwareInfo = $"Device Model: {SystemInfo.deviceModel}\r\n" +
-                              $"Device Type: {SystemInfo.deviceType}\r\n" +
-                              $"Resolution: {Screen.currentResolution.width} x {Screen.currentResolution.height}\r\n" +
-                              $"CPU: {SystemInfo.processorType}\r\n" +
-                              $"GPU: {SystemInfo.graphicsDeviceName}\r\n" +
+        string hardwareInfo = $"Device Model: {SystemInfo.deviceModel}\n" +
+                              $"Device Type: {SystemInfo.deviceType}\n" +
+                              $"Resolution: {Screen.currentResolution}\n" +
+                              $"CPU: {SystemInfo.processorType}\n" +
+                              $"GPU: {SystemInfo.graphicsDeviceName}\n" +
                               $"RAM: {SystemInfo.systemMemorySize} MB";
         
-        // Severity
+        // Bug info
+        string type = typeDropdown.options[typeDropdown.value].text;
         string frequency = frequencyDropdown.options[frequencyDropdown.value].text;
-        string impact = typeDropdown.options[typeDropdown.value].text;
         
-        
-        mail.Body = $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
+        mail.Body = $"Type: {type}\n" +
+                    $"Frequency: {frequency}\n\n" +
+                    $"Date: {DateTime.Now:yyyy-MM-dd}\n" +
                     $"Time: {DateTime.Now:HH:mm:ss}\n" +
                     $"Version: {Application.version}\n" +
                     $"OS: {SystemInfo.operatingSystem}\n\n" +
-                    $"HARDWARE \n{hardwareInfo}\n\n" +
-                    $"SEVERITY \n" +
-                    $"Frequency: {frequency}\n" +
-                    $"Impact: {impact}\n\n" +
+                    $"HARDWARE\n{hardwareInfo}\n\n" +
                     $"Player Description:\n{descriptionInput.text}";
-        
-        if (!string.IsNullOrEmpty(tempScreenshotPath) && File.Exists(tempScreenshotPath))
+
+        // Attach screenshot only if path is valid
+        if (File.Exists(tempScreenshotPath))
         {
             mail.Attachments.Add(new Attachment(tempScreenshotPath));
         }
         
-         // Attach
-        string logPath = ExceptionLogger.logFilePath; 
-        string tempLogPath = Path.Combine(Application.temporaryCachePath, "BugReport_Log.txt");
-        
-        // Attach only if path is valid
-        if (!string.IsNullOrEmpty(logPath) && File.Exists(logPath))
+        // Attach log only if path is valid
+        if (File.Exists(ExceptionLogger.logFilePath))
         {
-            // Copy the log file to a temporary location
-            File.Copy(logPath, tempLogPath, true);
-            mail.Attachments.Add(new Attachment(tempLogPath));
+            mail.Attachments.Add(new Attachment(ExceptionLogger.logFilePath));
         }
 
         // We call the static class here
@@ -144,6 +149,22 @@ public class BugReporter : MonoBehaviour
             OnMailSuccess, // The success callback
             OnMailFailure  // The failure callback
         );
+    }
+
+
+    // Keep trying to delete the temp screenshot until it's gone
+    private IEnumerator DeleteTempScreenshot()
+    {
+        while (File.Exists(tempScreenshotPath))
+        {
+            try
+            {
+                File.Delete(tempScreenshotPath);
+            }
+            catch { }
+
+            yield return null;
+        }
     }
 
     private void OnMailSuccess()
@@ -157,6 +178,7 @@ public class BugReporter : MonoBehaviour
         thankYouMessage.SetActive(true);
         Debug.Log("Bug report sent successfully.");
         ValidateInput(descriptionInput.text);
+        StartCoroutine(DeleteTempScreenshot());
     }
 
     private void OnMailFailure(string errorMessage)
@@ -164,6 +186,7 @@ public class BugReporter : MonoBehaviour
         isSending = false;
         Debug.LogError($"Failed to send bug report: {errorMessage}");
         ValidateInput(descriptionInput.text);
+        StartCoroutine(DeleteTempScreenshot());
     }
     
     private void CloseReporter()
