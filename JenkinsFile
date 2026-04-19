@@ -7,7 +7,7 @@ def branchMap = [
 def steamBranch = "unknown"
 def commitMsg = "unknown"
 def isMerge = false
-def botsAdminRole = "<@&1483456172567822378>"
+def botsAdminRole = "<@&1483456172567822378>"  //Reminder to remove 
 def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
@@ -55,7 +55,14 @@ pipeline {
                 script {
                     def scannerHome = tool 'SonarScanner' 
                     
-                    def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" -Dsonar.projectKey=\"AnomalyProject_Studio-Proj-26S1\" -Dsonar.projectName=\"Project Anomaly\" -Dsonar.sources=\"Assets/Code/Scripts\" -Dsonar.language=cs"
+                    def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" " +
+                                    "-Dsonar.projectKey=\"AnomalyProject_Studio-Proj-26S1\" " +
+                                    "-Dsonar.projectName=\"Project Anomaly\" " +
+                                    "-Dsonar.sources=\"Assets/Code/Scripts\" " +
+                                    "-Dsonar.language=cs " +
+                                    "-Dsonar.c.file.suffixes=- " +
+                                    "-Dsonar.cpp.file.suffixes=- " +
+                                    "-Dsonar.objc.file.suffixes=-"
                     
                     if (env.CHANGE_ID) {
                         discordSend title: "🔎 Code Review: PR-${env.CHANGE_ID}",
@@ -64,7 +71,11 @@ pipeline {
                             color: 16766720,
                             webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
                             
-                        sonarArgs += " -Dsonar.pullrequest.key=\"${env.CHANGE_ID}\" -Dsonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" -Dsonar.pullrequest.base=\"${env.CHANGE_TARGET}\""
+                        sonarArgs += " -Dsonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
+                                     "-Dsonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
+                                     "-Dsonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
+                                     "-Dsonar.pullrequest.provider=github " +
+                                     "-Dsonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\""
                     } else {
                         discordSend title: "🔎 Code Review: ${env.BRANCH_NAME}",
                             description: "${programmerRole} \nSir, I am running SonarQube static analysis on the ${env.BRANCH_NAME} branch.",
@@ -91,9 +102,6 @@ pipeline {
             }
             steps {
                 script {
-                    //Commenting this thing out for discord merge test, if it works we yeet it , if not we keep it
-                    //bat """powershell -Command "Invoke-RestMethod -Uri '${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}' -Method Post -Body (@{content='${programmerRole} - Sir, a new merge has been detected on ${env.BRANCH_NAME}!'} | ConvertTo-Json) -ContentType 'application/json'" """
-
                     discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
                         description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
                         link: env.BUILD_URL,

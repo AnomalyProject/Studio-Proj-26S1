@@ -11,6 +11,12 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private PlayerInteraction interaction;
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private GameObject bodyVisuals;
+    
+    [Header("Local Player")]
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private AudioListener playerAudioListener;
+    [SerializeField] private CameraLean playerCameraLean;
+    [SerializeField] private GameObject nameplateVisuals;
 
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
@@ -37,13 +43,25 @@ public class PlayerBody : NetworkBehaviour
 
     private bool TryApplyOwnership(bool local)
     {
-        Debug.Log($"[Ownership] ApplyOwnershipState: local={local}");
+        Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
         
         if(local) playerInput.ActivateInput();
         else playerInput.DeactivateInput();
+        
+        playerCamera.enabled = local;
+        playerAudioListener.enabled = local;
+        cameraController.enabled = local;
+        
+        movement.enabled = local;
+        movement.IsLocalPlayer = local;
+        
+        playerCameraLean.enabled = local;
+        playerCameraLean.IsLocalPlayer = local;
 
         if (bodyVisuals) bodyVisuals.SetActive(!local);
         interaction.enabled = local;
+        
+        if(nameplateVisuals) nameplateVisuals.SetActive(!local);
 
         return local;
     }

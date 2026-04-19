@@ -1,6 +1,9 @@
 using System;
 using PurrNet;
 using UnityEngine;
+using System.Collections;
+using PurrNet.Steam;
+using PurrNet.Transports;
 
 public class SessionModeManager : MonoBehaviour
 {
@@ -8,6 +11,9 @@ public class SessionModeManager : MonoBehaviour
     private SessionMode currentMode = SessionMode.None;
     public SessionMode CurrentMode => currentMode;
     [SerializeField] private string gameplaySceneName = "NetworkTestScene";
+    
+    private const float hostReadyTimeoutSeconds = 10f;
+    private const float sessionReadyTimeoutSeconds = 5f;
      
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -113,7 +119,7 @@ public class SessionModeManager : MonoBehaviour
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
         
-        SceneLoader.Instance.OnLoadFinished += OnSceneLoaded;
+        SceneLoader.Instance.OnLoadFinished += OnSoloSceneLoaded;
         SceneLoader.Instance.LoadSceneWithAsync(sceneName);
     }
     
@@ -151,18 +157,83 @@ public class SessionModeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Finalizes a solo scene load by unsubscribing from the load callback and transitioning the game into the InGame state.
+    /// Runs after the solo scene finishes loading to kick off the local listen-host startup coroutine.
     /// </summary>
-    private void OnSceneLoaded()
+    private void OnSoloSceneLoaded()
     {
-        // unsubscribing immediately because the next time any scene loads through SceneLoader, 
-        // OnSceneLoaded fires again and tries to transition to InGame from Menu. 
-        SceneLoader.Instance.OnLoadFinished -= OnSceneLoaded;
-        
-        GameStateManager.Instance.RequestStateChange(GameState.InGame);
-        Debug.Log("[SessionModeManager] Scene loaded. Transitioned to InGame");
+        SceneLoader.Instance.OnLoadFinished -= OnSoloSceneLoaded;
+        StartCoroutine(BeginLocalListenHost());
     }
-    
+
+    /// <summary>
+    /// Boots a solo session as a Purrnet listen-host over LocalTransport.
+    /// Flips the NetworkManager's active transport from Steam to Local, starts the host, and waits for
+    /// both listen-host readiness and session creation before transitioning to InGame. Returns
+    /// to the main menu if any step times out.
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator BeginLocalListenHost()
+    {
+        // wait so the new scene's Start method can run.
+        // Otherwhise network manager is null. 
+        float readyDeadline = Time.realtimeSinceStartup + 2f;
+        while (NetworkManager.main == null && Time.realtimeSinceStartup < readyDeadline)
+            yield return null;
+        
+        NetworkManager netManager = NetworkManager.main;
+
+        if (netManager == null)
+        {
+            Debug.LogError("[SessionModeManager] NetworkManager.main not found after solo scene load.");
+            ReturnToMenu();
+            yield break;
+        }
+        
+        LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+        if (localTransport == null)
+        {
+            Debug.LogError("[SessionModeManager] LocalTransport component missing on NetworkManager GameObject.");
+            ReturnToMenu();
+            yield break;
+        }
+        
+        SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+
+        localTransport.enabled = true;
+        if(steamTransport != null) steamTransport.enabled = false;
+        netManager.transport = localTransport;
+        
+        Debug.Log($"[SessionModeManager] Solo transport set to {netManager.transport.GetType().Name}. Starting host....");
+        netManager.StartHost();
+        
+        float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+        while (!netManager.isHost && Time.realtimeSinceStartup < hostDeadline)
+            yield return null;
+
+        if (!netManager.isHost)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for solo listen-host to become ready.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+               && Time.realtimeSinceStartup < sessionDeadline)
+            yield return null;
+
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for SessionManager to create the solo session.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        GameStateManager.Instance.RequestStateChange(GameState.InGame);
+        Debug.Log("[SessionModeManager] Solo host ready. -> Transitioned to InGame");
+    }
+
+
     /// <summary>
     /// Starts the co-op client join flow by entering lobby/loading states and loading the gameplay scene before joining begins.
     /// </summary>
