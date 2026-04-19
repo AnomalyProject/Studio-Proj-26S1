@@ -111,6 +111,23 @@ pipeline {
             }
         }
 
+        stage('Unity Liscence Check') {
+            when{
+                anyOf{
+                    branch 'develop'
+                    branch 'network'
+                }
+            }
+            steps{
+                script {
+                    def status = bat(
+                        script: "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -logFile \"${env.WORKSPACE}\\unity_license_check.log\"",
+                        returnStatus: true
+                    )
+                    echo "Unity license check exit code: ${status}"
+            }
+        }
+
         stage('Unity Build') {
             when {
                 anyOf {
