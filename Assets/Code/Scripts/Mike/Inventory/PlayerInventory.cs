@@ -1,6 +1,7 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,10 +16,11 @@ public class PlayerInventory : NetworkBehaviour
 
     public Inventory Inventory { get; private set; }
 
-    int focusedIndex = 0;
-    GameObject activeInstance;
-    Dictionary<string, GameObject> itemInstances = new();
-    PlayerBody playerBody;
+    private int focusedIndex = 0;
+    private GameObject activeInstance;
+    private Dictionary<string, GameObject> itemInstances = new();
+    private PlayerBody playerBody;
+    private Task<bool> currentUseTask;
 
     void Awake()
     {
@@ -135,34 +137,36 @@ public class PlayerInventory : NetworkBehaviour
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
-    public bool TryUseFocused()
+    public async Task<bool> TryUseFocused()
     {
-        if(!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
+        if (!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
         if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
 
-        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future
-        
-        bool success = interactable.TryInteract(playerBody); // Try interact with instance.
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
+        bool success = await interactable.TryInteract(playerBody); // Try interact with instance.
 
         if(success)
         {
-            RegisterUsage_ServerRpc(focusedIndex);
+            await RegisterUsage_ServerRpc(focusedIndex);
             OnItemUsed?.Invoke(stack.GetItemData());
         }
-
         return success;
     }
 
-    [ServerRpc] void RegisterUsage_ServerRpc(int slotIndex)
+    [ServerRpc] async Task RegisterUsage_ServerRpc(int slotIndex)
     {
-        if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
+        if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) await Task.CompletedTask;
         if (stack.GetItemData().IsConsumable) Inventory.TryRemoveOne(slotIndex);
     }
 
     #region Input Actions
     public void UseFocused(InputAction.CallbackContext ctx)
     {
-        if (ctx.started) TryUseFocused();
+        if (ctx.started)
+        {
+            if(currentUseTask != null && !currentUseTask.IsCompleted) return;
+            currentUseTask = TryUseFocused();
+        }
     }
     public void NextItem(InputAction.CallbackContext ctx)
     {

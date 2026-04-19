@@ -1,5 +1,6 @@
 using PurrNet;
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -24,10 +25,12 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         vendorHost.OnSpawnedEvent += UpdateContent;
     }
 
-    public bool CanInteract(PlayerBody interactor)
+    public Task<bool> CanInteract(PlayerBody interactor)
     {
-        if (vendorHost == null) return false;
-        return SlotIndex >= 0 && vendorHost.CheckPrice(SlotIndex, interactor.Inventory);
+        if (vendorHost == null) return Task.FromResult(false);
+
+        bool result = SlotIndex >= 0 && vendorHost.CheckPrice(SlotIndex, interactor.Inventory);
+        return Task.FromResult(result);
     }
 
     void UpdateContent() => UpdateContent(SlotIndex);
@@ -39,10 +42,9 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         Debug.Log($"Slot {slot} contains: {data?.ItemName ?? "Empty"}");
     }
 
-    public bool TryInteract(PlayerBody interactor)
+    public async Task<bool> TryInteract(PlayerBody interactor)
     {
-        if (!CanInteract(interactor)) return false;
-        vendorHost.RequestTransfer(SlotIndex, interactor.Inventory);
-        return true;
+        bool success = await vendorHost.RequestTransfer_Server(SlotIndex, interactor.Inventory);
+        return success;
     }
 }

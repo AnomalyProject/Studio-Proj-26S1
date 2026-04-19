@@ -1,4 +1,5 @@
 using PurrNet;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,6 +24,7 @@ public class PlayerInteraction : MonoBehaviour
 
     PlayerBody playerBody;
     InteractionSystem<PlayerBody> interactionSystem;
+    private Task currentInteractionTask;
 
     void Awake()
     {
@@ -41,7 +43,10 @@ public class PlayerInteraction : MonoBehaviour
         //if (!CanUseLocalInteraction()) return;
         
         if(ctx.started)
-        interactionSystem.TryInteractFocused();
+        {
+            if (currentInteractionTask != null && !currentInteractionTask.IsCompleted) return;
+            currentInteractionTask = interactionSystem.TryInteractFocused();
+        }
     }
 
     void PerformScan()

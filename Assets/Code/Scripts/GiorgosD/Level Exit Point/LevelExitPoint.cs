@@ -1,6 +1,7 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -32,13 +33,12 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
         col = GetComponent<Collider>();
         col.isTrigger = true;
     }
-    public bool CanInteract(PlayerBody interactor) => HasEnoughPlayers() && bIsAvailable.value;
-
-    public bool TryInteract(PlayerBody interactor)
+    public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(HasEnoughPlayers() && bIsAvailable.value);
+    public Task<bool> TryInteract(PlayerBody interactor)
     {
         Debug.Log("Interacted with exit");
         Exit();
-        return true;
+        return Task.FromResult(true);
     }
 
     #region Exit
