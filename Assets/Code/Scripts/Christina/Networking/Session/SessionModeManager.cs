@@ -69,6 +69,16 @@ public class SessionModeManager : MonoBehaviour
         {
             NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
         }
+        // todelete
+        SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            Debug.Log($"[SceneEvent] LOADED name={scene.name} mode={mode} totalScenes={SceneManager.sceneCount} stack={System.Environment.StackTrace}");
+        };
+        SceneManager.sceneUnloaded += (scene) =>
+        {
+            Debug.Log($"[SceneEvent] UNLOADED name={scene.name} totalScenes={SceneManager.sceneCount}");
+        };
+        
     }
     
     private void OnDestroy()
@@ -107,34 +117,59 @@ public class SessionModeManager : MonoBehaviour
     /// </summary>
     public void ReturnToMenu()
     {
-        if (isLocallyInitiatedTeardown) return; 
+        if (isLocallyInitiatedTeardown) return;
         isLocallyInitiatedTeardown = true;
-        
-        NetworkManager netManager = NetworkManager.main;
-        if (netManager != null)
+
+        StartCoroutine(ReturnToMenuRoutine());
+    }
+
+    private IEnumerator ReturnToMenuRoutine()
+    {
+        try
         {
-            if (netManager.isServer) netManager.StopServer();
-            if (netManager.isClient) netManager.StopClient();
-        }
+            NetworkManager netManager = NetworkManager.main;
+            if (netManager)
+            {
+                if (netManager.isServer) netManager.StopServer();
+                if (netManager.isClient) netManager.StopClient();
+            }
 
-        if (SteamSessionBridge.Instance != null)
+            if (SteamSessionBridge.Instance)
+            {
+                SteamSessionBridge.Instance.LeaveSteamLobby();
+            }
+
+            SetMode(SessionMode.None);
+
+            if (GameStateManager.Instance)
+            {
+                GameStateManager.Instance.ForceStateChange(GameState.Menu);
+            }
+
+
+            Scene menuScene = default;
+            float deadline = Time.realtimeSinceStartup + 3f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                menuScene = SceneManager.GetSceneByName("MainMenuChristina");
+                if (menuScene.IsValid() && menuScene.isLoaded) break;
+                yield return null;
+            }
+
+            if (menuScene.IsValid() && menuScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(menuScene);
+            }
+            else
+            {
+                Debug.LogWarning("[SessionModeManager] PurrNet didn't restore MainMenu.. Manually loading.");
+                SceneLoader.Instance.LoadScene("MainMenuChristina");
+            }
+        }
+        finally
         {
-            SteamSessionBridge.Instance.LeaveSteamLobby();
+            isLocallyInitiatedTeardown = false;
         }
-
-        SetMode(SessionMode.None);
-
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.ForceStateChange(GameState.Menu);
-        }
-
-        if (SceneLoader.Instance != null)
-        {
-            SceneLoader.Instance.LoadScene("MainMenuChristina");
-        }
-
-
     }
 
     /// <summary>
