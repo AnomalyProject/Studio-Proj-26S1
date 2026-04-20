@@ -40,8 +40,10 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     /// <returns>true if the focused interactable object exists and the interaction succeeds; otherwise, false.</returns>
     public async Task<bool> TryInteractFocused()
     {
+        if (_focusedInteractable == null) return await Task.FromResult(false);
         bool canInteract = await _focusedInteractable.CanInteract(Interactor);
-        if (_focusedInteractable != null && canInteract)
+
+        if (canInteract)
         {
             bool success = await _focusedInteractable.TryInteract(Interactor);
             OnInteractionAttempted?.Invoke(_focusedInteractable, success);

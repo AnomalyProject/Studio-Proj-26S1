@@ -1,21 +1,29 @@
-using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class AnomalyMap : GameMap
 {
-    [SerializeField, Tooltip("The normal version of the map, no anomalies.")] GameObject baseMap;
-    [SerializeField, Tooltip("The parent objects of anomaly groups.")] List<AnomalyGroup> anomalyVariations;
+    [SerializeField, Tooltip("The normal version of the map, no anomalies.")] private GameObject baseMap;
+    [SerializeField, Tooltip("The parent objects of anomaly groups.")] private List<AnomalyGroup> anomalyVariations;
    
-    List<int> availableIndices = new();
+    private List<int> availableIndices = new();
     public GameObject BaseMap => baseMap;
 
     protected override void Awake()
     {
         base.Awake();
+        anomalyVariations.RemoveAll(group => group.GroupRoot == null);
         ResetAvailableIndices();
+    }
+
+    /// <summary>
+    /// Adds new <see cref="AnomalyGroup"/> to <see cref="anomalyVariations"/>.
+    /// </summary>
+    /// <param name="newGroup">The group to add.</param>
+    public void AddVariation(AnomalyGroup newGroup)
+    {
+        anomalyVariations.Add(newGroup);
+        anomalyVariations.RemoveAll(group => group.GroupRoot == null);
     }
 
     /// <summary>
