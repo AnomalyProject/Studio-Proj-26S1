@@ -967,6 +967,9 @@ public class SteamSessionBridge : MonoBehaviour
     }
 
 
+    // todo: call SteamMatchmaking.SetLobbyJoinable(currentLobbyId, false)
+    //      when transitioning to Loading/InGame so steam-level joins are blocked
+    //      entirely.
     private void OnGameStateChanged(GameState previous, GameState next)
     {
         UpdateRichPresence(next);

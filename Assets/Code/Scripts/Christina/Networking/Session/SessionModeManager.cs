@@ -38,8 +38,6 @@ public class SessionModeManager : MonoBehaviour
 
     private void OnEnable()
     {
-        // todelete
-        Debug.Log($"[SessionModeManager] OnEnable — Bridge.Instance is {(SteamSessionBridge.Instance == null ? "NULL" : "SET")}");
         
         if (SteamSessionBridge.Instance != null)
         {
@@ -50,7 +48,7 @@ public class SessionModeManager : MonoBehaviour
 
     private void OnDisable()
     {
-        if (SteamSessionBridge.Instance != null)
+        if (SteamSessionBridge.Instance)
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
@@ -59,7 +57,7 @@ public class SessionModeManager : MonoBehaviour
 
     private void Start()
     {
-        if (SteamSessionBridge.Instance != null)
+        if (SteamSessionBridge.Instance)
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
@@ -69,21 +67,11 @@ public class SessionModeManager : MonoBehaviour
         {
             NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
         }
-        // todelete
-        SceneManager.sceneLoaded += (scene, mode) =>
-        {
-            Debug.Log($"[SceneEvent] LOADED name={scene.name} mode={mode} totalScenes={SceneManager.sceneCount} stack={System.Environment.StackTrace}");
-        };
-        SceneManager.sceneUnloaded += (scene) =>
-        {
-            Debug.Log($"[SceneEvent] UNLOADED name={scene.name} totalScenes={SceneManager.sceneCount}");
-        };
-        
     }
     
     private void OnDestroy()
     {
-        if (SteamSessionBridge.Instance != null)
+        if (SteamSessionBridge.Instance)
         {
             SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
             SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
@@ -176,27 +164,19 @@ public class SessionModeManager : MonoBehaviour
     /// Begins a solo session by entering the required state flow and loading the requested gameplay scene.
     /// </summary>
     /// <param name="sceneName"></param>
-    public void StartSolo(string sceneName)
+    public void StartSolo()
     {
         if (currentMode != SessionMode.None)
         {
             Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
             return;
         }
-
-        StartCoroutine(BeginSoloFlow());
-
-        /*Debug.Log("[SessionModeManager] Starting Solo session...");
-
+        
         SetMode(SessionMode.Solo);
-
-        // in Solo mode we don't need a Lobby phase. But we still go through it because
-        // GameStateManager requires that path.
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        SceneLoader.Instance.OnLoadFinished += OnSoloSceneLoaded;
-        SceneLoader.Instance.LoadSceneWithAsync(sceneName);*/
+        StartCoroutine(BeginSoloFlow());
     }
 
     /// <summary>
@@ -216,10 +196,6 @@ public class SessionModeManager : MonoBehaviour
         SetMode(SessionMode.CoOpHost);
 
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
-        //GameStateManager.Instance.RequestStateChange(GameState.Loading);
-
-        /*SceneLoader.Instance.OnLoadFinished += OnHostSceneLoaded;
-        SceneLoader.Instance.LoadSceneWithAsync(gameplaySceneName);*/
         
         SteamSessionBridge.Instance.BeginSteamListenHost();
     }
@@ -286,6 +262,7 @@ public class SessionModeManager : MonoBehaviour
         {
             Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
             ReturnToMenu();
+            yield break;
         }
         
         // swaping to local transport
@@ -304,6 +281,7 @@ public class SessionModeManager : MonoBehaviour
         {
             Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
             ReturnToMenu();
+            yield break;
         }
 
         float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
@@ -313,6 +291,7 @@ public class SessionModeManager : MonoBehaviour
         {
             Debug.LogWarning($"[SessionModeManager] Network Manager doesn't exist in this scene.");
             ReturnToMenu();
+            yield break;
         }
         
         // loading gameplay scene through PurrNet
@@ -442,8 +421,6 @@ public class SessionModeManager : MonoBehaviour
     /// <param name="status"></param>
     private void OnHostStartupStatusChanged(HostStartupStatus status)
     {
-        //todelete
-        Debug.Log($"[SessionModeManager] OnHostStartupStatusChanged fired: {status.Stage}");
         if (status.Stage == HostStartupStage.Failed)
         {
             Debug.LogWarning($"[SessionModeManager] Host startup failed: {status.Message}");
