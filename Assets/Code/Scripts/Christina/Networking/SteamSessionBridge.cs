@@ -3,6 +3,7 @@ using Steamworks;
 using PurrNet.Steam;
 using System.Collections;
 using PurrNet;
+using PurrNet.Transports;
 
 public class SteamSessionBridge : MonoBehaviour
 {
@@ -145,6 +146,7 @@ public class SteamSessionBridge : MonoBehaviour
         lobbyCreatedCallResult.Set(apiCall);
     }
     
+    //todo: Friends list display requires "steam_display" + partner registered localization tokens.
     public bool UpdateRichPresence(GameState state)
     {
         if (!SteamManager.Initialized) return false;
@@ -160,19 +162,40 @@ public class SteamSessionBridge : MonoBehaviour
         switch (state)
         {
             case GameState.Menu:
+                SteamFriends.SetRichPresence("steam_display", "#Status_InMenu");
                 status = "In Menu";
                 break;
             case GameState.Lobby:
-                status =  string.IsNullOrEmpty(mapName) ? "In Lobby" : $"In Lobby — {mapName}";
+                if (string.IsNullOrEmpty(mapName))
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InLobby");
+                }
+                else
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InLobbyWithMap");
+                    SteamFriends.SetRichPresence("map", mapName);
+                }
+                status = string.IsNullOrEmpty(mapName) ? "In Lobby" : $"In Lobby — {mapName}";
                 break;
             case GameState.Loading:
+                SteamFriends.SetRichPresence("steam_display", "#Status_Loading");
                 status = "Loading...";
                 break;
             case GameState.InGame:
-                status = string.IsNullOrEmpty(mapName) ? "Playing" : $"Playing — {mapName}";
+                if (string.IsNullOrEmpty(mapName))
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InGame");
+                }
+                else
+                {
+                    SteamFriends.SetRichPresence("steam_display", "#Status_InGameWithMap");
+                    SteamFriends.SetRichPresence("map", mapName);
+                }
+                status = string.IsNullOrEmpty(mapName) ? "In Game" : $"In Game — {mapName}";
                 break;
             case GameState.PostGame:
-                status = "Post-Game Results";
+                SteamFriends.SetRichPresence("steam_display", "#Status_PostGame");
+                status = "Post Game..";
                 break;
             default:
                 status = "Unknown";
@@ -352,19 +375,32 @@ public class SteamSessionBridge : MonoBehaviour
         
         SetBootStage(HostStartupStage.NetworkManagerFound, "Network Manager found!");
 
-        var activeTransport = networkManager.transport;
-        var steamTransport = activeTransport as SteamTransport;
-        
+        var steamTransport = networkManager.GetComponent<SteamTransport>();
+        var localTransport = networkManager.GetComponent<LocalTransport>();
+
         if (steamTransport == null)
         {
-            string transportName = activeTransport != null ? activeTransport.GetType().Name : "None";
-            
-            SetBootStage(HostStartupStage.Failed, $"Active transport was {currentHostStartupStatus.ActiveTransport}, not SteamTransport.", HostStartupStage.TransportValidated);
+            SetBootStage(
+                HostStartupStage.Failed,
+                "SteamTransport component was missing on NetworkManager.",
+                HostStartupStage.TransportValidated);
             hostStartupCoroutine = null;
             yield break;
         }
-        
-        SetBootStage(HostStartupStage.TransportValidated,  $"Active transport validated: {steamTransport.GetType().Name}");
+
+        steamTransport.enabled = true;
+        if (localTransport != null)
+            localTransport.enabled = false;
+
+        networkManager.transport = steamTransport;
+
+        // reseting the host client target to ourselves
+        steamTransport.address = SteamUser.GetSteamID().m_SteamID.ToString();
+
+        SetBootStage(
+            HostStartupStage.TransportValidated,
+            $"Active transport validated: {steamTransport.GetType().Name}, address={steamTransport.address}");
+
         
         networkManager.StartHost();
         SetBootStage(HostStartupStage.HostStarting, "StartHost() called. Waiting for listen-host readiness.");
@@ -734,24 +770,28 @@ public class SteamSessionBridge : MonoBehaviour
         float approvalDeadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
 
         while (joinApprovalResult == JoinApprovalResult.Pending &&
+               joinStartupInProgress &&
                Time.realtimeSinceStartup < approvalDeadline)
         {
             yield return null;
         }
 
-        if (joinApprovalResult == JoinApprovalResult.Pending)
+        // success or local teardown happened, so stop cleanly
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved)
         {
-            // Timed out — host never responded
-            Debug.LogError("[SteamBridge] Timed out waiting for session join approval from host.");
-            if (joinStartupInProgress)
-            {
-                SetJoinStage(
-                    JoinStartupStage.Failed,
-                    "Timed out waiting for host to approve session join.",
-                    ConnectionFailureSource.SessionApproval);
+            joinCoroutine = null;
+            yield break;
+        }
 
-                joinStartupInProgress = false;
-            }
+        Debug.LogError("[SteamBridge] Timed out waiting for session join approval from host.");
+        if (joinStartupInProgress)
+        {
+            SetJoinStage(
+                JoinStartupStage.Failed,
+                "Timed out waiting for host to approve session join.",
+                ConnectionFailureSource.SessionApproval);
+
+            joinStartupInProgress = false;
         }
 
         joinCoroutine = null;
@@ -904,17 +944,11 @@ public class SteamSessionBridge : MonoBehaviour
     {
         SyncMetadataToSteamLobby();
 
-        if (!joinStartupInProgress)
-            return;
+        if (!joinStartupInProgress) return;
+        if (steamID != SteamUser.GetSteamID().m_SteamID) return;
 
-        ulong localSteamId = SteamUser.GetSteamID().m_SteamID;
-        if (steamID != localSteamId)
-            return;
-        
-
-        SetJoinStage(
-            JoinStartupStage.SessionJoinApproved,
-            $"Session join approved for local player {displayName}.");
+        joinApprovalResult = JoinApprovalResult.Approved;
+        SetJoinStage(JoinStartupStage.SessionJoinApproved, $"Session join approved for local player {displayName}.");
 
         joinStartupInProgress = false;
     }
@@ -945,6 +979,9 @@ public class SteamSessionBridge : MonoBehaviour
     }
 
 
+    // todo: call SteamMatchmaking.SetLobbyJoinable(currentLobbyId, false)
+    //      when transitioning to Loading/InGame so steam-level joins are blocked
+    //      entirely.
     private void OnGameStateChanged(GameState previous, GameState next)
     {
         UpdateRichPresence(next);

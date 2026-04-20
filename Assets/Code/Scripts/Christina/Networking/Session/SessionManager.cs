@@ -65,6 +65,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
@@ -74,8 +75,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnSpawned(bool asServer)
     {
-        DontDestroyOnLoad(gameObject);
-
         if (asServer)
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
@@ -104,12 +103,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        // clear the singleton only if this is still the active instance, to avoid
-        // keeping a stale reference or overwriting a newer SessionManager.
-        if (Instance == this)
-        {
-            Instance = null;
-        }
         
         sessionData = null;
         hostPlayerID = null;
@@ -253,7 +246,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created.");
     }
@@ -358,7 +350,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameMode = sessionData.GameMode,
             MaxPlayers = sessionData.MaxPlayers,
             PlayerCount = sessionData.Players.Count,
-            Players = players
+            Players = players,
+            CustomPropertyKeys = keys,
+            CustomPropertyValues = values
         };
     }
 
@@ -513,8 +507,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
+        if (SessionModeManager.Instance == null)
+        {
+            Debug.LogError("[SessionManager] SessionModeManager missing during start-match. Cannot load gameplay scene.");
+            return;
+        }
 
+        SessionModeManager.Instance.LoadGameplayScene();
+        
         Debug.Log("[SessionManager] Game starting...");
+        
     }
 
     /// <summary>
