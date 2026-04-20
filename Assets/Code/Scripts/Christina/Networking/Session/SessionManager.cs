@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using UnityEngine;
-using Steamworks;
 using PurrNet;
 
 /// <summary>
@@ -66,6 +65,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
@@ -75,8 +75,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnSpawned(bool asServer)
     {
-        DontDestroyOnLoad(gameObject);
-
         if (asServer)
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
@@ -105,12 +103,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        // clear the singleton only if this is still the active instance, to avoid
-        // keeping a stale reference or overwriting a newer SessionManager.
-        if (Instance == this)
-        {
-            Instance = null;
-        }
         
         sessionData = null;
         hostPlayerID = null;
@@ -133,16 +125,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (playerID.isServer)
         {
             Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
-            Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
             return;
         }
 
         hostPlayerID = playerID;
+        var hostIdentity = LocalIdentity.ResolveHost();
 
-        ulong hostSteamID = SteamUser.GetSteamID().m_SteamID;
-        string hostName = SteamFriends.GetPersonaName();
-
-        AddPlayerToSession(playerID, hostSteamID, hostName, isHost: true);
+        AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
@@ -245,17 +234,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
+
+        var hostIdentity = LocalIdentity.ResolveHost();
         
         sessionData = new SessionData
         {
-            HostSteamID =  SteamUser.GetSteamID().m_SteamID,
+            HostSteamID =  hostIdentity.steamID,
             MapName = "Default",
             GameMode = "Default",
             MaxPlayers = 4
         };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
 
         Debug.Log("[SessionManager] Session created.");
     }
@@ -360,7 +350,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameMode = sessionData.GameMode,
             MaxPlayers = sessionData.MaxPlayers,
             PlayerCount = sessionData.Players.Count,
-            Players = players
+            Players = players,
+            CustomPropertyKeys = keys,
+            CustomPropertyValues = values
         };
     }
 
@@ -515,8 +507,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
+        if (SessionModeManager.Instance == null)
+        {
+            Debug.LogError("[SessionManager] SessionModeManager missing during start-match. Cannot load gameplay scene.");
+            return;
+        }
 
+        SessionModeManager.Instance.LoadGameplayScene();
+        
         Debug.Log("[SessionManager] Game starting...");
+        
     }
 
     /// <summary>

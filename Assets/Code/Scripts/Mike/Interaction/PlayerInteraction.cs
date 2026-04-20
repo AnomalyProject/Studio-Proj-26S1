@@ -1,8 +1,9 @@
 using PurrNet;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(FPSController))]
+[RequireComponent(typeof(PlayerBody))]
 public class PlayerInteraction : MonoBehaviour
 {
     enum InteractionMode
@@ -21,13 +22,14 @@ public class PlayerInteraction : MonoBehaviour
     [Header("Debug Options")]
     [SerializeField] bool debugGizmos = true;
 
-    FPSController playerController;
-    InteractionSystem<FPSController> interactionSystem;
+    PlayerBody playerBody;
+    InteractionSystem<PlayerBody> interactionSystem;
+    private Task currentInteractionTask;
 
     void Awake()
     {
-        playerController = GetComponent<FPSController>();
-        interactionSystem = new InteractionSystem<FPSController>(playerController);
+        playerBody = GetComponent<PlayerBody>();
+        interactionSystem = new InteractionSystem<PlayerBody>(playerBody);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -41,7 +43,10 @@ public class PlayerInteraction : MonoBehaviour
         //if (!CanUseLocalInteraction()) return;
         
         if(ctx.started)
-        interactionSystem.TryInteractFocused();
+        {
+            if (currentInteractionTask != null && !currentInteractionTask.IsCompleted) return;
+            currentInteractionTask = interactionSystem.TryInteractFocused();
+        }
     }
 
     void PerformScan()
