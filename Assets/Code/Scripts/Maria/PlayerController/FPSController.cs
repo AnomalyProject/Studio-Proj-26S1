@@ -29,6 +29,15 @@ public class FPSController : MonoBehaviour
     [SerializeField] private Transform cameraHolder;
     #endregion
 
+    #region Public Accessors
+    //Public Accessors(for other systems, e.g.audio, UI)
+
+    public bool IsCrouching => isCrouching;
+    public bool IsSprinting => isSprinting;
+    public bool IsGrounded => isGrounded;
+    public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
+    #endregion
+
     #region Private Fields
     private CharacterController character;
 
@@ -172,14 +181,5 @@ public class FPSController : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         character.Move(velocity * Time.deltaTime);
     }
-    #endregion
-
-    #region Public Accessors (commented out for now)
-    //Public Accessors(for other systems, e.g.audio, UI)
-
-    public bool IsCrouching => isCrouching;
-    public bool IsSprinting => isSprinting;
-    public bool IsGrounded => isGrounded;
-    public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
     #endregion
 }
