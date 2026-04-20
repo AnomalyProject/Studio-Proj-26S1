@@ -23,6 +23,9 @@ public class PlayerBody : NetworkBehaviour
     public FPSCameraController CameraController => cameraController;
     public PlayerInteraction Interaction => interaction;
 
+    public bool IsCrouching => movement.IsCrouching;
+    public bool IsSprinting => movement.IsSprinting;
+
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
