@@ -120,20 +120,36 @@ public class SessionModeManager : MonoBehaviour
             {
                 if (netManager.isServer) netManager.StopServer();
                 if (netManager.isClient) netManager.StopClient();
+                
+                float shutdownDeadline = Time.realtimeSinceStartup + 5f;
+                
+                while (netManager &&
+                       (netManager.clientState != ConnectionState.Disconnected ||
+                        netManager.serverState != ConnectionState.Disconnected ||
+                        !netManager.isOffline) &&
+                       Time.realtimeSinceStartup < shutdownDeadline)
+                {
+                    yield return null;
+                }
+                
+                if (netManager != null &&
+                    (netManager.clientState != ConnectionState.Disconnected ||
+                     netManager.serverState != ConnectionState.Disconnected ||
+                     !netManager.isOffline))
+                {
+                    Debug.LogWarning("[SessionModeManager] Network teardown timed out. Continuing to menu anyway.");
+                }
             }
 
             if (SteamSessionBridge.Instance)
             {
                 SteamSessionBridge.Instance.LeaveSteamLobby();
             }
-
-            SetMode(SessionMode.None);
-
+            
             if (GameStateManager.Instance)
             {
                 GameStateManager.Instance.ForceStateChange(GameState.Menu);
             }
-
 
             Scene menuScene = default;
             float deadline = Time.realtimeSinceStartup + 3f;
@@ -144,6 +160,7 @@ public class SessionModeManager : MonoBehaviour
                 yield return null;
             }
 
+
             if (menuScene.IsValid() && menuScene.isLoaded)
             {
                 SceneManager.SetActiveScene(menuScene);
@@ -153,6 +170,8 @@ public class SessionModeManager : MonoBehaviour
                 Debug.LogWarning("[SessionModeManager] PurrNet didn't restore MainMenu.. Manually loading.");
                 SceneLoader.Instance.LoadScene("MainMenuChristina");
             }
+            
+            SetMode(SessionMode.None);
         }
         finally
         {

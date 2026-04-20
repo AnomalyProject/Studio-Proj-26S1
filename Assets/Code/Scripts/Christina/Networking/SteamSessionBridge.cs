@@ -756,24 +756,28 @@ public class SteamSessionBridge : MonoBehaviour
         float approvalDeadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
 
         while (joinApprovalResult == JoinApprovalResult.Pending &&
+               joinStartupInProgress &&
                Time.realtimeSinceStartup < approvalDeadline)
         {
             yield return null;
         }
 
-        if (joinApprovalResult == JoinApprovalResult.Pending)
+        // success or local teardown happened, so stop cleanly
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved)
         {
-            // Timed out — host never responded
-            Debug.LogError("[SteamBridge] Timed out waiting for session join approval from host.");
-            if (joinStartupInProgress)
-            {
-                SetJoinStage(
-                    JoinStartupStage.Failed,
-                    "Timed out waiting for host to approve session join.",
-                    ConnectionFailureSource.SessionApproval);
+            joinCoroutine = null;
+            yield break;
+        }
 
-                joinStartupInProgress = false;
-            }
+        Debug.LogError("[SteamBridge] Timed out waiting for session join approval from host.");
+        if (joinStartupInProgress)
+        {
+            SetJoinStage(
+                JoinStartupStage.Failed,
+                "Timed out waiting for host to approve session join.",
+                ConnectionFailureSource.SessionApproval);
+
+            joinStartupInProgress = false;
         }
 
         joinCoroutine = null;
@@ -926,17 +930,11 @@ public class SteamSessionBridge : MonoBehaviour
     {
         SyncMetadataToSteamLobby();
 
-        if (!joinStartupInProgress)
-            return;
+        if (!joinStartupInProgress) return;
+        if (steamID != SteamUser.GetSteamID().m_SteamID) return;
 
-        ulong localSteamId = SteamUser.GetSteamID().m_SteamID;
-        if (steamID != localSteamId)
-            return;
-        
-
-        SetJoinStage(
-            JoinStartupStage.SessionJoinApproved,
-            $"Session join approved for local player {displayName}.");
+        joinApprovalResult = JoinApprovalResult.Approved;
+        SetJoinStage(JoinStartupStage.SessionJoinApproved, $"Session join approved for local player {displayName}.");
 
         joinStartupInProgress = false;
     }
