@@ -287,9 +287,17 @@ public class SessionModeManager : MonoBehaviour
         // swaping to local transport
         LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
         SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+        
+        if (localTransport == null)
+        {
+            Debug.LogError("[SessionModeManager] LocalTransport component missing on NetworkManager.");
+            ReturnToMenu();
+            yield break;
+        }
 
         localTransport.enabled = true;
         steamTransport.enabled = false;
+        netManager.transport = localTransport;
 
         netManager.StartHost();
         

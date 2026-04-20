@@ -3,6 +3,7 @@ using Steamworks;
 using PurrNet.Steam;
 using System.Collections;
 using PurrNet;
+using PurrNet.Transports;
 
 public class SteamSessionBridge : MonoBehaviour
 {
@@ -374,19 +375,32 @@ public class SteamSessionBridge : MonoBehaviour
         
         SetBootStage(HostStartupStage.NetworkManagerFound, "Network Manager found!");
 
-        var activeTransport = networkManager.transport;
-        var steamTransport = activeTransport as SteamTransport;
-        
+        var steamTransport = networkManager.GetComponent<SteamTransport>();
+        var localTransport = networkManager.GetComponent<LocalTransport>();
+
         if (steamTransport == null)
         {
-            string transportName = activeTransport != null ? activeTransport.GetType().Name : "None";
-            
-            SetBootStage(HostStartupStage.Failed, $"Active transport was {currentHostStartupStatus.ActiveTransport}, not SteamTransport.", HostStartupStage.TransportValidated);
+            SetBootStage(
+                HostStartupStage.Failed,
+                "SteamTransport component was missing on NetworkManager.",
+                HostStartupStage.TransportValidated);
             hostStartupCoroutine = null;
             yield break;
         }
-        
-        SetBootStage(HostStartupStage.TransportValidated,  $"Active transport validated: {steamTransport.GetType().Name}");
+
+        steamTransport.enabled = true;
+        if (localTransport != null)
+            localTransport.enabled = false;
+
+        networkManager.transport = steamTransport;
+
+        // reseting the host client target to ourselves
+        steamTransport.address = SteamUser.GetSteamID().m_SteamID.ToString();
+
+        SetBootStage(
+            HostStartupStage.TransportValidated,
+            $"Active transport validated: {steamTransport.GetType().Name}, address={steamTransport.address}");
+
         
         networkManager.StartHost();
         SetBootStage(HostStartupStage.HostStarting, "StartHost() called. Waiting for listen-host readiness.");
