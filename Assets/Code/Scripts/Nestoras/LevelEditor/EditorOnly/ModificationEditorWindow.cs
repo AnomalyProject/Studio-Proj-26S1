@@ -160,6 +160,10 @@ public class ModificationEditorWindow : EditorWindow
                         modificationObject.transform.localPosition = Vector3.zero;
                         modificationApplier = modificationObject.AddComponent<ModificationApplier>();
                         EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
+
+                        // Add to map
+                        AnomalyMap map = modificationsRoot.GetComponentInParent<AnomalyMap>();
+                        map.AddVariation(new AnomalyGroup(modificationObject, false));
                     }
                 }
                 catch { }
