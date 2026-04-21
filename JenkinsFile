@@ -70,8 +70,8 @@ pipeline {
             withSonarQubeEnv('SonarCloud') {
                 bat "dotnet sonarscanner begin ${sonarConfig}"
                 
-                bat "dotnet build ProjectAnomaly.sln --configuration Release"
-                
+                bat "dotnet build ProjectAnomalyAutomationPipiline.sln --configuration Release"
+                        
                 bat "dotnet sonarscanner end"
             }
         }
