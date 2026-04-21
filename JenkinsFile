@@ -6,6 +6,9 @@ def branchMap = [
 
 def steamBranch = "unknown"
 def commitMsg = "unknown"
+def isMerge = false
+def botsAdminRole = "<@&1483456172567822378>"  //Reminder to remove 
+def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
     agent any
@@ -19,22 +22,103 @@ pipeline {
         UNITY_PATH = '"C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.10f1\\Editor\\Unity.exe"'
         CREDS = credentials('MY_SECRET_ID') 
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
+        ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
     }
 
     stages {
 
-        stage('Checkout') {
+       stage('Checkout') {
             steps {
-                cleanWs()
                 checkout scm
+                
                 script{
-                    commitMsg = bat(script: "git log -1 --pretty=%s", returnStdout: true).trim().split('\n').last()
+                    bat "git clean -fdx -e Library/"
+                    
+                    commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
+                    def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
+                    isMerge = parentHashes.tokenize(' ').size() > 1
+                }
+            }
+        }
+
+        stage('SonarQube Code Review') {
+            when {
+                anyOf {
+                    changeRequest()
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner' 
+                    
+                    def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" " +
+                                    "-Dsonar.projectKey=\"AnomalyProject_Studio-Proj-26S1\" " +
+                                    "-Dsonar.projectName=\"Project Anomaly\" " +
+                                    "-Dsonar.sources=\"Assets/Code/Scripts\" " +
+                                    "-Dsonar.language=cs " +
+                                    "-Dsonar.c.file.suffixes=- " +
+                                    "-Dsonar.cpp.file.suffixes=- " +
+                                    "-Dsonar.objc.file.suffixes=-"
+                    
+                    if (env.CHANGE_ID) {
+                        discordSend title: "🔎 Code Review: PR-${env.CHANGE_ID}",
+                            description: "${programmerRole} \nSir, I am running isolated SonarQube static analysis on your Pull Request #${env.CHANGE_ID}.",
+                            link: env.BUILD_URL,
+                            color: 16766720,
+                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+                            
+                        sonarArgs += " -Dsonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
+                                     "-Dsonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
+                                     "-Dsonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
+                                     "-Dsonar.pullrequest.provider=github " +
+                                     "-Dsonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\""
+                    } else {
+                        discordSend title: "🔎 Code Review: ${env.BRANCH_NAME}",
+                            description: "${programmerRole} \nSir, I am running SonarQube static analysis on the ${env.BRANCH_NAME} branch.",
+                            link: env.BUILD_URL,
+                            color: 16766720,
+                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+                            
+                        sonarArgs += " -Dsonar.branch.name=\"${env.BRANCH_NAME}\""
+                    }
+                    
+                    withSonarQubeEnv('SonarCloud') {
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ${sonarArgs}"
+                    }
+                }
+            }
+        }
+
+        stage('Merge Notification') {
+            when {
+                allOf {
+                    expression { return isMerge }
+                    not { changeRequest() }
+                }
+            }
+            steps {
+                script {
+                    discordSend title: "🔀 New Merge: ${env.BRANCH_NAME}",
+                        description: "${programmerRole} \nSir, a merge was detected on ${env.BRANCH_NAME}. \n**Commit:** ${commitMsg}",
+                        link: env.BUILD_URL,
+                        result: 'ABORTED',
+                        webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_MERGE_URL}"
                 }
             }
         }
 
         stage('Unity Build') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
                 sleep time: 10, unit: 'SECONDS'
@@ -42,6 +126,13 @@ pipeline {
         }
 
         stage('Verify Build') {
+             when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 script {
                     def logFile = readFile(file: UNITY_LOG_PATH)
@@ -53,6 +144,13 @@ pipeline {
         }
 
         stage('Deploy to Steam') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                }
+            }
             steps {
                 script {
                     steamBranch = branchMap.get(env.BRANCH_NAME, "internal_testing")
@@ -80,10 +178,12 @@ pipeline {
     post {
         success {
             script {
+                def actionDesc = env.CHANGE_ID ? "The pipeline stages for Pull Request #${env.CHANGE_ID} were successfully completed." : "The build and the Deployment to Steam (${env.BRANCH_NAME}) were successful."
+                
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Splendid news Sir, the build and the Deployment to Steam (${env.BRANCH_NAME}) were successful.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "Splendid news Sir! ${actionDesc}\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
                     link: env.BUILD_URL,
-                    result: 'SUCCESS', //investigate why it does not print steam depo...
+                    result: 'SUCCESS',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
             }
         }
@@ -105,6 +205,11 @@ pipeline {
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+
+                    if (fileExists(UNITY_LOG_PATH)) {
+                    echo "Alfred: Dispatching the failure logs for investigation..."
+                    bat "curl.exe -F \"file=@${UNITY_LOG_PATH}\" %ANOMALY_DISCORD_WEBHOOK_URL%"
+                }
             }
         }
     }
