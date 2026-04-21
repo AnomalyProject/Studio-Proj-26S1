@@ -116,7 +116,7 @@ public class AnomalyManager : NetworkBehaviour
             return;
         }
 
-        if (!withAnomalies)
+        if (!withAnomalies || !activeMap.HasAnomalyVariations)
         {
             currentMapState.anomalyIndex = -1;
             RegisterState(RoomState.NormalRoom);

@@ -8,6 +8,7 @@ public class AnomalyMap : GameMap
    
     private List<int> availableIndices = new();
     public GameObject BaseMap => baseMap;
+    public bool HasAnomalyVariations => anomalyVariations != null && anomalyVariations.Count > 0;
 
     protected override void Awake()
     {
