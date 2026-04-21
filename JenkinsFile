@@ -58,6 +58,8 @@ pipeline {
             bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
             sleep time: 1, unit: 'SECONDS'
 
+            bat "if exist Studio-Proj-26S1.slnx (mkdir temp_slnx & move Studio-Proj-26S1.slnx temp_slnx\\)"
+
             bat "dir *.sln"
             
             def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" " +
