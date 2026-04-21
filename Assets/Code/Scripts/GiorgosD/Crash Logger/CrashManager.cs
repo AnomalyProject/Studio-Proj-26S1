@@ -46,22 +46,37 @@ public class CrashManager : MonoBehaviour
     {
         MailMessage mail = new MailMessage();
         mail.To.Add("");       //add mail for test
-        mail.Subject = $"Crash Report: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+        mail.Subject = $"Crash Report: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
         mail.Body = "A crash was detected. Please see the attached ZIP for logs and memory dumps.";
 
         try
         {
-            mail.Attachments.Add(new Attachment(crashZip));
+            var fs = new FileStream(crashZip, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            Attachment attachment = new Attachment(fs, "CrashReport.zip", "application/zip");
+            mail.Attachments.Add(attachment);
 
             MailService.SendEmail(
                 mail,
                 onSuccess: () => {
                     UnityEngine.Debug.Log("[CrashManager]: Email sent successfully.");
 
+                    mail.Dispose();
+                    fs.Close();
+                    fs.Dispose();
+
                     if (File.Exists(crashZip)) File.Delete(crashZip);
                 },
                 onFailure: (error) => {
                     UnityEngine.Debug.LogError($"[CrashManager]: Email failed to send: {error}");
+
+                    mail.Dispose();
+
+                    if (fs != null) 
+                    { 
+                        fs.Close();
+
+                        fs.Dispose(); 
+                    }
                 }
                 );
         }
