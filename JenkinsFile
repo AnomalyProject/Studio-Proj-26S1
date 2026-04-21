@@ -39,6 +39,8 @@ pipeline {
             }
         }
 
+        /*
+
         stage('SonarQube Code Review') {
     when {
         anyOf {
@@ -57,7 +59,7 @@ pipeline {
 
             bat "move *.csproj temp_quarantine\\ 2>nul"
             bat "move *.slnx temp_quarantine\\ 2>nul"
-            // Move all sln files, then move the good one back
+
             bat "move *.sln temp_quarantine\\ 2>nul"
             bat "move temp_quarantine\\BranchAutomationPipeline_develop.sln ."
 
@@ -84,7 +86,7 @@ pipeline {
             }
         }
     }
-}
+} */
 
         stage('Merge Notification') {
             when {
