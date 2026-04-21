@@ -56,6 +56,9 @@ pipeline {
 
             echo "Generating Unity project files..."
             bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
+            sleep time: 1, unit: 'SECONDS'
+
+            bat "dir *.sln"
             
             def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" " +
                               "/o:\"anomalyproject-1\" " +
@@ -112,7 +115,7 @@ pipeline {
             }
             steps {
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
-                sleep time: 10, unit: 'SECONDS'
+                sleep time: 5, unit: 'SECONDS'
             }
         }
 
