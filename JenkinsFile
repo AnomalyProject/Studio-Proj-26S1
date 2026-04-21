@@ -7,7 +7,7 @@ def branchMap = [
 def steamBranch = "unknown"
 def commitMsg = "unknown"
 def isMerge = false
-def botsAdminRole = "<@&1483456172567822378>"  //Reminder to remove 
+def botsAdminRole = "<@&1483456172567822378>"
 def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
@@ -27,14 +27,11 @@ pipeline {
     }
 
     stages {
-
-       stage('Checkout') {
+        stage('Checkout') {
             steps {
                 checkout scm
-                
-                script{
+                script {
                     bat "git clean -fdx -e Library/"
-                    
                     commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
                     def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
                     isMerge = parentHashes.tokenize(' ').size() > 1
@@ -43,58 +40,55 @@ pipeline {
         }
 
         stage('SonarQube Code Review') {
-    when {
-        anyOf {
-            changeRequest()
-            branch 'develop'
-            branch 'main'
-            branch 'network'
-        }
-    }
-    steps {
-        script {
-            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
-            sleep time: 1, unit: 'SECONDS'
-
-            bat "mkdir temp_quarantine"
-            bat "move *.slnx temp_quarantine\\ 2>nul"
-            bat "move *.csproj temp_quarantine\\ 2>nul"
-
-            try {
-                def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" " +
-                                  "/o:\"anomalyproject-1\" " +
-                                  "/d:sonar.host.url=\"https://sonarcloud.io\" "
-
-                if (env.CHANGE_ID) {
-                    sonarConfig += "/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
-                                   "/d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
-                                   "/d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
-                                   "/d:sonar.pullrequest.provider=github " +
-                                   "/d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\" "
-                } else {
-                    sonarConfig += "/d:sonar.branch.name=\"${env.BRANCH_NAME}\" "
+            when {
+                anyOf {
+                    changeRequest()
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
                 }
+            }
+            steps {
+                script {
+                    bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
+                    sleep time: 10, unit: 'SECONDS'
 
-                withSonarQubeEnv('SonarCloud') {
-                    bat "dotnet sonarscanner begin ${sonarConfig}"
-                    
-                    bat "move temp_quarantine\\* . 2>nul"
-                    
-                    bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
+                    bat "if not exist temp_quarantine mkdir temp_quarantine"
 
-                    bat "move *.csproj temp_quarantine\\ 2>nul"
                     bat "move *.slnx temp_quarantine\\ 2>nul"
-                    bat "for %f in (*.sln) do if not \"%f\" == \"BranchAutomationPipeline_develop.sln\" move \"%f\" temp_quarantine\\"
-                    
-                    bat "dotnet sonarscanner end"
+                    bat "move *.csproj temp_quarantine\\ 2>nul"
+                    bat "move *.sln temp_quarantine\\ 2>nul"
+                    bat "move temp_quarantine\\BranchAutomationPipeline_develop.sln ."
+
+                    try {
+                        def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" "
+                        if (env.CHANGE_ID) {
+                            sonarConfig += "/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" /d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" /d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" /d:sonar.pullrequest.provider=github /d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\" "
+                        } else {
+                            sonarConfig += "/d:sonar.branch.name=\"${env.BRANCH_NAME}\" "
+                        }
+
+                        withSonarQubeEnv('SonarCloud') {
+                            bat "dotnet sonarscanner begin ${sonarConfig}"
+                            
+                            bat "move temp_quarantine\\* . 2>nul"
+                            
+                            bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
+
+                            bat "move *.slnx temp_quarantine\\ 2>nul"
+                            bat "move *.csproj temp_quarantine\\ 2>nul"
+                            bat "move *.sln temp_quarantine\\ 2>nul"
+                            bat "move temp_quarantine\\BranchAutomationPipeline_develop.sln ."
+                            
+                            bat "dotnet sonarscanner end"
+                        }
+                    } finally {
+                        bat "move temp_quarantine\\* . 2>nul"
+                        bat "if exist temp_quarantine rmdir temp_quarantine"
+                    }
                 }
-            } finally {
-                bat "move temp_quarantine\\* . 2>nul"
-                bat "if exist temp_quarantine rmdir temp_quarantine"
             }
         }
-    }
-} 
 
         stage('Merge Notification') {
             when {
@@ -129,7 +123,7 @@ pipeline {
         }
 
         stage('Verify Build') {
-             when {
+            when {
                 anyOf {
                     branch 'develop'
                     branch 'main'
@@ -157,7 +151,6 @@ pipeline {
             steps {
                 script {
                     steamBranch = branchMap.get(env.BRANCH_NAME, "internal_testing")
-            
                     def contentRoot = "${WORKSPACE}\\Builds"
                     def outputRoot = "${WORKSPACE}\\SteamOutput"
                     def vdfPath = "${WORKSPACE}\\BuildScripts\\app_build.vdf"
@@ -167,8 +160,6 @@ pipeline {
 
                     def depotVdfPath = "${WORKSPACE}\\BuildScripts\\depot_build_4383781.vdf"
 
-                    echo "Alfred: Customizing the VDF for this specific workspace master Bruce..."
-                    
                     bat """powershell -Command "(Get-Content '${vdfPath}') -replace 'STEAM_BRANCH_PLACEHOLDER','${steamBranch}' -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${vdfPath}'" """
                     bat """powershell -Command "(Get-Content '${depotVdfPath}') -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${depotVdfPath}'" """
 
