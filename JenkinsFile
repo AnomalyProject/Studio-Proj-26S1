@@ -42,7 +42,15 @@ pipeline {
             }
         }
 
-        stage('SonarQube Code Review') {
+         stage('SonarQube Code Review') {
+    when {
+        anyOf {
+            changeRequest()
+            branch 'develop'
+            branch 'main'
+            branch 'network'
+        }
+    }
     steps {
         script {
             def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" " +
@@ -53,7 +61,8 @@ pipeline {
                 sonarConfig += "/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
                                "/d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
                                "/d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
-                               "/d:sonar.pullrequest.provider=github "
+                               "/d:sonar.pullrequest.provider=github " +
+                               "/d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\" "
             } else {
                 sonarConfig += "/d:sonar.branch.name=\"${env.BRANCH_NAME}\" "
             }
@@ -61,13 +70,13 @@ pipeline {
             withSonarQubeEnv('SonarCloud') {
                 bat "dotnet sonarscanner begin ${sonarConfig}"
                 
-                bat "dotnet build ProjectAnomaly.sln --configuration Release" 
+                bat "dotnet build ProjectAnomaly.sln --configuration Release"
                 
                 bat "dotnet sonarscanner end"
             }
         }
     }
-}
+} 
 
         stage('Merge Notification') {
             when {
