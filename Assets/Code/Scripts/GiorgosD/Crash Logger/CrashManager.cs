@@ -51,7 +51,7 @@ public class CrashManager : MonoBehaviour
 
         try
         {
-            // Allows the zip to be opened and attached to email even if its being used
+            // Allows the zip to be opened and attached to email even if its being "used"
             FileStream fileSt = new FileStream(crashZip, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             Attachment attachment = new Attachment(fileSt, "CrashReport.zip", "application/zip");
             mail.Attachments.Add(attachment);
