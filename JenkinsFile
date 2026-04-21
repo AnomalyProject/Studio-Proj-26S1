@@ -53,6 +53,10 @@ pipeline {
     }
     steps {
         script {
+
+            echo "Generating Unity project files..."
+            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
+            
             def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" " +
                               "/o:\"anomalyproject-1\" " +
                               "/d:sonar.host.url=\"https://sonarcloud.io\" "
