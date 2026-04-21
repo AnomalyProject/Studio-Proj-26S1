@@ -79,8 +79,7 @@ pipeline {
 
                 bat "dir"
                 
-                bat "dotnet build ProjectAnomalyAutomationPipiline.sln --configuration Release"
-
+                bat "dotnet build *.sln --configuration Release"
                 bat "dotnet sonarscanner end"
             }
         }
