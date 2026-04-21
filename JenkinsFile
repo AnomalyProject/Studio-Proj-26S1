@@ -81,6 +81,10 @@ pipeline {
                     bat "move temp_quarantine\\* . 2>nul"
                     
                     bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
+
+                    bat "move *.csproj temp_quarantine\\ 2>nul"
+                    bat "move *.slnx temp_quarantine\\ 2>nul"
+                    bat "for %f in (*.sln) do if not \"%f\" == \"BranchAutomationPipeline_develop.sln\" move \"%f\" temp_quarantine\\"
                     
                     bat "dotnet sonarscanner end"
                 }
