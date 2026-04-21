@@ -51,8 +51,9 @@ public class CrashManager : MonoBehaviour
 
         try
         {
-            var fs = new FileStream(crashZip, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            Attachment attachment = new Attachment(fs, "CrashReport.zip", "application/zip");
+            // Allows the zip to be opened and attached to email even if its being used
+            FileStream fileSt = new FileStream(crashZip, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            Attachment attachment = new Attachment(fileSt, "CrashReport.zip", "application/zip");
             mail.Attachments.Add(attachment);
 
             MailService.SendEmail(
@@ -61,8 +62,8 @@ public class CrashManager : MonoBehaviour
                     UnityEngine.Debug.Log("[CrashManager]: Email sent successfully.");
 
                     mail.Dispose();
-                    fs.Close();
-                    fs.Dispose();
+                    fileSt.Close();
+                    fileSt.Dispose();
 
                     if (File.Exists(crashZip)) File.Delete(crashZip);
                 },
@@ -71,11 +72,11 @@ public class CrashManager : MonoBehaviour
 
                     mail.Dispose();
 
-                    if (fs != null) 
+                    if (fileSt != null) 
                     { 
-                        fs.Close();
+                        fileSt.Close();
 
-                        fs.Dispose(); 
+                        fileSt.Dispose(); 
                     }
                 }
                 );
