@@ -43,12 +43,12 @@ pipeline {
         }
 
         stage('SonarQube Code Review') {
-            when {
-                anyOf {
-                    changeRequest()
-                    branch 'develop'
-                    branch 'main'
-                    branch 'network'
+    when {
+        anyOf {
+            changeRequest()
+            branch 'develop'
+            branch 'main'
+            branch 'network'
         }
     }
     steps {
@@ -78,6 +78,10 @@ pipeline {
                     bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
                     bat "dotnet sonarscanner end"
                 }
+            } catch (Exception e) {
+                echo "Build failed. Diagnostic: Scanning for all project files..."
+                bat "dir /s /b *.sln *.csproj"
+                throw e
             } finally {
                 bat "if exist temp_slnx\\Studio-Proj-26S1.slnx (move temp_slnx\\Studio-Proj-26S1.slnx . & rmdir temp_slnx)"
             }
