@@ -52,9 +52,9 @@ pipeline {
             bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
 
             def slnFile = bat(
-                script: '@echo off\nfor %f in (*.sln) do echo %f',
-                returnStdout: true
-            ).trim().split('\n').last()
+                script: """powershell -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name" """,
+                 returnStdout: true
+                ).trim().split('\n').last()
 
             echo "Alfred: Discovered solution file: ${slnFile}"
 
