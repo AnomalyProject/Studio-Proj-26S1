@@ -31,7 +31,7 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    bat "git clean -fdx -e Library/"
+                    bat "git clean -fd -e Library/"
                     commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
                     def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
                     isMerge = parentHashes.tokenize(' ').size() > 1
@@ -57,8 +57,6 @@ pipeline {
             ).trim().split('\n').last()
 
             echo "Alfred: Discovered solution file: ${slnFile}"
-
-            bat """powershell -Command "Get-ChildItem -Filter *.csproj | Remove-Item -Force" """
 
             withSonarQubeEnv('SonarCloud') {
                 bat """
