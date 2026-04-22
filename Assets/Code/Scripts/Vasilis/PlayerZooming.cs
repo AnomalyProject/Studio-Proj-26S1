@@ -5,16 +5,13 @@ public class PlayerZooming : MonoBehaviour
 {
     #region Inspector Configuration
     [Header("Zoom Settings")]
-
     [SerializeField] private Camera playerCamera;
 
     [Header("FOV Configuration")]
     [SerializeField] private float defaultFOV = 60f;
 
-
-    [Range(0.1f, 1.0f)] 
+    [Range(0.1f, 1.0f)]
     [SerializeField] private float zoomScale = 0.5f;
-
 
     [SerializeField] private float zoomTransitionSpeed = 12f;
     #endregion
@@ -27,7 +24,6 @@ public class PlayerZooming : MonoBehaviour
     #region Unity Lifecycle
     private void Awake()
     {
-       
         if (playerCamera == null)
         {
             playerCamera = GetComponentInChildren<Camera>();
@@ -43,30 +39,35 @@ public class PlayerZooming : MonoBehaviour
 
     private void Update()
     {
-   
-        if (Mouse.current != null)
-        {
-            isZooming = Mouse.current.rightButton.isPressed;
-        }
-
         CalculateTargetFOV();
         ApplySmoothZoom();
+    }
+    #endregion
+
+    #region Input Action Callback (Professional Method)
+
+    public void HandleZoom(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            isZooming = true;
+        }
+        else if (ctx.canceled)
+        {
+            isZooming = false;
+        }
     }
     #endregion
 
     #region Zoom Logic
     private void CalculateTargetFOV()
     {
-        // When zooming multiply the default FOV by our scale slider
-
         targetFOV = isZooming ? (defaultFOV * zoomScale) : defaultFOV;
     }
 
     private void ApplySmoothZoom()
     {
         if (playerCamera == null) return;
-
-        // Smooth out the camera transition of zoom
         playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, targetFOV, zoomTransitionSpeed * Time.deltaTime);
     }
     #endregion
