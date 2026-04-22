@@ -7,7 +7,7 @@ def branchMap = [
 def steamBranch = "unknown"
 def commitMsg = "unknown"
 def isMerge = false
-def botsAdminRole = "<@&1483456172567822378>"  //Reminder to remove 
+def botsAdminRole = "<@&1483456172567822378>"
 def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
@@ -27,68 +27,14 @@ pipeline {
     }
 
     stages {
-
-       stage('Checkout') {
+        stage('Checkout') {
             steps {
                 checkout scm
-                
-                script{
-                    bat "git clean -fdx -e Library/"
-                    
+                script {
+                    bat "git clean -fd -e Library/"
                     commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
                     def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
                     isMerge = parentHashes.tokenize(' ').size() > 1
-                }
-            }
-        }
-
-        stage('SonarQube Code Review') {
-            when {
-                anyOf {
-                    changeRequest()
-                    branch 'develop'
-                    branch 'main'
-                    branch 'network'
-                }
-            }
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner' 
-                    
-                    def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" " +
-                                    "-Dsonar.projectKey=\"AnomalyProject_Studio-Proj-26S1\" " +
-                                    "-Dsonar.projectName=\"Project Anomaly\" " +
-                                    "-Dsonar.sources=\"Assets/Code/Scripts\" " +
-                                    "-Dsonar.language=cs " +
-                                    "-Dsonar.c.file.suffixes=- " +
-                                    "-Dsonar.cpp.file.suffixes=- " +
-                                    "-Dsonar.objc.file.suffixes=-"
-                    
-                    if (env.CHANGE_ID) {
-                        discordSend title: "🔎 Code Review: PR-${env.CHANGE_ID}",
-                            description: "${programmerRole} \nSir, I am running isolated SonarQube static analysis on your Pull Request #${env.CHANGE_ID}.",
-                            link: env.BUILD_URL,
-                            color: 16766720,
-                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
-                            
-                        sonarArgs += " -Dsonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
-                                     "-Dsonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
-                                     "-Dsonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
-                                     "-Dsonar.pullrequest.provider=github " +
-                                     "-Dsonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\""
-                    } else {
-                        discordSend title: "🔎 Code Review: ${env.BRANCH_NAME}",
-                            description: "${programmerRole} \nSir, I am running SonarQube static analysis on the ${env.BRANCH_NAME} branch.",
-                            link: env.BUILD_URL,
-                            color: 16766720,
-                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
-                            
-                        sonarArgs += " -Dsonar.branch.name=\"${env.BRANCH_NAME}\""
-                    }
-                    
-                    withSonarQubeEnv('SonarCloud') {
-                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ${sonarArgs}"
-                    }
                 }
             }
         }
@@ -121,12 +67,12 @@ pipeline {
             }
             steps {
                 bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
-                sleep time: 10, unit: 'SECONDS'
+                sleep time: 5, unit: 'SECONDS'
             }
         }
 
         stage('Verify Build') {
-             when {
+            when {
                 anyOf {
                     branch 'develop'
                     branch 'main'
@@ -154,7 +100,6 @@ pipeline {
             steps {
                 script {
                     steamBranch = branchMap.get(env.BRANCH_NAME, "internal_testing")
-            
                     def contentRoot = "${WORKSPACE}\\Builds"
                     def outputRoot = "${WORKSPACE}\\SteamOutput"
                     def vdfPath = "${WORKSPACE}\\BuildScripts\\app_build.vdf"
@@ -164,8 +109,6 @@ pipeline {
 
                     def depotVdfPath = "${WORKSPACE}\\BuildScripts\\depot_build_4383781.vdf"
 
-                    echo "Alfred: Customizing the VDF for this specific workspace master Bruce..."
-                    
                     bat """powershell -Command "(Get-Content '${vdfPath}') -replace 'STEAM_BRANCH_PLACEHOLDER','${steamBranch}' -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${vdfPath}'" """
                     bat """powershell -Command "(Get-Content '${depotVdfPath}') -replace 'CONTENT_ROOT_PLACEHOLDER','${contentRoot}' -replace 'OUTPUT_ROOT_PLACEHOLDER','${outputRoot}' | Set-Content '${depotVdfPath}'" """
 
