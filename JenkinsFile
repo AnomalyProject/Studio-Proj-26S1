@@ -41,8 +41,8 @@ pipeline {
 
 
        stage('SonarQube Code Review') {
-        when {
-         anyOf {
+    when {
+        anyOf {
             changeRequest()
             branch 'develop'
         }
@@ -53,19 +53,15 @@ pipeline {
 
             def slnFile = bat(
                 script: """powershell -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name" """,
-                 returnStdout: true
-                ).trim().split('\n').last()
+                returnStdout: true
+            ).trim().split('\n').last()
 
             echo "Alfred: Discovered solution file: ${slnFile}"
 
-            if (!slnFile || !slnFile.endsWith('.sln')) {
-                error "Alfred: No .sln file found after project generation. Aborting analysis."
-            }
-
             withSonarQubeEnv('SonarCloud') {
-            bat """dotnet sonarscanner begin /k:"AnomalyProject_Studio-Proj-26S1" /o:"anomalyproject-1" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.projectBaseDir="." /d:sonar.dotnet.solution="${slnFile}" /d:sonar.scanner.scanAll=false"""
-            bat "dotnet build \"${slnFile}\" --configuration Release /nologo"
-            bat "dotnet sonarscanner end"
+                bat """dotnet sonarscanner begin /s:"SonarQube.Analysis.xml" /d:sonar.scanner.scanAll=false"""
+                bat "dotnet build \"${slnFile}\" --configuration Release /nologo"
+                bat "dotnet sonarscanner end"
             }
         }
     }
