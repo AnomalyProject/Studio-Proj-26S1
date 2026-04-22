@@ -43,7 +43,7 @@ pipeline {
        stage('SonarQube Code Review') {
     steps {
         withSonarQubeEnv('SonarCloud') {
-            withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+            withCredentials([string(credentialsId: 'sonar-cloud-token', variable: 'SONAR_TOKEN')]) {
                 bat """
                 echo Starting SonarQube Scan...
 
