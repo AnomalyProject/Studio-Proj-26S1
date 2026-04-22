@@ -61,7 +61,7 @@ pipeline {
             echo "Alfred: Using solution file: ${slnFile}"
 
             withSonarQubeEnv('SonarCloud') {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonar-cloud-token', variable: 'SONAR_TOKEN')]) {
 
                     bat """
                     set SONAR_SCANNER_HOME=%SONAR_SCANNER_HOME%
