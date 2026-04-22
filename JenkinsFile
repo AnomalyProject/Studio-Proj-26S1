@@ -47,33 +47,37 @@ pipeline {
             branch 'develop'
         }
     }
+
     steps {
         script {
+
             bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
 
             def slnFile = bat(
                 script: """powershell -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name" """,
                 returnStdout: true
-            ).trim().split('\n').last()
+            ).trim()
 
-            echo "Alfred: Discovered solution file: ${slnFile}"
+            echo "Alfred: Using solution file: ${slnFile}"
 
-                    withSonarQubeEnv('SonarCloud') {
-                def scanner = "\"C:\\Users\\PC_GAMES\\Desktop\\SonnarScanner\\sonar-scanner-11.2.1.137242-net-framework\\SonarScanner.MSBuild.exe\""
-                def msbuild = "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe\""
+            withSonarQubeEnv('SonarCloud') {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
 
-                bat """
-                ${scanner} begin ^
-                /k:"AnomalyProject_Studio-Proj-26S1" ^
-                /o:"anomalyproject-1" ^
-                /d:sonar.host.url="https://sonarcloud.io" ^
-                /d:sonar.token=%SONAR_TOKEN%
+                    bat """
+                    set SONAR_SCANNER_HOME=%SONAR_SCANNER_HOME%
 
-                ${msbuild} "${slnFile}" /t:Rebuild /p:Configuration=Release
+                    "%SONAR_SCANNER_HOME%\\SonarScanner.MSBuild.exe" begin ^
+                        /k:"AnomalyProject_Studio-Proj-26S1" ^
+                        /o:"anomalyproject-1" ^
+                        /d:sonar.host.url="https://sonarcloud.io" ^
+                        /d:sonar.token=%SONAR_TOKEN%
 
-                ${scanner} end ^
-                /d:sonar.token=%SONAR_TOKEN%
-                """
+                    dotnet build "${slnFile}" -c Release
+
+                    "%SONAR_SCANNER_HOME%\\SonarScanner.MSBuild.exe" end ^
+                        /d:sonar.token=%SONAR_TOKEN%
+                    """
+                }
             }
         }
     }
