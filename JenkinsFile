@@ -39,36 +39,6 @@ pipeline {
             }
         }
 
-
-       stage('SonarQube Code Review') {
-    steps {
-        withSonarQubeEnv('SonarCloud') {
-            withCredentials([string(credentialsId: 'sonar-cloud-token', variable: 'SONAR_TOKEN')]) {
-                bat """
-                echo Starting SonarQube Scan...
-
-                REM Get solution/project name (optional, safe way)
-                for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name"') do set SOLUTION=%%i
-
-                echo Solution: %SOLUTION%
-
-                REM Run Sonar Scanner (CLI version - NOT MSBuild)
-                sonar-scanner.bat ^
-                  -Dsonar.projectKey=AnomalyProject_Studio-Proj-26S1 ^
-                  -Dsonar.organization=anomalyproject-1 ^
-                  -Dsonar.host.url=https://sonarcloud.io ^
-                  -Dsonar.login=%SONAR_TOKEN% ^
-                  -Dsonar.sources=Assets ^
-                  -Dsonar.exclusions=**/Library/**,**/Build/**,**/*.meta ^
-                  -Dsonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
-
-                """
-            }
-        }
-    }
-}
-
-
         stage('Merge Notification') {
             when {
                 allOf {
