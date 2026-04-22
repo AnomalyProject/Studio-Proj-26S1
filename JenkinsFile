@@ -41,39 +41,16 @@ pipeline {
 
 
        stage('SonarQube Code Review') {
-    when {
-        anyOf {
-            changeRequest()
-            branch 'develop'
-            branch 'main'
-            branch 'network'
-        }
-    }
     steps {
         script {
-            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
-            sleep time: 10, unit: 'SECONDS'
-
             withSonarQubeEnv('SonarCloud') {
-                def sonarParams = [
-                    "/k:\"AnomalyProject_Studio-Proj-26S1\"",
-                    "/o:\"anomalyproject-1\"",
-                    "/d:sonar.host.url=\"https://sonarcloud.io\"",
-                    "/d:sonar.projectBaseDir=\".\"",
-                    "/d:sonar.sources=\"Assets/Scripts\"",
-                    "/d:sonar.exclusions=\"**/*.sln, **/*.csproj\""
-                ]
-
-                if (env.CHANGE_ID) {
-                    sonarParams.add("/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" /d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" /d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" /d:sonar.pullrequest.provider=github /d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\"")
-                } else {
-                    sonarParams.add("/d:sonar.branch.name=\"${env.BRANCH_NAME}\"")
-                }
-                bat "dotnet sonarscanner begin ${sonarParams.join(' ')}"
+                def scannerPath = "C:\\SonarScanner\\SonarScanner.MSBuild.exe"
                 
-                bat "dotnet build \"BranchAutomationPipeline_develop.sln\" --configuration Release"
+                bat "${scannerPath} begin /k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" /s:\"BranchAutomationPipeline_develop.sln\""
                 
-                bat "dotnet sonarscanner end"
+                bat "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" BranchAutomationPipeline_develop.sln /t:Rebuild"
+                
+                bat "${scannerPath} end"
             }
         }
     }
