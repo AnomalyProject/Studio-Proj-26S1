@@ -39,9 +39,8 @@ pipeline {
             }
         }
 
-        /*
 
-        stage('SonarQube Code Review') {
+       stage('SonarQube Code Review') {
     when {
         anyOf {
             changeRequest()
@@ -55,38 +54,30 @@ pipeline {
             bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
             sleep time: 10, unit: 'SECONDS'
 
-            bat "if not exist temp_quarantine mkdir temp_quarantine"
+            withSonarQubeEnv('SonarCloud') {
+                def sonarParams = [
+                    "/k:\"AnomalyProject_Studio-Proj-26S1\"",
+                    "/o:\"anomalyproject-1\"",
+                    "/d:sonar.host.url=\"https://sonarcloud.io\"",
+                    "/d:sonar.projectBaseDir=\".\"",
+                    "/d:sonar.sources=\"Assets/Scripts\"",
+                    "/d:sonar.exclusions=\"**/*.sln, **/*.csproj\""
+                ]
 
-            bat "move *.csproj temp_quarantine\\ 2>nul"
-            bat "move *.slnx temp_quarantine\\ 2>nul"
-
-            bat "move *.sln temp_quarantine\\ 2>nul"
-            bat "move temp_quarantine\\BranchAutomationPipeline_develop.sln ."
-
-            try {
-                def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" "
                 if (env.CHANGE_ID) {
-                    sonarConfig += "/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" /d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" /d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" /d:sonar.pullrequest.provider=github /d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\" "
+                    sonarParams.add("/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" /d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" /d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" /d:sonar.pullrequest.provider=github /d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\"")
                 } else {
-                    sonarConfig += "/d:sonar.branch.name=\"${env.BRANCH_NAME}\" "
+                    sonarParams.add("/d:sonar.branch.name=\"${env.BRANCH_NAME}\"")
                 }
-
-                withSonarQubeEnv('SonarCloud') {
-                    bat "dotnet sonarscanner begin ${sonarConfig}"
-                    
-                    bat "move temp_quarantine\\*.csproj . 2>nul"
-                    
-                    bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
-                    
-                    bat "dotnet sonarscanner end"
-                }
-            } finally {
-                bat "move temp_quarantine\\* . 2>nul"
-                bat "if exist temp_quarantine rmdir temp_quarantine"
+                bat "dotnet sonarscanner begin ${sonarParams.join(' ')}"
+                
+                bat "dotnet build \"BranchAutomationPipeline_develop.sln\" --configuration Release"
+                
+                bat "dotnet sonarscanner end"
             }
         }
     }
-} */
+}
 
         stage('Merge Notification') {
             when {
