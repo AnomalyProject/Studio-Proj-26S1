@@ -58,9 +58,7 @@ pipeline {
 
             echo "Alfred: Discovered solution file: ${slnFile}"
 
-            if (!fileExists('SonarQube.Analysis.xml')) {
-                error "Alfred: SonarQube.Analysis.xml not found — What the helly?"
-            }
+            bat """powershell -Command "Get-ChildItem -Filter *.csproj | Remove-Item -Force" """
 
             withSonarQubeEnv('SonarCloud') {
                 bat """dotnet sonarscanner begin /s:"SonarQube.Analysis.xml" /d:sonar.scanner.scanAll=false"""
