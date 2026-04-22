@@ -43,14 +43,11 @@ pipeline {
        stage('SonarQube Code Review') {
     steps {
         script {
+            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
             withSonarQubeEnv('SonarCloud') {
-                def scannerPath = "C:\\SonarScanner\\SonarScanner.MSBuild.exe"
-                
-                bat "${scannerPath} begin /k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" /s:\"BranchAutomationPipeline_develop.sln\""
-                
-                bat "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" BranchAutomationPipeline_develop.sln /t:Rebuild"
-                
-                bat "${scannerPath} end"
+                bat "dotnet sonarscanner begin /k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" /d:sonar.projectBaseDir=\".\" /s:\"BranchAutomationPipeline_develop.sln\" /d:sonar.scanner.scanAll=false"
+                bat "dotnet build \"BranchAutomationPipeline_develop.sln\" --configuration Release"
+                bat "dotnet sonarscanner end"
             }
         }
     }
