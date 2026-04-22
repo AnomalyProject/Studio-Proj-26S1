@@ -58,17 +58,20 @@ pipeline {
 
             echo "Alfred: Discovered solution file: ${slnFile}"
 
-            withSonarQubeEnv('SonarCloud') {
+                    withSonarQubeEnv('SonarCloud') {
+                def scanner = "\"C:\\Users\\PC_GAMES\\Desktop\\SonnarScanner\\sonar-scanner-11.2.1.137242-net-framework\\SonarScanner.MSBuild.exe\""
+                def msbuild = "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe\""
+
                 bat """
-                SonarScanner.MSBuild.exe begin ^
+                ${scanner} begin ^
                 /k:"AnomalyProject_Studio-Proj-26S1" ^
                 /o:"anomalyproject-1" ^
                 /d:sonar.host.url="https://sonarcloud.io" ^
                 /d:sonar.token=%SONAR_TOKEN%
 
-                MSBuild.exe "${slnFile}" /t:Rebuild /p:Configuration=Release
+                ${msbuild} "${slnFile}" /t:Rebuild /p:Configuration=Release
 
-                SonarScanner.MSBuild.exe end ^
+                ${scanner} end ^
                 /d:sonar.token=%SONAR_TOKEN%
                 """
             }
