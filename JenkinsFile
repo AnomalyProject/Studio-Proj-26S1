@@ -60,15 +60,16 @@ pipeline {
 
             withSonarQubeEnv('SonarCloud') {
                 bat """
-                dotnet sonarscanner begin ^
+                SonarScanner.MSBuild.exe begin ^
                 /k:"AnomalyProject_Studio-Proj-26S1" ^
                 /o:"anomalyproject-1" ^
                 /d:sonar.host.url="https://sonarcloud.io" ^
                 /d:sonar.token=%SONAR_TOKEN%
 
-                dotnet build "BranchAutomationPipeline_develop.sln" --configuration Release
+                MSBuild.exe "${slnFile}" /t:Rebuild /p:Configuration=Release
 
-                dotnet sonarscanner end /d:sonar.token=%SONAR_TOKEN%
+                SonarScanner.MSBuild.exe end ^
+                /d:sonar.token=%SONAR_TOKEN%
                 """
             }
         }
