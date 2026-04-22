@@ -18,12 +18,12 @@ public class TestUnlock : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.B))
         {
-            interactable.ResetInteractable();
+            interactable.ResetToLocked();
         }
 
         if (Input.GetKeyDown(KeyCode.N))
         {
-            interactable.ReturnItems(inv);
+            interactable.ReturnItems(inv.Inventory);
         }
     }
 }

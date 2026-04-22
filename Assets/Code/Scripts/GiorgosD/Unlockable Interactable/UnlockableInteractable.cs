@@ -1,10 +1,11 @@
 using NUnit.Framework;
+using PurrNet;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Utilities;
 
-public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
+public class UnlockableInteractable : NetworkBehaviour, IInteractable<PlayerBody>
 {
     [Header("Requierment")]
     [SerializeField] private InspectorItemStack itemRequirment;
@@ -14,8 +15,10 @@ public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
 
     [Header("Event")]
     public UnityEvent OnSuccess;
+    public UnityEvent OnReset;
 
     #region Interaction logic
+
     /// <summary>
     /// Makes sure the player can always try to interact.
     /// </summary>
@@ -31,23 +34,23 @@ public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
     /// </summary>
     /// <param name="interactor"></param>
     /// <returns></returns>
-    public Task<bool> TryInteract(PlayerBody interactor)
+    [ServerRpc] public Task<bool> TryInteract(PlayerBody interactor)
     {
         if (!isLocked)
         {
-            UseSuccess();
+            OnSuccess_Observers();
             return Task.FromResult(true);
         }
 
         if (HasItemsInInv(interactor))
         {
-            var inv = interactor.GetComponent<PlayerInventory>();
+            var inv = interactor.Inventory;
 
-            if(inv.Inventory.TryRemoveExact(itemRequirment.Data, itemRequirment.Quantity))
+            if(inv.TryRemoveExact(itemRequirment.Data, itemRequirment.Quantity))
             {
-                Debug.Log($"[UnlockableInteractable]: {inv.Inventory.IsInventoryFull()}");
+                Debug.Log($"[UnlockableInteractable]: {inv.IsInventoryFull()}");
                 isLocked = false;
-                UseSuccess();
+                OnReset_Observers();
                 return Task.FromResult(true);
             }
         }
@@ -62,16 +65,16 @@ public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
     /// <returns></returns>
     private bool HasItemsInInv(PlayerBody interactor)
     {
-        var inv = interactor.GetComponent<PlayerInventory>();
+        var inv = interactor.Inventory;
+
         if (inv == null)
         {
             Debug.Log("[UnlockableInteractable]: Process failed to find Player inventory");
-
             return false;
         }
 
-        Debug.Log($"[UnlockableInteractable]: interaction status {inv.Inventory.EnoughQuantity(itemRequirment.Data, itemRequirment.Quantity)}");
-        return inv.Inventory.EnoughQuantity(itemRequirment.Data, itemRequirment.Quantity);
+        Debug.Log($"[UnlockableInteractable]: interaction status {inv.EnoughQuantity(itemRequirment.Data, itemRequirment.Quantity)}");
+        return inv.EnoughQuantity(itemRequirment.Data, itemRequirment.Quantity);
     }
     #endregion
 
@@ -80,32 +83,37 @@ public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
     /// Returns items needed to unlock this interactable to player inventory (idk ask mike why he wanted this).
     /// </summary>
     /// <param name="inv"></param>
-    public void ReturnItems(PlayerInventory inv)
+    public void ReturnItems(Inventory inv)
     {
+        if (!isServer)
+        {
+            Debug.LogWarning("[UnlockableInteractable]: Cannot return items from a client, the return request must be performed by the server.");
+            return;
+        }
+
         if (isLocked)
         {
             Debug.Log("[UnlockableInteractable]: Interactable is locked thus items cant be returned to player.");
             return;
         }
 
-        if(inv.Inventory.CanFit(itemRequirment.Data, itemRequirment.Quantity))
-        {
-            inv.Inventory.TryAddExact(itemRequirment.Data, itemRequirment.Quantity);
-            Debug.Log($"[UnlockableInteractable]: Inventory is full: {inv.Inventory.IsInventoryFull()}");
-        }
-        else
-        {
-            Debug.Log("[UnlockableInteractable]: Player inventory is full.");
-        }
+        if(inv.TryAddExact(itemRequirment.Data, itemRequirment.Quantity)) ResetToLocked();
+        else Debug.Log("[UnlockableInteractable]: Player inventory is full.");
     }
 
     /// <summary>
     /// Resets the interacatble to locked/unInteracted.
     /// </summary>
-    public void ResetInteractable()
+    public void ResetToLocked()
     {
-        isLocked = true;
+        if (!isServer)
+        {
+            Debug.LogWarning("Cannot reset unlockable from a client!");
+            return;
+        }
 
+        isLocked = true;
+        OnReset_Observers();
         Debug.Log("[UnlockableInteractable]: Locked state has been reset.");
     }
     #endregion
@@ -114,11 +122,12 @@ public class UnlockableInteractable : MonoBehaviour, IInteractable<PlayerBody>
     /// <summary>
     /// Helper class fires OnSuccess event for Opening/Using something. (VS wouldnt auto complete the OnSuccess so i made the func).
     /// </summary>
-    private void UseSuccess()
+    [ObserversRpc] private void OnSuccess_Observers()
     {
         OnSuccess?.Invoke();
-
         Debug.Log("[UnlockableInteractable]: Open.");
     }
+
+    [ObserversRpc] private void OnReset_Observers() => OnReset?.Invoke();
     #endregion
 }
