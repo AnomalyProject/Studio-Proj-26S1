@@ -41,43 +41,28 @@ pipeline {
 
 
        stage('SonarQube Code Review') {
-    when {
-        anyOf {
-            changeRequest()
-            branch 'develop'
-        }
-    }
-
     steps {
-        script {
+        withSonarQubeEnv('SonarCloud') {
+            withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                bat """
+                echo Starting SonarQube Scan...
 
-            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
+                REM Get solution/project name (optional, safe way)
+                for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name"') do set SOLUTION=%%i
 
-            def slnFile = bat(
-                script: """powershell -Command "Get-ChildItem -Filter *.sln | Select-Object -First 1 -ExpandProperty Name" """,
-                returnStdout: true
-            ).trim()
+                echo Solution: %SOLUTION%
 
-            echo "Alfred: Using solution file: ${slnFile}"
+                REM Run Sonar Scanner (CLI version - NOT MSBuild)
+                sonar-scanner.bat ^
+                  -Dsonar.projectKey=AnomalyProject_Studio-Proj-26S1 ^
+                  -Dsonar.organization=anomalyproject-1 ^
+                  -Dsonar.host.url=https://sonarcloud.io ^
+                  -Dsonar.login=%SONAR_TOKEN% ^
+                  -Dsonar.sources=Assets ^
+                  -Dsonar.exclusions=**/Library/**,**/Build/**,**/*.meta ^
+                  -Dsonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
 
-            withSonarQubeEnv('SonarCloud') {
-                withCredentials([string(credentialsId: 'sonar-cloud-token', variable: 'SONAR_TOKEN')]) {
-
-                    bat """
-                    set SONAR_SCANNER_HOME=%SONAR_SCANNER_HOME%
-
-                    "%SONAR_SCANNER_HOME%\\SonarScanner.MSBuild.exe" begin ^
-                        /k:"AnomalyProject_Studio-Proj-26S1" ^
-                        /o:"anomalyproject-1" ^
-                        /d:sonar.host.url="https://sonarcloud.io" ^
-                        /d:sonar.token=%SONAR_TOKEN%
-
-                    dotnet build "${slnFile}" -c Release
-
-                    "%SONAR_SCANNER_HOME%\\SonarScanner.MSBuild.exe" end ^
-                        /d:sonar.token=%SONAR_TOKEN%
-                    """
-                }
+                """
             }
         }
     }
