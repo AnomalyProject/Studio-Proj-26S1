@@ -63,9 +63,9 @@ pipeline {
             }
 
             withSonarQubeEnv('SonarCloud') {
-                bat "dotnet sonarscanner begin /k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" /d:sonar.projectBaseDir=\".\" /s:\"${slnFile}\" /d:sonar.scanner.scanAll=false"
-                bat "dotnet build \"${slnFile}\" --configuration Release"
-                bat "dotnet sonarscanner end"
+            bat """dotnet sonarscanner begin /k:"AnomalyProject_Studio-Proj-26S1" /o:"anomalyproject-1" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.projectBaseDir="." /d:sonar.scanner.scanAll=false"""
+            bat "dotnet build \"${slnFile}\" --configuration Release /nologo"
+            bat "dotnet sonarscanner end"
             }
         }
     }
