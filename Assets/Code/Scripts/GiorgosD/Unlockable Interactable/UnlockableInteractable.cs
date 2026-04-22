@@ -1,9 +1,7 @@
-using NUnit.Framework;
 using PurrNet;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem.Utilities;
 
 public class UnlockableInteractable : NetworkBehaviour, IInteractable<PlayerBody>
 {
@@ -48,9 +46,8 @@ public class UnlockableInteractable : NetworkBehaviour, IInteractable<PlayerBody
 
             if(inv.TryRemoveExact(itemRequirment.Data, itemRequirment.Quantity))
             {
-                Debug.Log($"[UnlockableInteractable]: {inv.IsInventoryFull()}");
                 isLocked = false;
-                OnReset_Observers();
+                OnSuccess_Observers();
                 return Task.FromResult(true);
             }
         }
