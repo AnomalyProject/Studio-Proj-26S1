@@ -75,10 +75,10 @@ pipeline {
                 /d:sonar.token=%SONAR_AUTH_TOKEN%
                 """
             }
-            }
         }
     }
 }
+
 
         stage('Merge Notification') {
             when {
