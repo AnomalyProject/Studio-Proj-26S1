@@ -195,8 +195,23 @@ public class SessionModeManager : MonoBehaviour
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        StartCoroutine(BeginSoloFlow());
+        StartCoroutine(BeginSoloFlowForScene(gameplaySceneName));
     }
+
+    public void StartSoloInScene(string sceneName)
+    {
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
+            return;
+        }
+        
+        SetMode(SessionMode.Solo);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        StartCoroutine(BeginSoloFlowForScene(sceneName));
+    }
+    
 
     /// <summary>
     /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
@@ -273,7 +288,7 @@ public class SessionModeManager : MonoBehaviour
             
     }
 
-    private IEnumerator BeginSoloFlow()
+    private IEnumerator BeginSoloFlowForScene(string sceneName)
     {
         NetworkManager netManager = NetworkManager.main;
 
@@ -310,8 +325,7 @@ public class SessionModeManager : MonoBehaviour
             ReturnToMenu();
             yield break;
         }
-
-        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        
         while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < deadline) yield return null;
 
         if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
@@ -323,7 +337,7 @@ public class SessionModeManager : MonoBehaviour
         
         // loading gameplay scene through PurrNet
         var settings = new PurrSceneSettings { isPublic = true, mode = LoadSceneMode.Single };
-        var op = netManager.sceneModule.LoadSceneAsync(gameplaySceneName, settings);
+        var op = netManager.sceneModule.LoadSceneAsync(sceneName, settings);
         SceneLoader.Instance.PerformAsyncOperation(op);
 
         // waiting for the load to actually finish
@@ -331,6 +345,7 @@ public class SessionModeManager : MonoBehaviour
 
         GameStateManager.Instance.RequestStateChange(GameState.InGame);
     }
+    
 
     /// <summary>
     /// Boots a solo session as a Purrnet listen-host over LocalTransport.
