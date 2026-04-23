@@ -6,38 +6,39 @@ using UnityEngine.Events;
 public class EventVolume : MonoBehaviour
 {
     [Header("Detection Settings")]
-    [SerializeField] private string filterTag = "";
+    [Tooltip("Only objects on these layers will fire the events.")]
+    [SerializeField] private LayerMask detectionLayers;
 
     [Header("Events")]
-    public UnityEvent OnTriggerEntered;
-    public UnityEvent OnTriggerExited;
+    public UnityEvent TriggerEntered;
+    public UnityEvent TriggerExited;
 
     private Collider col;
 
     private void Awake()
     {
-    
+
         col = GetComponent<Collider>();
         col.isTrigger = true;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-    
-        if (!string.IsNullOrEmpty(filterTag) && !other.CompareTag(filterTag))
-            return;
-
-        Debug.Log($"{other.name} entered {gameObject.name}");
-        OnTriggerEntered?.Invoke();
+     
+        if (((1 << other.gameObject.layer) & detectionLayers) != 0)
+        {
+            Debug.Log($"{other.name} entered {gameObject.name}");
+            TriggerEntered?.Invoke();
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-   
-        if (!string.IsNullOrEmpty(filterTag) && !other.CompareTag(filterTag))
-            return;
-
-        Debug.Log($"{other.name} exited {gameObject.name}");
-        OnTriggerExited?.Invoke();
+      
+        if (((1 << other.gameObject.layer) & detectionLayers) != 0)
+        {
+            Debug.Log($"{other.name} exited {gameObject.name}");
+            TriggerExited?.Invoke();
+        }
     }
 }

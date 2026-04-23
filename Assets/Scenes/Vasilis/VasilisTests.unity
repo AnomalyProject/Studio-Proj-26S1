@@ -339,8 +339,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93f5da5317b1f3243b21a3081f1b363c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventVolume
-  filterTag: Player
-  OnTriggerEntered:
+  detectionLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  TriggerEntered:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2114815434}
@@ -355,7 +357,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  OnTriggerExited:
+  TriggerExited:
     m_PersistentCalls:
       m_Calls: []
 --- !u!65 &1457131680
