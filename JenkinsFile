@@ -2,6 +2,7 @@ def branchMap = [
     'develop': "internal_testing",
     'network': "network_testing",
     'main'   : "default"
+    'deployment' : "deployment_testing"
 ]
 
 def steamBranch = "unknown"
@@ -46,6 +47,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
                 steps {
                 script {
@@ -111,6 +113,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -125,6 +128,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -143,6 +147,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
