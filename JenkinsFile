@@ -49,8 +49,9 @@ pipeline {
                     branch 'network'
                     branch 'deployment'
                 }
+            }
                 steps {
-                script {
+                    script {
                     def scannerHome = tool 'SonarScanner' 
                     
                     def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" " +
@@ -88,6 +89,7 @@ pipeline {
                         bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ${sonarArgs}"
                     }
                 }
+            }
 
         stage('Merge Notification') {
             when {
@@ -209,4 +211,4 @@ pipeline {
             }
         }
     }
-}
+} 
