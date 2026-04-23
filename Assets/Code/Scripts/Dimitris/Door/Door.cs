@@ -1,10 +1,13 @@
+using System.Collections;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using PurrNet;
 using UnityEngine;
 /// <summary>
 /// Door class that implements an interaction interface , basically open and close door
 /// </summary>
 [RequireComponent(typeof(Collider))]
-public class Door : MonoBehaviour, IInteractable<MonoBehaviour>
+public class Door : NetworkBehaviour, IInteractable<MonoBehaviour>
 {
     [SerializeField] private Animation anim;
     [SerializeField] private string doorAnimationName = "Door Open";
@@ -19,15 +22,46 @@ public class Door : MonoBehaviour, IInteractable<MonoBehaviour>
     // Attempts to interact with the door
     public Task<bool> TryInteract(MonoBehaviour Interactor) 
     {
-        Debug.Log("Door Interacted with by " + Interactor.name);
-        PlayAnimation();//Animation PLay
+        if (isServer)
+        {
+            ToggleDoor();
+        }
+        else
+        {
+            RequestToggle_ServerRpc();
+        }
+        
         return Task.FromResult(true);
+       
+    }
+
+    [ServerRpc]
+    private void RequestToggle_ServerRpc()
+    {
+        ToggleDoor();
+    }
+    private void ToggleDoor()
+    {
+        if (isAnimating) return;
+
+        isOpen = !isOpen;
+
+        PlayAnimation(isOpen);
+
+        DoorStateObservers(isOpen);
+    }
+
+    [ObserversRpc]
+    private void DoorStateObservers(bool open)
+    {
+        isOpen = open;
+        PlayAnimation(open);
     }
     // Handles playing the animation forward or backward
-    private void PlayAnimation()
+    private void PlayAnimation(bool open)
     {
         AnimationState state = anim[doorAnimationName];
-        if (!isOpen)
+        if (open)
         {
             state.speed = 1f;
             state.time = 0f;
@@ -39,11 +73,11 @@ public class Door : MonoBehaviour, IInteractable<MonoBehaviour>
         }
         anim.Play(doorAnimationName);
         isAnimating = true;
-        StartCoroutine(WaitForAnimation(state.length));
+        StartCoroutine(ResetAnimation(state.length));
         isOpen = !isOpen;//Door State change (Open or Closed = !isOpen)
     }
     // Coroutine that waits for the animation to finish
-    private System.Collections.IEnumerator WaitForAnimation(float duration)
+    private IEnumerator ResetAnimation(float duration)
     {
         yield return new WaitForSeconds(duration);
         isAnimating = false;
