@@ -66,7 +66,7 @@ pipeline {
                 }
             }
             steps {
-                bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -logFile \"${UNITY_LOG_PATH}\""
+                bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -gameVersion \"1.0.${env.BUILD_NUMBER}\" -logFile \"${UNITY_LOG_PATH}\""
                 sleep time: 5, unit: 'SECONDS'
             }
         }
