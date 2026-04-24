@@ -1,9 +1,10 @@
 using PurrNet;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(FPSController))]
-public class PlayerInteraction : NetworkBehaviour
+[RequireComponent(typeof(PlayerBody))]
+public class PlayerInteraction : MonoBehaviour
 {
     enum InteractionMode
     {
@@ -21,13 +22,14 @@ public class PlayerInteraction : NetworkBehaviour
     [Header("Debug Options")]
     [SerializeField] bool debugGizmos = true;
 
-    FPSController playerController;
-    InteractionSystem<FPSController> interactionSystem;
+    PlayerBody playerBody;
+    InteractionSystem<PlayerBody> interactionSystem;
+    private Task currentInteractionTask;
 
     void Awake()
     {
-        playerController = GetComponent<FPSController>();
-        interactionSystem = new InteractionSystem<FPSController>(playerController);
+        playerBody = GetComponent<PlayerBody>();
+        interactionSystem = new InteractionSystem<PlayerBody>(playerBody);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -38,12 +40,19 @@ public class PlayerInteraction : NetworkBehaviour
 
     public void InteractFocused(InputAction.CallbackContext ctx)
     {
+        //if (!CanUseLocalInteraction()) return;
+        
         if(ctx.started)
-        interactionSystem.TryInteractFocused();
+        {
+            if (currentInteractionTask != null && !currentInteractionTask.IsCompleted) return;
+            currentInteractionTask = interactionSystem.TryInteractFocused();
+        }
     }
 
     void PerformScan()
     {
+        //if (!CanUseLocalInteraction()) return;
+        
         switch (interactionMode)
         {
             case InteractionMode.Raycast: interactionSystem.RaycastScan(playerCamera, scanRange, scanLayer);
@@ -72,4 +81,14 @@ public class PlayerInteraction : NetworkBehaviour
                 break;
         }
     }
+
+    /*private bool CanUseLocalInteraction()
+    {
+        if (SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.Solo)
+        {
+            return true;
+        }
+        
+        return isOwner;
+    }*/
 }

@@ -1,22 +1,35 @@
+using PurrNet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
-public class Inventory 
+public class Inventory : NetworkModule
 {
     #region Events
     /// <summary>
     /// Provides the item data and quantity amount.
     /// </summary>
     public event Action<ItemData, int> OnItemAdded, OnItemRemoved;
-    public event Action OnInventoryFull, OnSlotsMoved, OnInventoryChanged;
+    /// <summary>
+    /// Provides the actual stack in read-only form and the slot index it's positioned at.
+    /// </summary>
+    public event Action<IReadOnlyItemStack, int> OnStackAdded, OnStackRemoved, OnStackChanged;
+    public event Action OnInventoryFull;
+    public event Action<int, int> OnSlotsSwapped;
+    [ObserversRpc] private void InvokeInventoryFull() => OnInventoryFull?.Invoke();
+    [ObserversRpc] private void InvokeSlotsSwapped(int indexA, int indexB) => OnSlotsSwapped?.Invoke(indexA, indexB);
+    [ObserversRpc] private void InvokeItemAdded(ItemData itemData, int amount) => OnItemAdded?.Invoke(itemData, amount);
+    [ObserversRpc] private void InvokeItemRemoved(ItemData itemData, int amount) => OnItemRemoved?.Invoke(itemData, amount);
+    [ObserversRpc] private void InvokeStackAdded(IReadOnlyItemStack stack, int slotIndex) => OnStackAdded?.Invoke(stack, slotIndex);
+    [ObserversRpc] private void InvokeStackRemoved(IReadOnlyItemStack stack, int slotIndex) => OnStackRemoved?.Invoke(stack, slotIndex);
+    [ObserversRpc] private void InvokeStackChanged(IReadOnlyItemStack stack, int slotIndex) => OnStackChanged?.Invoke(stack, slotIndex);
+
     #endregion
 
     #region Fields and Properties
 
-    ItemStack[] slots;
+    SyncArray<ItemStack> slots;
     public int EmptySlots => slots.Count(slot => slot == null);
     public int UsedSlots => slots.Count(slot => slot != null);
     public int TotalSlots => slots.Length;
@@ -26,11 +39,9 @@ public class Inventory
     #region Constructor
     public Inventory(int size, params ItemStack[] startingItems)
     {
-        slots = new ItemStack[size];
-
-        OnItemAdded += (itemData, amount) => OnInventoryChanged?.Invoke();
-        OnItemRemoved += (itemData, amount) => OnInventoryChanged?.Invoke();
-        OnSlotsMoved += () => OnInventoryChanged?.Invoke();
+        size = Math.Max(size, 1);
+        slots = new(size, ownerAuth: false);
+        OnStackChanged += (_, index) => slots.SetDirty(index);
 
         for (int i = 0; i < startingItems.Length && !IsInventoryFull(); i++)
         {
@@ -54,9 +65,9 @@ public class Inventory
     /// <param name="stack">The item stack to add to the inventory. The stack's quantity must be greater than zero.</param>
     public int Add(ItemStack stack, bool modifyInputStack = true)
     {
-        if(stack == null || stack.Quantity <= 0) return 0;
+        if (stack == null || stack.Quantity <= 0) return 0;
         int totalAdded = Add(stack.ItemData, stack.Quantity);
-        if(modifyInputStack) stack.RemoveFromStack(totalAdded);
+        if (modifyInputStack) stack.RemoveFromStack(totalAdded);
         return totalAdded;
     }
     /// <summary>
@@ -82,6 +93,8 @@ public class Inventory
             if (slots[index].IsFull()) continue;
 
             int added = slots[index].AddToStack(quantity);
+
+            if(added > 0) InvokeStackChanged(slots[index], index);
             totalAmountAdded += added;
             quantity -= added;
         }
@@ -90,14 +103,14 @@ public class Inventory
         {
             int possibleToAdd = Mathf.Min(quantity, itemData.MaxStackSize);
             slots[emptySlotIndex] = new ItemStack(itemData, possibleToAdd);
+            InvokeStackAdded(slots[emptySlotIndex], emptySlotIndex);
             totalAmountAdded += possibleToAdd;
             quantity -= possibleToAdd;
         }
 
-        if (totalAmountAdded > 0) OnItemAdded?.Invoke(itemData, totalAmountAdded);
+        if (totalAmountAdded > 0) InvokeItemAdded(itemData, totalAmountAdded);
 
-        if (IsInventoryFull())
-            OnInventoryFull?.Invoke();
+        if (IsInventoryFull()) InvokeInventoryFull();
 
         return totalAmountAdded;
     }
@@ -119,30 +132,7 @@ public class Inventory
     /// <returns>true if the entire quantity was added to the inventory. Otherwise, false.</returns>
     public bool TryAddExact(ItemData itemData, int quantity)
     {
-        if (IsInventoryFull() || quantity <= 0 || itemData == null) return false;
-
-        int totalRemaining = quantity;
-
-        List<int> sameItemSlots = FindSlotsWithItem(itemData);
-
-        for (int i = 0; i < sameItemSlots.Count && totalRemaining > 0; i++)
-        {
-            int index = sameItemSlots[i];
-            if (slots[index].IsFull()) continue;
-
-            int used = Mathf.Min(totalRemaining, slots[index].GetRemainingCapacity());
-            totalRemaining -= used;
-        }
-
-        if (totalRemaining <= 0)
-        {
-            Add(itemData, quantity);
-            return true;
-        }
-
-        int stacksNeeded = Mathf.CeilToInt((float)totalRemaining / itemData.MaxStackSize);
-
-        if (stacksNeeded > EmptySlots) return false;
+        if (!CanFit(itemData, quantity)) return false;
 
         Add(itemData, quantity);
         return true;
@@ -172,6 +162,29 @@ public class Inventory
     }
 
     /// <summary>
+    /// Attempts to retrieve the next available item stack cycling after the specified index.
+    /// </summary>
+    /// <param name="fromIndex">The zero-based index from which to start the search for the next item stack.</param>
+    /// <param name="stack">When this method returns, contains the next available item stack, if found; otherwise, null.</param>
+    /// <param name="itemIndex">When this method returns, contains the index of the next available item stack, if found; otherwise, -1.</param>
+    /// <returns><see langword="true"/> if a next item stack is found; otherwise, <see langword="false"/>.</returns>
+    public bool TryGetNext(int fromIndex, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        return TryGetInDirection(fromIndex, direction: 1, out stack, out itemIndex);
+    }
+    /// <summary>
+    /// Attempts to retrieve the next available item stack, cycling the contents backwards.
+    /// </summary>
+    /// <param name="fromIndex">The zero-based index from which to search backward for the previous item stack.</param>
+    /// <param name="stack">When this method returns, contains the previous item stack if found; otherwise, <see langword="null"/>.</param>
+    /// <param name="itemIndex">When this method returns, contains the index of the previous item stack if found; otherwise, -1.</param>
+    /// <returns><see langword="true"/> if a previous item stack is found; otherwise, <see langword="false"/>.</returns>
+    public bool TryGetPrevious(int fromIndex, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        return TryGetInDirection(fromIndex, direction: -1, out stack, out itemIndex);
+    }
+
+    /// <summary>
     /// Returns an enumerable readonly collection of all item stacks contained in the slots, null slots included.
     /// </summary>
     /// <returns>An of all <see cref="ItemStack"/>'s in the inventory that can be used to iterate through the slots.</returns>
@@ -191,7 +204,7 @@ public class Inventory
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] != null)  
+            if (slots[i] != null)
                 yield return slots[i].Clone();
         }
     }
@@ -219,16 +232,12 @@ public class Inventory
         if (toInventory == null) return 0;
         if (slots[fromIndex] == null) return 0;
 
-        ItemStack stackToTransfer = slots[fromIndex];
         amount = Mathf.Min(amount, slots[fromIndex].Quantity);
 
-        int amountTransfered = toInventory.Add(stackToTransfer.ItemData, amount);
-        if(amountTransfered == 0) return 0;
+        int amountTransfered = toInventory.Add(slots[fromIndex].ItemData, amount);
+        if (amountTransfered == 0) return 0;
 
-        stackToTransfer.RemoveFromStack(amountTransfered);
-        OnItemRemoved?.Invoke(stackToTransfer.ItemData, amountTransfered);
-
-        if (stackToTransfer.Quantity <= 0) slots[fromIndex] = null;
+        Remove(fromIndex, amountTransfered);
 
         return amountTransfered;
     }
@@ -268,17 +277,18 @@ public class Inventory
             int amountToTransfer = Mathf.Min(amount, slots[index].Quantity);
             int successfullyTransfered = toInventory.Add(slots[index].ItemData, amountToTransfer);
 
-            if(successfullyTransfered == 0) break; // break if transaction was unsuccessful (other inventory full)
+            if (successfullyTransfered == 0) break; // break if transaction was unsuccessful (other inventory full)
 
-            slots[index].RemoveFromStack(successfullyTransfered);
+            Remove(index, successfullyTransfered, notify: false);
+
             totalTransfered += successfullyTransfered;
             amount -= successfullyTransfered;
 
-            if (slots[index].Quantity <= 0) slots[index] = null;
+            if (slots[index].Quantity <= 0) ClearSlot(index);
             if (amount <= 0) break; // break if nothing left to transfer
         }
 
-        if(totalTransfered > 0) OnItemRemoved?.Invoke(itemData, totalTransfered);
+        if (totalTransfered > 0) InvokeItemRemoved(itemData, totalTransfered);
         return totalTransfered;
     }
 
@@ -304,6 +314,24 @@ public class Inventory
         return true;
     }
 
+    /// <summary>
+    /// Attempts to transfer the entire item stack from the specified slot to the target inventory, requiring an exact
+    /// fit.
+    /// </summary>
+    /// <remarks>The transfer only succeeds if the target inventory can accept the full quantity of the item
+    /// stack without modification. If the transfer is successful, the source slot is cleared.</remarks>
+    /// <param name="fromSlot">The zero-based index of the slot containing the item stack to transfer.</param>
+    /// <param name="toInventory">The inventory to which the item stack will be transferred. Cannot be null.</param>
+    /// <returns>true if the entire item stack was successfully transferred to the target inventory; otherwise, false.</returns>
+    public bool TryTransferExact(int fromSlot, Inventory toInventory)
+    {
+        if (toInventory == null) return false;
+        if(!TryGet(fromSlot, out IReadOnlyItemStack stack)) return false;
+        if(!toInventory.TryAddExact(stack.GetItemData(), stack.GetQuantity())) return false;
+        ClearSlot(fromSlot);
+        return true;
+    }
+
     #endregion
 
     #region Remove Methods
@@ -317,39 +345,45 @@ public class Inventory
     /// <returns>The total number of items actually removed. Returns 0 if no items were removed.</returns>
     public int Remove(ItemData itemData, int quantity)
     {
-        if(quantity <= 0 || itemData == null) return 0;
+        if (quantity <= 0 || itemData == null) return 0;
 
         List<int> sameItemSlots = FindSlotsWithItem(itemData);
         int totalAmountRemoved = 0;
 
-        for (int i = 0; i < sameItemSlots.Count; i++)
+        for (int i = 0; i < sameItemSlots.Count && quantity > 0; i++)
         {
             int index = sameItemSlots[i];
 
-            if (slots[index].IsEmpty())
-            {
-                slots[index] = null;
-                continue;
-            }
-
-            int amountRemoved = slots[index].RemoveFromStack(quantity);
-            totalAmountRemoved += amountRemoved;
-            quantity -= amountRemoved;
-
-            if (slots[index].IsEmpty()) slots[index] = null;
-
-            if (quantity <= 0)
-            {
-                OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
-                return totalAmountRemoved;
-            }
+            int removed = Remove(index, quantity, notify: false);
+            totalAmountRemoved += removed;
+            quantity -= removed;
         }
 
-        if(totalAmountRemoved > 0)
-        OnItemRemoved?.Invoke(itemData, totalAmountRemoved);
+        if (totalAmountRemoved > 0) InvokeItemRemoved(itemData, totalAmountRemoved);
 
         return totalAmountRemoved;
     }
+    int Remove(int index, int quantity, bool notify)
+    {
+        var stack = slots[index];
+        if (stack == null || quantity <= 0) return 0;
+
+        int removed = stack.RemoveFromStack(quantity);
+        if(removed > 0) InvokeStackChanged(stack, index);
+
+        if (notify) InvokeItemRemoved(stack.GetItemData(), removed);
+        if (stack.IsEmpty()) ClearSlot(index);
+
+        return removed;
+    }
+
+    /// <summary>
+    /// Remove the requested amount from the specific slot.
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="quantity"></param>
+    /// <returns></returns>
+    public int Remove(int index, int quantity) => Remove(index, quantity, true);
 
     /// <summary>
     /// Removes the specified quantity of items from the collection based on the provided item stack.
@@ -358,7 +392,7 @@ public class Inventory
     /// to remove.</param>
     /// <returns>The number of items that were actually removed from the collection. This value may be less than the requested
     /// quantity if insufficient items are available.</returns>
-    public int Remove(ItemStack stack) => stack != null? Remove(stack.ItemData, stack.Quantity) : 0;
+    public int Remove(ItemStack stack) => stack != null ? Remove(stack.ItemData, stack.Quantity) : 0;
 
     /// <summary>
     /// Removes one of the specified item from the collection.
@@ -366,6 +400,7 @@ public class Inventory
     /// <param name="itemData">The item to remove from the collection. Cannot be null.</param>
     /// <returns>true if the item was successfully removed. Otherwise, false.</returns>
     public bool TryRemoveOne(ItemData itemData) => Remove(itemData, 1) > 0;
+    public bool TryRemoveOne(int index) => Remove(index, 1) > 0;
 
     /// <summary>
     /// Attempts to remove the specified quantity of the given item from the collection if the exact quantity is
@@ -399,8 +434,17 @@ public class Inventory
     public void ClearSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
+
+        ItemStack stackToRemove = slots[slotIndex];
         slots[slotIndex] = null;
-        OnInventoryChanged?.Invoke();
+
+        if (stackToRemove != null)
+        {
+            if (!stackToRemove.IsEmpty())
+                InvokeItemRemoved(stackToRemove.GetItemData(), stackToRemove.GetQuantity());
+
+            InvokeStackRemoved(stackToRemove, slotIndex);
+        }
     }
 
     /// <summary>
@@ -410,19 +454,41 @@ public class Inventory
     /// will contain no items, and its size remains unchanged.</remarks>
     public void Clear()
     {
-        for (int i = 0; i < slots.Length; i++) slots[i] = null;
-        OnInventoryChanged?.Invoke();
+        for (int i = 0; i < slots.Length; i++) ClearSlot(i);
     }
     #endregion
 
     #endregion
 
     #region Helper Methods
-    bool TryFindEmptySlot(out int index)
+    private bool TryGetInDirection(int fromIndex, int direction, out IReadOnlyItemStack stack, out int itemIndex)
+    {
+        itemIndex = fromIndex;
+        stack = null;
+
+        bool invalidIndex = itemIndex < 0 || itemIndex >= TotalSlots;
+
+        if (invalidIndex)
+        {
+            itemIndex = -1;
+            return false;
+        }
+
+        for (int i = 0; i < TotalSlots; i++)
+        {
+            itemIndex = (itemIndex + direction + TotalSlots) % TotalSlots;
+
+            if (TryGet(itemIndex, out stack)) return true;
+        }
+
+        itemIndex = -1;
+        return false;
+    }
+    private bool TryFindEmptySlot(out int index)
     {
         index = -1;
 
-        for(int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null)
             {
@@ -443,9 +509,9 @@ public class Inventory
     public List<int> FindSlotsWithItem(ItemData itemData)
     {
         List<int> indices = new List<int>();
-        if(itemData == null) return indices;
+        if (itemData == null) return indices;
 
-        for(int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] != null && slots[i].ItemData == itemData)
             {
@@ -466,6 +532,9 @@ public class Inventory
     /// false.</returns>
     public bool EnoughQuantity(ItemData itemData, int quantity)
     {
+        if (quantity < 0 || itemData == null) return false;
+        if (quantity == 0) return true;
+
         List<int> sameItemSlots = FindSlotsWithItem(itemData);
         int totalQuantity = 0;
         for (int i = 0; i < sameItemSlots.Count; i++)
@@ -487,50 +556,89 @@ public class Inventory
     /// indices.</param>
     /// <param name="toSlot">The zero-based index of the destination slot to move or combine items to. Must be within the valid range of slot
     /// indices.</param>
-    public void SwapSlots(int fromSlot, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, invB: this, toSlot);
-    /// <summary>
-    /// Swaps the contents of two inventory slots, from this inventory to another, combining item stacks if they contain the same item type.
-    /// </summary>
-    /// <remarks>If both slots contain the same item type, their quantities are combined in the destination
-    /// slot up to its stack limit, and the source slot is reduced accordingly. If the slots contain different items,
-    /// their contents are swapped. Cancels if contents of <paramref name="fromSlot"/> or <paramref name="toInventory"/> are null.</remarks>
-    /// <param name="fromSlot">The zero-based index of the source slot to move or combine items from. Must be within the valid range of slot
-    /// indices.</param>
-    /// <param name="toInventory">The destination inventory to which the items will be moved or combined. Cannot be null.</param>
-    /// <param name="toSlot">The zero-based index of the destination slot of the other inventory to move or combine items to. Must be within the valid range of slot
-    /// indices.</param>
-    public void SwapSlots(int fromSlot, Inventory toInventory, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, toInventory, toSlot);
-
-    void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
+    public void MoveSlot(int fromSlot, int toSlot)
     {
-        if(invA == null || invB == null) return;
-        if(indexA < 0 || indexA >= invA.slots.Length) return;
-        if(indexB < 0 || indexB >= invB.slots.Length) return;
-        if(invA == invB && indexA == indexB) return;
+        if (fromSlot == toSlot) return;
+        if (TryCombine(fromSlot, toInventory: this, toSlot, out bool operationValid)) return;
+        if (!operationValid) return;
 
-        var stackA = invA.slots[indexA];
-        var stackB = invB.slots[indexB];
+        ItemStack temp = slots[fromSlot];
+        slots[fromSlot] = slots[toSlot];
+        slots[toSlot] = temp;
 
-        if (stackA == null) return;
+        InvokeSlotsSwapped(fromSlot, toSlot);
+    }
+    /// <summary>
+    /// <inheritdoc cref = "MoveSlot(int, int)"/>
+    /// </summary>
+    /// <remarks>
+    /// <inheritdoc cref = "MoveSlot(int, int)"/>
+    /// </remarks>
+    public void MoveSlot(int fromSlot, Inventory toInventory, int toSlot)
+    {
+        if (toInventory == null) return;
 
-        bool sameItem = stackB != null && stackA.ItemData == stackB.ItemData;
+        if (toInventory == this)
+        {
+            MoveSlot(fromSlot, toSlot);
+            return;
+        }
+
+        if (TryCombine(fromSlot, toInventory: toInventory, toSlot, out bool operationValid)) return;
+        if (!operationValid) return;
+
+        ItemStack otherStack = toInventory.Detach(toSlot);
+        ItemStack thisStack = Detach(fromSlot);
+
+        toInventory.slots[toSlot] = thisStack;
+        slots[fromSlot] = otherStack;
+
+        toInventory.InvokeItemAdded(thisStack.GetItemData(), thisStack.GetQuantity());
+        toInventory.InvokeStackAdded(thisStack, toSlot);
+
+        if (otherStack != null)
+        {
+            InvokeItemAdded(otherStack.GetItemData(), otherStack.GetQuantity());
+            InvokeStackAdded(otherStack, fromSlot);
+        }
+    }
+    private bool TryCombine(int fromSlot, Inventory toInventory, int toSlot, out bool operationValid)
+    {
+        operationValid = false;
+        if (fromSlot < 0 || fromSlot >= slots.Length) return false;
+        if (toSlot < 0 || toSlot >= toInventory.slots.Length) return false;
+
+        ItemStack thisStack = slots[fromSlot];
+        ItemStack otherStack = toInventory.slots[toSlot];
+
+        if (thisStack == null) return false;
+        operationValid = true;
+
+        bool sameItem = otherStack != null && thisStack.ItemData == otherStack.ItemData;
 
         if (sameItem)
         {
-            int added = stackB.AddToStack(stackA.Quantity);
-            stackA.RemoveFromStack(added);
+            int added = otherStack.AddToStack(thisStack.Quantity);
 
-            if (stackA.Quantity <= 0) invA.slots[indexA] = null;
+            if (added > 0)
+            {
+                thisStack.RemoveFromStack(added);
+
+                if (thisStack.IsEmpty()) ClearSlot(fromSlot);
+                else InvokeStackChanged(thisStack, fromSlot);
+
+                toInventory.InvokeStackChanged(otherStack, toSlot);
+                return true;
+            }
         }
-        else
-        {
-            invA.slots[indexA] = stackB;
-            invB.slots[indexB] = stackA;
-        }
 
-        invA.OnSlotsMoved?.Invoke();
-
-        if (invA != invB) invB.OnSlotsMoved?.Invoke();
+        return false;
+    }
+    private ItemStack Detach(int fromSlot)
+    {
+        var stack = slots[fromSlot];
+        ClearSlot(fromSlot);
+        return stack;
     }
 
     /// <summary>
@@ -540,5 +648,32 @@ public class Inventory
     /// <param name="data">The item to locate in the collection. Cannot be null.</param>
     /// <returns>true if a slot containing the specified item with a quantity greater than zero is found; otherwise, false.</returns>
     public bool Contains(ItemData data) => slots.Any(s => s != null && s.ItemData == data && s.Quantity > 0);
+
+    /// <summary>
+    /// Determines whether the specified quantity of the given item can fit into the inventory, considering current
+    /// stack sizes and available slots.
+    /// </summary>
+    /// <remarks>This method accounts for partially filled stacks of the same item and available empty slots.
+    /// It does not modify the inventory.</remarks>
+    /// <param name="data">The item to check for available space in the inventory. Cannot be null.</param>
+    /// <param name="quantity">The number of items to check for available space. Must be greater than zero.</param>
+    /// <returns>true if the entire quantity of the item can fit into the inventory; otherwise, false.</returns>
+    public bool CanFit(ItemData data, int quantity)
+    {
+        if (quantity < 0 || data == null) return false;
+
+        int totalRemaining = quantity;
+        List<int> sameItemSlots = FindSlotsWithItem(data);
+        for (int i = 0; i < sameItemSlots.Count && totalRemaining > 0; i++)
+        {
+            int index = sameItemSlots[i];
+            if (slots[index].IsFull()) continue;
+            int used = Mathf.Min(totalRemaining, slots[index].GetRemainingCapacity());
+            totalRemaining -= used;
+        }
+        if (totalRemaining <= 0) return true;
+        int stacksNeeded = Mathf.CeilToInt((float)totalRemaining / data.MaxStackSize);
+        return stacksNeeded <= EmptySlots;
+    }
     #endregion
 }
