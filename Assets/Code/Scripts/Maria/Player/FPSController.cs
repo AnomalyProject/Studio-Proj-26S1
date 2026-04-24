@@ -35,6 +35,7 @@ public class FPSController : MonoBehaviour
     public bool IsCrouching => isCrouching;
     public bool IsSprinting => isSprinting;
     public bool IsGrounded => isGrounded;
+    public bool IsMoving => moveInput.sqrMagnitude > 0;
     public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
     #endregion
 
@@ -79,6 +80,7 @@ public class FPSController : MonoBehaviour
         ApplyMovement();
         HandleGravity();
         SmoothCrouchTransition();
+        Debug.Log("Player Moving:" + IsMoving);
 
     }
     #endregion
@@ -169,7 +171,6 @@ public class FPSController : MonoBehaviour
         if (isCrouching) speed = crouchSpeed;
         else if (isSprinting) speed = sprintSpeed;
         else speed = walkSpeed;
-
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         character.Move(move * (speed * Time.deltaTime));
     }
