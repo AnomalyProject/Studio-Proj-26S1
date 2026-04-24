@@ -248,6 +248,7 @@ GameObject:
   - component: {fileID: 7145071027208893932}
   - component: {fileID: 8945130606974342615}
   - component: {fileID: 5223983998993346721}
+  - component: {fileID: 1719570517764467312}
   m_Layer: 3
   m_Name: CameraHolder
   m_TagString: Untagged
@@ -304,6 +305,22 @@ MonoBehaviour:
   leanAngle: 15
   leanDistance: 0.5
   leanSpeed: 7
+--- !u!114 &1719570517764467312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3688201667625389418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c239db77a72ea604aa659110d9654906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerZooming
+  playerCamera: {fileID: 1415168984759268418}
+  defaultFOV: 60
+  zoomScale: 0.5
+  zoomTransitionSpeed: 12
 --- !u!1 &4227618509524077635
 GameObject:
   m_ObjectHideFlags: 0
@@ -664,6 +681,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 7fab08e1-028b-43a3-8a16-00e7e0e67053
     m_ActionName: 'Player/Use Focused Item[/DualSenseGamepadHID/rightShoulder,/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1719570517764467312}
+        m_TargetAssemblyTypeName: PlayerZooming, Assembly-CSharp
+        m_MethodName: HandleZoom
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 73adec9e-4999-4a3a-873b-711a555ac367
+    m_ActionName: 'Player/Zoom[/Mouse/rightButton,/DualShock4GamepadHID/rightStickPress]'
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
