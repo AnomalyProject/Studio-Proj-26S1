@@ -31,62 +31,13 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    bat "git clean -fdx -e Library/"
+                    bat "git clean -fd -e Library/"
                     commitMsg = bat(script: "@echo off\ngit log -1 --pretty=%%s", returnStdout: true).trim().split('\n').last()
                     def parentHashes = bat(script: "@echo off\ngit log -1 --pretty=%%p", returnStdout: true).trim().split('\n').last()
                     isMerge = parentHashes.tokenize(' ').size() > 1
                 }
             }
         }
-
-        /*
-
-        stage('SonarQube Code Review') {
-    when {
-        anyOf {
-            changeRequest()
-            branch 'develop'
-            branch 'main'
-            branch 'network'
-        }
-    }
-    steps {
-        script {
-            bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath . -createProjectFiles"
-            sleep time: 10, unit: 'SECONDS'
-
-            bat "if not exist temp_quarantine mkdir temp_quarantine"
-
-            bat "move *.csproj temp_quarantine\\ 2>nul"
-            bat "move *.slnx temp_quarantine\\ 2>nul"
-
-            bat "move *.sln temp_quarantine\\ 2>nul"
-            bat "move temp_quarantine\\BranchAutomationPipeline_develop.sln ."
-
-            try {
-                def sonarConfig = "/k:\"AnomalyProject_Studio-Proj-26S1\" /o:\"anomalyproject-1\" /d:sonar.host.url=\"https://sonarcloud.io\" "
-                if (env.CHANGE_ID) {
-                    sonarConfig += "/d:sonar.pullrequest.key=\"${env.CHANGE_ID}\" /d:sonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" /d:sonar.pullrequest.base=\"${env.CHANGE_TARGET}\" /d:sonar.pullrequest.provider=github /d:sonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\" "
-                } else {
-                    sonarConfig += "/d:sonar.branch.name=\"${env.BRANCH_NAME}\" "
-                }
-
-                withSonarQubeEnv('SonarCloud') {
-                    bat "dotnet sonarscanner begin ${sonarConfig}"
-                    
-                    bat "move temp_quarantine\\*.csproj . 2>nul"
-                    
-                    bat "dotnet build BranchAutomationPipeline_develop.sln --configuration Release"
-                    
-                    bat "dotnet sonarscanner end"
-                }
-            } finally {
-                bat "move temp_quarantine\\* . 2>nul"
-                bat "if exist temp_quarantine rmdir temp_quarantine"
-            }
-        }
-    }
-} */
 
         stage('Merge Notification') {
             when {
