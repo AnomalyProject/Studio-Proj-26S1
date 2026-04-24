@@ -200,6 +200,13 @@ public class SessionModeManager : MonoBehaviour
 
     public void StartSoloInScene(string sceneName)
     {
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("[SessionModeManager] Cannot start solo. Scene name was empty.");
+            ReturnToMenu();
+            return;
+        }
+        
         if (currentMode != SessionMode.None)
         {
             Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
@@ -326,7 +333,8 @@ public class SessionModeManager : MonoBehaviour
             yield break;
         }
         
-        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < deadline) yield return null;
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < sessionDeadline) yield return null;
 
         if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
         {
