@@ -1,103 +1,62 @@
-using NUnit.Framework.Interfaces;
 using PurrNet;
-using System.Globalization;
 using System;
+using System.Collections;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
-using PurrNet.Modules;
 
 public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
 {
             
     [SerializeField] private UnityEvent onPickup; //add event to connect sound and other stuff for designer Inspector
-    [Header("InspectorItemStack")] 
-    [SerializeField] private ItemData itemData;
-    [SerializeField] private int startQuantity; //  set in Inspector
-    private int quantity;// runtime synced value
-    public event System.Action<ItemData, int> OnPickup; //add event to use in other scripts
-  
-    void Awake()
+    [SerializeField] InspectorItemStack itemStack;
+    protected override void OnSpawned(bool asServer)
     {
+        base.OnSpawned(asServer);
+
         //If nothing is being assigned first in inspector would lead to an error so doesnt let object break
-        if (itemData == null ) 
+        if (asServer && itemStack.Data == null)
         {
             Debug.LogError("InspectorItemStack is not assigned!", this);
             return;
         }
     }
-    protected override void OnSpawned()
-    {        
-        if (NetworkManager.main.isServer)
-        {
-            quantity = startQuantity;
-        }
-    }
+
+    private void OnValidate() => itemStack.Validate();
+
     public Task<bool> CanInteract(PlayerBody player)
     {
-        return Task.FromResult(quantity > 0 && itemData != null);//If there is no items doesnt let interact
+        return Task.FromResult(true); //If there is no items doesnt let interact
     }
-    public Task<bool> TryInteract(PlayerBody player)
+    [ServerRpc] public Task<bool> TryInteract(PlayerBody player)
     {
-        if (isServer)
-        {
-            HandlePickup(player);
-        }
-        else
-        {
-            RequestPickup(player);
-        }
-
-        return Task.FromResult(true);
+        return HandlePickup_Server(player);
     }
  
-    [ServerRpc]
-    private void RequestPickup(PlayerBody player)
+    private Task<bool> HandlePickup_Server(PlayerBody player)
     {
-        HandlePickup(player);
-    }
-    private void HandlePickup(PlayerBody player)
-    {
-       
-        if (! CanInteract(player).Result) return;
+        if (!isServer) return Task.FromResult(false);
+        ItemStack stack = itemStack.GetItemStack();
+        Inventory playerInventory = player.Inventory;//Gets inventory to use Playerinventory.cs methods
 
-        PlayerInventory playerInventory = player.GetComponent<PlayerInventory>();//Gets inventory to use Playerinventory.cs methods
-        if (playerInventory == null) return ;
-        //Stacking and fill slots , Stack updates automatically
-        int totalAdded = 0;
+        if (playerInventory == null || itemStack.Data == null) return Task.FromResult(false);
+        int added = playerInventory.Add(stack, modifyInputStack: true);
 
-        while (quantity > 0)
+        if (added > 0)
         {
-            int added = playerInventory.Inventory.Add(itemData, quantity);
-
-            if (added == 0)
-            {
-                Debug.Log("Inventory is full");//if inventory is full there is no added so interact is unsuccesfull
-                break;
-            }
-
-            quantity -= added;
-            totalAdded += added;
+            InvokeOnPickup();
+            if (stack.Quantity <= 0) StartCoroutine(DespawnNextFrame());
+            return Task.FromResult(true);
         }
-     
-        
-        if (totalAdded > 0)
+        return Task.FromResult(false);
+
+        IEnumerator DespawnNextFrame()
         {
-            Pickup_ClientRpc(totalAdded);
+            yield return null;
+            Despawn();
         }
-        
-        if (quantity <= 0)
-            Despawn();  //if is empty after pickup and nothing remains , then destroys the object
-                        //if it is not empty just remains with less quantity
+    }
 
-    }
-    
-    [ObserversRpc]
-    private void Pickup_ClientRpc(int amount)
-    {
-        //Events are triggered when succefull pickup for all clients from server
-        onPickup?.Invoke();
-        OnPickup?.Invoke(itemData, amount);
-    }
-   
+    [ObserversRpc] void InvokeOnPickup() => onPickup?.Invoke();
 }
