@@ -50,8 +50,11 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
             return Task.FromResult(true);
         }
         return Task.FromResult(false);
+    }
 
-        IEnumerator DespawnNextFrame()
+    IEnumerator DespawnNextFrame()
+    {
+        if (isServer)
         {
             yield return null;
             Despawn();
