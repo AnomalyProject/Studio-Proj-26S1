@@ -24,6 +24,7 @@ pipeline {
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
         ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
+        GAME_VERSION = "1.0.${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -66,7 +67,7 @@ pipeline {
                 }
             }
             steps {
-                bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -gameVersion \"1.0.${env.BUILD_NUMBER}\" -logFile \"${UNITY_LOG_PATH}\""
+                bat "${UNITY_PATH} -batchmode -nographics -quit -projectPath \"%cd%\" -executeMethod BuildScript.PerformBuild -gameVersion \"${env.GAME_VERSION}\" -logFile \"${UNITY_LOG_PATH}\""
                 sleep time: 5, unit: 'SECONDS'
             }
         }
@@ -124,7 +125,7 @@ pipeline {
                 def actionDesc = env.CHANGE_ID ? "The pipeline stages for Pull Request #${env.CHANGE_ID} were successfully completed." : "The build and the Deployment to Steam (${env.BRANCH_NAME}) were successful."
                 
                 discordSend title: "✅ Build Success: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Splendid news Sir! ${actionDesc}\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "Splendid news Sir! ${actionDesc}\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}\n**Game Version:** ${env.GAME_VERSION}\n",
                     link: env.BUILD_URL,
                     result: 'SUCCESS',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
@@ -144,7 +145,7 @@ pipeline {
         failure {
             script {
                 discordSend title: "❌ Build Failed: ${env.BRANCH_NAME} (#${env.BUILD_NUMBER})",
-                    description: "Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}",
+                    description: "Most unfortunate news Sir, the build for (${env.BRANCH_NAME}) has Failed.\n**Commit:** ${commitMsg}\n**Steam Depo:** ${steamBranch}\n**Game Version:** ${env.GAME_VERSION}\n",
                     link: env.BUILD_URL,
                     result: 'FAILURE',
                     webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
