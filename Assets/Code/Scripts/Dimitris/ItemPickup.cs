@@ -45,7 +45,7 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
 
         if (added > 0)
         {
-            InvokeOnPickup();
+            InvokeOnPickup_Observers();
             if (stack.Quantity <= 0) StartCoroutine(DespawnNextFrame());
             return Task.FromResult(true);
         }
@@ -58,5 +58,5 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
         }
     }
 
-    [ObserversRpc] void InvokeOnPickup() => onPickup?.Invoke();
+    [ObserversRpc] void InvokeOnPickup_Observers() => onPickup?.Invoke();
 }
