@@ -41,13 +41,9 @@ public class SessionModeManager : MonoBehaviour
     private void OnEnable()
     {
         
-        if (SteamSessionBridge.Instance != null)
-        {
-            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
-        }
+        TrySubscribeToSteamBridge();
     }
-
+    
     private void OnDisable()
     {
         if (SteamSessionBridge.Instance)
@@ -59,6 +55,8 @@ public class SessionModeManager : MonoBehaviour
 
     private void Start()
     {
+        TrySubscribeToSteamBridge();
+        
         if (NetworkManager.main)
         {
             NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
@@ -78,6 +76,18 @@ public class SessionModeManager : MonoBehaviour
             NetworkManager.main.onClientConnectionState -= OnClientConnectionStateChanged;
         }
     }
+    
+    private void TrySubscribeToSteamBridge()
+    {
+        if (SteamSessionBridge.Instance == null) return;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+    }
+
 
     /// <summary>
     /// Updates the active session mode and notifies listeners when the mode actually changes
