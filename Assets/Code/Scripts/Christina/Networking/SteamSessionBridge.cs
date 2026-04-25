@@ -849,33 +849,7 @@ public class SteamSessionBridge : MonoBehaviour
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
-        // Same lobby check: if player is already in the lobby they're trying to join, ignore it
-        if (isInLobby && currentLobbyID ==callback.m_steamIDLobby)
-        {
-            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
-            return;
-        }
-        
-        joinStartupAttemptID++;
-        joinStartupInProgress = true;
-        joinApprovalResult = JoinApprovalResult.Pending; 
-        pendingJoinLobbyID = callback.m_steamIDLobby;
-
-        SetJoinStage(
-            JoinStartupStage.JoinRequestReceived,
-            $"Join requested for lobby {callback.m_steamIDLobby}");
-        
-        // Existing lobby cleanup: if player is in a different lobby or mid-creation, clean up first
-        if (isInLobby || isCreatingLobby)
-        {
-            Debug.Log("[SteamBridge] Leaving current lobby before joining new one.");
-            LeaveSteamLobby();
-        }
-        SetJoinStage(
-            JoinStartupStage.LeavingPreviousLobby,
-            "Leaving current Steam lobby before new join attempt.");
-        
-        SessionModeManager.Instance.StartJoining();
+        RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
 
     }
     
@@ -1022,5 +996,39 @@ public class SteamSessionBridge : MonoBehaviour
             LeaveSteamLobby();
         }
         
+    }
+
+    public bool TryOpenInviteOverlay()
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+        
+        SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
+        return true;
+    }
+
+    public bool TrySetLobbyVisibility(string visibility)
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
+
+        ELobbyType newLobbyType = visibility == "Public" ? ELobbyType.k_ELobbyTypePublic : ELobbyType.k_ELobbyTypeFriendsOnly;
+        
+        bool success = SteamMatchmaking.SetLobbyType(currentLobbyID, newLobbyType);
+
+        if (success) lobbyType = newLobbyType;
+
+        return success;
+    }
+
+    public bool TrySetLobbyMaxPlayers(int maxPlayers)
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
+        
+        if(maxPlayers < 2 || maxPlayers > 4) return false;
+        
+        return SteamMatchmaking.SetLobbyMemberLimit(currentLobbyID, maxPlayers);
     }
 }

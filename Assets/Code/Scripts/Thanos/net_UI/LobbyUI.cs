@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Steamworks;
+using System.Collections;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -19,6 +20,22 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private TMP_Text readyButtonText;
     [SerializeField] private Button startButton;
     [SerializeField] private Button leaveButton;
+    
+    [Header("Lobby Info")]
+    [SerializeField] private TMP_Text readyCountText;
+    
+    [Header("Invite")]
+    [SerializeField] private Button inviteButton;
+    
+    [Header("Host Controls")]
+    [SerializeField] private GameObject hostControlsRoot;
+    [SerializeField] private TMP_Dropdown privacyDropdown;
+    [SerializeField] private TMP_Dropdown maxPlayersDropdown;
+
+    [Header("Messages")]
+    [SerializeField] private GameObject messagePanel;
+    [SerializeField] private TMP_Text messageText;
+    
 
     private void Awake()
     {
@@ -26,7 +43,12 @@ public class LobbyUI : MonoBehaviour
         readyButton.onClick.AddListener(() => SessionManager.Instance.RequestToggleReady());
         startButton.onClick.AddListener(() => SessionManager.Instance.RequestStartMatch());
         leaveButton.onClick.AddListener(OnLeaveClicked);
+        
+        inviteButton.onClick.AddListener(OnInviteClicked);
+        privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
+        maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
     }
+    
 
     private void Start()
     {
@@ -43,6 +65,10 @@ public class LobbyUI : MonoBehaviour
 
         //Subscribing to SessionManager event
         SessionEvents.OnSessionDataChanged += RefreshUI; 
+        
+        SessionEvents.OnSessionError += HandleSessionError;
+        SessionEvents.OnHostMigrationStarted += HandleHostMigrationStarted;
+
     }
 
     private void OnDisable()
@@ -53,6 +79,9 @@ public class LobbyUI : MonoBehaviour
         }
         
         SessionEvents.OnSessionDataChanged -= RefreshUI;
+        
+        SessionEvents.OnSessionError -= HandleSessionError;
+        SessionEvents.OnHostMigrationStarted -= HandleHostMigrationStarted;
     }
 
     private void HandleStateChanged(GameState previousState, GameState newState)
@@ -73,8 +102,7 @@ public class LobbyUI : MonoBehaviour
 
     private void RefreshUI()
     {
-        if (SessionManager.Instance == null || SessionManager.Instance.LatestClientSession.Players == null) 
-            return;
+        if (SessionManager.Instance == null || SessionManager.Instance.LatestClientSession.Players == null) return;
 
         var sessionData = SessionManager.Instance.LatestClientSession;
 
@@ -92,6 +120,7 @@ public class LobbyUI : MonoBehaviour
 
         bool allPlayersReady = true;
         bool isLocalPlayerReady = false;
+        int readyCount = 0;
         ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
 
         //Using new list items and calculating states
@@ -100,7 +129,11 @@ public class LobbyUI : MonoBehaviour
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
             listItem.Setup(player);
 
-            if (!player.IsReady) 
+            if (!player.IsReady)
+            {
+                readyCount++;
+            }
+            else
             {
                 allPlayersReady = false;
             }
@@ -119,8 +152,44 @@ public class LobbyUI : MonoBehaviour
 
         //Updating start button - only the host can see it, if everyone is ready he can press it-
         bool isHost = SessionManager.Instance.IsHost;
+        
+        hostControlsRoot.SetActive(isHost);
+        inviteButton.interactable = SteamSessionBridge.Instance != null;
+        
+        ApplyLobbySettings(sessionData, isHost);
+        
         startButton.gameObject.SetActive(isHost);
         startButton.interactable = isHost && allPlayersReady && sessionData.PlayerCount > 0;
+    }
+    
+    private void OnMaxPlayersChanged(int arg0)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private void OnPrivacyChanged(int arg0)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private void OnInviteClicked()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private void ApplyLobbySettings(ClientSessionData sessionData, bool isHost)
+    {
+        throw new System.NotImplementedException();
+    }
+    
+    private void HandleHostMigrationStarted(string obj)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private void HandleSessionError(SessionErrorResponse obj)
+    {
+        throw new System.NotImplementedException();
     }
 
     private void OnLeaveClicked()
