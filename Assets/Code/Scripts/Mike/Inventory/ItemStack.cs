@@ -6,6 +6,7 @@ public class ItemStack : IReadOnlyItemStack
     #region Fields and Properties
     public ItemData ItemData { get; }
     public int Quantity  { get; private set; }
+    public string Id { get; } = Guid.NewGuid().ToString();
 
     #endregion
 
@@ -82,13 +83,17 @@ public class ItemStack : IReadOnlyItemStack
     public bool IsEmpty() => Quantity <= 0;
     public int GetRemainingCapacity() => ItemData.MaxStackSize - Quantity;
     public int GetMaxCapacity() => ItemData.MaxStackSize;
+    public string GetID() => Id;
     #endregion
 }
 [Serializable] public class InspectorItemStack
 {
     [SerializeField] ItemData itemData;
     [SerializeField, Min(1)] int quantity;
-    ItemStack _cachedStack;
+    private ItemStack _cachedStack;
+
+    public ItemData Data => itemData;
+    public int Quantity => quantity;
 
     /// <summary>
     /// Gets or creates an <see cref="ItemStack"/> instance based on the data stored in this <see cref="InspectorItemStack"/> and internally caches it.
@@ -105,10 +110,28 @@ public class ItemStack : IReadOnlyItemStack
         if (cache) _cachedStack = newStack;
         return newStack;
     }
+
+    /// <summary>
+    /// Validates the current quantity value, ensuring it is within the allowed range for the associated item.
+    /// </summary>
+    /// <remarks>If the associated item data is null, the quantity is reset to zero. Otherwise, the quantity
+    /// is clamped between 1 and the item's maximum stack size. This method should be called after modifying the
+    /// quantity or item data to maintain valid state.</remarks>
+    public void Validate()
+    {
+        if (itemData == null)
+        {
+            quantity = 0;
+            return;
+        }
+
+        quantity = Mathf.Clamp(quantity, 1, itemData.MaxStackSize);
+    }
 }
 
 public interface IReadOnlyItemStack
 {
+    string GetID();
     int GetQuantity();
     ItemData GetItemData();
     bool IsFull();

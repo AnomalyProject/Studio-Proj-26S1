@@ -1,11 +1,13 @@
+using PurrNet;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(PlayerBody))]
-public class PlayerInventory : MonoBehaviour
+public class PlayerInventory : NetworkBehaviour
 {
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
 
@@ -14,27 +16,49 @@ public class PlayerInventory : MonoBehaviour
 
     public Inventory Inventory { get; private set; }
 
-    int focusedIndex = 0;
-    GameObject activeInstance;
-    Dictionary<IReadOnlyItemStack, GameObject> itemInstances = new();
-    PlayerBody playerBody;
+    private int focusedSlot = 0;
+    private GameObject activeInstance;
+    private Dictionary<string, GameObject> itemInstances = new();
+    private PlayerBody playerBody;
+    private Task<bool> currentUseTask;
 
     void Awake()
     {
         playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
+    }
 
-        Inventory.OnSlotsMoved += HandleSlotsMoved;
+    protected override void OnSpawned()
+    {
+        if (!isOwner) return;
+        Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
     }
 
-    #region Inventory Event Subscribers
-    void HandleSlotsMoved()
+    public void DebugInventory()
     {
-        if(Inventory.TryGet(focusedIndex, out var stack))
+        foreach(var item in Inventory.GetEnumeration())
         {
-            GameObject itemInstance = itemInstances[stack];
+            if (item == null) Debug.Log("Empty Slot");
+            else Debug.Log($"Item: {item.GetItemData().name}, Quantity: {item.GetQuantity()}");
+        }
+
+        foreach(var item in itemInstances)
+        {
+            if (item.Value == null) Debug.Log("Empty Slot");
+            else Debug.Log($"Instances: Item Key: {item.Key}, Item Object: {item.Value.name}");
+        }
+    }
+
+    #region Inventory Event Subscribers
+    void HandleSlotsSwapped(int fromSlot, int toSlot)
+    {
+        if (fromSlot != focusedSlot) return;
+
+        if (Inventory.TryGet(focusedSlot, out var stack))
+        {
+            GameObject itemInstance = itemInstances[stack.GetID()];
 
             if (itemInstance != activeInstance)
             {
@@ -49,14 +73,14 @@ public class PlayerInventory : MonoBehaviour
         if (stack.GetItemData().ItemPrefab == null) return;
 
         GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
-        itemInstances.Add(stack, itemObject);
+        itemInstances.Add(stack.GetID(), itemObject);
 
         if (activeInstance == null) ChangeFocused(slotIndex);
         else itemObject.SetActive(false);
     }
     void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
-        if (!itemInstances.TryGetValue(stack, out GameObject itemInstance)) return;
+        if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return;
 
         if (activeInstance == itemInstance)
         {
@@ -66,44 +90,31 @@ public class PlayerInventory : MonoBehaviour
         }
 
         Destroy(itemInstance);
-        itemInstances.Remove(stack);
+        itemInstances.Remove(stack.GetID());
     }
     #endregion
 
     #region Inventory Control
     public void NextItem()
     {
-        int current = focusedIndex;
-
-        for (int i = 0; i < Inventory.TotalSlots; i++)
+        DebugInventory();
+        if (Inventory.TryGetNext(focusedSlot, out var stack, out int nextIndex))
         {
-            current = (current + 1) % Inventory.TotalSlots;
-
-            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
-            {
-                ChangeFocused(current);
-                return;
-            }
+            ChangeFocused(nextIndex);
+            return;
         }
     }
     public void PreviousItem()
     {
-        int current = focusedIndex;
-
-        for (int i = 0; i < Inventory.TotalSlots; i++)
+        if (Inventory.TryGetPrevious(focusedSlot, out IReadOnlyItemStack stack, out int nextIndex))
         {
-            current = (current - 1 + Inventory.TotalSlots) % Inventory.TotalSlots;
-
-            if (Inventory.TryGet(current, out IReadOnlyItemStack stack))
-            {
-                ChangeFocused(current);
-                return;
-            }
+            ChangeFocused(nextIndex);
+            return;
         }
     }
     public void ChangeFocused(int focusAtIndex)
     {
-        bool differentIndex = focusedIndex != focusAtIndex;
+        bool differentIndex = focusedSlot != focusAtIndex;
 
         if (!differentIndex && activeInstance != null) return;
         if (focusAtIndex >= Inventory.TotalSlots || focusAtIndex < 0) return;
@@ -111,14 +122,14 @@ public class PlayerInventory : MonoBehaviour
         IReadOnlyItemStack stack;
         GameObject itemObject = null;
 
-        if (differentIndex && Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
+        if (differentIndex && Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(false);
         }
 
-        focusedIndex = focusAtIndex;
+        focusedSlot = focusAtIndex;
 
-        if (Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack, out itemObject))
+        if (Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(true);
         }
@@ -127,31 +138,36 @@ public class PlayerInventory : MonoBehaviour
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
-    public bool TryUseFocused()
+    public async Task<bool> TryUseFocused()
     {
-        if(!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        GameObject itemInstance = itemInstances[stack];
+        if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
+        if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
 
-        if (itemInstance == null) return false; // Try get item's world instance
-        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future
-        
-        bool success = interactable.TryInteract(playerBody); // Try interact with instance.
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
+        bool success = await interactable.TryInteract(playerBody); // Try interact with instance.
 
         if(success)
         {
-            if(stack.GetItemData().IsConsumable)
-            Inventory.TryRemoveOne(focusedIndex); // Deplete if consumable.
-
+            await RegisterUsage_ServerRpc(focusedSlot);
             OnItemUsed?.Invoke(stack.GetItemData());
         }
-
         return success;
+    }
+
+    [ServerRpc] async Task RegisterUsage_ServerRpc(int slotIndex)
+    {
+        if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) await Task.CompletedTask;
+        if (stack.GetItemData().IsConsumable) Inventory.TryRemoveOne(slotIndex);
     }
 
     #region Input Actions
     public void UseFocused(InputAction.CallbackContext ctx)
     {
-        if (ctx.started) TryUseFocused();
+        if (ctx.started)
+        {
+            if(currentUseTask != null && !currentUseTask.IsCompleted) return;
+            currentUseTask = TryUseFocused();
+        }
     }
     public void NextItem(InputAction.CallbackContext ctx)
     {
@@ -168,7 +184,7 @@ public class PlayerInventory : MonoBehaviour
     #region Helpers
     public IReadOnlyItemStack GetFocusedItem()
     {
-        Inventory.TryGet(focusedIndex, out var stack);
+        Inventory.TryGet(focusedSlot, out var stack);
         return stack;
     }
     #endregion

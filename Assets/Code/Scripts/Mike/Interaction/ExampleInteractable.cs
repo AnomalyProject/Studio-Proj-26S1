@@ -1,12 +1,13 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class ExampleInteractable : MonoBehaviour, IInteractable<MonoBehaviour>
 {
-    public bool CanInteract(MonoBehaviour interactor) => true;
+    public Task<bool> CanInteract(MonoBehaviour interactor) => Task.FromResult(true);
 
-    public bool TryInteract(MonoBehaviour interactor)
+    public Task<bool> TryInteract(MonoBehaviour interactor)
     {
         Debug.Log("Interacted With:" + gameObject.name);
-        return true;
+        return Task.FromResult(true);
     }
 }

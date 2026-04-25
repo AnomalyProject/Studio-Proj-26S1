@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using System;
 
 [Serializable] public class AnomalyGroup
 {
@@ -7,4 +7,10 @@ using UnityEngine;
     [SerializeField] bool _replacesBaseMap;
     public GameObject GroupRoot => _groupRoot;
     public bool ReplacesBaseMap => _replacesBaseMap;
+
+    public AnomalyGroup(GameObject groupRoot, bool replacesBaseMap)
+    {
+        _groupRoot = groupRoot;
+        _replacesBaseMap = replacesBaseMap;
+    }
 }

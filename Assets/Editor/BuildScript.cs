@@ -9,6 +9,22 @@ public class BuildScript
     [MenuItem("Build/Perform Build")]
     public static void PerformBuild() 
     {
+        #region VersionDisplayHandling
+        string[] args = Environment.GetCommandLineArgs();
+        string versionNumber = "1.0.0";
+        
+        for (int i = 0; i < args.Length; i++) 
+        {
+            if (args[i] == "-gameVersion" && i + 1 < args.Length) 
+            {
+                versionNumber = args[i + 1];
+                break;
+            }
+        }
+        PlayerSettings.bundleVersion = versionNumber;
+        #endregion
+        
+        #region BuildInstructions
         string[] activeScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
 
         if (activeScenes.Length == 0) {
@@ -42,5 +58,7 @@ public class BuildScript
             Debug.LogError("Alfred: Build Finished, Result: Failure");
             EditorApplication.Exit(1);
         }
+        #endregion
     }
+    
 }
