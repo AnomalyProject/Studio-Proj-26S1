@@ -36,7 +36,8 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private GameObject messagePanel;
     [SerializeField] private TMP_Text messageText;
     
-
+    private Coroutine messageCoroutine;
+    
     private void Awake()
     {
         //Connecting UI interactions to SessionManager
@@ -129,7 +130,7 @@ public class LobbyUI : MonoBehaviour
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
             listItem.Setup(player);
 
-            if (!player.IsReady)
+            if (player.IsReady)
             {
                 readyCount++;
             }
@@ -143,6 +144,8 @@ public class LobbyUI : MonoBehaviour
                 isLocalPlayerReady = player.IsReady;
             }
         }
+        
+        readyCountText.text = $"Ready: {readyCount}/{sessionData.PlayerCount}";
 
         //Updating ready status
         if (readyButtonText != null)
@@ -162,38 +165,130 @@ public class LobbyUI : MonoBehaviour
         startButton.interactable = isHost && allPlayersReady && sessionData.PlayerCount > 0;
     }
     
-    private void OnMaxPlayersChanged(int arg0)
+    private void OnPrivacyChanged(int index)
     {
-        throw new System.NotImplementedException();
-    }
+        if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
 
-    private void OnPrivacyChanged(int arg0)
-    {
-        throw new System.NotImplementedException();
-    }
+        string visibility = index == 1 ? "Public" : "Friends Only";
 
-    private void OnInviteClicked()
-    {
-        throw new System.NotImplementedException();
-    }
+        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyVisibility(visibility))
+        {
+            ShowMessage("Failed to update lobby visibility.");
+            RefreshUI();
+            return;
+        }
 
-    private void ApplyLobbySettings(ClientSessionData sessionData, bool isHost)
-    {
-        throw new System.NotImplementedException();
+        SessionManager.Instance.RequestUpdateSettings("LobbyVisibility", visibility);
     }
     
-    private void HandleHostMigrationStarted(string obj)
+    private void OnInviteClicked()
     {
-        throw new System.NotImplementedException();
+        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TryOpenInviteOverlay())
+        {
+            ShowMessage("Could not open the Steam invite overlay.");
+        }
+    }
+    
+    private void OnMaxPlayersChanged(int index)
+    {
+        if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
+
+        var sessionData = SessionManager.Instance.LatestClientSession;
+        int maxPlayers = index + 2;
+
+        if (maxPlayers < sessionData.PlayerCount)
+        {
+            ShowMessage("Max players cannot be lower than the current player count.");
+            maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);
+            return;
+        }
+
+        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers))
+        {
+            ShowMessage("Failed to update max players.");
+            maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);
+            return;
+        }
+
+        SessionManager.Instance.RequestUpdateSettings("MaxPlayers", maxPlayers.ToString());
     }
 
-    private void HandleSessionError(SessionErrorResponse obj)
+    private void HandleSessionError(SessionErrorResponse error)
     {
-        throw new System.NotImplementedException();
+        ShowMessage(error.Message, 3f);
+    }
+    
+    private void HandleHostMigrationStarted(string newHostName)
+    {
+        ShowMessage("Host left the lobby.", 2f);
     }
 
     private void OnLeaveClicked()
     {
         SessionModeManager.Instance.ReturnToMenu();
+    }
+    
+    private void ApplyLobbySettings(ClientSessionData sessionData, bool isHost)
+    {
+        if (privacyDropdown != null)
+        {
+            string visibility = GetCustomProperty(sessionData, "LobbyVisibility");
+            if (string.IsNullOrEmpty(visibility))
+            {
+                visibility = "Friends Only";
+            }
+
+            privacyDropdown.SetValueWithoutNotify(visibility == "Public" ? 1 : 0);
+            privacyDropdown.interactable = isHost;
+        }
+
+        if (maxPlayersDropdown != null)
+        {
+            int clampedMaxPlayers = Mathf.Clamp(sessionData.MaxPlayers, 2, 4);
+            maxPlayersDropdown.SetValueWithoutNotify(clampedMaxPlayers - 2);
+            maxPlayersDropdown.interactable = isHost;
+        }
+    }
+    
+    private string GetCustomProperty(ClientSessionData sessionData, string key)
+    {
+        if (sessionData.CustomPropertyKeys == null || sessionData.CustomPropertyValues == null)
+            return null;
+
+        int count = Mathf.Min(sessionData.CustomPropertyKeys.Count, sessionData.CustomPropertyValues.Count);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (sessionData.CustomPropertyKeys[i] == key)
+            {
+                return sessionData.CustomPropertyValues[i];
+            }
+        }
+
+        return null;
+    }
+    
+    private void ShowMessage(string message, float duration = 2.5f)
+    {
+        if (messagePanel == null || messageText == null)
+            return;
+
+        if (messageCoroutine != null)
+        {
+            StopCoroutine(messageCoroutine);
+        }
+
+        messageCoroutine = StartCoroutine(ShowMessageRoutine(message, duration));
+    }
+    
+    private IEnumerator ShowMessageRoutine(string message, float duration)
+    {
+        messagePanel.SetActive(true);
+        messageText.text = message;
+
+        yield return new WaitForSecondsRealtime(duration);
+
+        messagePanel.SetActive(false);
+        messageCoroutine = null;
     }
 }
