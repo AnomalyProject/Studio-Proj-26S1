@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using TMPro;
-using UnityEditor.VersionControl;
 using UnityEngine.UI;
 
 public class JoinCoOpPanelUI : MonoBehaviour
