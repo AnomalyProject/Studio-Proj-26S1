@@ -13,7 +13,6 @@ public class LobbyUI : MonoBehaviour
     [Header("Player List")]
     [SerializeField] private Transform playerListContainer;
     [SerializeField] private PlayerListUI playerListItemPrefab;
-    [SerializeField] private TMP_Text playerCountText;
 
     [Header("Buttons")]
     [SerializeField] private Button readyButton;
@@ -107,12 +106,6 @@ public class LobbyUI : MonoBehaviour
 
         var sessionData = SessionManager.Instance.LatestClientSession;
 
-        //Updating Player count display
-        if (playerCountText != null)
-        {
-            playerCountText.text = $"Players: {sessionData.PlayerCount}/{sessionData.MaxPlayers}";
-        }
-
         //Clearing old list items
         foreach (Transform child in playerListContainer)
         {
@@ -145,7 +138,7 @@ public class LobbyUI : MonoBehaviour
             }
         }
         
-        readyCountText.text = $"Ready: {readyCount}/{sessionData.PlayerCount}";
+        readyCountText.text = $"{readyCount}/{sessionData.PlayerCount} Ready";
 
         //Updating ready status
         if (readyButtonText != null)
