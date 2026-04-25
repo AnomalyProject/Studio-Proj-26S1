@@ -45,8 +45,8 @@ public class CrashManager : MonoBehaviour
     static private void EmailCrashReport()
     {
         MailMessage mail = new MailMessage();
-        mail.To.Add("");       //add mail for test
-        mail.Subject = $"Crash Report: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+        mail.To.Add("saeathenssteambuilds@gmail.com");       //add mail for test
+        mail.Subject = $"{Application.productName} v{Application.version} | Crash Report: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
         mail.Body = "A crash was detected. Please see the attached ZIP for logs and memory dumps.";
 
         try
