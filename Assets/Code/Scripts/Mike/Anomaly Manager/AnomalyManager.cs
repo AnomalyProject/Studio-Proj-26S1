@@ -49,8 +49,12 @@ public class AnomalyManager : NetworkBehaviour
         mapOrientor = GetComponent<MapOrientor>();
         OnMapChanged += mapOrientor.OrientMap;
 
-        if(!mapsArePrefabs)
-        foreach (var map in mapCollection) map.DisableAll();
+        if (!mapsArePrefabs)
+        {
+            foreach (var map in mapCollection) map.DisableAll();
+            foreach (var punish in punishmentRooms) punish.gameObject.SetActive(false);
+            winRoom.gameObject.SetActive(false);
+        }
     }
 
     #region Sync Methods
