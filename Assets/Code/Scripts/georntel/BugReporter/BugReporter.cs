@@ -17,7 +17,6 @@ public class BugReporter : MonoBehaviour
     public Button submitButton;
     public Button closeButton;
     public GameObject thankYouMessage;
-    public Toggle includeScreenshotToggle;
 
     [Header("SMTP Configuration")]
     
@@ -76,17 +75,8 @@ public class BugReporter : MonoBehaviour
         if (isSending) return;
         isSending = true;
         submitButton.interactable = false; 
-       
-        //  Screenshot toggle
-        if (includeScreenshotToggle != null && includeScreenshotToggle.isOn)
-        {
-            StopAllCoroutines(); // Stop any ongoing screenshot deletion attempts
-            StartCoroutine(CaptureScreenshotAndSend());
-        }
-        else
-        {
-            SendEmailReport();
-        }
+        StopAllCoroutines(); 
+        StartCoroutine(CaptureScreenshotAndSend());
     }
     
     private IEnumerator CaptureScreenshotAndSend()
