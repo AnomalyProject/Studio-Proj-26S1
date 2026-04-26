@@ -125,11 +125,6 @@ public class LobbyUI : MonoBehaviour
 
     private void OnLeaveClicked()
     {
-        //We say bye bye to the server and leave
-        SessionManager.Instance.RequestLeaveSession();
-        
-        //Maybe we can modify the SessionManager to handle this transition here better, but since it doesnt we do this here locally for now.
-        GameStateManager.Instance.RequestStateChange(GameState.Menu);
-        //TODO:After lead is done on the main scripts, revise this shi and refactor what is needed.
+        SessionModeManager.Instance.ReturnToMenu();
     }
 }

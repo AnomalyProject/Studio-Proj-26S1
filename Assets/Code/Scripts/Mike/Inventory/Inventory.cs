@@ -14,16 +14,16 @@ public class Inventory : NetworkModule
     /// <summary>
     /// Provides the actual stack in read-only form and the slot index it's positioned at.
     /// </summary>
-    public event Action<IReadOnlyItemStack, int> OnStackAdded, OnStackRemoved;
-    public event Action OnInventoryFull, OnSlotsMoved, OnInventoryChanged;
-
-    [ObserversRpc] private void InvokeInventoryChanged() => OnInventoryChanged?.Invoke();
+    public event Action<IReadOnlyItemStack, int> OnStackAdded, OnStackRemoved, OnStackChanged;
+    public event Action OnInventoryFull;
+    public event Action<int, int> OnSlotsSwapped;
     [ObserversRpc] private void InvokeInventoryFull() => OnInventoryFull?.Invoke();
-    [ObserversRpc] private void InvokeSlotsMoved() => OnSlotsMoved?.Invoke();
+    [ObserversRpc] private void InvokeSlotsSwapped(int indexA, int indexB) => OnSlotsSwapped?.Invoke(indexA, indexB);
     [ObserversRpc] private void InvokeItemAdded(ItemData itemData, int amount) => OnItemAdded?.Invoke(itemData, amount);
     [ObserversRpc] private void InvokeItemRemoved(ItemData itemData, int amount) => OnItemRemoved?.Invoke(itemData, amount);
     [ObserversRpc] private void InvokeStackAdded(IReadOnlyItemStack stack, int slotIndex) => OnStackAdded?.Invoke(stack, slotIndex);
     [ObserversRpc] private void InvokeStackRemoved(IReadOnlyItemStack stack, int slotIndex) => OnStackRemoved?.Invoke(stack, slotIndex);
+    [ObserversRpc] private void InvokeStackChanged(IReadOnlyItemStack stack, int slotIndex) => OnStackChanged?.Invoke(stack, slotIndex);
 
     #endregion
 
@@ -41,10 +41,7 @@ public class Inventory : NetworkModule
     {
         size = Math.Max(size, 1);
         slots = new(size, ownerAuth: false);
-
-        OnItemAdded += (itemData, amount) => InvokeInventoryChanged();
-        OnItemRemoved += (itemData, amount) => InvokeInventoryChanged();
-        OnSlotsMoved += () => InvokeInventoryChanged();
+        OnStackChanged += (_, index) => slots.SetDirty(index);
 
         for (int i = 0; i < startingItems.Length && !IsInventoryFull(); i++)
         {
@@ -97,7 +94,7 @@ public class Inventory : NetworkModule
 
             int added = slots[index].AddToStack(quantity);
 
-            if(added > 0) slots.SetDirty(index);
+            if(added > 0) InvokeStackChanged(slots[index], index);
             totalAmountAdded += added;
             quantity -= added;
         }
@@ -372,7 +369,7 @@ public class Inventory : NetworkModule
         if (stack == null || quantity <= 0) return 0;
 
         int removed = stack.RemoveFromStack(quantity);
-        if(removed > 0) slots.SetDirty(index);
+        if(removed > 0) InvokeStackChanged(stack, index);
 
         if (notify) InvokeItemRemoved(stack.GetItemData(), removed);
         if (stack.IsEmpty()) ClearSlot(index);
@@ -436,16 +433,18 @@ public class Inventory : NetworkModule
     /// slots.</param>
     public void ClearSlot(int slotIndex)
     {
-        ClearSlotSilent(slotIndex);
-        InvokeInventoryChanged();
-    }
-
-    void ClearSlotSilent(int slotIndex)
-    {
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
+
         ItemStack stackToRemove = slots[slotIndex];
         slots[slotIndex] = null;
-        InvokeStackRemoved(stackToRemove, slotIndex);
+
+        if (stackToRemove != null)
+        {
+            if (!stackToRemove.IsEmpty())
+                InvokeItemRemoved(stackToRemove.GetItemData(), stackToRemove.GetQuantity());
+
+            InvokeStackRemoved(stackToRemove, slotIndex);
+        }
     }
 
     /// <summary>
@@ -455,8 +454,7 @@ public class Inventory : NetworkModule
     /// will contain no items, and its size remains unchanged.</remarks>
     public void Clear()
     {
-        for (int i = 0; i < slots.Length; i++) ClearSlotSilent(i);
-        InvokeInventoryChanged();
+        for (int i = 0; i < slots.Length; i++) ClearSlot(i);
     }
     #endregion
 
@@ -558,55 +556,89 @@ public class Inventory : NetworkModule
     /// indices.</param>
     /// <param name="toSlot">The zero-based index of the destination slot to move or combine items to. Must be within the valid range of slot
     /// indices.</param>
-    public void SwapSlots(int fromSlot, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, invB: this, toSlot);
-    /// <summary>
-    /// Swaps the contents of two inventory slots, from this inventory to another, combining item stacks if they contain the same item type.
-    /// </summary>
-    /// <remarks>If both slots contain the same item type, their quantities are combined in the destination
-    /// slot up to its stack limit, and the source slot is reduced accordingly. If the slots contain different items,
-    /// their contents are swapped. Cancels if contents of <paramref name="fromSlot"/> or <paramref name="toInventory"/> are null.</remarks>
-    /// <param name="fromSlot">The zero-based index of the source slot to move or combine items from. Must be within the valid range of slot
-    /// indices.</param>
-    /// <param name="toInventory">The destination inventory to which the items will be moved or combined. Cannot be null.</param>
-    /// <param name="toSlot">The zero-based index of the destination slot of the other inventory to move or combine items to. Must be within the valid range of slot
-    /// indices.</param>
-    public void SwapSlots(int fromSlot, Inventory toInventory, int toSlot) => MergeOrSwapSlots(invA: this, fromSlot, toInventory, toSlot);
-    private void MergeOrSwapSlots(Inventory invA, int indexA, Inventory invB, int indexB)
+    public void MoveSlot(int fromSlot, int toSlot)
     {
-        if (invA == null || invB == null) return;
-        if (indexA < 0 || indexA >= invA.slots.Length) return;
-        if (indexB < 0 || indexB >= invB.slots.Length) return;
-        if (invA == invB && indexA == indexB) return;
+        if (fromSlot == toSlot) return;
+        if (TryCombine(fromSlot, toInventory: this, toSlot, out bool operationValid)) return;
+        if (!operationValid) return;
 
-        var stackA = invA.slots[indexA];
-        var stackB = invB.slots[indexB];
+        ItemStack temp = slots[fromSlot];
+        slots[fromSlot] = slots[toSlot];
+        slots[toSlot] = temp;
 
-        if (stackA == null) return;
+        InvokeSlotsSwapped(fromSlot, toSlot);
+    }
+    /// <summary>
+    /// <inheritdoc cref = "MoveSlot(int, int)"/>
+    /// </summary>
+    /// <remarks>
+    /// <inheritdoc cref = "MoveSlot(int, int)"/>
+    /// </remarks>
+    public void MoveSlot(int fromSlot, Inventory toInventory, int toSlot)
+    {
+        if (toInventory == null) return;
 
-        bool sameItem = stackB != null && stackA.ItemData == stackB.ItemData;
+        if (toInventory == this)
+        {
+            MoveSlot(fromSlot, toSlot);
+            return;
+        }
+
+        if (TryCombine(fromSlot, toInventory: toInventory, toSlot, out bool operationValid)) return;
+        if (!operationValid) return;
+
+        ItemStack otherStack = toInventory.Detach(toSlot);
+        ItemStack thisStack = Detach(fromSlot);
+
+        toInventory.slots[toSlot] = thisStack;
+        slots[fromSlot] = otherStack;
+
+        toInventory.InvokeItemAdded(thisStack.GetItemData(), thisStack.GetQuantity());
+        toInventory.InvokeStackAdded(thisStack, toSlot);
+
+        if (otherStack != null)
+        {
+            InvokeItemAdded(otherStack.GetItemData(), otherStack.GetQuantity());
+            InvokeStackAdded(otherStack, fromSlot);
+        }
+    }
+    private bool TryCombine(int fromSlot, Inventory toInventory, int toSlot, out bool operationValid)
+    {
+        operationValid = false;
+        if (fromSlot < 0 || fromSlot >= slots.Length) return false;
+        if (toSlot < 0 || toSlot >= toInventory.slots.Length) return false;
+
+        ItemStack thisStack = slots[fromSlot];
+        ItemStack otherStack = toInventory.slots[toSlot];
+
+        if (thisStack == null) return false;
+        operationValid = true;
+
+        bool sameItem = otherStack != null && thisStack.ItemData == otherStack.ItemData;
 
         if (sameItem)
         {
-            int added = stackB.AddToStack(stackA.Quantity);
-            stackA.RemoveFromStack(added);
+            int added = otherStack.AddToStack(thisStack.Quantity);
 
             if (added > 0)
             {
-                invB.slots.SetDirty(indexB);
-                invA.slots.SetDirty(indexA);
+                thisStack.RemoveFromStack(added);
+
+                if (thisStack.IsEmpty()) ClearSlot(fromSlot);
+                else InvokeStackChanged(thisStack, fromSlot);
+
+                toInventory.InvokeStackChanged(otherStack, toSlot);
+                return true;
             }
-
-            if (stackA.Quantity <= 0) invA.ClearSlot(indexA);
-        }
-        else
-        {
-            invA.slots[indexA] = stackB;
-            invB.slots[indexB] = stackA;
         }
 
-        invA.InvokeSlotsMoved();
-
-        if (invA != invB) invB.InvokeSlotsMoved();
+        return false;
+    }
+    private ItemStack Detach(int fromSlot)
+    {
+        var stack = slots[fromSlot];
+        ClearSlot(fromSlot);
+        return stack;
     }
 
     /// <summary>

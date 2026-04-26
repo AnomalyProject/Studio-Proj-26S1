@@ -29,6 +29,16 @@ public class FPSController : MonoBehaviour
     [SerializeField] private Transform cameraHolder;
     #endregion
 
+    #region Public Accessors
+    //Public Accessors(for other systems, e.g.audio, UI)
+
+    public bool IsCrouching => isCrouching;
+    public bool IsSprinting => isSprinting;
+    public bool IsGrounded => isGrounded;
+    public bool IsMoving => moveInput.sqrMagnitude > 0;
+    public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
+    #endregion
+
     #region Private Fields
     private CharacterController character;
 
@@ -41,6 +51,7 @@ public class FPSController : MonoBehaviour
 
     // Crouch state
     private bool isCrouching = false;
+    private bool isSprinting = false;
     private float targetHeight;
     private float targetCameraLocalY;
     public bool IsLocalPlayer { get; set; }
@@ -69,6 +80,7 @@ public class FPSController : MonoBehaviour
         ApplyMovement();
         HandleGravity();
         SmoothCrouchTransition();
+        Debug.Log("Player Moving:" + IsMoving);
 
     }
     #endregion
@@ -153,11 +165,12 @@ public class FPSController : MonoBehaviour
     }
     private void ApplyMovement()
     {
+        isSprinting = sprintHeld && moveInput.y > 0f && !isCrouching;
+
         float speed;
         if (isCrouching) speed = crouchSpeed;
-        else if (sprintHeld && moveInput.y > 0f) speed = sprintSpeed;
+        else if (isSprinting) speed = sprintSpeed;
         else speed = walkSpeed;
-
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         character.Move(move * (speed * Time.deltaTime));
     }
@@ -169,14 +182,5 @@ public class FPSController : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         character.Move(velocity * Time.deltaTime);
     }
-    #endregion
-
-    #region Public Accessors (commented out for now)
-    // Public Accessors (for other systems, e.g. audio, UI)
-
-    //public bool IsCrouching => isCrouching;
-    //public bool IsSprinting => input.SprintHeld && !isCrouching;
-    //public bool IsGrounded => isGrounded;
-    //public float CurrentSpeed => isCrouching ? crouchSpeed : (input.SprintHeld ? sprintSpeed : walkSpeed);
     #endregion
 }

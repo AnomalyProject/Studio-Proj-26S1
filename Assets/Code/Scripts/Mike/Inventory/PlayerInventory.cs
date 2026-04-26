@@ -16,7 +16,7 @@ public class PlayerInventory : NetworkBehaviour
 
     public Inventory Inventory { get; private set; }
 
-    private int focusedIndex = 0;
+    private int focusedSlot = 0;
     private GameObject activeInstance;
     private Dictionary<string, GameObject> itemInstances = new();
     private PlayerBody playerBody;
@@ -31,13 +31,12 @@ public class PlayerInventory : NetworkBehaviour
     protected override void OnSpawned()
     {
         if (!isOwner) return;
-        Inventory.OnSlotsMoved += HandleSlotsMoved;
+        Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
-        Inventory.OnInventoryChanged += DebugInventory;
     }
 
-    void DebugInventory()
+    public void DebugInventory()
     {
         foreach(var item in Inventory.GetEnumeration())
         {
@@ -53,9 +52,11 @@ public class PlayerInventory : NetworkBehaviour
     }
 
     #region Inventory Event Subscribers
-    void HandleSlotsMoved()
+    void HandleSlotsSwapped(int fromSlot, int toSlot)
     {
-        if(Inventory.TryGet(focusedIndex, out var stack))
+        if (fromSlot != focusedSlot) return;
+
+        if (Inventory.TryGet(focusedSlot, out var stack))
         {
             GameObject itemInstance = itemInstances[stack.GetID()];
 
@@ -97,7 +98,7 @@ public class PlayerInventory : NetworkBehaviour
     public void NextItem()
     {
         DebugInventory();
-        if (Inventory.TryGetNext(focusedIndex, out var stack, out int nextIndex))
+        if (Inventory.TryGetNext(focusedSlot, out var stack, out int nextIndex))
         {
             ChangeFocused(nextIndex);
             return;
@@ -105,7 +106,7 @@ public class PlayerInventory : NetworkBehaviour
     }
     public void PreviousItem()
     {
-        if (Inventory.TryGetPrevious(focusedIndex, out IReadOnlyItemStack stack, out int nextIndex))
+        if (Inventory.TryGetPrevious(focusedSlot, out IReadOnlyItemStack stack, out int nextIndex))
         {
             ChangeFocused(nextIndex);
             return;
@@ -113,7 +114,7 @@ public class PlayerInventory : NetworkBehaviour
     }
     public void ChangeFocused(int focusAtIndex)
     {
-        bool differentIndex = focusedIndex != focusAtIndex;
+        bool differentIndex = focusedSlot != focusAtIndex;
 
         if (!differentIndex && activeInstance != null) return;
         if (focusAtIndex >= Inventory.TotalSlots || focusAtIndex < 0) return;
@@ -121,14 +122,14 @@ public class PlayerInventory : NetworkBehaviour
         IReadOnlyItemStack stack;
         GameObject itemObject = null;
 
-        if (differentIndex && Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
+        if (differentIndex && Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(false);
         }
 
-        focusedIndex = focusAtIndex;
+        focusedSlot = focusAtIndex;
 
-        if (Inventory.TryGet(focusedIndex, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
+        if (Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
             itemObject?.SetActive(true);
         }
@@ -139,7 +140,7 @@ public class PlayerInventory : NetworkBehaviour
     }
     public async Task<bool> TryUseFocused()
     {
-        if (!Inventory.TryGet(focusedIndex, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
+        if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
         if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
 
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
@@ -147,7 +148,7 @@ public class PlayerInventory : NetworkBehaviour
 
         if(success)
         {
-            await RegisterUsage_ServerRpc(focusedIndex);
+            await RegisterUsage_ServerRpc(focusedSlot);
             OnItemUsed?.Invoke(stack.GetItemData());
         }
         return success;
@@ -183,7 +184,7 @@ public class PlayerInventory : NetworkBehaviour
     #region Helpers
     public IReadOnlyItemStack GetFocusedItem()
     {
-        Inventory.TryGet(focusedIndex, out var stack);
+        Inventory.TryGet(focusedSlot, out var stack);
         return stack;
     }
     #endregion
