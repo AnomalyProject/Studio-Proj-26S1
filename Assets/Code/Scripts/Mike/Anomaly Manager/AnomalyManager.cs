@@ -1,6 +1,5 @@
 using PurrNet;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
 
 [RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : NetworkBehaviour
