@@ -64,19 +64,18 @@ public class LobbyPresentationManager : MonoBehaviour
     
     private bool HasUsableSessionData()
     {
-        if (SessionManager.Instance == null) return false;
-
-        return SessionManager.Instance.LatestClientSession.Players != null;
+        List<ClientPlayerInfo> players = GetPlayersForPresentation();
+        return players.Count > 0;
     }
 
     
     private void RefreshPresentation()
     {
-        //todelete
+       //todelete
         Debug.Log("[LobbyPresentation] RefreshPresentation called.");
-        
+
         ClearPresentation();
-        
+
         if (standeePrefab == null)
         {
             Debug.LogWarning("[LobbyPresentation] Standee prefab is missing.");
@@ -89,46 +88,83 @@ public class LobbyPresentationManager : MonoBehaviour
             return;
         }
 
-        if (SessionManager.Instance == null) return;
-
-        if (SessionManager.Instance == null) return;
-
-        ClientSessionData sessionData = SessionManager.Instance.LatestClientSession;
-        if (sessionData.Players == null) return;
-
-        List<ClientPlayerInfo> orderedPlayers = BuildOrderedPlayerList(sessionData);
+        List<ClientPlayerInfo> orderedPlayers = GetPlayersForPresentation();
+        Debug.Log($"[LobbyPresentation] Players found: {orderedPlayers.Count}");
 
         int standeeCount = Mathf.Min(playerSlots.Length, orderedPlayers.Count);
 
         for (int i = 0; i < standeeCount; i++)
         {
-            LobbyStandee standee = Instantiate(standeePrefab, playerSlots[i]);
-            standee.transform.localPosition = Vector3.zero;
-            standee.transform.localRotation = Quaternion.identity;
+            if (playerSlots[i] == null)
+            {
+                Debug.LogWarning($"[LobbyPresentation] Slot {i} is missing.");
+                continue;
+            }
+
+            LobbyStandee standee = Instantiate(standeePrefab, playerSlots[i].position, playerSlots[i].rotation);
+            standee.name = $"LobbyStandee_{orderedPlayers[i].DisplayName}";
             standee.Setup(orderedPlayers[i]);
 
             activeStandees.Add(standee);
+
+            Debug.Log($"[LobbyPresentation] Spawned standee for {orderedPlayers[i].DisplayName} at {playerSlots[i].position}");
         }
     }
     
-    private List<ClientPlayerInfo> BuildOrderedPlayerList(ClientSessionData sessionData)
+    private List<ClientPlayerInfo> GetPlayersForPresentation()
+    {
+        List<ClientPlayerInfo> players = new List<ClientPlayerInfo>();
+
+        if (SessionManager.Instance == null)
+        {
+            return players;
+        }
+
+        if (SessionManager.Instance.IsHost && SessionManager.Instance.CurrentSession != null)
+        {
+            for (int i = 0; i < SessionManager.Instance.CurrentSession.Players.Count; i++)
+            {
+                PlayerSessionInfo serverPlayer = SessionManager.Instance.CurrentSession.Players[i];
+
+                players.Add(new ClientPlayerInfo
+                {
+                    SteamID = serverPlayer.SteamID,
+                    DisplayName = serverPlayer.DisplayName,
+                    IsReady = serverPlayer.IsReady,
+                    IsHost = serverPlayer.IsHost
+                });
+            }
+
+            return BuildOrderedPlayerList(players);
+        }
+
+        ClientSessionData clientSession = SessionManager.Instance.LatestClientSession;
+
+        if (clientSession.Players != null)
+        {
+            return BuildOrderedPlayerList(clientSession.Players);
+        }
+
+        return players;
+    }
+    
+    private List<ClientPlayerInfo> BuildOrderedPlayerList(List<ClientPlayerInfo> players)
     {
         List<ClientPlayerInfo> orderedPlayers = new List<ClientPlayerInfo>();
 
-        // puttin the host to the first slot (slot 0)
-        for (int i = 0; i < sessionData.Players.Count; i++)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (sessionData.Players[i].IsHost)
+            if (players[i].IsHost)
             {
-                orderedPlayers.Add(sessionData.Players[i]);
+                orderedPlayers.Add(players[i]);
             }
         }
 
-        for (int i = 0; i < sessionData.Players.Count; i++)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (!sessionData.Players[i].IsHost)
+            if (!players[i].IsHost)
             {
-                orderedPlayers.Add(sessionData.Players[i]);
+                orderedPlayers.Add(players[i]);
             }
         }
 
