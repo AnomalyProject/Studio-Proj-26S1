@@ -159,7 +159,7 @@ public class BugReporter : MonoBehaviour
     }
 
 
-    // Keep trying to delete the temp screenshot until it's gone
+    // Keep trying to delete the temp files until they're gone
     private IEnumerator DeleteTempFiles()
     {
         while (File.Exists(tempScreenshotPath))

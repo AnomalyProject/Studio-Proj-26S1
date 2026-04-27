@@ -24,7 +24,7 @@ public class ModificationEditorInfoPopup : EditorWindow
         // Centered default position
         Rect main = EditorGUIUtility.GetMainWindowPosition();
         float width = 700;
-        float height = 460;
+        float height = 480;
 
         window.position = new Rect(main.x + (main.width - width) / 2, main.y + (main.height - height) / 2, width, height);
         window.minSize = new Vector2(400, 300);
@@ -47,6 +47,11 @@ public class ModificationEditorInfoPopup : EditorWindow
         GUILayout.Label("Particle Systems", header);
         GUILayout.Label("<line-indent=2em><color=#FF5555><b>Particles are BAD and I HATE them.</b></color> Do <b>NOT</b> modify particle systems. If you do, the console will log <b>600 different warnings</b> because you <b><u>deserve it</u></b>. If you <b>HAVE</b> to instantiate a particle system instead of just toggling it, convert it to a prefab and use a spawner. Also, adding / removing particle systems will make your modification asset larger than your mom.</line-indent>", body);
         EditorGUILayout.EndScrollView();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Open Documentation", GUILayout.MaxWidth(150))) Application.OpenURL("https://app.clickup.com/90151230104/v/dc/2kypx6mr-4495/2kypx6mr-15595");
+        GUILayout.EndHorizontal();
     }
 }
 #endif

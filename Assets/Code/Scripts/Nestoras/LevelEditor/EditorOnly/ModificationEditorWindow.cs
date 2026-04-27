@@ -160,6 +160,10 @@ public class ModificationEditorWindow : EditorWindow
                         modificationObject.transform.localPosition = Vector3.zero;
                         modificationApplier = modificationObject.AddComponent<ModificationApplier>();
                         EditorApplication.delayCall += () => modificationApplier.levelModification = lastModification;
+
+                        // Add to map
+                        AnomalyMap map = modificationsRoot.GetComponentInParent<AnomalyMap>();
+                        map.AddVariation(new AnomalyGroup(modificationObject, false));
                     }
                 }
                 catch { }
@@ -295,7 +299,7 @@ public class ModificationEditorWindow : EditorWindow
                             {
                                 EditorGUI.indentLevel++;
                                 // Explicitly check enabled state since it's not part of the field list
-                                if (component.oldEnabled != component.newEnabled) DrawAlignedModification("Enabled", component.oldEnabled.ToString(), component.newEnabled.ToString());
+                                if (component.oldEnabled != component.newEnabled) DrawAlignedModification("Enabled", component.oldEnabled.ToString(), component.newEnabled.ToString(), true);
                                 // Draw each field modification with optional warnings / green text to indicate support by custom appliers in standalone builds
                                 foreach (FieldModification field in component.fieldModifications) DrawAlignedModification(field.before.path, FieldSnapshotToDisplayString(field.before), FieldSnapshotToDisplayString(field.after), ComponentApplierRegistry.IsFieldSupported(System.Type.GetType(component.type), field.before.path), !System.Type.GetType(component.type).IsSubclassOf(typeof(MonoBehaviour)));
                                 EditorGUI.indentLevel--;

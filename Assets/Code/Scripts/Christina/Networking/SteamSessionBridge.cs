@@ -9,7 +9,7 @@ public class SteamSessionBridge : MonoBehaviour
 {
     public static SteamSessionBridge Instance { get; private set; }
 
-    private CSteamID currentLobbyId;
+    private CSteamID currentLobbyID;
     private bool isInLobby = false;
     private bool isCreatingLobby = false;
     private bool isSteamAvailable = false;
@@ -30,7 +30,7 @@ public class SteamSessionBridge : MonoBehaviour
     private JoinStartupStatus currentJoinStartupStatus;
     private int joinStartupAttemptID = 0;
     private bool joinStartupInProgress = false;
-    private CSteamID pendingJoinLobbyId;
+    private CSteamID pendingJoinLobbyID;
     private enum JoinApprovalResult { Pending, Approved, Rejected }
     private JoinApprovalResult joinApprovalResult = JoinApprovalResult.Pending;
 
@@ -103,7 +103,7 @@ public class SteamSessionBridge : MonoBehaviour
                     joinStartupAttemptID++;
                     joinStartupInProgress = true;
                     joinApprovalResult = JoinApprovalResult.Pending; 
-                    pendingJoinLobbyId = new CSteamID(lobbyId);
+                    pendingJoinLobbyID = new CSteamID(lobbyId);
 
                     SetJoinStage(
                         JoinStartupStage.JoinRequestReceived,
@@ -146,7 +146,6 @@ public class SteamSessionBridge : MonoBehaviour
         lobbyCreatedCallResult.Set(apiCall);
     }
     
-    //todo: Friends list display requires "steam_display" + partner registered localization tokens.
     public bool UpdateRichPresence(GameState state)
     {
         if (!SteamManager.Initialized) return false;
@@ -209,7 +208,7 @@ public class SteamSessionBridge : MonoBehaviour
         // when someone clicks it Steam fires GameLobbyJoinRequested_t 
         if (state == GameState.Lobby && isInLobby)
         {
-            connectSet = SteamFriends.SetRichPresence("connect", $"+connect_lobby {currentLobbyId}");
+            connectSet = SteamFriends.SetRichPresence("connect", $"+connect_lobby {currentLobbyID}");
         }
         else
         {
@@ -229,6 +228,37 @@ public class SteamSessionBridge : MonoBehaviour
 
         return success;
     }
+    
+    public void RequestJoinLobbyById(ulong lobbyId)
+    {
+        CSteamID requestedLobby = new CSteamID(lobbyId);
+
+        if (isInLobby && currentLobbyID == requestedLobby)
+        {
+            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request...");
+            return;
+        }
+
+        joinStartupAttemptID++;
+        joinStartupInProgress = true;
+        joinApprovalResult = JoinApprovalResult.Pending;
+        pendingJoinLobbyID = requestedLobby;
+
+        SetJoinStage(
+            JoinStartupStage.JoinRequestReceived,
+            $"Join requested for lobby {requestedLobby}");
+
+        if (isInLobby || isCreatingLobby)
+        {
+            LeaveSteamLobby();
+            SetJoinStage(
+                JoinStartupStage.LeavingPreviousLobby,
+                "Leaving current Steam lobby before new join attempt.");
+        }
+
+        SessionModeManager.Instance.StartJoining();
+    }
+
     
     public void LeaveSteamLobby()
     {
@@ -253,11 +283,11 @@ public class SteamSessionBridge : MonoBehaviour
             // have already called SteamAPI.Shutdown() before our OnDestroy runs.
             if (isSteamAvailable)
             {
-                SteamMatchmaking.LeaveLobby(currentLobbyId);
+                SteamMatchmaking.LeaveLobby(currentLobbyID);
                 SteamFriends.ClearRichPresence();
             }
             
-            currentLobbyId = new CSteamID();
+            currentLobbyID = new CSteamID();
             isInLobby = false;
             
             Debug.Log("[SteamBridge] Left Steam lobby and cleared Rich Presence");
@@ -339,7 +369,7 @@ public class SteamSessionBridge : MonoBehaviour
     
     public void BeginPendingSteamJoin()
     {
-        if (!pendingJoinLobbyId.IsValid())
+        if (!pendingJoinLobbyID.IsValid())
         {
             SetJoinStage(
                 JoinStartupStage.Failed,
@@ -348,11 +378,11 @@ public class SteamSessionBridge : MonoBehaviour
             return;
         }
 
-        SteamMatchmaking.JoinLobby(pendingJoinLobbyId);
+        SteamMatchmaking.JoinLobby(pendingJoinLobbyID);
 
         SetJoinStage(
             JoinStartupStage.LobbyJoinRequested,
-            $"Requested Steam lobby join for {pendingJoinLobbyId} after scene load.");
+            $"Requested Steam lobby join for {pendingJoinLobbyID} after scene load.");
     }
 
     
@@ -504,14 +534,14 @@ public class SteamSessionBridge : MonoBehaviour
             return;
         }
         
-        currentLobbyId = new CSteamID(result.m_ulSteamIDLobby);
-        pendingHostLobbyId = currentLobbyId;
+        currentLobbyID = new CSteamID(result.m_ulSteamIDLobby);
+        pendingHostLobbyId = currentLobbyID;
         hostLobbyCreated = true;
         isInLobby = true;
         
         SetBootStage(
             HostStartupStage.LobbyCreated,
-            $"Steam lobby created successfully. Lobby ID: {currentLobbyId}");
+            $"Steam lobby created successfully. Lobby ID: {currentLobbyID}");
 
     }
 
@@ -545,10 +575,10 @@ public class SteamSessionBridge : MonoBehaviour
         }
         
         CSteamID enteredLobbyId = new CSteamID(callback.m_ulSteamIDLobby);
-        currentLobbyId = enteredLobbyId;
+        currentLobbyID = enteredLobbyId;
         isInLobby = true;
 
-        CSteamID lobbyOwner = SteamMatchmaking.GetLobbyOwner(currentLobbyId);
+        CSteamID lobbyOwner = SteamMatchmaking.GetLobbyOwner(currentLobbyID);
         bool isHost = lobbyOwner == SteamUser.GetSteamID();
 
         bool hostStartupInProgress = hostStartupCoroutine != null &&
@@ -567,7 +597,7 @@ public class SteamSessionBridge : MonoBehaviour
 
             SetBootStage(
                 HostStartupStage.LobbyEnteredAsHost,
-                $"Entered Steam lobby as host. Lobby ID: {currentLobbyId}");
+                $"Entered Steam lobby as host. Lobby ID: {currentLobbyID}");
 
             bool metadataPublished = SyncMetadataToSteamLobby();
             bool richPresencePublished = UpdateRichPresence(GameState.Lobby);
@@ -593,7 +623,7 @@ public class SteamSessionBridge : MonoBehaviour
             
             if (joinStartupInProgress)
             {
-                pendingJoinLobbyId = enteredLobbyId;
+                pendingJoinLobbyID = enteredLobbyId;
 
                 SetJoinStage(
                     JoinStartupStage.LobbyEntered,
@@ -819,33 +849,7 @@ public class SteamSessionBridge : MonoBehaviour
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
         Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
-        // Same lobby check: if player is already in the lobby they're trying to join, ignore it
-        if (isInLobby && currentLobbyId ==callback.m_steamIDLobby)
-        {
-            Debug.LogWarning("[SteamBridge] Already in this lobby, ignoring join request.");
-            return;
-        }
-        
-        joinStartupAttemptID++;
-        joinStartupInProgress = true;
-        joinApprovalResult = JoinApprovalResult.Pending; 
-        pendingJoinLobbyId = callback.m_steamIDLobby;
-
-        SetJoinStage(
-            JoinStartupStage.JoinRequestReceived,
-            $"Join requested for lobby {callback.m_steamIDLobby}");
-        
-        // Existing lobby cleanup: if player is in a different lobby or mid-creation, clean up first
-        if (isInLobby || isCreatingLobby)
-        {
-            Debug.Log("[SteamBridge] Leaving current lobby before joining new one.");
-            LeaveSteamLobby();
-        }
-        SetJoinStage(
-            JoinStartupStage.LeavingPreviousLobby,
-            "Leaving current Steam lobby before new join attempt.");
-        
-        SessionModeManager.Instance.StartJoining();
+        RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
 
     }
     
@@ -856,7 +860,7 @@ public class SteamSessionBridge : MonoBehaviour
         if (!isInLobby) return false;
         
         // only the lobby owner can set metadata
-        if (SteamMatchmaking.GetLobbyOwner(currentLobbyId) != SteamUser.GetSteamID()) return false;
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
         
         if (SessionManager.Instance == null) return false;
         var session = SessionManager.Instance.CurrentSession;
@@ -865,14 +869,14 @@ public class SteamSessionBridge : MonoBehaviour
         bool success = true;
 
         // everything inside the metadata are strings + keys have 255 character limit. Should keep them short.
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "session_id", session.SessionId);
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "map_name", session.MapName);
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "game_mode", session.GameMode);
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "host_name", SteamFriends.GetPersonaName());
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "player_count", session.Players.Count.ToString());
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "max_players", session.MaxPlayers.ToString());
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "game_state", GameStateManager.Instance.CurrentState.ToString());
-        success &= SteamMatchmaking.SetLobbyData(currentLobbyId, "game_version", Application.version);
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "session_id", session.SessionId);
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "map_name", session.MapName);
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "game_mode", session.GameMode);
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "host_name", SteamFriends.GetPersonaName());
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "player_count", session.Players.Count.ToString());
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "max_players", session.MaxPlayers.ToString());
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "game_state", GameStateManager.Instance.CurrentState.ToString());
+        success &= SteamMatchmaking.SetLobbyData(currentLobbyID, "game_version", Application.version);
         
         
         // sync custom properties with prefix to avoid key collisions, for example
@@ -880,7 +884,7 @@ public class SteamSessionBridge : MonoBehaviour
         // overwrite the reserved map_name key. Namespacing prevents that kind of collisions.
         foreach (var kvp in session.CustomProperties)
         {
-            success &= SteamMatchmaking.SetLobbyData(currentLobbyId, $"custom_{kvp.Key}", kvp.Value);
+            success &= SteamMatchmaking.SetLobbyData(currentLobbyID, $"custom_{kvp.Key}", kvp.Value);
         }
 
         if (success)
@@ -901,7 +905,7 @@ public class SteamSessionBridge : MonoBehaviour
         currentJoinStartupStatus.Message = message;
         currentJoinStartupStatus.AttemptID = joinStartupAttemptID;
         currentJoinStartupStatus.FailureSource = failureSource;
-        currentJoinStartupStatus.TargetLobbyId = pendingJoinLobbyId.IsValid() ? pendingJoinLobbyId.ToString() : "None";
+        currentJoinStartupStatus.TargetLobbyId = pendingJoinLobbyID.IsValid() ? pendingJoinLobbyID.ToString() : "None";
 
         Debug.Log(
             $"[SteamBridge:Join] Attempt={currentJoinStartupStatus.AttemptID} " +
@@ -992,5 +996,39 @@ public class SteamSessionBridge : MonoBehaviour
             LeaveSteamLobby();
         }
         
+    }
+
+    public bool TryOpenInviteOverlay()
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+        
+        SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
+        return true;
+    }
+
+    public bool TrySetLobbyVisibility(string visibility)
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
+
+        ELobbyType newLobbyType = visibility == "Public" ? ELobbyType.k_ELobbyTypePublic : ELobbyType.k_ELobbyTypeFriendsOnly;
+        
+        bool success = SteamMatchmaking.SetLobbyType(currentLobbyID, newLobbyType);
+
+        if (success) lobbyType = newLobbyType;
+
+        return success;
+    }
+
+    public bool TrySetLobbyMaxPlayers(int maxPlayers)
+    {
+        if (!isSteamAvailable || !isInLobby) return false;
+
+        if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
+        
+        if(maxPlayers < 2 || maxPlayers > 4) return false;
+        
+        return SteamMatchmaking.SetLobbyMemberLimit(currentLobbyID, maxPlayers);
     }
 }
