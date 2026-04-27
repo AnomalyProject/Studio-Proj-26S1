@@ -62,7 +62,7 @@ public class AnomalyManager : NetworkBehaviour
         if (!isServer) return;
         if (activeMap == null) { Debug.LogError("No active map to apply variation to!"); return; }
 
-        currentMapState.variationIndex = withAnomalies ? activeMap.GetRandomUnusedAnomalyIndex() : -1;
+        currentMapState.variationIndex = withAnomalies && activeMap.HasAnomalyVariations? activeMap.GetRandomUnusedAnomalyIndex() : -1;
         RegisterState(withAnomalies? RoomState.AnomalyRoom : RoomState.NormalRoom);
     }
     public void EnablePunishmentRoom_Server()
