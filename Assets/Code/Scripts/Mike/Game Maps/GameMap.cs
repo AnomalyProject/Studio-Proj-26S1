@@ -1,6 +1,7 @@
+using PurrNet;
 using UnityEngine;
 
-public class GameMap : MonoBehaviour
+public class GameMap : NetworkBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
     public Transform EntryPointAnchor => entryPointAnchor;
