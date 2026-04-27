@@ -20,6 +20,8 @@ public class SessionModeManager : MonoBehaviour
 
     private const float hostReadyTimeoutSeconds = 10f;
     private const float sessionReadyTimeoutSeconds = 5f;
+    
+    private Coroutine hostLeftRoutine;
 
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -39,13 +41,9 @@ public class SessionModeManager : MonoBehaviour
     private void OnEnable()
     {
         
-        if (SteamSessionBridge.Instance != null)
-        {
-            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
-        }
+        TrySubscribeToSteamBridge();
     }
-
+    
     private void OnDisable()
     {
         if (SteamSessionBridge.Instance)
@@ -57,12 +55,8 @@ public class SessionModeManager : MonoBehaviour
 
     private void Start()
     {
-        if (SteamSessionBridge.Instance)
-        {
-            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
-        }
-
+        TrySubscribeToSteamBridge();
+        
         if (NetworkManager.main)
         {
             NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
@@ -82,6 +76,18 @@ public class SessionModeManager : MonoBehaviour
             NetworkManager.main.onClientConnectionState -= OnClientConnectionStateChanged;
         }
     }
+    
+    private void TrySubscribeToSteamBridge()
+    {
+        if (SteamSessionBridge.Instance == null) return;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+    }
+
 
     /// <summary>
     /// Updates the active session mode and notifies listeners when the mode actually changes
@@ -492,10 +498,17 @@ public class SessionModeManager : MonoBehaviour
         if (state != ConnectionState.Disconnected) return;
         if (currentMode != SessionMode.CoOpClient) return;
         if (isLocallyInitiatedTeardown) return;
+        if (hostLeftRoutine != null) return;
         
         Debug.LogWarning("[SessionModeManager] Client disconnected unexpectedly — host likely left. Returning to menu.");
-
-        SessionEvents.InvokeHostMigrationStarted(null);
+        hostLeftRoutine = StartCoroutine(HandleHostLeftRoutine());
+    }
+    
+    private IEnumerator HandleHostLeftRoutine()
+    {
+        SessionEvents.InvokeHostMigrationStarted("Host left the lobby.");
+        yield return new WaitForSecondsRealtime(2f);
+        hostLeftRoutine = null;
         ReturnToMenu();
     }
 
