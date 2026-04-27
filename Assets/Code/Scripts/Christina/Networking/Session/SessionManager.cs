@@ -242,7 +242,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             HostSteamID =  hostIdentity.steamID,
             MapName = "Default",
             GameMode = "Default",
-            MaxPlayers = 4
+            MaxPlayers = 2
         };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
