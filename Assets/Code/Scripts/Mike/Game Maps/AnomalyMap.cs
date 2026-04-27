@@ -15,6 +15,7 @@ public class AnomalyMap : GameMap
         base.Awake();
         anomalyVariations.RemoveAll(group => group.GroupRoot == null);
         ResetAvailableIndices();
+        DisableAll(keepBase: true);
     }
 
     /// <summary>
