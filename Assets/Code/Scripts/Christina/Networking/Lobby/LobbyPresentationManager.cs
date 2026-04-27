@@ -12,8 +12,6 @@ public class LobbyPresentationManager : MonoBehaviour
     
     private void OnEnable()
     {
-        // todelete
-        Debug.Log("[LobbyPresentation] OnEnable called.");
         
         SessionEvents.OnSessionDataChanged += RefreshPresentation;
         
@@ -41,22 +39,10 @@ public class LobbyPresentationManager : MonoBehaviour
     
     private IEnumerator WaitForSessionThenRefresh()
     {
-        //todelete
-        Debug.Log("[LobbyPresentation] Waiting for session data.");
         
         float deadline = Time.realtimeSinceStartup + 5f;
 
         while (!HasUsableSessionData() && Time.realtimeSinceStartup < deadline) yield return null;
-        
-        //todelete
-        if (!HasUsableSessionData())
-        {
-            Debug.LogWarning("[LobbyPresentation] Timed out waiting for session data.");
-        }
-        else
-        {
-            Debug.Log("[LobbyPresentation] Session data found.");
-        }
 
         RefreshPresentation();
         waitForSessionRoutine = null;
@@ -71,9 +57,6 @@ public class LobbyPresentationManager : MonoBehaviour
     
     private void RefreshPresentation()
     {
-       //todelete
-        Debug.Log("[LobbyPresentation] RefreshPresentation called.");
-
         ClearPresentation();
 
         if (standeePrefab == null)
@@ -91,24 +74,55 @@ public class LobbyPresentationManager : MonoBehaviour
         List<ClientPlayerInfo> orderedPlayers = GetPlayersForPresentation();
         Debug.Log($"[LobbyPresentation] Players found: {orderedPlayers.Count}");
 
-        int standeeCount = Mathf.Min(playerSlots.Length, orderedPlayers.Count);
+        int maxPlayers = GetMaxPlayersForPresentation();
+        int standeeCount = Mathf.Min(playerSlots.Length, maxPlayers);
 
         for (int i = 0; i < standeeCount; i++)
         {
             if (playerSlots[i] == null)
             {
-                Debug.LogWarning($"[LobbyPresentation] Slot {i} is missing.");
+                Debug.LogWarning($"[LobbyPresentation] Slot {i} is missing!!");
                 continue;
             }
 
             LobbyStandee standee = Instantiate(standeePrefab, playerSlots[i].position, playerSlots[i].rotation);
-            standee.name = $"LobbyStandee_{orderedPlayers[i].DisplayName}";
-            standee.Setup(orderedPlayers[i]);
+            
+            if (i < orderedPlayers.Count)
+            {
+                standee.name = $"LobbyStandee_{orderedPlayers[i].DisplayName}";
+                standee.SetupOccupied(orderedPlayers[i]);
+            }
+            else
+            {
+                standee.name = $"LobbyStandee_Empty_{i + 1}";
+                standee.SetupEmpty();
+            }
 
             activeStandees.Add(standee);
-
-            Debug.Log($"[LobbyPresentation] Spawned standee for {orderedPlayers[i].DisplayName} at {playerSlots[i].position}");
         }
+        
+    }
+    
+    private int GetMaxPlayersForPresentation()
+    {
+        if (SessionManager.Instance == null)
+        {
+            return 2; // show the smaller room size if sessionManager is null. just a safe fallback
+        }
+
+        if (SessionManager.Instance.IsHost && SessionManager.Instance.CurrentSession != null)
+        {
+            return Mathf.Clamp(SessionManager.Instance.CurrentSession.MaxPlayers, 2, playerSlots.Length);
+        }
+
+        ClientSessionData clientSession = SessionManager.Instance.LatestClientSession;
+
+        if (clientSession.Players != null)
+        {
+            return Mathf.Clamp(clientSession.MaxPlayers, 2, playerSlots.Length);
+        }
+
+        return 2;
     }
     
     private List<ClientPlayerInfo> GetPlayersForPresentation()
