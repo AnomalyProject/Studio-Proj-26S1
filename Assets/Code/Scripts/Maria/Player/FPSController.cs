@@ -80,7 +80,7 @@ public class FPSController : MonoBehaviour
         ApplyMovement();
         HandleGravity();
         SmoothCrouchTransition();
-        Debug.Log("Player Moving:" + IsMoving);
+        //Debug.Log("Player Moving:" + IsMoving);
 
     }
     #endregion
