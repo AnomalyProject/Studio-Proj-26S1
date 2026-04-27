@@ -191,7 +191,11 @@ public class AnomalyManager : NetworkBehaviour
     /// </summary>
     private void HideAll()
     {
-        if (activeMap) activeMap.DisableAll();
+        if (activeMap)
+        {
+            activeMap.DisableAll();
+            activeMap.gameObject.SetActive(false);
+        }
         if (activeUniqueRoom) activeUniqueRoom.gameObject.SetActive(false);
     }
     /// <summary>
