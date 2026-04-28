@@ -20,6 +20,8 @@ public class SessionModeManager : MonoBehaviour
 
     private const float hostReadyTimeoutSeconds = 10f;
     private const float sessionReadyTimeoutSeconds = 5f;
+    
+    private Coroutine hostLeftRoutine;
 
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -39,13 +41,9 @@ public class SessionModeManager : MonoBehaviour
     private void OnEnable()
     {
         
-        if (SteamSessionBridge.Instance != null)
-        {
-            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
-        }
+        TrySubscribeToSteamBridge();
     }
-
+    
     private void OnDisable()
     {
         if (SteamSessionBridge.Instance)
@@ -57,12 +55,8 @@ public class SessionModeManager : MonoBehaviour
 
     private void Start()
     {
-        if (SteamSessionBridge.Instance)
-        {
-            SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
-            SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
-        }
-
+        TrySubscribeToSteamBridge();
+        
         if (NetworkManager.main)
         {
             NetworkManager.main.onClientConnectionState += OnClientConnectionStateChanged;
@@ -82,6 +76,18 @@ public class SessionModeManager : MonoBehaviour
             NetworkManager.main.onClientConnectionState -= OnClientConnectionStateChanged;
         }
     }
+    
+    private void TrySubscribeToSteamBridge()
+    {
+        if (SteamSessionBridge.Instance == null) return;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged -= OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged -= OnJoinStartupStatusChanged;
+
+        SteamSessionBridge.Instance.OnHostStartupStatusChanged += OnHostStartupStatusChanged;
+        SteamSessionBridge.Instance.OnJoinStartupStatusChanged += OnJoinStartupStatusChanged;
+    }
+
 
     /// <summary>
     /// Updates the active session mode and notifies listeners when the mode actually changes
@@ -195,8 +201,30 @@ public class SessionModeManager : MonoBehaviour
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        StartCoroutine(BeginSoloFlow());
+        StartCoroutine(BeginSoloFlowForScene(gameplaySceneName));
     }
+
+    public void StartSoloInScene(string sceneName)
+    {
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("[SessionModeManager] Cannot start solo. Scene name was empty.");
+            ReturnToMenu();
+            return;
+        }
+        
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
+            return;
+        }
+        
+        SetMode(SessionMode.Solo);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        StartCoroutine(BeginSoloFlowForScene(sceneName));
+    }
+    
 
     /// <summary>
     /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
@@ -273,7 +301,7 @@ public class SessionModeManager : MonoBehaviour
             
     }
 
-    private IEnumerator BeginSoloFlow()
+    private IEnumerator BeginSoloFlowForScene(string sceneName)
     {
         NetworkManager netManager = NetworkManager.main;
 
@@ -310,9 +338,9 @@ public class SessionModeManager : MonoBehaviour
             ReturnToMenu();
             yield break;
         }
-
+        
         float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
-        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < deadline) yield return null;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) && Time.realtimeSinceStartup < sessionDeadline) yield return null;
 
         if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
         {
@@ -323,7 +351,7 @@ public class SessionModeManager : MonoBehaviour
         
         // loading gameplay scene through PurrNet
         var settings = new PurrSceneSettings { isPublic = true, mode = LoadSceneMode.Single };
-        var op = netManager.sceneModule.LoadSceneAsync(gameplaySceneName, settings);
+        var op = netManager.sceneModule.LoadSceneAsync(sceneName, settings);
         SceneLoader.Instance.PerformAsyncOperation(op);
 
         // waiting for the load to actually finish
@@ -331,6 +359,7 @@ public class SessionModeManager : MonoBehaviour
 
         GameStateManager.Instance.RequestStateChange(GameState.InGame);
     }
+    
 
     /// <summary>
     /// Boots a solo session as a Purrnet listen-host over LocalTransport.
@@ -469,10 +498,17 @@ public class SessionModeManager : MonoBehaviour
         if (state != ConnectionState.Disconnected) return;
         if (currentMode != SessionMode.CoOpClient) return;
         if (isLocallyInitiatedTeardown) return;
+        if (hostLeftRoutine != null) return;
         
         Debug.LogWarning("[SessionModeManager] Client disconnected unexpectedly — host likely left. Returning to menu.");
-
-        SessionEvents.InvokeHostMigrationStarted(null);
+        hostLeftRoutine = StartCoroutine(HandleHostLeftRoutine());
+    }
+    
+    private IEnumerator HandleHostLeftRoutine()
+    {
+        SessionEvents.InvokeHostMigrationStarted("Host left the lobby.");
+        yield return new WaitForSecondsRealtime(2f);
+        hostLeftRoutine = null;
         ReturnToMenu();
     }
 

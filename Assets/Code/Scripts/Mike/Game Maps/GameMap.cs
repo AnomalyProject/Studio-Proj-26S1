@@ -1,6 +1,7 @@
+using PurrNet;
 using UnityEngine;
 
-public class GameMap : MonoBehaviour
+public class GameMap : NetworkBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
     public Transform EntryPointAnchor => entryPointAnchor;
@@ -9,15 +10,8 @@ public class GameMap : MonoBehaviour
 
     protected virtual void Awake()
     {
-        // Ensure the entry anchor is parent to the map
-        Transform newEntryAnchor = new GameObject($"Entry Anchor ({name})").transform;
-        newEntryAnchor.position = entryPointAnchor.transform.position;
-        newEntryAnchor.rotation = entryPointAnchor.transform.rotation;
         entryPointAnchor.gameObject.SetActive(false);
         exitPointAnchor.gameObject.SetActive(false);
-
-        transform.SetParent(newEntryAnchor.transform, true);
-        entryPointAnchor = newEntryAnchor;
     }
 
     private void OnValidate()
@@ -42,10 +36,5 @@ public class GameMap : MonoBehaviour
 
         entryPointAnchor.transform.localScale = Vector3.one;
         exitPointAnchor.transform.localScale = Vector3.one;
-    }
-
-    private void OnDestroy()
-    {
-        if(entryPointAnchor.gameObject != null) Destroy(entryPointAnchor.gameObject);
     }
 }

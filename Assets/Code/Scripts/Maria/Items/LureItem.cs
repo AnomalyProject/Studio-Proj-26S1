@@ -1,0 +1,76 @@
+using PurrNet;
+using UnityEngine;
+
+/// <summary>
+/// Placeable lure that pulses noise and audio at a fixed interval until its duration expires,
+/// then destroys itself. Inherits emission logic from <see cref="NoiseEmitter"/>.
+///
+/// Activation flow (server-authoritative):
+///   OnSpawned  → Activate() if server
+///   Activate() → InvokeRepeating(Pulse, pulseInterval) + Invoke(StopLure, lureDuration)
+///   Pulse()    → Emit_Server(noiseRadius) — audio replicated to all observers via ObserversRpc
+///   StopLure() → CancelInvoke + Destroy(gameObject)
+/// </summary>
+[RequireComponent(typeof(AudioSource))]
+public class LureItem : NoiseEmitter
+{
+    #region Inspector
+    [Header("Noise")]
+    [Tooltip("World-space radius in which IAlertable entities will be alerted.")]
+    [SerializeField] float noiseRadius = 8f;
+
+    [Header("Timing")]
+    [Tooltip("Seconds between each noise pulse")]
+    [SerializeField] float pulseInterval = 1.5f;
+
+    [Tooltip("Seconds the lure stays active before destroying itself.")]
+    [SerializeField] float lureDuration = 10f;
+
+    #endregion
+
+    #region Network Lifecycle
+
+    /// <summary>
+    /// Starts the lure on the server only. Clients receive audio purely through
+    /// the ObserversRpc in <see cref="NoiseEmitter.Emit_Server"/>.
+    /// </summary>
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+
+        if(asServer) Activate();
+    }
+    #endregion
+
+    #region Private Logic
+
+    /// <summary>
+    /// Starts the pulse loop and the self-destruct countdown.
+    /// CancelInvoke() first ensures no duplicate chains if called more than once.
+    /// </summary>
+    private void Activate()
+    {
+        if (!isServer) return;
+
+        CancelInvoke();
+        InvokeRepeating(nameof(Pulse), 0f, pulseInterval);
+        Invoke(nameof(StopLure), lureDuration);
+    }
+
+    /// <summary>
+    /// Emits noise at the full configured radius. No ratio applied — the lure
+    /// always broadcasts at its full Inspector-configured radius.
+    /// Audio is replicated to all observers automatically by <see cref="NoiseEmitter.Emit_Server"/>.
+    /// </summary>
+    private void Pulse() => Emit_Server(noiseRadius);
+
+    /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
+    private void StopLure()
+    {
+        if (!isServer) return;
+
+        CancelInvoke();
+        Destroy(gameObject);
+    }
+    #endregion
+}
