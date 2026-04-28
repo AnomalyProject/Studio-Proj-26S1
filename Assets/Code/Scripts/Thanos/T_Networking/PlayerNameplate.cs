@@ -13,9 +13,10 @@ public class PlayerNameplate : NetworkBehaviour
     /// Kept as a public method so the name can be set after the object is created.
     /// </summary>
     [ObserversRpc(bufferLast: true)]
-    public void SetName(string displayName)
+    public void SetName(string displayName, int colourIndex)
     {
         nameText.text = displayName;
+        nameText.color = PlayerColour.GetColor(colourIndex);
     }
     
     // chose late update to avoid jittering
