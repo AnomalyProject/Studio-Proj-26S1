@@ -1,5 +1,6 @@
 using UnityEngine;
 using PurrNet;
+using UnityEngine.InputSystem;
 
 public class TextChatManager : NetworkBehaviour 
 {
@@ -7,6 +8,12 @@ public class TextChatManager : NetworkBehaviour
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
+
+    [SerializeField] private InputActionAsset playerMap;
+    [SerializeField] private InputActionAsset consoleMap;
+    [SerializeField] private InputActionAsset UIMap;
+
+
 
     private void Awake()
     {
@@ -56,6 +63,28 @@ public class TextChatManager : NetworkBehaviour
         if (ChatUI.Instance != null)
         {
             ChatUI.Instance.ReceiveMessage(displayName, message);
+        }
+    }
+
+    public void SetInputState(bool isChatting)
+    {
+        if (isChatting)
+        {
+            playerMap.Disable();
+            consoleMap.Disable();
+            UIMap.Enable();
+        
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            UIMap.Disable();
+            consoleMap.Disable();
+            playerMap.Enable();
+        
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
 }
