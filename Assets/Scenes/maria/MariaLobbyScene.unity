@@ -1251,6 +1251,92 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: 3b74840570a038c4fa10fc30f2bb4ddb, type: 3}
   m_PrefabInstance: {fileID: 115130180}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &119127830
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.778
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1941749
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -21.156
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706717379646594739, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4158961773394589312, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      propertyPath: m_Name
+      value: Rubber Duck
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4158961773394589312, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 119127832}
+  m_SourcePrefab: {fileID: 100100000, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+--- !u!1 &119127831 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4158961773394589312, guid: 0855de86cb15989408d6224ec03200d9, type: 3}
+  m_PrefabInstance: {fileID: 119127830}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &119127832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119127831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8ce21e1fb401c549829fca883f3dc38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SimpleInteractable
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
 --- !u!1 &123653190
 GameObject:
   m_ObjectHideFlags: 0
@@ -5680,15 +5766,15 @@ MonoBehaviour:
     Look - Mouse
     + Right Ctrl Stick
 
-    Zoom - Right Click + Right Ctrl Stick
+    Zoom - Right Click + Right Ctrl Stick(Pressed)
 
-    Crouch - Ctrl
-    + Button East
+    Crouch
+    - Ctrl + Button East
 
     Lean Left & Right - Q/E + Left/Right Trigger
 
-    Use Item
-    - Left Click + Right Shoulder Btn
+    Use
+    Item - Left Click + Right Shoulder Btn
 
     Next Item - Tab + D-Pad
 
@@ -11807,7 +11893,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 0e34111aec521b047be26767e0a74457, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.2839985
+      value: 0.383
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 0e34111aec521b047be26767e0a74457, type: 3}
       propertyPath: m_LocalRotation.w
@@ -15423,7 +15509,7 @@ MonoBehaviour:
     a room contains an anomaly, please enter the elevator from which you came from.
     \nIf an area is clear of anomalies, proceed to the elevator at the end of the
     level. \nAll players must be present in the elevator for your choice to be registered.
-    \nDon't stray too far from one another.\nYou don't know what lurks in the dark\n:)"
+    \nDon't stray too far from one another.\nYou don't know what lurks in the dark\n:]"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 795c79418fec80d4daaf14faa8d0eb75, type: 2}
   m_sharedMaterial: {fileID: 2220717831942814115, guid: 795c79418fec80d4daaf14faa8d0eb75, type: 2}
@@ -18959,3 +19045,4 @@ SceneRoots:
   - {fileID: 1970371786}
   - {fileID: 1792289656}
   - {fileID: 273494312}
+  - {fileID: 119127830}
