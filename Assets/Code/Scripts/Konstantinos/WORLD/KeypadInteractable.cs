@@ -1,8 +1,7 @@
+using PurrNet;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
-using PurrNet;
-using System.Collections;
 
 public class KeypadInteractable : NetworkBehaviour
 {
@@ -47,6 +46,9 @@ public class KeypadInteractable : NetworkBehaviour
         { 
             inputText.text = statusText.text = ""; // texts clear
         }
+
+        if(!asServer)
+        currentInput.onChanged += OnInputChanged.Invoke;
     }
 
     public void GenerateNewPassword()
@@ -159,7 +161,7 @@ public class KeypadInteractable : NetworkBehaviour
         if (statusText != null)
         {
             statusText.color = Color.orange;
-            statusText.text = "Input Cleared";
+            statusText.text = "Input Cleared"; 
         }
         if (inputText != null) inputText.text = "";
     }
@@ -172,7 +174,6 @@ public class KeypadInteractable : NetworkBehaviour
         {
             inputText.text = newValue; // show input text
             statusText.text = ""; // no status visible when input text is on screen     
-            OnInputChanged?.Invoke(newValue);
         }
     }
 }
