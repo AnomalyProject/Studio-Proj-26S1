@@ -66,8 +66,9 @@ public class TextChatManager : NetworkBehaviour
         }
     }
 
-    public void SetInputState(bool isChatting)
+    public void SetInputState()
     {
+        bool isChatting = ChatUI.Instance.IsTyping;
         if (isChatting)
         {
             playerMap.Disable();
