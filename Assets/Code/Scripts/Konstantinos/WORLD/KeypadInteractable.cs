@@ -15,7 +15,7 @@ public class KeypadInteractable : NetworkBehaviour
     [Header("Events")]
     public UnityEvent OnAccessGranted;
     public UnityEvent OnAccessDenied;
-    public UnityEvent<string> OnPasswordGenerated;
+    public UnityEvent<string> OnPasswordGenerated, OnInputChanged;
 
     private string requiredPassword;
     private SyncVar<string> currentInput = new SyncVar<string>(ownerAuth: false); // sync var to display changes on all clients
@@ -172,6 +172,7 @@ public class KeypadInteractable : NetworkBehaviour
         {
             inputText.text = newValue; // show input text
             statusText.text = ""; // no status visible when input text is on screen     
+            OnInputChanged?.Invoke(newValue);
         }
     }
 }
