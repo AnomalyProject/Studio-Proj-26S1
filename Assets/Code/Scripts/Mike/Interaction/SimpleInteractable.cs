@@ -10,7 +10,7 @@ public class SimpleInteractable : NetworkBehaviour, IInteractable<MonoBehaviour>
 
     [ServerRpc] public Task<bool> TryInteract(MonoBehaviour interactor)
     {
-        OnInteracted?.Invoke();
+        InvokeInteracted();
         return Task.FromResult(true);
     }
 
