@@ -114,7 +114,6 @@ public class KeypadInteractable : NetworkBehaviour
     {
         if (currentInput.value == requiredPassword)
         {
-            currentInput.value = "";
             NotifyAccessGranted();
         }
         else
