@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class SimpleInteractable : NetworkBehaviour, IInteractable<MonoBehaviour>
 {
-    private UnityEvent OnInteracted;
+    [SerializeField] private UnityEvent OnInteracted;
     public Task<bool> CanInteract(MonoBehaviour interactor) => Task.FromResult(true);
 
     [ServerRpc] public Task<bool> TryInteract(MonoBehaviour interactor)
