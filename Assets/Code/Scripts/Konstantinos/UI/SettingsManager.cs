@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using TMPro;
+using UnityEngine.UI;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -13,6 +15,10 @@ public class SettingsManager : MonoBehaviour
     [Header("World References")]
     [SerializeField] GameObject settingsCanvas;
     [SerializeField] GameObject firstSelectedElement;
+
+    [Header("Settings Controls References")]
+    [SerializeField] private Slider masterVolumeSlider;
+    [SerializeField] private TMP_Dropdown resolutionDropdown;
 
     private void Awake()
     {
@@ -28,12 +34,21 @@ public class SettingsManager : MonoBehaviour
 
         //initialization
         settingsCanvas.SetActive(false);
+        InitializeSettings();
     }
 
+    public void InitializeSettings()
+    {
+        // Makes sure the slider/dropdown/toggle values are correct
+
+        //masterVolumeSlider.value = AudioManager.Instance.
+        //resolutionDropdown.value = 
+    }
 
     public static void Open()
     {
         Instance?.settingsCanvas.SetActive(true);
+        Instance?.InitializeSettings();
         IsOpen = true;
         EventSystem.current.SetSelectedGameObject(Instance.firstSelectedElement);
         OnSettingsOpened?.Invoke();
