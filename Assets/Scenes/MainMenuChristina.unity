@@ -455,6 +455,7 @@ MonoBehaviour:
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
 --- !u!1 &202684372
+--- !u!1 &263152435
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -463,13 +464,19 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 202684373}
-  m_Layer: 0
-  m_Name: 
+  m_Layer: 5
+  m_Name: ListState
+  - component: {fileID: 263152436}
+  - component: {fileID: 263152439}
+  - component: {fileID: 263152438}
+  - component: {fileID: 263152437}
+  m_Layer: 5
+  m_Name: VersionDisplay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &202684373
 RectTransform:
   m_ObjectHideFlags: 0
@@ -628,37 +635,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 251443763}
   m_CullTransparentMesh: 1
---- !u!1 &263152435
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 263152436}
-  m_Layer: 5
-  m_Name: ListState
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &263152436
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 263152435}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &305798414
 GameObject:
   m_ObjectHideFlags: 0
@@ -1124,6 +1100,7 @@ RectTransform:
   - {fileID: 64460203}
   - {fileID: 59129278}
   - {fileID: 1456036973}
+  - {fileID: 263152436}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3696,7 +3673,6 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 263152436}
   - {fileID: 126596933}
   - {fileID: 909419559}
   - {fileID: 619665994}

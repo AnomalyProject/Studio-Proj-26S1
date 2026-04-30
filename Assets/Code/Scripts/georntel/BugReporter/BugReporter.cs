@@ -41,7 +41,7 @@ public class BugReporter : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F8)) ToggleReporter();
+        if (Input.GetKeyDown(KeyCode.F12)) ToggleReporter();
     }
 
     public void ToggleReporter()
@@ -202,7 +202,7 @@ public class BugReporter : MonoBehaviour
     
     private void CloseReporter()
     {
-        ToggleReporter();
+        bugReporterPanel.SetActive(false);
         thankYouMessage.SetActive(false); 
     }
 }
