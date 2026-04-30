@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 /// <summary>
 /// Door class that implements an interaction interface , basically open and close door
 /// </summary>
@@ -9,6 +10,7 @@ public class Door : NetworkBehaviour, IInteractable<MonoBehaviour>
 {
     [SerializeField] private Animation anim;
     [SerializeField] private string doorAnimationName = "Door Open";
+    [SerializeField] UnityEvent OnStartOpen, OnStartClose;
 
     private bool isOpen = false;// Checks if door is currently open
 
@@ -23,7 +25,7 @@ public class Door : NetworkBehaviour, IInteractable<MonoBehaviour>
         return Task.FromResult(true);     
     }
 
-    private void ToggleDoor_Server()
+    public void ToggleDoor_Server()
     {
         if (!isServer || anim.isPlaying) return;
 
@@ -38,11 +40,13 @@ public class Door : NetworkBehaviour, IInteractable<MonoBehaviour>
         {
             state.speed = 1f;
             state.time = 0f;
+            OnStartOpen?.Invoke();
         }
         else
         {
             state.speed = -1f;
             state.time = state.length;
+            OnStartClose?.Invoke();
         }
         anim.Play(doorAnimationName);
     }

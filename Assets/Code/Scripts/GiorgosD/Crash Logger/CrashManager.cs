@@ -19,6 +19,10 @@ public class CrashManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static private void Initialize()
     {
+#if UNITY_EDITOR
+        return;
+#endif
+
         flagPath = Path.Combine(Application.persistentDataPath, "exit_success.tmp");
 
         crashZip = Path.Combine(Application.persistentDataPath, "CrashReport.zip");
@@ -97,19 +101,6 @@ public class CrashManager : MonoBehaviour
         obj.AddComponent<CrashManager>();
         DontDestroyOnLoad(obj);
         obj.hideFlags = HideFlags.HideInHierarchy;
-    }
-
-    /// <summary>
-    /// THIS SHOULD BE DELETED AFTER TESTING!!! 
-    /// </summary>
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F5))
-        {
-            UnityEngine.Debug.Log("[CrashManager]: Crashed Game!!!!");
-
-            Utils.ForceCrash(ForcedCrashCategory.FatalError);
-        }
     }
 
     /// <summary>

@@ -47,20 +47,22 @@ public class ModificationEditorWindow : EditorWindow
         capturedNativeFieldWithoutApplier = false;
     }
 
+    private void ClearSnapshots()
+    {
+        baseline = null;
+        lastModification = null;
+        baselineHasNativeFieldWithoutApplier = false;
+        capturedNativeFieldWithoutApplier = false;
+        modificationName = null;
+    }
+
     [MenuItem("Window/Modification Editor")]
     public static void Open() => GetWindow<ModificationEditorWindow>("Modification Editor");
 
     private void OnGUI()
     {
         // Clear snapshots when changing objects
-        if (lastRoot != root)
-        {
-            baseline = null;
-            lastModification = null;
-            baselineHasNativeFieldWithoutApplier = false;
-            capturedNativeFieldWithoutApplier = false;
-            modificationName = null;
-        }
+        if (lastRoot != root) ClearSnapshots();
         lastRoot = root;
 
         // Scene References
@@ -116,7 +118,11 @@ public class ModificationEditorWindow : EditorWindow
         Rect cleanRect = GUILayoutUtility.GetRect(cleanButtonContent, EditorStyles.iconButton);
         cleanRect.y += 2.5f; // Align with text field and other buttons
         cleanRect.x -= 1;
-        if (GUI.Button(cleanRect, cleanButtonContent, EditorStyles.iconButton)) ObjectGuidRegistryUtility.CleanRegistry();
+        if (GUI.Button(cleanRect, cleanButtonContent, EditorStyles.iconButton))
+        {
+            ObjectGuidRegistryUtility.CleanRegistry();
+            ClearSnapshots(); // Force user to recapture baseline to avoid referencing deleted entries and causing errors when applying modifications
+        }
         float iconOffset = EditorGUIUtility.singleLineHeight - 10f;
         cleanRect.x += iconOffset;
         cleanRect.y += iconOffset;
