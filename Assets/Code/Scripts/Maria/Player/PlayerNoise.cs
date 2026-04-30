@@ -80,8 +80,6 @@ public class PlayerNoise : NoiseEmitter
     /// </summary>
     void OnStep()
     {
-        //NoiseEmitter.EmitWithRatio → Physics.OverlapSphere → IAlertable.Alert<NoiseEmitter>
-
         PlayAudioLocal(GetCurrentVolume());
         RequestEmission(GetCurrentRadius());
     }
