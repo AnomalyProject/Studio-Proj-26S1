@@ -69,20 +69,20 @@ public class TextChatManager : NetworkBehaviour
     public void SetInputState()
     {
         bool isChatting = ChatUI.Instance.IsTyping;
+
         if (isChatting)
         {
             playerMap.Disable();
             consoleMap.Disable();
             UIMap.Enable();
-        
+            
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
         else
         {
-            UIMap.Disable();
-            consoleMap.Disable();
             playerMap.Enable();
+            UIMap.Disable();
         
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
