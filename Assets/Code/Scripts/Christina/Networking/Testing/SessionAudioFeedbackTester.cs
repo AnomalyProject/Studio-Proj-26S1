@@ -6,6 +6,20 @@ public class SessionAudioFeedbackTester : MonoBehaviour
     [SerializeField] private AudioClip playerJoinedClip;
     [SerializeField] private AudioClip playerLeftClip;
     
+    private static SessionAudioFeedbackTester instance;
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+    
     private void OnEnable()
     {
         SessionEvents.OnPlayerJoined += PlayPlayerJoinedSound;
