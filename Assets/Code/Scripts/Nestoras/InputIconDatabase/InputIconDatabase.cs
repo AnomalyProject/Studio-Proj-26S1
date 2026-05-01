@@ -36,7 +36,7 @@ public class InputIconDatabase : ScriptableObject
             "Switch" => switchPro,
             _ => keyboard
         };
-        foreach (InputIconMapping map in activeList) lookup[Normalize(map.controlPath)] = map.icon;
+        foreach (InputIconMapping map in activeList) lookup[map.controlPath] = map.icon;
     }
 
     public Sprite GetIcon(string controlPath)
@@ -44,12 +44,5 @@ public class InputIconDatabase : ScriptableObject
         if (lookup == null) return null;
         lookup.TryGetValue(controlPath, out Sprite sprite);
         return sprite;
-    }
-
-    public static string Normalize(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return path;
-        int slash = path.IndexOf('/');
-        return slash >= 0 ? path.Substring(slash + 1).ToLower() : path.ToLower();
     }
 }

@@ -29,7 +29,7 @@ public static class InputIconService
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void Initialize()
     {
-        iconDatabase = Resources.Load<InputIconDatabase>("InputIconDatabase");
+        iconDatabase = Resources.Load<InputIconDatabase>("InputIcons/InputIconDatabase");
         InputSystem.onActionChange += OnActionChange;
     }
     private static void OnActionChange(object obj, InputActionChange change)
@@ -71,8 +71,7 @@ public static class InputIconService
         foreach (InputBinding binding in action.bindings)
         {
             if (binding.isComposite) continue;
-            string path = InputIconDatabase.Normalize(binding.effectivePath);
-            Sprite sprite = iconDatabase.GetIcon(path);
+            Sprite sprite = iconDatabase.GetIcon(binding.effectivePath);
             if (sprite != null) return sprite;
         }
         return null;
