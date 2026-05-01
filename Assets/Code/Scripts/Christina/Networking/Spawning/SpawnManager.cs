@@ -1,10 +1,6 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 using PurrNet;
-using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using Unity.VisualScripting;
 
 public enum SpawnStrategy
 {
@@ -91,7 +87,6 @@ public class SpawnManager : MonoBehaviour
     
     private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
     {
-
         //Free his spawn point before sending him home
         if(playerSpawnPoints.TryGetValue(playerID, out SpawnPoint freedPoint))
         {
@@ -112,7 +107,6 @@ public class SpawnManager : MonoBehaviour
     // this fixing a networking timing issue
     private void SpawnExistingPlayers()
     {
-        
         if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
         if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) return;
         
@@ -124,7 +118,6 @@ public class SpawnManager : MonoBehaviour
             {
                 HandlePlayerAdded(playerid.Value, player.SteamID, player.DisplayName);
             }
-               
         }
     }
     
