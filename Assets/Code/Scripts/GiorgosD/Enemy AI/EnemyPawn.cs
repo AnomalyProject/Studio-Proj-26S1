@@ -1,9 +1,9 @@
+using PurrNet;
 using System;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Assertions.Must;
 
-public class EnemyPawn : MonoBehaviour
+public class EnemyPawn : NetworkBehaviour
 {
     #region Enemy Settings
     [Header("Movement")]
@@ -178,6 +178,8 @@ public class EnemyPawn : MonoBehaviour
     /// </summary>
     private void Sight()
     {
+        if (!isServer) return;
+
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
         Transform closestDetectedPlayer = null;
