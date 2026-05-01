@@ -14,7 +14,7 @@ public class KeypadButton : NetworkBehaviour, IInteractable<MonoBehaviour>
     public Task<bool> CanInteract(MonoBehaviour interactor)
     {
         // Always interactable as long as a Keypad is assigned.
-        return Task.FromResult(myKeypad != null);
+        return Task.FromResult(myKeypad != null && myKeypad.RequiredInput != myKeypad.CurrentInput);
     }
 
     public Task<bool> TryInteract(MonoBehaviour interactor)

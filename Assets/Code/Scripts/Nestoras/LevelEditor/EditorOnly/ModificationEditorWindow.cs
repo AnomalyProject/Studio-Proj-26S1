@@ -47,20 +47,22 @@ public class ModificationEditorWindow : EditorWindow
         capturedNativeFieldWithoutApplier = false;
     }
 
+    private void ClearSnapshots()
+    {
+        baseline = null;
+        lastModification = null;
+        baselineHasNativeFieldWithoutApplier = false;
+        capturedNativeFieldWithoutApplier = false;
+        modificationName = null;
+    }
+
     [MenuItem("Window/Modification Editor")]
     public static void Open() => GetWindow<ModificationEditorWindow>("Modification Editor");
 
     private void OnGUI()
     {
         // Clear snapshots when changing objects
-        if (lastRoot != root)
-        {
-            baseline = null;
-            lastModification = null;
-            baselineHasNativeFieldWithoutApplier = false;
-            capturedNativeFieldWithoutApplier = false;
-            modificationName = null;
-        }
+        if (lastRoot != root) ClearSnapshots();
         lastRoot = root;
 
         // Scene References
@@ -116,7 +118,11 @@ public class ModificationEditorWindow : EditorWindow
         Rect cleanRect = GUILayoutUtility.GetRect(cleanButtonContent, EditorStyles.iconButton);
         cleanRect.y += 2.5f; // Align with text field and other buttons
         cleanRect.x -= 1;
-        if (GUI.Button(cleanRect, cleanButtonContent, EditorStyles.iconButton)) ObjectGuidRegistryUtility.CleanRegistry();
+        if (GUI.Button(cleanRect, cleanButtonContent, EditorStyles.iconButton))
+        {
+            ObjectGuidRegistryUtility.CleanRegistry();
+            ClearSnapshots(); // Force user to recapture baseline to avoid referencing deleted entries and causing errors when applying modifications
+        }
         float iconOffset = EditorGUIUtility.singleLineHeight - 10f;
         cleanRect.x += iconOffset;
         cleanRect.y += iconOffset;
@@ -299,7 +305,7 @@ public class ModificationEditorWindow : EditorWindow
                             {
                                 EditorGUI.indentLevel++;
                                 // Explicitly check enabled state since it's not part of the field list
-                                if (component.oldEnabled != component.newEnabled) DrawAlignedModification("Enabled", component.oldEnabled.ToString(), component.newEnabled.ToString());
+                                if (component.oldEnabled != component.newEnabled) DrawAlignedModification("Enabled", component.oldEnabled.ToString(), component.newEnabled.ToString(), true);
                                 // Draw each field modification with optional warnings / green text to indicate support by custom appliers in standalone builds
                                 foreach (FieldModification field in component.fieldModifications) DrawAlignedModification(field.before.path, FieldSnapshotToDisplayString(field.before), FieldSnapshotToDisplayString(field.after), ComponentApplierRegistry.IsFieldSupported(System.Type.GetType(component.type), field.before.path), !System.Type.GetType(component.type).IsSubclassOf(typeof(MonoBehaviour)));
                                 EditorGUI.indentLevel--;
