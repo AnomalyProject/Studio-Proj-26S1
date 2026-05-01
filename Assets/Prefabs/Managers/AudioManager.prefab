@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 3462594946998860067}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2405.6995, y: 0.00002, z: 2896.1821}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -50,14 +50,14 @@ MonoBehaviour:
   musicB: {fileID: 3966320824015373872}
   sfxPool: []
   uiPool: []
-  audioMixer: {fileID: 0}
-  masterVolume: 
-  musicVolume: 
-  sfxVolume: 
-  uiVolume: 
-  musicGroup: {fileID: 0}
-  sfxGroup: {fileID: 0}
-  uiGroup: {fileID: 0}
+  audioMixer: {fileID: 24100000, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
+  masterVolume: Master Volume
+  musicVolume: Music Volume
+  sfxVolume: SFX Volume
+  uiVolume: UI Volume
+  musicGroup: {fileID: 7316568304578440071, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
+  sfxGroup: {fileID: -4590799063784688275, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
+  uiGroup: {fileID: 239814882077169142, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
   crossFadeDuration: 0.1
   fadeDuration: 0.1
   fadePauseDelay: 0
@@ -70,7 +70,7 @@ AudioSource:
   m_GameObject: {fileID: 3462594946998860067}
   m_Enabled: 0
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 7316568304578440071, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 310761c92e10bf349ba0bee8d9f7a698, type: 3}
   m_PlayOnAwake: 1
@@ -167,7 +167,7 @@ AudioSource:
   m_GameObject: {fileID: 3462594946998860067}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 7316568304578440071, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
