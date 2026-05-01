@@ -37,16 +37,15 @@ public class SnapshotID : MonoBehaviour
             return;
         }
 
-//#if UNITY_EDITOR
-//        if (Application.isPlaying) return;
-//        // Detect duplicates in the scene
-//        SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-//        bool duplicateExists = all.Any(x => x != this && x.guid == guid);
-//        if (duplicateExists)
-//        {
-//            guid = System.Guid.NewGuid().ToString();
-//            EditorUtility.SetDirty(this); // Mark dirty so Unity saves the change
-//        }
-//#endif
+#if UNITY_EDITOR
+        // Detect duplicates in the scene
+        SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool duplicateExists = all.Any(x => x != this && x.guid == guid);
+        if (duplicateExists)
+        {
+            guid = System.Guid.NewGuid().ToString();
+            EditorUtility.SetDirty(this); // Mark dirty so Unity saves the change
+        }
+#endif
     }
 }

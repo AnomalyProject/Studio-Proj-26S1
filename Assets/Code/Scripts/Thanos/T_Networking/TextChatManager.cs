@@ -20,7 +20,7 @@ public class TextChatManager : NetworkBehaviour
     }
     
     [ServerRpc (requireOwnership: false)] 
-    public void SendChatMessage(string message, ulong senderSteamID)
+    public void SendChatMessageServerRpc(string message, ulong senderSteamID)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         
@@ -29,7 +29,7 @@ public class TextChatManager : NetworkBehaviour
             message = message.Substring(0, maxMessageLength); 
         }
 
-        string displayName = "John Anomaly";
+        string displayName = "Unknown Player";
         
         SessionData currentSession = SessionManager.Instance.CurrentSession; 
         
@@ -38,9 +38,7 @@ public class TextChatManager : NetworkBehaviour
             PlayerSessionInfo? playerInfo = currentSession.GetPlayer(senderSteamID);
             if (playerInfo.HasValue)
             {
-                string name = playerInfo.Value.DisplayName;
-                string hexColor = PlayerColour.GetHex(playerInfo.Value.ColourIndex);
-                displayName = $"<color={hexColor}>{name}</color>";
+                displayName = playerInfo.Value.DisplayName;
             }
             else
             {
