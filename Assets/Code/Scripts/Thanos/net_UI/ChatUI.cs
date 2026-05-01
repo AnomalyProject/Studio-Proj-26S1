@@ -55,7 +55,7 @@ public class ChatUI : MonoBehaviour
 
         ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
         
-        TextChatManager.Instance.SendChatMessageServerRpc(text, localSteamID);
+        TextChatManager.Instance.SendChatMessage(text, localSteamID);
         
         chatInputField.text = "";
         

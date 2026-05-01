@@ -1,7 +1,8 @@
 def branchMap = [
     'develop': "internal_testing",
     'network': "network_testing",
-    'main'   : "default"
+    'main'   : "default",
+    'deployment' : "deployment_testing"
 ]
 
 def steamBranch = "unknown"
@@ -40,6 +41,58 @@ pipeline {
             }
         }
 
+         stage('SonarQube Code Review') {
+            when {
+                anyOf {
+                    changeRequest()
+                    branch 'develop'
+                    branch 'main'
+                    branch 'network'
+                    branch 'deployment'
+                }
+            }
+                steps {
+                    script {
+                    def scannerHome = tool 'SonarScanner' 
+                    
+                    def sonarArgs = "-Dsonar.organization=\"anomalyproject-1\" " +
+                                    "-Dsonar.projectKey=\"AnomalyProject_Studio-Proj-26S1\" " +
+                                    "-Dsonar.projectName=\"Project Anomaly\" " +
+                                    "-Dsonar.sources=\"Assets/Code/Scripts\" " +
+                                    "-Dsonar.language=cs " +
+                                    "-Dsonar.c.file.suffixes=- " +
+                                    "-Dsonar.cpp.file.suffixes=- " +
+                                    "-Dsonar.objc.file.suffixes=-"
+                    
+                    if (env.CHANGE_ID) {
+                        discordSend title: "🔎 Code Review: PR-${env.CHANGE_ID}",
+                            description: "${programmerRole} \nSir, I am running isolated SonarQube static analysis on your Pull Request #${env.CHANGE_ID}.",
+                            link: env.BUILD_URL,
+                            color: 16766720,
+                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+                            
+                        sonarArgs += " -Dsonar.pullrequest.key=\"${env.CHANGE_ID}\" " +
+                                     "-Dsonar.pullrequest.branch=\"${env.CHANGE_BRANCH}\" " +
+                                     "-Dsonar.pullrequest.base=\"${env.CHANGE_TARGET}\" " +
+                                     "-Dsonar.pullrequest.provider=github " +
+                                     "-Dsonar.pullrequest.github.repository=\"thanostham/Studio-Proj-26S1\""
+                    } else {
+                        discordSend title: "🔎 Code Review: ${env.BRANCH_NAME}",
+                            description: "${programmerRole} \nSir, I am running SonarQube static analysis on the ${env.BRANCH_NAME} branch.",
+                            link: env.BUILD_URL,
+                            color: 16766720,
+                            webhookURL: "${env.ANOMALY_DISCORD_WEBHOOK_URL}"
+                            
+                        sonarArgs += " -Dsonar.branch.name=\"${env.BRANCH_NAME}\""
+                    }
+                    
+                    withSonarQubeEnv('SonarCloud') {
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ${sonarArgs}"
+                    }
+                }
+            }
+        }
+        
         stage('Merge Notification') {
             when {
                 allOf {
@@ -64,6 +117,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -78,6 +132,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -96,6 +151,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'deployment'
                 }
             }
             steps {
@@ -157,4 +213,4 @@ pipeline {
             }
         }
     }
-}
+} 

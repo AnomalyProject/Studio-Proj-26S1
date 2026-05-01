@@ -13,6 +13,8 @@ public struct PlayerSessionInfo
     public bool IsHost;
     public DateTime JoinedAt;
 
+    public int ColourIndex;
+
     public PlayerSessionInfo(ulong steamID, string name, bool isHost = false, int teamID = -1)
     {
         SteamID = steamID;
@@ -21,6 +23,7 @@ public struct PlayerSessionInfo
         TeamID = teamID;
         IsReady = false;
         JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
+        ColourIndex = 0;
     }
 
 }
@@ -70,14 +73,23 @@ public class SessionData
         CreatedAt = DateTime.UtcNow;
         CurrentState = GameState.Lobby;
     }
-
     public void AddPlayer(PlayerSessionInfo newPlayer)
     {
-        if (Players.Any(pp => pp.SteamID == newPlayer.SteamID))
+        if (Players.Any(pp => pp.SteamID == newPlayer.SteamID)) return;
+        Debug.Log($"[SessionDataManager] Player {newPlayer.SteamID} already exists. Skipping to next player.");
+        //--------------Colour Assigning ----------------
+        List<int> usedColors = Players.Select(p => p.ColourIndex).ToList();
+        
+        List<int> availableColors = new List<int> { 0, 1, 2, 3 };
+        availableColors.RemoveAll(c => usedColors.Contains(c));
+        
+        if (availableColors.Count > 0)
         {
-            Debug.Log($"[SessionDataManager] Player {newPlayer.SteamID} already exists. Skipping to next player.");
-            return;
+            int randomIndex = UnityEngine.Random.Range(0, availableColors.Count);
+            newPlayer.ColourIndex = availableColors[randomIndex];
         }
+        //-----------------------------------------------
+
         Players.Add(newPlayer);
     }
 

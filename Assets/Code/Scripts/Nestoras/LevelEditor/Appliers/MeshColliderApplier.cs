@@ -17,7 +17,6 @@ public class MeshColliderApplier : IComponentApplier
     {
         { "m_Mesh", (c, field) => c.sharedMesh = field.GetAsObject() as Mesh },
         { "m_Convex", (c, field) => c.convex = field.GetAs<bool>() },
-        { "m_CookingOptions", (c, field) => c.cookingOptions = (MeshColliderCookingOptions)field.GetAs<int>() },
     };
     public bool Supports(string path) => supportedFields.ContainsKey(path);
     public bool Ignores(string path) => false;
