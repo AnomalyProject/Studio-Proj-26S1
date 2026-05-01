@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CompositeVendor : VendorBase
 {
@@ -45,9 +46,13 @@ public class CompositeVendor : VendorBase
         {
             Debug.Log("Transfer Success");
             toInventory.Remove(CurrencyItem, stackPrice);
-            InvokeOnSlotChanged(slotIndex);
+            InvokeTransferSuccess(slotIndex);
         }
         return Task.FromResult(success);
     }
-    [ObserversRpc] private void InvokeOnSlotChanged(int slot) => OnSlotChanged?.Invoke(slot);
+    [ObserversRpc] private void InvokeTransferSuccess(int transferedSlot)
+    {
+        OnSlotChanged?.Invoke(transferedSlot);
+        OnTransferSuccess?.Invoke();
+    }
 }

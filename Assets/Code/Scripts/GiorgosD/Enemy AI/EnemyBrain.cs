@@ -1,8 +1,9 @@
+using PurrNet;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyBrain : MonoBehaviour, IAlertable
+public class EnemyBrain : NetworkBehaviour, IAlertable
 {
     [Header("Patrol Settings")]
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
@@ -18,6 +19,7 @@ public class EnemyBrain : MonoBehaviour, IAlertable
     private BaseState currentState;
 
     // TEMP stuff bc no events fire at the moment
+    public bool tempStuffEnabled;
     public bool poiIsEnabled;
     private AI_TestHelper testHelper;
 
@@ -28,13 +30,18 @@ public class EnemyBrain : MonoBehaviour, IAlertable
 
     private void Start()
     {
+        if (!isServer) return;
+
         body = GetComponent<EnemyPawn>();
 
-        testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
+        if (!tempStuffEnabled)
+        {
+            //testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
 
-        testHelper.onWatched.AddListener(OnObservedTooMuch);
+            //testHelper.onWatched.AddListener(OnObservedTooMuch);
 
-        testHelper.onItemPicked.AddListener(OnItemPicked);
+            //testHelper.onItemPicked.AddListener(OnItemPicked);
+        }
 
         ChangeState(new PatrolState(this, body));
     }
@@ -50,6 +57,8 @@ public class EnemyBrain : MonoBehaviour, IAlertable
 
     private void Update()
     {
+        if (!isServer) return;
+
         currentState?.Update();
     }
 
@@ -68,6 +77,8 @@ public class EnemyBrain : MonoBehaviour, IAlertable
 
     public void Alert<TTarget>(TTarget alertedBy) where TTarget : MonoBehaviour
     {
+        if (!isServer) return;
+
         if (currentState is ChaseState || currentState is AttackState || currentState is AlertState) return;
 
         ChangeState(new AlertState(this, body, alertedBy.transform));

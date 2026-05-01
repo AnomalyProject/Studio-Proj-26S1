@@ -9,6 +9,8 @@ public abstract class VendorBase : NetworkBehaviour
     [SerializeField] private bool randomizeStashContent = true;
     [SerializeField, Tooltip("What will be requested by the player to pay.")] private ItemData currencyItem;
     [SerializeField] private InspectorItemStack[] itemsForSale;
+    [SerializeField] protected UnityEvent OnTransferSuccess;
+
     public UnityEvent OnRestock;
     public event System.Action OnSpawnedEvent;
 
