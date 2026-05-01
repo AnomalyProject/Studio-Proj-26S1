@@ -66,24 +66,19 @@ public class TextChatManager : NetworkBehaviour
         }
     }
 
-    public void SetInputState()
+    public void SetInputState(bool isChatting)
     {
-        bool isChatting = ChatUI.Instance.IsTyping;
-
+        var playerInput = GetComponent<PlayerInput>();
+    
         if (isChatting)
         {
-            playerMap.Disable();
-            consoleMap.Disable();
-            UIMap.Enable();
-            
+            playerInput.SwitchCurrentActionMap("UI");
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
         else
         {
-            playerMap.Enable();
-            UIMap.Disable();
-        
+            playerInput.SwitchCurrentActionMap("Player");
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
