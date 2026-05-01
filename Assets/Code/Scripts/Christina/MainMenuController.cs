@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
-using Steamworks;
+using TMPro;
+using Unity.VisualScripting;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -7,6 +9,19 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private GameObject modePanel;
     [SerializeField] private GameObject coopPanel;
     [SerializeField] private GameObject joinPanel;
+    [SerializeField] private GameObject messagePanel;
+    [SerializeField] private TMP_Text messageText;
+
+    private void OnEnable()
+    {
+        string message = SessionModeManager.Instance.LastJoinFailureMessage;
+
+        if (!String.IsNullOrWhiteSpace(message))
+        {
+            ShowMessage(message);
+            SessionModeManager.Instance.ClearLastJoinFailureMessage();
+        }
+    }
 
     public void OnStartPressed()
     {
@@ -54,6 +69,14 @@ public class MainMenuController : MonoBehaviour
     {
         joinPanel.SetActive(false);
         coopPanel.SetActive(true);
+    }
+
+    private void ShowMessage(string message)
+    {
+        if (messagePanel == null || messageText == null) return;
+        
+        messagePanel.SetActive(true);
+        messageText.text = message;
     }
     
 }
