@@ -23,7 +23,6 @@ public static class InputIconService
     public static event Action<InputDeviceType> OnDeviceChanged;
     private static InputDevice currentDevice;
 
-
     private static InputIconDatabase iconDatabase;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -32,6 +31,7 @@ public static class InputIconService
         iconDatabase = Resources.Load<InputIconDatabase>("InputIcons/InputIconDatabase");
         InputSystem.onActionChange += OnActionChange;
     }
+
     private static void OnActionChange(object obj, InputActionChange change)
     {
         if (change == InputActionChange.ActionStarted)
