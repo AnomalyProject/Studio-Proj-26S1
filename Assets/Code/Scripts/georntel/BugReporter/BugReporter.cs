@@ -40,7 +40,7 @@ public class BugReporter : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F12)) ToggleReporter();
+        if (Input.GetKeyDown(KeyCode.F8)) ToggleReporter();
     }
 
     public void ToggleReporter()
@@ -149,7 +149,7 @@ public class BugReporter : MonoBehaviour
     }
 
 
-    // Keep trying to delete the temp screenshot until it's gone
+    // Keep trying to delete the temp files until they're gone
     private IEnumerator DeleteTempFiles()
     {
         while (File.Exists(tempScreenshotPath))
@@ -192,7 +192,7 @@ public class BugReporter : MonoBehaviour
     
     private void CloseReporter()
     {
-        bugReporterPanel.SetActive(false);
+        ToggleReporter();
         thankYouMessage.SetActive(false); 
     }
 }

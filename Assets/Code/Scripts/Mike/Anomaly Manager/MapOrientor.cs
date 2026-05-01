@@ -27,8 +27,8 @@ public class MapOrientor : MonoBehaviour
     public static void OrientMap(GameMap map, Transform entryPoint, Transform exitPoint)
     {
         // Entry Point is the parent of the whole map, configured in GameMap's awake.
-        map.EntryPointAnchor.position = entryPoint.transform.position;
-        map.EntryPointAnchor.rotation = entryPoint.transform.rotation;
+        map.transform.position = entryPoint.transform.position;
+        map.transform.rotation = entryPoint.transform.rotation;
 
         exitPoint.transform.position = map.ExitPointAnchor.position;
         exitPoint.transform.rotation = map.ExitPointAnchor.rotation;

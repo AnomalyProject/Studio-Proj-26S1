@@ -242,7 +242,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             HostSteamID =  hostIdentity.steamID,
             MapName = "Default",
             GameMode = "Default",
-            MaxPlayers = 4
+            MaxPlayers = 2
         };
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
@@ -539,24 +539,53 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
+        bool shouldResetReadyStates = false;
+        
         switch (key)
         {
             case "MapName":
                 sessionData.MapName = value;
+                shouldResetReadyStates = true;
                 break;
             case "GameMode":
                 sessionData.GameMode = value;
+                shouldResetReadyStates = true;
                 break;
             case "MaxPlayers":
-                if (int.TryParse(value, out int maxPlayers))
-                    sessionData.MaxPlayers = maxPlayers;
+                if (!int.TryParse(value, out int maxPlayers))
+                {
+                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players value was invalid.");
+                    return;
+                }
+                if (maxPlayers < 2 || maxPlayers > 4)
+                {
+                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players must be between 2 and 4.");
+                    return;
+                }
+
+                if (maxPlayers < sessionData.Players.Count)
+                {
+                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
+                    return;
+                }
+                sessionData.MaxPlayers = maxPlayers;
+                shouldResetReadyStates = true;
+                break;
+            case "LobbyVisibility":
+                if (value != "Friends Only" && value != "Public")
+                {
+                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
+                    return;
+                }
+
+                sessionData.SetCustomProperty(key, value);
                 break;
             default:
                 sessionData.SetCustomProperty(key, value);
                 break;
         }
 
-        sessionData.ResetReadyStates();
+        if(shouldResetReadyStates) sessionData.ResetReadyStates();
 
         OnSessionUpdated_Client(BuildClientSessionData());
         Debug.Log("[SessionManager] Settings updated.");

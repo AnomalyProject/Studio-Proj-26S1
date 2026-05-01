@@ -12,7 +12,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
 
     // Checks
     [SerializeField] private SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
-    private SyncVar<bool> bIsAvailable = new SyncVar<bool>(ownerAuth: false);
+    private SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
     private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
