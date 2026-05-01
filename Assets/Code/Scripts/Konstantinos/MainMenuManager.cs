@@ -29,6 +29,21 @@ public class MainMenuManager : MonoBehaviour
         SetMenuActivity(false);
     }
 
+    private void OnEnable()
+    {
+        SettingsManager.OnSettingsClosed += HandleSettingsClosed;
+    }
+
+    private void OnDisable()
+    {
+        SettingsManager.OnSettingsClosed -= HandleSettingsClosed;
+    }
+
+    private void HandleSettingsClosed()
+    {
+        SetMenuActivity(true);
+    }
+
     void Start()
     {
         if (enableOnStart)
@@ -71,7 +86,8 @@ public class MainMenuManager : MonoBehaviour
 
     public void OpenSettings()
     {
-        // SettingsManager.Open() 
+        SetMenuActivity(false);
+        SettingsManager.Open(); 
     }
 
     public void QuitGame()
