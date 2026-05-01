@@ -3,11 +3,6 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 
-/// <summary>
-/// Nestoras Angelopoulos
-/// 
-/// Tool to export specific icons from the editor for use in builds
-/// </summary>
 public class ExportIcons
 {
     //[MenuItem("Tools/Export Console Icons")]

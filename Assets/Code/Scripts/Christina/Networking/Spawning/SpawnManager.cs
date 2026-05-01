@@ -82,9 +82,13 @@ public class SpawnManager : MonoBehaviour
         
         spawnedPlayers[playerID] = networkIdentity;
         networkIdentity.GiveOwnership(playerID);
-
+        
+        var playerInfo = SessionManager.Instance.CurrentSession.GetPlayer(steamID);
         var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
-        if (nameplate != null) nameplate.SetName(displayName);
+        if (nameplate != null)
+        {
+            nameplate.SetName(displayName, playerInfo.Value.ColourIndex);
+        }
         
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
     }
