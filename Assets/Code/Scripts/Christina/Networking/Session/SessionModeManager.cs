@@ -21,6 +21,8 @@ public class SessionModeManager : MonoBehaviour
     private const float hostReadyTimeoutSeconds = 10f;
     private const float sessionReadyTimeoutSeconds = 5f;
     
+    public string LastJoinFailureMessage { get; private set; }
+    
     private Coroutine hostLeftRoutine;
 
     public event Action<SessionMode, SessionMode> OnModeChanged;
@@ -466,9 +468,19 @@ public class SessionModeManager : MonoBehaviour
     {
         if (status.Stage == JoinStartupStage.Failed)
         {
+            LastJoinFailureMessage =  $"Could not join lobby: {status.Message}";
             Debug.LogWarning($"[SessionModeManager] Join failed: {status.Message}");
             ReturnToMenu();
         }
+    }
+
+    /// <summary>
+    /// A method clearing the message after showing it, otherwise the same old error will re appear
+    /// every time the player opens the menu
+    /// </summary>
+    public void ClearLastJoinFailureMessage()
+    {
+        LastJoinFailureMessage = "";
     }
     
     /// <summary>
