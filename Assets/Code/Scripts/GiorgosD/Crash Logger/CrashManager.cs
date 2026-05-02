@@ -1,9 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net.Mail;
 using UnityEngine;
-using UnityEngine.Diagnostics;
+using System.IO;
+using System;
 
 public class CrashManager : MonoBehaviour
 {

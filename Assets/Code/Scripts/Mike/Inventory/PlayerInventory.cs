@@ -19,7 +19,7 @@ public class PlayerInventory : NetworkBehaviour
 
     public Inventory Inventory { get; private set; }
 
-    private int focusedSlot = 0;
+    public int focusedSlot { get; private set; } = 0;
     private GameObject activeInstance;
     private Dictionary<string, GameObject> itemInstances = new();
     private PlayerBody playerBody;
