@@ -22,26 +22,26 @@ public class GameManager : NetworkBehaviour
 
     [Header("Win Condition")]
     [Tooltip("How many correct decisions in a row are required to win.")]
-    [SerializeField] int requiredCorrectDecisions = 5;
+    [SerializeField] private int requiredCorrectDecisions = 5;
 
     [Header("Decision Cooldown")]
     [Tooltip("Seconds after a decision is made before another can be registered. Prevents spam.")]
-    [SerializeField, Min(1)] float decisionCooldown = 2f;
+    [SerializeField, Min(1)] private float decisionCooldown = 2f;
 
     [Tooltip("Seconds between elevator interaction and map change. Allows time for animations, feedback, etc.")]
-    [SerializeField, Min(.5f)] float mapChangeDelay = 2;
+    [SerializeField, Min(.5f)] private float mapChangeDelay = 2;
 
     [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
-    [SerializeField, Min(1f)] float punishmentTimeLimit = 10; 
+    [SerializeField, Min(1f)] private float punishmentTimeLimit = 10; 
     #endregion
 
     #region State
     public int CurrentProgress { get; private set; }
-    bool ElevatorCoolDown;
-    bool isFirstRoom => CurrentProgress == 0;
+    private bool ElevatorCoolDown;
+    private bool isFirstRoom => CurrentProgress == 0;
 
-    Coroutine punishmentTimerCoroutine;
-    Coroutine mapChangeCoroutine;
+    private Coroutine punishmentTimerCoroutine;
+    private Coroutine mapChangeCoroutine;
     #endregion
 
     #region Events
@@ -54,7 +54,7 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Unity Lifecycle
-    void Awake() => ValidateDependencies();
+    private void Awake() => ValidateDependencies();
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
@@ -63,12 +63,12 @@ public class GameManager : NetworkBehaviour
         NewGame();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         MapOrientor.OnElevatorInteracted += HandleElevatorInteracted;
         anomalyManager.OnStateChanged += HandleStateChanged;
     }
-    void OnDisable()
+    private void OnDisable()
     {
         MapOrientor.OnElevatorInteracted -= HandleElevatorInteracted;
         anomalyManager.OnStateChanged -= HandleStateChanged;
@@ -103,6 +103,8 @@ public class GameManager : NetworkBehaviour
 
         LogProgress("Game reset.");
     }
+
+    public int CorrectDecisionsToWin() => requiredCorrectDecisions;
     #endregion
 
     #region Event Subscribers
@@ -111,7 +113,7 @@ public class GameManager : NetworkBehaviour
     /// Owns all elevator configuration and game event firing so state-driven
     /// side effects are handled in one place rather than scattered across methods.
     /// </summary>
-    void HandleStateChanged(AnomalyManager.RoomState newState)
+    private void HandleStateChanged(AnomalyManager.RoomState newState)
     {
         if(!isServer) return;
 
@@ -145,7 +147,7 @@ public class GameManager : NetworkBehaviour
     /// Immediately locks the used elevator and waits <see cref="mapChangeDelay"/> seconds
     /// before routing to the correct handler based on the current room state.
     /// </summary>
-    void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
+    private void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
     {
 
         if (!isServer || !TryStartCooldown()) return;
@@ -186,7 +188,7 @@ public class GameManager : NetworkBehaviour
     /// Evaluates the player's elevator choice against the actual room state
     /// and dispatches to <see cref="HandleCorrectDecision"/> or <see cref="HandleWrongDecision"/>.
     /// </summary>
-    void HandleCoreLoopDecision(bool decision)
+    private void HandleCoreLoopDecision(bool decision)
     {
         bool decisionIsCorrect = decision == anomalyManager.HasAnomaly;
         Debug.Log($"[GameManager] Used entry: {decision} | HasAnomaly: {anomalyManager.HasAnomaly} | Correct: {decisionIsCorrect}");
@@ -199,7 +201,7 @@ public class GameManager : NetworkBehaviour
     /// Increments progress and either triggers the win condition or
     /// instructs <see cref="AnomalyManager"/> to decide the next map variation.
     /// </summary>
-    void HandleCorrectDecision()
+    private void HandleCorrectDecision()
     {
         CurrentProgress++;
         OnProgressChanged?.Invoke(CurrentProgress);
@@ -226,7 +228,7 @@ public class GameManager : NetworkBehaviour
     /// Instructs <see cref="AnomalyManager"/> to enable a punishment room.
     /// Elevator configuration is handled reactively via <see cref="HandleStateChanged"/>.
     /// </summary>
-    void HandleWrongDecision() => anomalyManager.EnablePunishmentRoom_Server();
+    private void HandleWrongDecision() => anomalyManager.EnablePunishmentRoom_Server();
 
     /// <summary>
     /// Handles the logic for entering the punishment room after a wrong decision is made.
@@ -234,7 +236,7 @@ public class GameManager : NetworkBehaviour
     /// <remarks>Disables elevator entry, enables elevator exit, and starts the punishment room timer.
     /// Triggers the wrong decision event and logs progress. Call this method when the user must be sent to the
     /// punishment room as a result of an incorrect action.</remarks>
-    void HandlePunishmentRoomEntry()
+    private void HandlePunishmentRoomEntry()
     {
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
         BeginPunishmentRoomTimer(punishmentTimeLimit);
@@ -248,7 +250,7 @@ public class GameManager : NetworkBehaviour
     /// Called when the player uses the exit elevator inside the punishment room.
     /// Resumes the core loop with progress saved, picking a new map variation.
     /// </summary>
-    void HandlePunishmentRoomExit()
+    private void HandlePunishmentRoomExit()
     {
         StopPunishmentTimer();
         if(isServer) anomalyManager.DecideNextMapVariation();
@@ -260,7 +262,7 @@ public class GameManager : NetworkBehaviour
     /// Called when the player uses the entry elevator inside the win room.
     /// Resets the game entirely back to progress 0.
     /// </summary>
-    void HandleWinRoomExit()
+    private void HandleWinRoomExit()
     {
         LogProgress("Returning from Win room. Resetting progress to 0.");
         NewGame();
@@ -274,7 +276,7 @@ public class GameManager : NetworkBehaviour
     /// <remarks>If a punishment timer is already running, it will be stopped and restarted with the new time
     /// limit.</remarks>
     /// <param name="timeLimit">The duration, in seconds, for which the punishment room timer should run. Must be greater than zero.</param>
-    [ObserversRpc] void BeginPunishmentRoomTimer(float timeLimit)
+    [ObserversRpc] private void BeginPunishmentRoomTimer(float timeLimit)
     {
         if (punishmentTimerCoroutine != null)
         {
@@ -291,7 +293,7 @@ public class GameManager : NetworkBehaviour
     /// timer completes, game progress is reset. The timer logs the remaining time at one-second intervals.</remarks>
     /// <param name="timeLimit">The duration, in seconds, for the punishment timer. Must be greater than zero.</param>
     /// <returns>An enumerator that yields once per second until the timer expires.</returns>
-    IEnumerator PunishmentTimer(float timeLimit)
+    private IEnumerator PunishmentTimer(float timeLimit)
     {
         float timeRemaining = timeLimit;
 
@@ -312,7 +314,7 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     /// <remarks>This method has no effect if no punishment timer is running. Intended to be called remotely
     /// on all observers in a networked environment.</remarks>
-    [ObserversRpc] void StopPunishmentTimer()
+    [ObserversRpc] private void StopPunishmentTimer()
     {
         if(punishmentTimerCoroutine == null) return;
 
@@ -320,7 +322,7 @@ public class GameManager : NetworkBehaviour
         punishmentTimerCoroutine = null;
     }
 
-    [ObserversRpc] void InvokeOnPunishmentTimerExpired() => OnPunishmentTimerExpired?.Invoke();
+    [ObserversRpc] private void InvokeOnPunishmentTimerExpired() => OnPunishmentTimerExpired?.Invoke();
     #endregion
 
     #region Elevator Control
@@ -328,7 +330,7 @@ public class GameManager : NetworkBehaviour
     /// Sets the interactability of both elevators independently.
     /// Use this whenever the game changes state to control player navigation.
     /// </summary>
-    void SetElevatorInteraction(bool entryEnabled, bool exitEnabled)
+    private void SetElevatorInteraction(bool entryEnabled, bool exitEnabled)
     {
         mapOrientor.EntryElevator.SetInteraction(entryEnabled);
         mapOrientor.ExitElevator.SetInteraction(exitEnabled);
@@ -339,7 +341,7 @@ public class GameManager : NetworkBehaviour
     /// Must be called before elevators are opened so they fire the correct value on interact.
     /// Entry elevator always represents "anomaly present", exit always represents "no anomaly".
     /// </summary>
-    void SetElevatorChoice(bool entryHasAnomaly, bool exitHasAnomaly)
+    private void SetElevatorChoice(bool entryHasAnomaly, bool exitHasAnomaly)
     {
         mapOrientor.EntryElevator.SetChoice(entryHasAnomaly);
         mapOrientor.ExitElevator.SetChoice(exitHasAnomaly);
@@ -351,7 +353,7 @@ public class GameManager : NetworkBehaviour
     /// Attempts to start the decision cooldown. Returns false if already on cooldown,
     /// preventing duplicate interactions from being processed.
     /// </summary>
-    bool TryStartCooldown()
+    private bool TryStartCooldown()
     {
         if (ElevatorCoolDown) return false;
 
@@ -359,9 +361,9 @@ public class GameManager : NetworkBehaviour
         Invoke(nameof(ResetCooldown), decisionCooldown);
         return true;
     }
-    void ResetCooldown() => ElevatorCoolDown = false;
-    void LogProgress(string context) => Debug.Log($"[GameManager] {context} | Progress: {CurrentProgress} / {requiredCorrectDecisions}");
-    void ValidateDependencies()
+    private void ResetCooldown() => ElevatorCoolDown = false;
+    private void LogProgress(string context) => Debug.Log($"[GameManager] {context} | Progress: {CurrentProgress} / {requiredCorrectDecisions}");
+    private void ValidateDependencies()
     {
         if (anomalyManager == null)
             Debug.LogError("[GameManager] AnomalyManager reference is missing! Assign it in the Inspector.");

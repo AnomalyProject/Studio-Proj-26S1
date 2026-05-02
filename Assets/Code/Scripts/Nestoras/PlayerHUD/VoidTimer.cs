@@ -2,6 +2,11 @@ using UnityEngine;
 using System;
 using TMPro;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Timer for the Void area.
+/// </summary>
 public class VoidTimer : MonoBehaviour
 {
     private TextMeshProUGUI timerText;
