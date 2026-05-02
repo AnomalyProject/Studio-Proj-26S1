@@ -114,6 +114,7 @@ public class LobbyUI : MonoBehaviour
 
         bool allPlayersReady = true;
         bool isLocalPlayerReady = false;
+        bool isLocalPlayerInElevator = false;
         int readyCount = 0;
         ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
 
@@ -123,7 +124,7 @@ public class LobbyUI : MonoBehaviour
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
             listItem.Setup(player);
 
-            if (player.IsReady)
+            if (player.IsReady && player.IsInElevator)
             {
                 readyCount++;
             }
@@ -135,15 +136,34 @@ public class LobbyUI : MonoBehaviour
             if (player.SteamID == localSteamID)
             {
                 isLocalPlayerReady = player.IsReady;
+                isLocalPlayerInElevator = player.IsInElevator;
             }
         }
         
-        readyCountText.text = $"{readyCount}/{sessionData.PlayerCount} Ready";
+        readyCountText.text = $"{readyCount}/{sessionData.PlayerCount} Ready In Elevator";
 
         //Updating ready status
+        if (readyButton != null)
+        {
+            readyButton.interactable =
+                isLocalPlayerInElevator &&
+                sessionData.ElevatorState == ElevatorLobbyState.Open;
+        }
+
         if (readyButtonText != null)
         {
-            readyButtonText.text = isLocalPlayerReady ? "Unready" : "Ready";
+            if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosing)
+            {
+                readyButtonText.text = "Doors Closing";
+            }
+            else if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosed)
+            {
+                readyButtonText.text = "Leaving";
+            }
+            else
+            {
+                readyButtonText.text = isLocalPlayerReady ? "Unready" : "Ready";
+            }
         }
 
         //Updating start button - only the host can see it, if everyone is ready he can press it-
