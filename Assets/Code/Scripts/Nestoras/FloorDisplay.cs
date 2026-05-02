@@ -14,7 +14,6 @@ public class FloorDisplay : MonoBehaviour
     private void Awake()
     {
         floorNumber = GetComponent<TextMeshPro>();
-        Debug.LogWarning(floorNumber);
         gameManager = FindFirstObjectByType<GameManager>(FindObjectsInactive.Include);
         if (gameManager != null) gameManager.OnProgressChanged.AddListener((progress) => floorNumber.text = $"{progress}/{gameManager.CorrectDecisionsToWin()}");
     }
