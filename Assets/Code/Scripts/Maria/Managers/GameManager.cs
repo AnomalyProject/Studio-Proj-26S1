@@ -136,6 +136,7 @@ public class GameManager : NetworkBehaviour
 
             case AnomalyManager.RoomState.WinRoom:
                 SetElevatorInteraction(entryEnabled: true, exitEnabled: false);
+                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
                 OnGameWon?.Invoke();
                 LogProgress("Game won! Use the entry elevator to play again!");
                 break;
@@ -173,7 +174,7 @@ public class GameManager : NetworkBehaviour
                     break;
 
                 case AnomalyManager.RoomState.WinRoom:
-                    HandleWinRoomExit();
+                    HandleWinRoomExit(decision);
                     break;
             }
 
@@ -259,13 +260,35 @@ public class GameManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// Called when the player uses the entry elevator inside the win room.
-    /// Resets the game entirely back to progress 0.
+    /// Handles the player's choice upon leaving the win room.
+    /// Routes to <see cref="HandleWinRoomReplay"/> if the entry elevator was used,
+    /// or <see cref="HandleWinRoomReturnToLobby"/> if the exit elevator was used.
     /// </summary>
-    private void HandleWinRoomExit()
+    /// <param name="decision">True if the entry elevator was used (replay), false if the exit elevator was used (lobby).</param>
+    private void HandleWinRoomExit(bool decision)
+    {
+        if (decision) HandleWinRoomReplay();
+        else HandleWinRoomReturnToLobby();
+    }
+
+    /// <summary>
+    /// Called when the player uses the entry elevator in the win room.
+    /// Resets the game entirely back to progress 0 and starts the loop again.
+    /// </summary>
+    private void HandleWinRoomReplay()
     {
         LogProgress("Returning from Win room. Resetting progress to 0.");
         NewGame();
+    }
+
+    /// <summary>
+    /// Called when the player uses the exit elevator in the win room.
+    /// Returns all players to the lobby via <see cref="SessionManager.RequestReturnToLobby"/>.
+    /// </summary>
+    private void HandleWinRoomReturnToLobby()
+    {
+        LogProgress("Returning from Win Room - returning to lobby.");
+        SessionManager.Instance.RequestReturnToLobby();
     }
     #endregion
 
@@ -286,12 +309,14 @@ public class GameManager : NetworkBehaviour
 
         punishmentTimerCoroutine = StartCoroutine(PunishmentTimer(timeLimit));
     }
+
     /// <summary>
-    /// Runs a countdown timer for the punishment phase and resets game progress when the time limit expires.
+    /// Runs a countdown timer for the punishment phase. If the timer expires before
+    /// the player reaches the exit elevator, all players are returned to the lobby
+    /// via <see cref="SessionManager.RequestReturnToLobby"/>.
+    /// The timer logs the remaining time at one-second intervals.
     /// </summary>
-    /// <remarks>This coroutine should be started using StartCoroutine in a Unity MonoBehaviour. When the
-    /// timer completes, game progress is reset. The timer logs the remaining time at one-second intervals.</remarks>
-    /// <param name="timeLimit">The duration, in seconds, for the punishment timer. Must be greater than zero.</param>
+    /// <param name="timeLimit">The duration in seconds for the punishment timer. Must be greater than zero.</param>
     /// <returns>An enumerator that yields once per second until the timer expires.</returns>
     private IEnumerator PunishmentTimer(float timeLimit)
     {
@@ -306,8 +331,12 @@ public class GameManager : NetworkBehaviour
         }
 
         LogProgress("Punishment timer expired - resetting progress to 0");
-        if(isServer) InvokeOnPunishmentTimerExpired();
-        NewGame();
+
+        if (isServer)
+        {
+            InvokeOnPunishmentTimerExpired();
+            SessionManager.Instance.RequestReturnToLobby();
+        }
     }
     /// <summary>
     /// Stops the currently running punishment timer, if one is active.
