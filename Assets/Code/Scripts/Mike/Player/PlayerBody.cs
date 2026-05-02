@@ -27,6 +27,7 @@ public class PlayerBody : NetworkBehaviour
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
+    public static PlayerBody localPlayerBody;
 
     // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
     // So the issue is that PlayrBody can register two times. We want to prevent that.  
@@ -46,6 +47,7 @@ public class PlayerBody : NetworkBehaviour
         
         if (!isLocalPlayerRegistered) return;
         
+        localPlayerBody = null;
         OnLocalPlayerDespawned?.Invoke(this);
         isLocalPlayerRegistered = false;
     }
@@ -84,6 +86,7 @@ public class PlayerBody : NetworkBehaviour
 
         if (local && !isLocalPlayerRegistered)
         {
+            localPlayerBody = this;
             isLocalPlayerRegistered = true;
             OnLocalPlayerSpawned?.Invoke(this);
         }
