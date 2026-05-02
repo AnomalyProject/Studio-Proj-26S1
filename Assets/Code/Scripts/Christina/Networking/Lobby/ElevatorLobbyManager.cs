@@ -58,7 +58,8 @@ public class ElevatorLobbyManager : NetworkBehaviour
     {
         playerID = default;
 
-        if (!other.TryGetComponent(out PlayerBody player)) return false;
+        PlayerBody player = other.GetComponentInParent<PlayerBody>();
+        if (player == null) return false;
         if (!player.OwnerPlayerID.HasValue) return false;
 
         playerID = player.OwnerPlayerID.Value;
