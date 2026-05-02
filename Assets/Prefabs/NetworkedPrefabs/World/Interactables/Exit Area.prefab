@@ -1291,7 +1291,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2db1d5189376e34a972ee7018b2c208, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExitInteractable
-  exitPoint: {fileID: 0}
+  exitPoint: {fileID: 8684492745940543863}
 --- !u!1 &7161689458794217673
 GameObject:
   m_ObjectHideFlags: 0
@@ -1585,6 +1585,7 @@ GameObject:
   - component: {fileID: 2395659666017662331}
   - component: {fileID: 7612448317716179553}
   - component: {fileID: 190496192248154155}
+  - component: {fileID: 6382614970092091523}
   m_Layer: 0
   m_Name: Exit Area
   m_TagString: Untagged
@@ -1678,7 +1679,19 @@ MonoBehaviour:
         m_CallState: 2
   OnFullyClosed:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6382614970092091523}
+        m_TargetAssemblyTypeName: ElevatorLobbyManager, Assembly-CSharp
+        m_MethodName: OnDoorsFullyClosed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnFullyOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1698,8 +1711,8 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   openOnStart: 1
-  openClip: {fileID: 0}
-  closeClip: {fileID: 0}
+  openClip: {fileID: 8300000, guid: 8644c9140f600274c8b12c33ebc4ffc9, type: 3}
+  closeClip: {fileID: 8300000, guid: 940e15c7c6cc69c4eaa289aa3cc375f6, type: 3}
 --- !u!65 &2395659666017662331
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1840,6 +1853,29 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &6382614970092091523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8660687802128819689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6bf861d56987a84f96ea82d861a5c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorLobbyManager
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  elevatorExit: {fileID: 8684492745940543863}
+  loadDelay: 2
 --- !u!1 &8728270399503556362
 GameObject:
   m_ObjectHideFlags: 0
