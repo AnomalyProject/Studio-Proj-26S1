@@ -1,8 +1,7 @@
+using PurrNet;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
-using PurrNet;
-using System.Collections;
 
 public class KeypadInteractable : NetworkBehaviour
 {
@@ -15,7 +14,7 @@ public class KeypadInteractable : NetworkBehaviour
     [Header("Events")]
     public UnityEvent OnAccessGranted;
     public UnityEvent OnAccessDenied;
-    public UnityEvent<string> OnPasswordGenerated;
+    public UnityEvent<string> OnPasswordGenerated, OnInputChanged;
 
     private string requiredPassword;
     private SyncVar<string> currentInput = new SyncVar<string>(ownerAuth: false); // sync var to display changes on all clients
@@ -47,6 +46,9 @@ public class KeypadInteractable : NetworkBehaviour
         { 
             inputText.text = statusText.text = ""; // texts clear
         }
+
+        if(!asServer)
+        currentInput.onChanged += OnInputChanged.Invoke;
     }
 
     public void GenerateNewPassword()
@@ -159,7 +161,7 @@ public class KeypadInteractable : NetworkBehaviour
         if (statusText != null)
         {
             statusText.color = Color.orange;
-            statusText.text = "Input Cleared";
+            statusText.text = "Input Cleared"; 
         }
         if (inputText != null) inputText.text = "";
     }

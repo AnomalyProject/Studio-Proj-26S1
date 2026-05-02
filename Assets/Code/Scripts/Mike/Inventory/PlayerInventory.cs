@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 
@@ -13,6 +14,8 @@ public class PlayerInventory : NetworkBehaviour
 
     [SerializeField, Min(1)] int inventorySize = 5;
     [SerializeField] Transform itemHolder;
+    [SerializeField] private UnityEvent<ItemData> _OnFocusedChanged, _OnItemUsed;
+    [SerializeField] private UnityEvent<ItemData, int> OnItemAdded, OnItemRemoved;
 
     public Inventory Inventory { get; private set; }
 
@@ -34,6 +37,11 @@ public class PlayerInventory : NetworkBehaviour
         Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
+
+        Inventory.OnItemAdded += OnItemAdded.Invoke;
+        Inventory.OnItemRemoved += OnItemRemoved.Invoke;
+        OnFocusedChanged += _OnFocusedChanged.Invoke;
+        OnItemUsed += _OnItemUsed.Invoke;
     }
 
     public void DebugInventory()

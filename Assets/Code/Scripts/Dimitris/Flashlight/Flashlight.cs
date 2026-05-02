@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Threading.Tasks;
+using UnityEngine.Events;
 /// <summary>
 /// Flashlight class that implements an interaction interface , basically switch lights on and off
 /// There is a capacity of energy that keeps on the light and when its durability fails turns off 
@@ -17,7 +18,7 @@ public class Flashlight : MonoBehaviour, IInteractable<MonoBehaviour>
     float durability = 0f;
     float minDrainSpeedMult = .1f;
     private bool flashlightOn = false;
-    public event Action OnToggleOn, OnToggleOff, OnDrained;
+    public UnityEvent OnToggleOn, OnToggleOff, OnDrained;
     public float NormalizedDurability => durability / maxDurabilitySeconds;
 
     public Task<bool> CanInteract(MonoBehaviour Interactor)
