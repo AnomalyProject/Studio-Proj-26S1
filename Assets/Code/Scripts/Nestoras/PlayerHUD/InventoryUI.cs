@@ -16,6 +16,7 @@ public class InventoryUI : MonoBehaviour
         public Image background;
         public Image icon;
         public TextMeshProUGUI count;
+        public GameObject usePrompt;
     }
     private Dictionary<int, InventorySlotUI> slots;
 
@@ -53,7 +54,8 @@ public class InventoryUI : MonoBehaviour
             Image background = slot.GetComponent<Image>();
             Image icon = slot.transform.GetChild(0).GetComponent<Image>();
             TextMeshProUGUI count = slot.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-            slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count });
+            GameObject usePrompt = slot.GetComponentInChildren<InputIcon>(true).gameObject;
+            slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
 
         playerInput.actions["Scroll Inventory"].performed += SwitchSlot;
@@ -69,12 +71,14 @@ public class InventoryUI : MonoBehaviour
                 slots[index].count.enabled = true;
                 slots[index].count.text = count.ToString();
             }
+            if (index == playerInventory.focusedSlot && playerInventory.CanUseFocused()) slots[index].usePrompt.SetActive(true);
         };
         player.Inventory.OnStackRemoved += (item, index) =>
         {
             slots[index].icon.sprite = null;
             slots[index].icon.enabled = false;
             slots[index].count.enabled = false;
+            slots[index].usePrompt.SetActive(false);
         };
         player.Inventory.OnStackChanged += (item, index) =>
         {
@@ -104,8 +108,10 @@ public class InventoryUI : MonoBehaviour
         if (playerInventory == null) return;
 
         slots[playerInventory.focusedSlot].background.transform.localScale = Vector3.one;
+        slots[playerInventory.focusedSlot].usePrompt.SetActive(false);
         slots[newIndex].background.transform.localScale = Vector3.one * focusedSlotScale;
-
         playerInventory.ChangeFocused(newIndex);
+
+        if (playerInventory.CanUseFocused()) slots[newIndex].usePrompt.SetActive(true);
     }
 }
