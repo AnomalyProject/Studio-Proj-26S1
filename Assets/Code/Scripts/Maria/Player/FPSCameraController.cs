@@ -36,7 +36,7 @@ public class FPSCameraController : MonoBehaviour
     }
     private void Start()
     {
-        LockCursor();
+        //LockCursor();
     }
 
     void Update() => UpdateLook();
