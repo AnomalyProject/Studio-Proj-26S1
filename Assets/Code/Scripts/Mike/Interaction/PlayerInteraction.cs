@@ -1,39 +1,37 @@
-using PurrNet;
-using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
+using System.Threading.Tasks;
 
 [RequireComponent(typeof(PlayerBody))]
 public class PlayerInteraction : MonoBehaviour
 {
-    enum InteractionMode
+    private enum InteractionMode
     {
         Raycast,
         OverlapSphere
     }
 
     [Header("Configuration Settings")]
-    [SerializeField] Camera playerCamera;
-    [SerializeField] InteractionMode interactionMode;
-    [SerializeField, Min(.05f)] float tickRate = 0.1f;
-    [SerializeField] LayerMask scanLayer;
-    [SerializeField, Min(.1f)] float scanRange = 5f;
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private InteractionMode interactionMode;
+    [SerializeField, Min(.05f)] private float tickRate = 0.1f;
+    [SerializeField] private LayerMask scanLayer;
+    [SerializeField, Min(.1f)] private float scanRange = 5f;
 
     [Header("Debug Options")]
-    [SerializeField] bool debugGizmos = true;
+    [SerializeField] private bool debugGizmos = true;
 
-    PlayerBody playerBody;
-    InteractionSystem<PlayerBody> interactionSystem;
+    private PlayerBody playerBody;
+    public InteractionSystem<PlayerBody> interactionSystem { get; private set; }
     private Task currentInteractionTask;
 
-    void Awake()
+    private void Awake()
     {
         playerBody = GetComponent<PlayerBody>();
         interactionSystem = new InteractionSystem<PlayerBody>(playerBody);
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
         InvokeRepeating(nameof(PerformScan), 0f, tickRate);
     }
@@ -49,7 +47,7 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    void PerformScan()
+    private void PerformScan()
     {
         //if (!CanUseLocalInteraction()) return;
         

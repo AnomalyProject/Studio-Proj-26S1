@@ -24,7 +24,7 @@ public class ModificationEditorInfoPopup : EditorWindow
         // Centered default position
         Rect main = EditorGUIUtility.GetMainWindowPosition();
         float width = 700;
-        float height = 480;
+        float height = 560;
 
         window.position = new Rect(main.x + (main.width - width) / 2, main.y + (main.height - height) / 2, width, height);
         window.minSize = new Vector2(400, 300);
@@ -43,6 +43,9 @@ public class ModificationEditorInfoPopup : EditorWindow
         GUILayout.Space(10);
         GUILayout.Label("References", header);
         GUILayout.Label("<line-indent=2em>Whenever you change an object reference, if that reference <b>isn't a file</b>, but an object in the scene (GameObject or Component), then the system <color=#FF5555><b>can't store it</b></color>, as it only exists for the lifetime of the scene instance.\nIf the reference <b>is a file</b> (Mesh, Material, Shader, AudioClip, etc.), then it is assigned a GUID and referenced in a registry inside the <b>Resources</b> folder (if you later delete that modification, then the registry will have to be <b>manually cleared</b> of any entries for unused references).</line-indent>", body);
+        GUILayout.Space(10);
+        GUILayout.Label("Exported Prefabs", header);
+        GUILayout.Label("<line-indent=2em>After finishing a level, you may drag it to the project tab to export it as a prefab. <color=#FF5555><b>NEVER</b></color> modify the prefab directly. <color=#6FB76F><b>ALWAYS</b></color> bring it back into a scene to edit it again. Failing to do so may de-sync some critical data. After you're done, don't forget to apply your overrides to the prefab.</line-indent>", body);
         GUILayout.Space(10);
         GUILayout.Label("Particle Systems", header);
         GUILayout.Label("<line-indent=2em><color=#FF5555><b>Particles are BAD and I HATE them.</b></color> Do <b>NOT</b> modify particle systems. If you do, the console will log <b>600 different warnings</b> because you <b><u>deserve it</u></b>. If you <b>HAVE</b> to instantiate a particle system instead of just toggling it, convert it to a prefab and use a spawner. Also, adding / removing particle systems will make your modification asset larger than your mom.</line-indent>", body);
