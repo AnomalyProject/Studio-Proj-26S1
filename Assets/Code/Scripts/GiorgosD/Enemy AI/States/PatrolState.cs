@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PatrolState : BaseState
@@ -15,9 +16,19 @@ public class PatrolState : BaseState
 
         body.OnPlayerSpotted += HandlePlayerSpotted;
 
-        MoveToPoint();
+        if (brain.poiIsEnabled)
+        {
+            MoveToPoint(brain.PatrolPriorities);
+        }
+        else
+        {
+            MoveToPoint(brain.PatrolPoints);
+        }
     }
 
+    /// <summary>
+    /// Transition to Idle if close enough to the patrol point.
+    /// </summary>
     public override void Update()
     {
         if (!body.agent.pathPending && body.agent.remainingDistance <= body.agent.stoppingDistance)
@@ -29,35 +40,28 @@ public class PatrolState : BaseState
     /// <summary>
     /// Selects a new patrol point at random and moves to it.
     /// </summary>
-    private void MoveToPoint()
+    /// <param name="patrolPoints"> The list of patrol points to choose from. </param>
+    private void MoveToPoint(List<Transform> patrolPoints)
     {
-        if (brain.PatrolPoints.Count == 0) return;
+        if (patrolPoints.Count == 0) return;
 
         int nextIndex = pointIndex;
 
-        while (nextIndex == pointIndex && brain.PatrolPoints.Count > 1)
+        while (nextIndex == pointIndex && patrolPoints.Count > 1)
         {
-            nextIndex = Random.Range(0, brain.PatrolPoints.Count);
+            nextIndex = Random.Range(0, patrolPoints.Count);
         }
 
         pointIndex = nextIndex;
 
         Debug.Log($"Moving to patrol point {pointIndex}");
 
-        body.MoveToTarget(brain.PatrolPoints[pointIndex].position);
-    }
-
-    /// <summary>
-    /// Transition to Idle and then from idle to patrol again reseting the random point.
-    /// </summary>
-    private void MoveToNextPoint()
-    {
-        brain.ChangeState(new IdleState(brain, body));
+        body.MoveToTarget(patrolPoints[pointIndex].position);
     }
 
     private void HandlePlayerSpotted(GameObject player)
     {
-        brain.ChangeState(new ChaseState(brain, body, player.transform));
+        brain.ChangeState(new AlertState(brain, body, player.transform));
     }
 
     public override void Exit()

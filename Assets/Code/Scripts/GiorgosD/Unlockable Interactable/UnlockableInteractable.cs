@@ -16,7 +16,6 @@ public class UnlockableInteractable : NetworkBehaviour, IInteractable<PlayerBody
     public UnityEvent OnReset;
 
     #region Interaction logic
-
     /// <summary>
     /// Makes sure the player can always try to interact.
     /// </summary>
