@@ -61,5 +61,6 @@ public class PauseMenu : MonoBehaviour
             Cursor.visible = false;
         }
     }
+    public void BackToMenu() => SessionModeManager.Instance.ReturnToMenu();
     public void QuitGame() => DevConsole.commands["exit"].Execute(null);
 }
