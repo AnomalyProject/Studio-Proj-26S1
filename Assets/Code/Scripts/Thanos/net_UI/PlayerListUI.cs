@@ -21,5 +21,22 @@ public class PlayerListUI : MonoBehaviour
         
         //Show/hide Host icon
         hostIndicator.SetActive(playerInfo.IsHost);
+        
+        // adding indicators for ready/ in elevator state
+        if (playerInfo.IsReady && playerInfo.IsInElevator)
+        {
+            statusText.text = "Ready - In Elevator";
+            statusText.color = Color.green;
+        }
+        else if (playerInfo.IsInElevator)
+        {
+            statusText.text = "In Elevator";
+            statusText.color = Color.yellow;
+        }
+        else
+        {
+            statusText.text = "Not Ready";
+            statusText.color = Color.red;
+        }
     }
 }
