@@ -1,9 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net.Mail;
 using UnityEngine;
-using UnityEngine.Diagnostics;
+using System.IO;
+using System;
 
 public class CrashManager : MonoBehaviour
 {
@@ -19,6 +18,11 @@ public class CrashManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static private void Initialize()
     {
+#pragma warning disable CS0162 // Unreachable code detected
+#if UNITY_EDITOR
+        return;
+#endif
+
         flagPath = Path.Combine(Application.persistentDataPath, "exit_success.tmp");
 
         crashZip = Path.Combine(Application.persistentDataPath, "CrashReport.zip");
@@ -37,6 +41,7 @@ public class CrashManager : MonoBehaviour
         CreateObject();
 
         LaunchWatchdog();
+#pragma warning restore CS0162 // Unreachable code detected
     }
 
     /// <summary>
@@ -97,19 +102,6 @@ public class CrashManager : MonoBehaviour
         obj.AddComponent<CrashManager>();
         DontDestroyOnLoad(obj);
         obj.hideFlags = HideFlags.HideInHierarchy;
-    }
-
-    /// <summary>
-    /// THIS SHOULD BE DELETED AFTER TESTING!!! 
-    /// </summary>
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F5))
-        {
-            UnityEngine.Debug.Log("[CrashManager]: Crashed Game!!!!");
-
-            Utils.ForceCrash(ForcedCrashCategory.FatalError);
-        }
     }
 
     /// <summary>

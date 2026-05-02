@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 
@@ -11,18 +12,20 @@ public class PlayerInventory : NetworkBehaviour
 {
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
 
-    [SerializeField, Min(1)] int inventorySize = 5;
-    [SerializeField] Transform itemHolder;
+    [SerializeField, Min(1)] private int inventorySize = 5;
+    [SerializeField] private Transform itemHolder;
+    [SerializeField] private UnityEvent<ItemData> _OnFocusedChanged, _OnItemUsed;
+    [SerializeField] private UnityEvent<ItemData, int> OnItemAdded, OnItemRemoved;
 
     public Inventory Inventory { get; private set; }
 
-    private int focusedSlot = 0;
+    public int focusedSlot { get; private set; } = 0;
     private GameObject activeInstance;
     private Dictionary<string, GameObject> itemInstances = new();
     private PlayerBody playerBody;
     private Task<bool> currentUseTask;
 
-    void Awake()
+    private void Awake()
     {
         playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
@@ -34,6 +37,11 @@ public class PlayerInventory : NetworkBehaviour
         Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackRemoved += HandleStackRemoval;
+
+        Inventory.OnItemAdded += OnItemAdded.Invoke;
+        Inventory.OnItemRemoved += OnItemRemoved.Invoke;
+        OnFocusedChanged += _OnFocusedChanged.Invoke;
+        OnItemUsed += _OnItemUsed.Invoke;
     }
 
     public void DebugInventory()
@@ -52,7 +60,7 @@ public class PlayerInventory : NetworkBehaviour
     }
 
     #region Inventory Event Subscribers
-    void HandleSlotsSwapped(int fromSlot, int toSlot)
+    private void HandleSlotsSwapped(int fromSlot, int toSlot)
     {
         if (fromSlot != focusedSlot) return;
 
@@ -68,7 +76,7 @@ public class PlayerInventory : NetworkBehaviour
             }
         }
     }
-    void HandleStackCreation(IReadOnlyItemStack stack, int slotIndex)
+    private void HandleStackCreation(IReadOnlyItemStack stack, int slotIndex)
     {
         if (stack.GetItemData().ItemPrefab == null) return;
 
@@ -78,7 +86,7 @@ public class PlayerInventory : NetworkBehaviour
         if (activeInstance == null) ChangeFocused(slotIndex);
         else itemObject.SetActive(false);
     }
-    void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
+    private void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
         if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return;
 
@@ -152,6 +160,13 @@ public class PlayerInventory : NetworkBehaviour
             OnItemUsed?.Invoke(stack.GetItemData());
         }
         return success;
+    }
+    public bool CanUseFocused()
+    {
+        if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
+        if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
+        return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
 
     [ServerRpc] async Task RegisterUsage_ServerRpc(int slotIndex)

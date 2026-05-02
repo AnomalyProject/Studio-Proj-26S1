@@ -38,7 +38,9 @@ public class SnapshotID : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        // Detect duplicates in the scene
+        if (PrefabUtility.IsPartOfPrefabAsset(this)) return; // Don't regenerate GUID when making a prefab.
+
+        // Detect duplicates in the scene (Ctrl+D)
         SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         bool duplicateExists = all.Any(x => x != this && x.guid == guid);
         if (duplicateExists)

@@ -1041,7 +1041,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5402278856886778198}
   m_HandleRect: {fileID: 7291192494062809535}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1085,8 +1085,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 760, y: -415}
-  m_SizeDelta: {x: 1520, y: 830}
+  m_AnchoredPosition: {x: 760, y: -280}
+  m_SizeDelta: {x: 1520, y: 560}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8899320347405936142
 CanvasRenderer:
@@ -1186,6 +1186,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2198752141034164430}
   - component: {fileID: 821403123327757513}
+  - component: {fileID: 8291134508613667696}
   m_Layer: 5
   m_Name: Buttons
   m_TagString: Untagged
@@ -1213,7 +1214,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 1444, y: -25}
-  m_SizeDelta: {x: 152, y: 50}
+  m_SizeDelta: {x: 150, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &821403123327757513
 MonoBehaviour:
@@ -1241,6 +1242,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &8291134508613667696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3407263797302250697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86710e43de46f6f4bac7c8e50813a599, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
+  m_AspectMode: 2
+  m_AspectRatio: 3
 --- !u!1 &3463919201696564214
 GameObject:
   m_ObjectHideFlags: 0
@@ -1252,6 +1267,7 @@ GameObject:
   - component: {fileID: 6210924326845919322}
   - component: {fileID: 1606146676129727528}
   - component: {fileID: 4368401007576560443}
+  - component: {fileID: 2938899469420310978}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -1318,6 +1334,25 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2938899469420310978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3463919201696564214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b94ea0da267f7ab4aa874a578f1c65ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AspectRatioLimiter
+  referenceAspectRatio: 1.7777778
+  maxAspectRatio: 2
+  offsetMin: {x: 200, y: -100}
+  offsetMax: {x: -200, y: 100}
+  toolbar: {fileID: 3005379203241968762}
+  screen: {fileID: 3234242347501370891}
+  commandLine: {fileID: 6875019176486597814}
 --- !u!1 &3790660251559676402
 GameObject:
   m_ObjectHideFlags: 0
@@ -2406,7 +2441,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -0.000061035156}
   m_SizeDelta: {x: 0, y: 10}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2518819750351870968

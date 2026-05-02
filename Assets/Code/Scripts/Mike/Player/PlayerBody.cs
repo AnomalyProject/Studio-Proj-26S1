@@ -1,3 +1,4 @@
+using System;
 using PurrNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,11 +18,20 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private AudioListener playerAudioListener;
     [SerializeField] private CameraLean playerCameraLean;
     [SerializeField] private GameObject nameplateVisuals;
-
+    
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
     public PlayerInteraction Interaction => interaction;
+    public PlayerID? OwnerPlayerID => owner;
+
+    public static event Action<PlayerBody> OnLocalPlayerSpawned;
+    public static event Action<PlayerBody> OnLocalPlayerDespawned;
+    public static PlayerBody localPlayerBody;
+
+    // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
+    // So the issue is that PlayrBody can register two times. We want to prevent that.  
+    private bool isLocalPlayerRegistered;
 
     protected override void OnSpawned(bool asServer)
     {
@@ -29,6 +39,17 @@ public class PlayerBody : NetworkBehaviour
 
         if (asServer) return;
         if (!TryApplyOwnership(isOwner)) return;
+    }
+
+    protected override void OnDespawned()
+    {
+        base.OnDespawned();
+        
+        if (!isLocalPlayerRegistered) return;
+        
+        localPlayerBody = null;
+        OnLocalPlayerDespawned?.Invoke(this);
+        isLocalPlayerRegistered = false;
     }
 
     protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
@@ -62,6 +83,13 @@ public class PlayerBody : NetworkBehaviour
         interaction.enabled = local;
         
         if(nameplateVisuals) nameplateVisuals.SetActive(!local);
+
+        if (local && !isLocalPlayerRegistered)
+        {
+            localPlayerBody = this;
+            isLocalPlayerRegistered = true;
+            OnLocalPlayerSpawned?.Invoke(this);
+        }
 
         return local;
     }

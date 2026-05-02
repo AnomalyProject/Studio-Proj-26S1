@@ -1,0 +1,99 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class MainMenuManager : MonoBehaviour
+{
+    enum SceneLoadingMethod
+    {
+        WithString,
+        WithIndex
+    }
+
+    [Header("References")]
+    [SerializeField] GameObject mainMenuCanvas;
+    [SerializeField] GameObject firstSelectedButton;
+
+    [Space(10)]
+    [Header("Manager Settings")]
+    [SerializeField] bool enableOnStart = true;
+
+    [Space(10)]
+    [Header("Start Settings")]
+    [SerializeField] SceneLoadingMethod currentSceneLoading;
+    [SerializeField] string startSceneString = "MainGameplayScene";
+    [SerializeField] int startSceneIndex = 1;
+
+
+    private void Awake()
+    {
+        SetMenuActivity(false);
+    }
+
+    private void OnEnable()
+    {
+        SettingsManager.OnSettingsClosed += HandleSettingsClosed;
+    }
+
+    private void OnDisable()
+    {
+        SettingsManager.OnSettingsClosed -= HandleSettingsClosed;
+    }
+
+    private void HandleSettingsClosed()
+    {
+        SetMenuActivity(true);
+    }
+
+    void Start()
+    {
+        if (enableOnStart)
+        {
+            SetMenuActivity(true);
+        }
+    }
+
+    public void SetMenuActivity(bool active)
+    {
+        switch (active)
+        {
+            case true:
+                // activate canvas and select first button
+                mainMenuCanvas?.SetActive(true);
+                EventSystem.current.SetSelectedGameObject(firstSelectedButton);
+                break;
+            case false:
+                // deactivate canvas and clear selected button
+                mainMenuCanvas?.SetActive(false);
+                EventSystem.current.SetSelectedGameObject(null);
+                break;
+        }
+    }
+
+    #region Canvas Button Methods
+    public void StartGame()
+    {
+        switch (currentSceneLoading)
+        {
+            case SceneLoadingMethod.WithIndex:
+                SceneLoader.Instance.LoadSceneWithAsync(startSceneIndex); 
+                break;
+            case SceneLoadingMethod.WithString:
+                SceneLoader.Instance.LoadSceneWithAsync(startSceneString);
+                break;
+
+        }
+    }
+
+    public void OpenSettings()
+    {
+        SetMenuActivity(false);
+        SettingsManager.Open(); 
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+        Debug.Log("Player has quit the game!");
+    }
+    #endregion
+}
