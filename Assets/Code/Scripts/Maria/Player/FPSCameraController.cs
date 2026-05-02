@@ -36,7 +36,7 @@ public class FPSCameraController : MonoBehaviour
     }
     private void Start()
     {
-        LockCursor();
+        //LockCursor();
     }
 
     void Update() => UpdateLook();
@@ -64,17 +64,17 @@ public class FPSCameraController : MonoBehaviour
     #endregion
 
     #region Cursor Control
-    private static void LockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+    //private static void LockCursor()
+    //{
+    //    Cursor.lockState = CursorLockMode.Locked;
+    //    Cursor.visible = false;
+    //}
 
-    // Call from a pause / menu system when you need to release the cursor
-    public static void UnlockCursor()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
+    //// Call from a pause / menu system when you need to release the cursor
+    //public static void UnlockCursor()
+    //{
+    //    Cursor.lockState = CursorLockMode.None;
+    //    Cursor.visible = true;
+    //}
     #endregion
 }
