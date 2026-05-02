@@ -23,6 +23,7 @@ public class PlayerBody : NetworkBehaviour
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
     public PlayerInteraction Interaction => interaction;
+    public PlayerID? OwnerPlayerID => owner;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;

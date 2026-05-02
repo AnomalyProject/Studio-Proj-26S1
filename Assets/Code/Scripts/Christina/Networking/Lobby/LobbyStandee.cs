@@ -29,8 +29,22 @@ public class LobbyStandee : MonoBehaviour
         labelRoot.gameObject.SetActive(true);
         
         nameText.text = playerInfo.DisplayName;
-        statusText.text = playerInfo.IsReady ? "Ready" : "Not Ready";
-        statusText.color = playerInfo.IsReady ? readyColor : notReadyColor;
+        if (playerInfo.IsReady && playerInfo.IsInElevator)
+        {
+            statusText.text = "Ready - In Elevator";
+            statusText.color = readyColor;
+        }
+        else if (playerInfo.IsInElevator)
+        {
+            statusText.text = "In Elevator";
+            statusText.color = Color.yellow;
+        }
+        else
+        {
+            statusText.text = "Not Ready";
+            statusText.color = notReadyColor;
+        }
+
 
         hostBadge.SetActive(playerInfo.IsHost);
     }
