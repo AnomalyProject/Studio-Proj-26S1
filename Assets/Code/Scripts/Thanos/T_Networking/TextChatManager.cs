@@ -8,13 +8,6 @@ public class TextChatManager : NetworkBehaviour
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
-
-    [SerializeField] private InputActionAsset playerMap;
-    [SerializeField] private InputActionAsset consoleMap;
-    [SerializeField] private InputActionAsset UIMap;
-
-
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -57,7 +50,7 @@ public class TextChatManager : NetworkBehaviour
         BroadcastMessage(displayName, message);
     }
     
-    [ObserversRpc] 
+    [ObserversRpc(bufferLast: true)] //Save last RPC message to be broadcasted to the next player that joins the room 
     private void BroadcastMessage(string displayName, string message)
     {
         if (ChatUI.Instance != null)
@@ -66,21 +59,10 @@ public class TextChatManager : NetworkBehaviour
         }
     }
 
-    public void SetInputState(bool isChatting)
+    /* //Testing input handling with component
+    public void SetInputState(PlayerInput input)
     {
-        var playerInput = GetComponent<PlayerInput>();
-    
-        if (isChatting)
-        {
-            playerInput.SwitchCurrentActionMap("UI");
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            playerInput.SwitchCurrentActionMap("Player");
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        input = GetComponent<PlayerInput>();
     }
+    */
 }
