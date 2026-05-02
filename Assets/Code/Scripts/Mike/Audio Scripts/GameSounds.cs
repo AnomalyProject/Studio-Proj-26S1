@@ -9,7 +9,7 @@ public class GameSounds : SoundCaller
     public void OnVoidTimerTick(float currentTime)
     {
         if(currentTime <= warningTicksAtSeconds && currentTime != 0)
-        PlaySFXClip(voidTimerTick);
+        PlayUIClip(voidTimerTick);
     }
 
     public void OnElevatorOpened()
