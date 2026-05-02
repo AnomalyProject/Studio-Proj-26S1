@@ -1,10 +1,14 @@
-using System;
 using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine;
+using TMPro;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Draws a hotbar with the correct number of slots and handles scrolling through them and updating their icons and counts when the inventory changes.
+/// </summary>
 public class InventoryUI : MonoBehaviour
 {
     private struct InventorySlotUI
