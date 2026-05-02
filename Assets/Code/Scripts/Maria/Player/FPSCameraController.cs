@@ -36,7 +36,16 @@ public class FPSCameraController : MonoBehaviour
     }
     private void Start()
     {
-        LockCursor();
+       // LockCursor();
+       if (GameStateManager.Instance != null &&
+           GameStateManager.Instance.CurrentState == GameState.InGame)
+       {
+           LockCursor();
+       }
+       else
+       {
+           UnlockCursor();
+       }
     }
 
     void Update() => UpdateLook();
@@ -51,12 +60,21 @@ public class FPSCameraController : MonoBehaviour
 
     void UpdateLook()
     {
-        if (playerBody == null) return;
+        /*if (playerBody == null) return;
 
         // Horizontal -> rotate the player body (yaw)
         playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX, Space.World);
 
         // Vertical -> rotate the camera holder (pitch), clamped
+        currentPitch -= lookInput.y * mouseSensitivityY;
+        currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
+        transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);*/
+        
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+        if (playerBody == null) return;
+
+        playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX, Space.World);
+
         currentPitch -= lookInput.y * mouseSensitivityY;
         currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
         transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
