@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class SessionSounds : MonoBehaviour
+public class SessionSounds : SoundCaller
 {
     [SerializeField] AudioClip playerJoinedClip, playerLeftClip;
 
@@ -19,12 +19,4 @@ public class SessionSounds : MonoBehaviour
 
     private void HandlePlayerJoinedEvent(ulong arg1, string arg2) => PlayUIClip(playerJoinedClip);
     private void HandlePlayerLeftEvent(ulong arg1, string arg2) => PlayUIClip(playerLeftClip);
-
-    private void PlayUIClip(AudioClip clip)
-    {
-        if (AudioManager.Instance && clip)
-        {
-            AudioManager.Instance.PlayUI(clip);
-        }
-    }
 }
