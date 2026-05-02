@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public class ElevatorExit : LevelExitPoint
 {
     [SerializeField, Header("Animation Events")] UnityEvent OnFullyClosed;
-    [SerializeField] UnityEvent OnFullyOpened;
+    [SerializeField] UnityEvent OnFullyOpened, OnStartOpen;
 
     [SerializeField] bool openOnStart;
     AudioSource audioSource;
@@ -47,4 +47,5 @@ public class ElevatorExit : LevelExitPoint
     }
     public void AnimEvent_FullyOpened() => OnFullyOpened?.Invoke();
     public void AnimEvent_FullyClosed() => OnFullyClosed?.Invoke();
+    public void AnimEvent_OnStartOpen() => OnStartOpen?.Invoke();
 }
