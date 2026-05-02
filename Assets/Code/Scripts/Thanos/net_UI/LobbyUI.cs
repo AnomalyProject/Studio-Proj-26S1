@@ -174,8 +174,8 @@ public class LobbyUI : MonoBehaviour
         
         ApplyLobbySettings(sessionData, isHost);
         
-        startButton.gameObject.SetActive(isHost);
-        startButton.interactable = isHost && allPlayersReady && sessionData.PlayerCount > 0;
+        startButton.gameObject.SetActive(false);
+        startButton.interactable = false;
     }
     
     private void OnPrivacyChanged(int index)

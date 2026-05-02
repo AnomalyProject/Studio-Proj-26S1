@@ -310,9 +310,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         sessionData.ResetReadyStates();
 
         OnPlayerLeft_Client(steamID, reason);
-        OnSessionUpdated_Client(BuildClientSessionData());
+        SendSessionUpdate();
 
-        sessionData.ResetReadyStates();
         OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
         Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
     }
