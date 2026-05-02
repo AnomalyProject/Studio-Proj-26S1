@@ -574,6 +574,39 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     /// <summary>
+    /// Client-to-server request for returning from gameplay to the lobby.
+    /// Validates that the requester is allowed to trigger the transition, resets lobby data
+    /// such as player ready states and elevator state, then asks SessionModeManager to load the lobby
+    /// scene for the whole session.
+    /// </summary>
+    [ServerRpc(requireOwnership: false)]
+    public void RequestReturnToLobby(RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
+        {
+            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can return to lobby.");
+            return;
+        }
+
+        if (GameStateManager.Instance.CurrentState != GameState.InGame &&
+            GameStateManager.Instance.CurrentState != GameState.PostGame)
+        {
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
+            return;
+        }
+
+        // Reset ready/elevator session data here before loading lobby.
+        sessionData.ResetReadyStates();
+        sessionData.ElevatorState = ElevatorLobbyState.Open;
+        SendSessionUpdate();
+
+        SessionModeManager.Instance.LoadLobbyScene();
+    }
+
+
+    /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via hostPlayerID)
     /// 2. Game is in Lobby state (can't  twice)
