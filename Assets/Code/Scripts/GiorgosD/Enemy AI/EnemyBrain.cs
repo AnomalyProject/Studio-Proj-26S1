@@ -30,17 +30,15 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
     private void Start()
     {
-        if (!isServer) return;
-
         body = GetComponent<EnemyPawn>();
 
         if (!tempStuffEnabled)
         {
-            //testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
+            testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
 
-            //testHelper.onWatched.AddListener(OnObservedTooMuch);
+            testHelper.onWatched.AddListener(OnObservedTooMuch);
 
-            //testHelper.onItemPicked.AddListener(OnItemPicked);
+            testHelper.onItemPicked.AddListener(OnItemPicked);
         }
 
         ChangeState(new PatrolState(this, body));
@@ -57,8 +55,6 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
     private void Update()
     {
-        if (!isServer) return;
-
         currentState?.Update();
     }
 
@@ -77,8 +73,6 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
     public void Alert<TTarget>(TTarget alertedBy) where TTarget : MonoBehaviour
     {
-        if (!isServer) return;
-
         if (currentState is ChaseState || currentState is AttackState || currentState is AlertState) return;
 
         ChangeState(new AlertState(this, body, alertedBy.transform));

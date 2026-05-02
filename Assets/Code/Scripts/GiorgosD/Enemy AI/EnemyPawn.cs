@@ -178,8 +178,6 @@ public class EnemyPawn : NetworkBehaviour
     /// </summary>
     private void Sight()
     {
-        if (!isServer) return;
-
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
         Transform closestDetectedPlayer = null;
