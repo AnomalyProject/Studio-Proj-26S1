@@ -6,6 +6,9 @@ using UnityEngine.InputSystem;
 
 public static class InputBridge
 {
+    public static event Action<InputContext> OnContextChanged;
+
+    #region Enum & Data Container
     public enum InputContext // Assign InputContextConfig attribute on each new enum value
     {
         [InputContextConfig(mapName: nameof(IA_Global.Player), cursorVisible: false)]
@@ -17,7 +20,6 @@ public static class InputBridge
         [InputContextConfig(mapName: nameof(IA_Global.DevConsole), cursorVisible: true)]
         DevConsole 
     }
-
     struct MapCursorPair
     {
         public InputActionMap map { get; private set; }
@@ -29,15 +31,16 @@ public static class InputBridge
             this.cursorVisible = cursorVisible;
         }
     }
+    #endregion
 
+    #region Fields & Properties
+    public static IA_Global Actions { get; private set; }
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
     static InputContext previousContext = InputContext.Player;
-
-    public static event Action<InputContext> OnContextChanged;
     static readonly Dictionary<InputContext, MapCursorPair> contextMap;
+    #endregion
 
-    public static IA_Global Actions { get; private set; }
-
+    #region Constructor
     static InputBridge()
     {
         Actions = new IA_Global();
@@ -47,6 +50,9 @@ public static class InputBridge
         Actions.Global.Enable();
         SetContext(InputContext.Player);
     }
+    #endregion
+
+    #region Exposed Methods
 
     /// <summary>
     /// Change the active action map.
@@ -84,6 +90,10 @@ public static class InputBridge
         if (context == CurrentContext) RestorePreviousContext();
         else SetContext(context);
     }
+
+    #endregion
+
+    #region Helpers
     static void SetCursor(bool visible)
     {
         Cursor.visible = visible;
@@ -106,4 +116,5 @@ public static class InputBridge
 
         return map;
     }
+    #endregion
 }
