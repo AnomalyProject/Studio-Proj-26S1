@@ -13,9 +13,9 @@ public class AttackState : BaseState
 
     public override void Enter()
     {
+        Debug.Log("Attacking");
         //OnPlayerAttacked?.Invoke(player.gameObject); //this if we want the attack event to happen even if not hit.
 
-                    
         bool isHit = body.IsHitSuccess(player) ? DoAttack(player) : ChangeToChaseState();
     }
 
@@ -57,13 +57,13 @@ public class AttackState : BaseState
 
     private bool ChangeToChaseState()
     {
-        brain.ChangeState(new ChaseState(brain, body, player));
+        brain.ChangeState(new AlertState(brain, body, player));
 
         return true;
     }
 
     public override void Exit()
     {
-        
+
     }
 }

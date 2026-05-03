@@ -1,9 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net.Mail;
 using UnityEngine;
-using UnityEngine.Diagnostics;
+using System.IO;
+using System;
 
 public class CrashManager : MonoBehaviour
 {
@@ -19,6 +18,7 @@ public class CrashManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static private void Initialize()
     {
+#pragma warning disable CS0162 // Unreachable code detected
 #if UNITY_EDITOR
         return;
 #endif
@@ -41,6 +41,7 @@ public class CrashManager : MonoBehaviour
         CreateObject();
 
         LaunchWatchdog();
+#pragma warning restore CS0162 // Unreachable code detected
     }
 
     /// <summary>

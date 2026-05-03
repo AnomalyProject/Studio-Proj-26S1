@@ -10,7 +10,6 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private FPSController movement;
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private PlayerInteraction interaction;
-    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private GameObject bodyVisuals;
     
     [Header("Local Player")]
@@ -19,14 +18,15 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private CameraLean playerCameraLean;
     [SerializeField] private GameObject nameplateVisuals;
     
-    
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
     public PlayerInteraction Interaction => interaction;
+    public PlayerID? OwnerPlayerID => owner;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
+    public static PlayerBody localPlayerBody;
 
     // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
     // So the issue is that PlayrBody can register two times. We want to prevent that.  
@@ -46,6 +46,7 @@ public class PlayerBody : NetworkBehaviour
         
         if (!isLocalPlayerRegistered) return;
         
+        localPlayerBody = null;
         OnLocalPlayerDespawned?.Invoke(this);
         isLocalPlayerRegistered = false;
     }
@@ -64,9 +65,6 @@ public class PlayerBody : NetworkBehaviour
     {
         Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
         
-        if(local) playerInput.ActivateInput();
-        else playerInput.DeactivateInput();
-        
         playerCamera.enabled = local;
         playerAudioListener.enabled = local;
         cameraController.enabled = local;
@@ -84,6 +82,7 @@ public class PlayerBody : NetworkBehaviour
 
         if (local && !isLocalPlayerRegistered)
         {
+            localPlayerBody = this;
             isLocalPlayerRegistered = true;
             OnLocalPlayerSpawned?.Invoke(this);
         }

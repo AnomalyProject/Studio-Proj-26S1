@@ -1,8 +1,9 @@
+using PurrNet;
 using System;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyPawn : MonoBehaviour
+public class EnemyPawn : NetworkBehaviour
 {
     #region Enemy Settings
     [Header("Movement")]
@@ -14,11 +15,22 @@ public class EnemyPawn : MonoBehaviour
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
     [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
-    [SerializeField,Tooltip("How often it should check for what it sees")] private float checkFrequency;
+    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player")] private float sightAngleSearch;
+    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when its doing anything other than searching for the player, this should match the sightAngle value")] private float sightAngleNormal;
+    [SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private Transform cachedPlayer;
+
+    // Aggression will be revised later.
+    [Header("Aggression Settings")]
+    [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
+    [SerializeField, Tooltip("Controls how much each aggression level increases the auto Detection")] private float autoDetectMultiplier;
+    [SerializeField, Tooltip("Controls how much each aggression level increases the Sight Range")] private float sightRangeMultiplier;
+    [SerializeField, Tooltip("Controls how much each aggression level decreases the check Frequency of sight")] private float checkFrequencyReduction;
+    [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
+    [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
     [Header("Attack")]
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
@@ -56,7 +68,7 @@ public class EnemyPawn : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets speed of enemy depending on the state of the enemy.
+    /// Sets speed of enemy depending on the state of the enemy. (true = running, false = walking)
     /// </summary>
     /// <param name="isRunning"></param>
     public void SetMoveSpeed(bool isRunning)
@@ -81,6 +93,46 @@ public class EnemyPawn : MonoBehaviour
     }
     #endregion
 
+    #region Aggression
+    /// <summary>
+    /// Increasses the aggression level of the enemy by 1 and updates all the stats accordingly. (Later will change to listen to event)
+    /// </summary>
+    public void IncreaseAggression()
+    {
+        if (aggressionLevel < maxAggressionLevel)
+        {
+            aggressionLevel++;
+            runSpeed *= runMultiplier;
+            autoDetectRange *= autoDetectMultiplier;
+            sightRange *= sightRangeMultiplier;
+            checkFrequency -= checkFrequencyReduction;
+
+            Debug.Log($"Aggression increased to level {aggressionLevel}");
+            return;
+        }
+
+        Debug.LogWarning("Aggression level is already at maximum!");
+    }
+
+    /// <summary>
+    /// Does the opposite of IncreaseAggression.
+    /// </summary>
+    public void DecreaseAggression()
+    {
+        if (aggressionLevel > 0)
+        {
+            aggressionLevel--;
+            runSpeed /= runMultiplier;
+            autoDetectRange /= autoDetectMultiplier;
+            sightRange /= sightRangeMultiplier;
+            checkFrequency += checkFrequencyReduction;
+            Debug.Log($"Aggression decreased to level {aggressionLevel}");
+            return;
+        }
+        Debug.LogWarning("Aggression level is already at minimum!");
+    }
+    #endregion
+
     #region Turning
     /// <summary>
     /// Makes the enemy always face the player.
@@ -102,6 +154,22 @@ public class EnemyPawn : MonoBehaviour
 
         agent.isStopped = false; 
     }
+
+    /// <summary>
+    /// Check for if enemy is facing target.
+    /// </summary>
+    /// <param name="targetPos"></param>
+    /// <returns></returns>
+    public bool IsFacingTarget(Vector3 targetPos)
+    {
+        Vector3 directionToTarget = (targetPos - transform.position).normalized;
+
+        directionToTarget.y = 0;
+
+        float dotProduct = Vector3.Dot(transform.forward.normalized, directionToTarget.normalized);
+
+        return dotProduct >= 0.95f;
+    }
     #endregion
 
     #region Sight
@@ -110,6 +178,8 @@ public class EnemyPawn : MonoBehaviour
     /// </summary>
     private void Sight()
     {
+        if (!isServer) return;
+
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
         Transform closestDetectedPlayer = null;
@@ -173,6 +243,21 @@ public class EnemyPawn : MonoBehaviour
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// This func increases and decreases the Sight angle to mimic the enemy looking around for the player when it loses sight.
+    /// </summary>
+    public void IdleSearch(bool isSearching)
+    {
+        if (isSearching)
+        {
+            sightAngle = sightAngleSearch;
+        }
+        else
+        {
+            sightAngle = sightAngleNormal;
+        }
     }
     #endregion
 

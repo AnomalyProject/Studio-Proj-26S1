@@ -12,8 +12,10 @@ public struct PlayerSessionInfo
     public bool IsReady;
     public bool IsHost;
     public DateTime JoinedAt;
+    public bool IsInElevator;
 
-    public PlayerSessionInfo(ulong steamID, string name, bool isHost = false, int teamID = -1)
+
+    public PlayerSessionInfo(ulong steamID, string name, bool isHost = false, int teamID = -1, bool isInElevator = false)
     {
         SteamID = steamID;
         DisplayName = name;
@@ -21,6 +23,7 @@ public struct PlayerSessionInfo
         TeamID = teamID;
         IsReady = false;
         JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
+        IsInElevator = isInElevator;
     }
 
 }
@@ -34,6 +37,7 @@ public struct ClientPlayerInfo
     public string DisplayName;
     public bool IsReady;
     public bool IsHost;
+    public bool IsInElevator;
 }
     
 [Serializable]
@@ -45,6 +49,7 @@ public struct ClientSessionData
     public int MaxPlayers;
     public int PlayerCount;
     public List<ClientPlayerInfo> Players;
+    public ElevatorLobbyState ElevatorState;
     
     //workaround for serialization issues with Dictionaries
     public List<string> CustomPropertyKeys;
@@ -63,6 +68,11 @@ public class SessionData
     public DateTime CreatedAt { get; private set; }
     public GameState CurrentState { get; set; }
     public Dictionary<string, string> CustomProperties { get; set; } = new Dictionary<string, string>();
+    
+    // elevator
+    public ElevatorLobbyState ElevatorState;
+    public bool AllPlayersReadyInElevator => Players.Count > 0 && Players.All(pp => pp.IsInElevator && pp.IsReady);
+
 
     public SessionData()
     {
