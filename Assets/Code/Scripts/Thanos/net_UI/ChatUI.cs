@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using TMPro; 
-using Steamworks;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using System.Collections;
@@ -21,6 +20,9 @@ public class ChatUI : MonoBehaviour
     [Header("UI Toggling")]
     [SerializeField] private Image scrollViewBackground;
     [SerializeField] private GameObject scrollbarObject;
+    
+    private InputBridge.InputContext previousInputContext;
+    private bool chatIsOpen;
     
     private Text_Chat chatInputActions;
     
@@ -65,8 +67,13 @@ public class ChatUI : MonoBehaviour
     {
         if (!string.IsNullOrWhiteSpace(text))
         {
-            ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
-            TextChatManager.Instance.SendChatMessage(text, localSteamID);
+            if (TextChatManager.Instance == null || !TextChatManager.Instance.isSpawned)
+            {
+                Debug.LogWarning("[ChatUI] Cannot send message. TextChatManager is not ready.");
+                return;
+            }
+
+            TextChatManager.Instance.SendChatMessage(text);
         }
         
         chatInputField.text = "";
@@ -75,11 +82,16 @@ public class ChatUI : MonoBehaviour
     
     private void OpenChat()
     {
+        
+        if(chatIsOpen) return;
+        chatIsOpen = true;
+        
+        previousInputContext = InputBridge.CurrentContext;
+        InputBridge.SetContext(InputBridge.InputContext.UI);
+        
         chatInputField.gameObject.SetActive(true);
         if (scrollViewBackground != null) scrollViewBackground.enabled = true;
         if (scrollbarObject != null) scrollbarObject.SetActive(true);
-        
-        ToggleGameplayInputs(true);
         
         StartCoroutine(FocusChatNextFrame());
     }
@@ -92,6 +104,9 @@ public class ChatUI : MonoBehaviour
     
     private void CloseChat()
     {
+        bool wasOpen = chatIsOpen;
+        chatIsOpen = false;
+        
         chatInputField.gameObject.SetActive(false);
         if (scrollViewBackground != null) scrollViewBackground.enabled = false;
         if (scrollbarObject != null) scrollbarObject.SetActive(false);
@@ -101,8 +116,11 @@ public class ChatUI : MonoBehaviour
             UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         }
         
-        ToggleGameplayInputs(false);
-        
+        if (wasOpen)
+        {
+            InputBridge.SetContext(previousInputContext);
+        }
+
         lastCloseTime = Time.unscaledTime;
     }
     public void ReceiveMessage(string displayName, string message)
