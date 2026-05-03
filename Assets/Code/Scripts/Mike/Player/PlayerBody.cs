@@ -66,9 +66,6 @@ public class PlayerBody : NetworkBehaviour
     {
         Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
         
-        if(local) playerInput.ActivateInput();
-        else playerInput.DeactivateInput();
-        
         playerCamera.enabled = local;
         playerAudioListener.enabled = local;
         cameraController.enabled = local;
