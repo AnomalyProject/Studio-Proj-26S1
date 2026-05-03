@@ -567,7 +567,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return false;
         }
 
-        // todelete: dummy comment to push and get a new build
         SessionModeManager.Instance.LoadGameplayScene();
         Debug.Log("[SessionManager] Elevator locked. Game starting...");
         return true;
