@@ -39,7 +39,7 @@ public class DevConsole : MonoBehaviour
 
     #region Input
     [Header("Input")]
-    private IA_DevConsole inputActions;
+    private InputAction toggleConsoleAction;
     private InputAction submitAction;
     private InputAction scrollAction;
     #endregion
@@ -144,7 +144,6 @@ public class DevConsole : MonoBehaviour
     private bool showErrors = true;
     private int historyIndex = -1;
     private List<string> commandHistory = new List<string>();
-    private bool cursorVisibleLastToggle;
     public static Dictionary<LogType, Sprite> icons = new Dictionary<LogType, Sprite>();
     private LogEntry focusedEntry;
     #endregion
@@ -190,9 +189,9 @@ public class DevConsole : MonoBehaviour
         commands["cls"].callback += ClearScreen;
 
         // Input
-        inputActions = new IA_DevConsole();
-        submitAction = inputActions.DevConsole.Submit;
-        scrollAction = inputActions.DevConsole.ScrollHistory;
+        toggleConsoleAction = InputBridge.Actions.FindAction("Toggle Dev");
+        submitAction = InputBridge.Actions.FindAction("DevConsole/Submit");
+        scrollAction = InputBridge.Actions.FindAction("DevConsole/Scroll History");
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -314,29 +313,20 @@ public class DevConsole : MonoBehaviour
     private void OnEnable()
     {
         devConsoles.Add(this);
-
         onCommandEntered += TryRunningAsBuiltInCommand;
 
-        inputActions.UI.ToggleConsole.performed += OnToggleConsole;
+        toggleConsoleAction.performed += OnToggleConsole;
         submitAction.performed += OnSubmit;
         scrollAction.performed += OnScrollHistory;
-
-        inputActions.Enable();
-
-        submitAction.Disable();
-        scrollAction.Disable();
     }
     private void OnDisable()
     {
         devConsoles.Remove(this);
-
         onCommandEntered -= TryRunningAsBuiltInCommand;
 
-        inputActions.UI.ToggleConsole.performed -= OnToggleConsole;
+        toggleConsoleAction.performed -= OnToggleConsole;
         submitAction.performed -= OnSubmit;
         scrollAction.performed -= OnScrollHistory;
-
-        inputActions.Disable();
     }
     #endregion
 
@@ -345,34 +335,13 @@ public class DevConsole : MonoBehaviour
     {
         isOpen = !isOpen;
         root.SetActive(isOpen);
-
-        // FOR PROTOTYPE LIVE DEMO. REFACTOR PLZ
-        PlayerInput[] playerControls = FindObjectsByType<PlayerInput>(FindObjectsSortMode.None);
-        foreach (PlayerInput playerInput in playerControls) playerInput.enabled = !isOpen;
-
+        
         if (isOpen)
         {
-            cursorVisibleLastToggle = Cursor.visible;
-
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
             onConsoleToggledOn?.Invoke();
-            submitAction.Enable();
-            scrollAction.Enable();
             commandLine.ActivateInputField();
         }
-        else
-        {
-            if (!cursorVisibleLastToggle)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-            
-            onConsoleToggledOff?.Invoke();
-            submitAction.Disable();
-            scrollAction.Disable();
-        }
+        else onConsoleToggledOff?.Invoke();
     }
 
     private void OnSubmit(InputAction.CallbackContext context)
