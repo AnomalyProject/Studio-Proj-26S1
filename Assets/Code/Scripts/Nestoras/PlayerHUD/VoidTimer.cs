@@ -24,7 +24,7 @@ public class VoidTimer : MonoBehaviour
 
         anomalyManager.OnStateChanged += (state) =>
         {
-            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false); 
+            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false);
         };
         gameManager.OnPunishmentTimerExpired.AddListener(() => timerText.color = Color.red);
 

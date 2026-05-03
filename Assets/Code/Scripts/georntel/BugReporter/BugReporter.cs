@@ -1,9 +1,9 @@
-using System.IO;
-using System.Collections;
-using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using UnityEngine;
+using System.Collections;
 using System.Net.Mail;
+using System.IO;
 using System;
 using TMPro;
 
@@ -25,6 +25,22 @@ public class BugReporter : MonoBehaviour
     private string tempScreenshotPath;
     private string tempLogPath;
 
+    private InputAction openReporterAction;
+    private InputAction closeReporterAction;
+
+    private void Awake()
+    {
+        openReporterAction = InputBridge.Actions.FindAction("Player/Open Bug Reporter");
+        closeReporterAction = InputBridge.Actions.FindAction("BugReporter/Close");
+        openReporterAction.performed += ToggleReporter;
+        closeReporterAction.performed += CloseReporter;
+    }
+    private void OnDestroy()
+    {
+        openReporterAction.performed -= ToggleReporter;
+        closeReporterAction.performed -= CloseReporter;
+    }
+
     private void Start()
     {
         tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "Screenshot.png");
@@ -35,34 +51,15 @@ public class BugReporter : MonoBehaviour
         submitButton.interactable = false;
         descriptionInput.onValueChanged.AddListener(ValidateInput);
         submitButton.onClick.AddListener(OnSubmitClicked);
-        closeButton.onClick.AddListener(CloseReporter);
+        closeButton.onClick.AddListener(() => CloseReporter(new InputAction.CallbackContext()));
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F8)) ToggleReporter();
-    }
-
-    public void ToggleReporter()
+    public void ToggleReporter(InputAction.CallbackContext context)
     {
         bool isActive = !bugReporterPanel.activeSelf;
         bugReporterPanel.SetActive(isActive);
         if (!isActive) thankYouMessage.SetActive(false);
-
-        // FOR PROTOTYPE LIVE DEMO. REFACTOR PLZ
-        PlayerInput[] playerControls = FindObjectsByType<PlayerInput>(FindObjectsSortMode.None);
-        foreach (PlayerInput playerInput in playerControls) playerInput.enabled = !isActive;
-
-        if (isActive)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        InputBridge.SetContext(isActive ? InputBridge.InputContext.BugReporter : InputBridge.InputContext.Player);
     }
 
     private void ValidateInput(string input)
@@ -189,10 +186,10 @@ public class BugReporter : MonoBehaviour
         ValidateInput(descriptionInput.text);
         StartCoroutine(DeleteTempFiles());
     }
-    
-    private void CloseReporter()
+    private void CloseReporter(InputAction.CallbackContext context)
     {
-        ToggleReporter();
+        if (InputBridge.CurrentContext != InputBridge.InputContext.BugReporter) return;
+        ToggleReporter(context);
         thankYouMessage.SetActive(false); 
     }
 }

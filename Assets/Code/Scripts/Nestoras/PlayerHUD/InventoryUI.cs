@@ -22,7 +22,7 @@ public class InventoryUI : MonoBehaviour
 
     [SerializeField] private GameObject inventorySlotPrefab;
     private PlayerInventory playerInventory;
-    private PlayerInput playerInput;
+    private InputAction scrollInventoryAction;
     private Transform UI;
 
     [SerializeField] float focusedSlotScale = 1.2f;
@@ -30,6 +30,8 @@ public class InventoryUI : MonoBehaviour
     private void Awake()
     {
         UI = transform.GetChild(0);
+        scrollInventoryAction = InputBridge.Actions.FindAction("Scroll Inventory");
+        scrollInventoryAction.performed += SwitchSlot;
 
         if (PlayerBody.localPlayerBody != null) ConstructInventory(PlayerBody.localPlayerBody);
         PlayerBody.OnLocalPlayerSpawned += ConstructInventory;
@@ -37,14 +39,13 @@ public class InventoryUI : MonoBehaviour
     }
     private void OnDestroy()
     {
+        scrollInventoryAction.performed -= SwitchSlot;
+
         PlayerBody.OnLocalPlayerSpawned -= ConstructInventory;
         PlayerBody.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
-
-        if (playerInput != null) playerInput.actions["Scroll Inventory"].performed -= SwitchSlot;
     }
     private void ConstructInventory(PlayerBody player)
     {
-        playerInput = player.GetComponent<PlayerInput>();
         playerInventory = player.GetComponent<PlayerInventory>();
 
         slots = new Dictionary<int, InventorySlotUI>(player.Inventory.TotalSlots);
@@ -57,8 +58,6 @@ public class InventoryUI : MonoBehaviour
             GameObject usePrompt = slot.GetComponentInChildren<InputIcon>(true).gameObject;
             slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
-
-        playerInput.actions["Scroll Inventory"].performed += SwitchSlot;
         SwitchSlot(0);
         
         player.Inventory.OnStackAdded += (item, index) =>
@@ -94,10 +93,7 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
-        playerInput.actions["Scroll Inventory"].performed -= SwitchSlot;
-        playerInput = null;
         playerInventory = null;
-
         foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.gameObject);
         slots.Clear();
     }

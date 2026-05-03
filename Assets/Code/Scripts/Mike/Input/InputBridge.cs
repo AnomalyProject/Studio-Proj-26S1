@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
+using System;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
 public static class InputBridge
 {
@@ -17,8 +17,11 @@ public static class InputBridge
         [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
         UI,
 
+        [InputContextConfig(mapName: nameof(IA_Global.BugReporter), cursorVisible: true)]
+        BugReporter,
+
         [InputContextConfig(mapName: nameof(IA_Global.DevConsole), cursorVisible: true)]
-        DevConsole 
+        DevConsole,
     }
     struct MapCursorPair
     {
@@ -36,7 +39,7 @@ public static class InputBridge
     #region Fields & Properties
     public static IA_Global Actions { get; private set; }
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
-    static InputContext previousContext = InputContext.Player;
+    public static InputContext PreviousContext { get; private set; } = InputContext.Player;
     static Dictionary<InputContext, MapCursorPair> contextMap;
     #endregion
 
@@ -48,7 +51,7 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
-        previousContext = CurrentContext;
+        PreviousContext = CurrentContext;
         CurrentContext = context;
 
         foreach (var map in Actions.asset.actionMaps)
@@ -67,7 +70,7 @@ public static class InputBridge
     /// <summary>
     /// Restore the previously active action map.
     /// </summary>
-    public static void RestorePreviousContext() => SetContext(previousContext);
+    public static void RestorePreviousContext() => SetContext(PreviousContext);
 
     /// <summary>
     /// Toggle between the previous action map and the provided one.
