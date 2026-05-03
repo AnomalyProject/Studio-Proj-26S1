@@ -10,6 +10,10 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
 
     void IA_Global.IGlobalActions.OnToggleUI(InputAction.CallbackContext ctx)
     {
-        if (ctx.started) ToggleContext(InputContext.UI);
+        if (ctx.started)
+        {
+            if (CurrentContext == InputContext.UI) SetContext(InputContext.Player);
+            else SetContext(InputContext.UI);
+        }
     }
 }
