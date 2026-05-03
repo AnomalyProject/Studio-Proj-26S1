@@ -90,7 +90,7 @@ public static class InputBridge
 
         Actions.Global.SetCallbacks(new GlobalInputCallbacks());
         Actions.Global.Enable();
-        SetContext(InputContext.Player);
+        SetContext(InputContext.UI);
     }
     static void SetCursor(bool visible)
     {
