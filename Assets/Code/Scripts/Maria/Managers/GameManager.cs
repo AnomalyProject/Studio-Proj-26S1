@@ -135,9 +135,10 @@ public class GameManager : NetworkBehaviour
                 break;
 
             case AnomalyManager.RoomState.WinRoom:
-                SetElevatorInteraction(entryEnabled: true, exitEnabled: false);
+                SetElevatorInteraction(entryEnabled: true, exitEnabled: true);
+                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
                 OnGameWon?.Invoke();
-                LogProgress("Game won! Use the entry elevator to play again!");
+                LogProgress("Game won! Use the entry elevator to play again, or use the exit elevator to return to the Lobby!");
                 break;
         }
     }
@@ -154,6 +155,8 @@ public class GameManager : NetworkBehaviour
 
         usedElevator.SetInteraction(false);
         mapChangeCoroutine = StartCoroutine(PerformMapChange());
+
+        StopPunishmentTimer();
 
         IEnumerator PerformMapChange()
         {
@@ -173,7 +176,7 @@ public class GameManager : NetworkBehaviour
                     break;
 
                 case AnomalyManager.RoomState.WinRoom:
-                    HandleWinRoomExit();
+                    HandleWinRoomExit(decision);
                     break;
             }
 
@@ -239,7 +242,8 @@ public class GameManager : NetworkBehaviour
     private void HandlePunishmentRoomEntry()
     {
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
-        BeginPunishmentRoomTimer(punishmentTimeLimit);
+
+        //BeginPunishmentRoomTimer_ObserversRpc(punishmentTimeLimit);
 
         OnWrongDecision?.Invoke();
         LogProgress($"Wrong decision — punishment room. Use the exit elevator to resume." +
@@ -252,31 +256,59 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     private void HandlePunishmentRoomExit()
     {
-        StopPunishmentTimer();
         if(isServer) anomalyManager.DecideNextMapVariation();
-
         LogProgress("Resuming from punishment room.");
     }
 
     /// <summary>
-    /// Called when the player uses the entry elevator inside the win room.
-    /// Resets the game entirely back to progress 0.
+    /// Handles the player's choice upon leaving the win room.
+    /// Routes to <see cref="HandleWinRoomReplay"/> if the entry elevator was used,
+    /// or <see cref="HandleWinRoomReturnToLobby"/> if the exit elevator was used.
     /// </summary>
-    private void HandleWinRoomExit()
+    /// <param name="decision">True if the entry elevator was used (replay), false if the exit elevator was used (lobby).</param>
+    private void HandleWinRoomExit(bool decision)
+    {
+        if (decision) HandleWinRoomReplay();
+        else HandleWinRoomReturnToLobby();
+    }
+    #endregion
+
+    #region Win Room Logic
+    /// <summary>
+    /// Called when the player uses the entry elevator in the win room.
+    /// Resets the game entirely back to progress 0 and starts the loop again.
+    /// </summary>
+    private void HandleWinRoomReplay()
     {
         LogProgress("Returning from Win room. Resetting progress to 0.");
         NewGame();
     }
+
+    /// <summary>
+    /// Called when the player uses the exit elevator in the win room.
+    /// Returns all players to the lobby via <see cref="SessionManager.RequestReturnToLobby"/>.
+    /// </summary>
+    private void HandleWinRoomReturnToLobby()
+    {
+        LogProgress("Returning from Win Room - returning to lobby.");
+        SessionManager.Instance.RequestReturnToLobby();
+    }
     #endregion
 
     #region Punishment Timer
+
+    public void StartPunishTimer_Server()
+    {
+        if (!isServer || anomalyManager.CurrentState != AnomalyManager.RoomState.PunishmentRoom) return;
+        BeginPunishmentRoomTimer_ObserversRpc(punishmentTimeLimit);
+    }
     /// <summary>
     /// Starts or restarts the punishment room timer with the specified time limit.
     /// </summary>
     /// <remarks>If a punishment timer is already running, it will be stopped and restarted with the new time
     /// limit.</remarks>
     /// <param name="timeLimit">The duration, in seconds, for which the punishment room timer should run. Must be greater than zero.</param>
-    [ObserversRpc] private void BeginPunishmentRoomTimer(float timeLimit)
+    [ObserversRpc] private void BeginPunishmentRoomTimer_ObserversRpc(float timeLimit)
     {
         if (punishmentTimerCoroutine != null)
         {
@@ -286,12 +318,14 @@ public class GameManager : NetworkBehaviour
 
         punishmentTimerCoroutine = StartCoroutine(PunishmentTimer(timeLimit));
     }
+
     /// <summary>
-    /// Runs a countdown timer for the punishment phase and resets game progress when the time limit expires.
+    /// Runs a countdown timer for the punishment phase. If the timer expires before
+    /// the player reaches the exit elevator, all players are returned to the lobby
+    /// via <see cref="SessionManager.RequestReturnToLobby"/>.
+    /// The timer logs the remaining time at one-second intervals.
     /// </summary>
-    /// <remarks>This coroutine should be started using StartCoroutine in a Unity MonoBehaviour. When the
-    /// timer completes, game progress is reset. The timer logs the remaining time at one-second intervals.</remarks>
-    /// <param name="timeLimit">The duration, in seconds, for the punishment timer. Must be greater than zero.</param>
+    /// <param name="timeLimit">The duration in seconds for the punishment timer. Must be greater than zero.</param>
     /// <returns>An enumerator that yields once per second until the timer expires.</returns>
     private IEnumerator PunishmentTimer(float timeLimit)
     {
@@ -306,8 +340,12 @@ public class GameManager : NetworkBehaviour
         }
 
         LogProgress("Punishment timer expired - resetting progress to 0");
-        if(isServer) InvokeOnPunishmentTimerExpired();
-        NewGame();
+
+        if (isServer)
+        {
+            InvokeOnPunishmentTimerExpired();
+            SessionManager.Instance.RequestReturnToLobby();
+        }
     }
     /// <summary>
     /// Stops the currently running punishment timer, if one is active.
