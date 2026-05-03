@@ -10,7 +10,6 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private FPSController movement;
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private PlayerInteraction interaction;
-    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private GameObject bodyVisuals;
     
     [Header("Local Player")]
@@ -65,9 +64,6 @@ public class PlayerBody : NetworkBehaviour
     private bool TryApplyOwnership(bool local)
     {
         Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
-        
-        if(local) playerInput.ActivateInput();
-        else playerInput.DeactivateInput();
         
         playerCamera.enabled = local;
         playerAudioListener.enabled = local;
