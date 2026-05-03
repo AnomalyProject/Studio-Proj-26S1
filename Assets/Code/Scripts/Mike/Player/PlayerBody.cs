@@ -10,7 +10,6 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private FPSController movement;
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private PlayerInteraction interaction;
-    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private GameObject bodyVisuals;
     
     [Header("Local Player")]
