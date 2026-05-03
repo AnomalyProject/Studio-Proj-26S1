@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class InteractPrompt : MonoBehaviour
 {
-    [SerializeField] private GameObject visual;
+    private GameObject visual;
 
     private void Awake()
     {
@@ -17,19 +17,16 @@ public class InteractPrompt : MonoBehaviour
         PlayerBody.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
         PlayerBody.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
     }
-
     private void OnDestroy()
     {
         PlayerBody.OnLocalPlayerSpawned -= HandleLocalPlayerSpawned;
         PlayerBody.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
     }
-
     private void HandleLocalPlayerSpawned(PlayerBody player)
     {
         player.Interaction.interactionSystem.OnFocusedInteractable += OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus += OnInteractableLostFocus;
     }
-
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
         player.Interaction.interactionSystem.OnFocusedInteractable -= OnFocusedInteractable;
