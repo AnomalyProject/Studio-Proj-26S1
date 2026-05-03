@@ -1,5 +1,6 @@
 using UnityEngine;
 using PurrNet;
+using UnityEngine.InputSystem;
 
 public class TextChatManager : NetworkBehaviour 
 {
@@ -7,7 +8,6 @@ public class TextChatManager : NetworkBehaviour
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -20,7 +20,7 @@ public class TextChatManager : NetworkBehaviour
     }
     
     [ServerRpc (requireOwnership: false)] 
-    public void SendChatMessageServerRpc(string message, ulong senderSteamID)
+    public void SendChatMessage(string message, ulong senderSteamID)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         
@@ -29,7 +29,7 @@ public class TextChatManager : NetworkBehaviour
             message = message.Substring(0, maxMessageLength); 
         }
 
-        string displayName = "Unknown Player";
+        string displayName = "John Anomaly";
         
         SessionData currentSession = SessionManager.Instance.CurrentSession; 
         
@@ -38,7 +38,9 @@ public class TextChatManager : NetworkBehaviour
             PlayerSessionInfo? playerInfo = currentSession.GetPlayer(senderSteamID);
             if (playerInfo.HasValue)
             {
-                displayName = playerInfo.Value.DisplayName;
+                string name = playerInfo.Value.DisplayName;
+                string hexColor = PlayerColour.GetHex(playerInfo.Value.ColorIndex);
+                displayName = $"<color={hexColor}>{name}</color>";
             }
             else
             {
@@ -50,7 +52,7 @@ public class TextChatManager : NetworkBehaviour
         BroadcastMessage(displayName, message);
     }
     
-    [ObserversRpc] 
+    [ObserversRpc(bufferLast: true)] //Save last RPC message to be broadcasted to the next player that joins the room 
     private void BroadcastMessage(string displayName, string message)
     {
         if (ChatUI.Instance != null)
@@ -58,4 +60,11 @@ public class TextChatManager : NetworkBehaviour
             ChatUI.Instance.ReceiveMessage(displayName, message);
         }
     }
+
+    /* //Testing input handling with component
+    public void SetInputState(PlayerInput input)
+    {
+        input = GetComponent<PlayerInput>();
+    }
+    */
 }
