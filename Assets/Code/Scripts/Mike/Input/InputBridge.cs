@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public static class InputBridge
 {
-    public enum InputContext  // WARNING: Dont forget to assign new values in the dictionary inside the constructor.
-    { 
-        Player, 
-        UI, 
+    public enum InputContext
+    {
+        [InputContextConfig(mapName: nameof(IA_Global.Player), cursorVisible: false)]
+        Player,
+
+        [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
+        UI,
+
+        [InputContextConfig(mapName: nameof(IA_Global.DevConsole), cursorVisible: true)]
         DevConsole 
     }
 
@@ -31,24 +37,15 @@ public static class InputBridge
     static readonly Dictionary<InputContext, MapCursorPair> contextMap;
 
     public static IA_Global Actions { get; private set; }
-    public static IA_Global.PlayerActions Player => Actions.Player;
-    public static IA_Global.UIActions UI => Actions.UI;
-    public static IA_Global.DevConsoleActions DevConsole => Actions.DevConsole;
 
     static InputBridge()
     {
         Actions = new IA_Global();
+        contextMap = BuildContextMap();
+
         Actions.Global.SetCallbacks(new GlobalInputCallbacks());
-
-        contextMap = new() // Assign any new enum-map value here.
-        {
-            [InputContext.Player] = new MapCursorPair(map: Actions.Player.Get(), cursorVisible: false),
-            [InputContext.UI] = new MapCursorPair(map: Actions.UI.Get(), cursorVisible: true),
-            [InputContext.DevConsole] = new MapCursorPair(map: Actions.DevConsole.Get(), cursorVisible: true)
-        };
-
-        SetContext(InputContext.Player);
         Actions.Global.Enable();
+        SetContext(InputContext.Player);
     }
 
     /// <summary>
@@ -91,5 +88,22 @@ public static class InputBridge
     {
         Cursor.visible = visible;
         Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+    static Dictionary<InputContext, MapCursorPair> BuildContextMap()
+    {
+        var map = new Dictionary<InputContext, MapCursorPair>();
+
+        foreach (InputContext context in Enum.GetValues(typeof(InputContext)))
+        {
+            FieldInfo field = typeof(InputContext).GetField(context.ToString());
+            var attribute = field.GetCustomAttribute<InputContextConfigAttribute>();
+
+            if (attribute == null) throw new Exception($"[InputBridge] InputContext.{context} is missing an InputContextConfig attribute.");
+
+            InputActionMap actionMap = Actions.asset.FindActionMap(attribute.MapName, throwIfNotFound: true);
+            map[context] = new MapCursorPair(actionMap, attribute.CursorVisible);
+        }
+
+        return map;
     }
 }

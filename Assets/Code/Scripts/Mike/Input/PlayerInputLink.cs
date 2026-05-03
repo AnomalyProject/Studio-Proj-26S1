@@ -23,7 +23,7 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
 
     private void SubscribeInput()
     {
-        if (playerBody.isOwner) InputBridge.Player.SetCallbacks(this);
+        if (playerBody.isOwner) InputBridge.Actions.Player.SetCallbacks(this);
     }
 
     void IA_Global.IPlayerActions.OnCrouch(InputAction.CallbackContext context) => onCrouch.Invoke(context);
