@@ -20,7 +20,7 @@ public class TextChatManager : NetworkBehaviour
     }
     
     [ServerRpc (requireOwnership: false)] 
-    public void SendChatMessage(string message, RPCInfo info = default)
+    public void SendChatMessage(string message, ulong senderSteamID)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         
@@ -28,16 +28,27 @@ public class TextChatManager : NetworkBehaviour
         {
             message = message.Substring(0, maxMessageLength); 
         }
+
+        string displayName = "John Anomaly";
         
-        if (SessionManager.Instance == null || !SessionManager.Instance.TryGetPlayerForConnection(info.sender, out PlayerSessionInfo playerInfo))
+        SessionData currentSession = SessionManager.Instance.CurrentSession; 
+        
+        if (currentSession != null)
         {
-            Debug.LogWarning($"[ChatManager] Message rejected from unknown player: {info.sender}");
-            return;
+            PlayerSessionInfo? playerInfo = currentSession.GetPlayer(senderSteamID);
+            if (playerInfo.HasValue)
+            {
+                string name = playerInfo.Value.DisplayName;
+                string hexColor = PlayerColour.GetHex(playerInfo.Value.ColorIndex);
+                displayName = $"<color={hexColor}>{name}</color>";
+            }
+            else
+            {
+                Debug.LogWarning($"[ChatManager] Received message from unknown SteamID: {senderSteamID}");
+                return;
+            }
         }
         
-        string hexColor = PlayerColour.GetHex(playerInfo.ColorIndex);
-        string displayName = $"<color={hexColor}>{playerInfo.DisplayName}</color>";
-
         BroadcastMessage(displayName, message);
     }
     

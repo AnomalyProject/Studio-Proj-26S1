@@ -328,20 +328,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return null;
     }
     
-    public bool TryGetPlayerForConnection(PlayerID playerID, out PlayerSessionInfo playerInfo)
-    {
-        playerInfo = default;
-
-        if (!playerConnectionMap.TryGetValue(playerID, out ulong steamID)) return false;
-
-        PlayerSessionInfo? foundPlayer = sessionData?.GetPlayer(steamID);
-
-        if (!foundPlayer.HasValue) return false;
-
-        playerInfo = foundPlayer.Value;
-        return true;
-    }
-    
     /// <summary>
     /// Creates a client facing snapshot of the current session by coping only th e
     /// public, serializable data the client needs from the authoritative session state.
