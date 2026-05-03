@@ -135,10 +135,10 @@ public class GameManager : NetworkBehaviour
                 break;
 
             case AnomalyManager.RoomState.WinRoom:
-                SetElevatorInteraction(entryEnabled: true, exitEnabled: false);
+                SetElevatorInteraction(entryEnabled: true, exitEnabled: true);
                 SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
                 OnGameWon?.Invoke();
-                LogProgress("Game won! Use the entry elevator to play again!");
+                LogProgress("Game won! Use the entry elevator to play again, or use the exit elevator to return to the Lobby!");
                 break;
         }
     }
