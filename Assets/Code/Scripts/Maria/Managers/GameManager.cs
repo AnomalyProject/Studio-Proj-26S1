@@ -156,6 +156,8 @@ public class GameManager : NetworkBehaviour
         usedElevator.SetInteraction(false);
         mapChangeCoroutine = StartCoroutine(PerformMapChange());
 
+        StopPunishmentTimer();
+
         IEnumerator PerformMapChange()
         {
             yield return new WaitForSeconds(mapChangeDelay);
@@ -240,7 +242,8 @@ public class GameManager : NetworkBehaviour
     private void HandlePunishmentRoomEntry()
     {
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
-        BeginPunishmentRoomTimer(punishmentTimeLimit);
+
+        //BeginPunishmentRoomTimer_ObserversRpc(punishmentTimeLimit);
 
         OnWrongDecision?.Invoke();
         LogProgress($"Wrong decision — punishment room. Use the exit elevator to resume." +
@@ -253,9 +256,7 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     private void HandlePunishmentRoomExit()
     {
-        StopPunishmentTimer();
         if(isServer) anomalyManager.DecideNextMapVariation();
-
         LogProgress("Resuming from punishment room.");
     }
 
@@ -270,7 +271,9 @@ public class GameManager : NetworkBehaviour
         if (decision) HandleWinRoomReplay();
         else HandleWinRoomReturnToLobby();
     }
+    #endregion
 
+    #region Win Room Logic
     /// <summary>
     /// Called when the player uses the entry elevator in the win room.
     /// Resets the game entirely back to progress 0 and starts the loop again.
@@ -293,13 +296,19 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Punishment Timer
+
+    public void StartPunishTimer_Server()
+    {
+        if (!isServer || anomalyManager.CurrentState != AnomalyManager.RoomState.PunishmentRoom) return;
+        BeginPunishmentRoomTimer_ObserversRpc(punishmentTimeLimit);
+    }
     /// <summary>
     /// Starts or restarts the punishment room timer with the specified time limit.
     /// </summary>
     /// <remarks>If a punishment timer is already running, it will be stopped and restarted with the new time
     /// limit.</remarks>
     /// <param name="timeLimit">The duration, in seconds, for which the punishment room timer should run. Must be greater than zero.</param>
-    [ObserversRpc] private void BeginPunishmentRoomTimer(float timeLimit)
+    [ObserversRpc] private void BeginPunishmentRoomTimer_ObserversRpc(float timeLimit)
     {
         if (punishmentTimerCoroutine != null)
         {
