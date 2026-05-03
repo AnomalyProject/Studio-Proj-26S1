@@ -115,7 +115,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""e3f8c3a3-9c67-4b78-91d9-7e273567e142"",
-                    ""path"": """",
+                    ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

@@ -37,19 +37,7 @@ public static class InputBridge
     public static IA_Global Actions { get; private set; }
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
     static InputContext previousContext = InputContext.Player;
-    static readonly Dictionary<InputContext, MapCursorPair> contextMap;
-    #endregion
-
-    #region Constructor
-    static InputBridge()
-    {
-        Actions = new IA_Global();
-        contextMap = BuildContextMap();
-
-        Actions.Global.SetCallbacks(new GlobalInputCallbacks());
-        Actions.Global.Enable();
-        SetContext(InputContext.Player);
-    }
+    static Dictionary<InputContext, MapCursorPair> contextMap;
     #endregion
 
     #region Exposed Methods
@@ -94,6 +82,16 @@ public static class InputBridge
     #endregion
 
     #region Helpers
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Init()
+    {
+        Actions = new IA_Global();
+        contextMap = BuildContextMap();
+
+        Actions.Global.SetCallbacks(new GlobalInputCallbacks());
+        Actions.Global.Enable();
+        SetContext(InputContext.Player);
+    }
     static void SetCursor(bool visible)
     {
         Cursor.visible = visible;
