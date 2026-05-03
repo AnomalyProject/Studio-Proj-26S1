@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 public static class InputBridge
 {
-    public enum InputContext
+    public enum InputContext // Assign InputContextConfig attribute on each new enum value
     {
         [InputContextConfig(mapName: nameof(IA_Global.Player), cursorVisible: false)]
         Player,
