@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public static class InputBridge
 {
-    public enum InputContext  // Dont forget to assign new values in the dictionary inside the constructor.
+    public enum InputContext  // WARNING: Dont forget to assign new values in the dictionary inside the constructor.
     { 
         Player, 
         UI, 
@@ -15,12 +15,12 @@ public static class InputBridge
     struct MapCursorPair
     {
         public InputActionMap map { get; private set; }
-        public bool cursorVisibility { get; private set; }
+        public bool cursorVisible { get; private set; }
 
-        public MapCursorPair(InputActionMap map, bool cursorVisibility)
+        public MapCursorPair(InputActionMap map, bool cursorVisible)
         {
             this.map = map;
-            this.cursorVisibility = cursorVisibility;
+            this.cursorVisible = cursorVisible;
         }
     }
 
@@ -38,15 +38,13 @@ public static class InputBridge
     static InputBridge()
     {
         Actions = new IA_Global();
-
-        Actions.Global.ToggleDev.started += _ => ToggleContext(InputContext.DevConsole);
-        Actions.Global.ToggleUI.started += _ => ToggleContext(InputContext.UI);
+        Actions.Global.SetCallbacks(new GlobalInputCallbacks());
 
         contextMap = new() // Assign any new enum-map value here.
         {
-            [InputContext.Player] = new MapCursorPair(Actions.Player.Get(), false),
-            [InputContext.UI] = new MapCursorPair(Actions.UI.Get(), true),
-            [InputContext.DevConsole] = new MapCursorPair(Actions.DevConsole.Get(), true)
+            [InputContext.Player] = new MapCursorPair(map: Actions.Player.Get(), cursorVisible: false),
+            [InputContext.UI] = new MapCursorPair(map: Actions.UI.Get(), cursorVisible: true),
+            [InputContext.DevConsole] = new MapCursorPair(map: Actions.DevConsole.Get(), cursorVisible: true)
         };
 
         SetContext(InputContext.Player);
@@ -71,7 +69,7 @@ public static class InputBridge
         var pair = contextMap[context];
 
         pair.map.Enable();
-        SetCursor(pair.cursorVisibility);
+        SetCursor(pair.cursorVisible);
         OnContextChanged?.Invoke(context);
     }
 
