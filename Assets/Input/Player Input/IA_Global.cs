@@ -126,7 +126,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""11894a8a-1b60-4710-9e6b-003c70c4ec8d"",
-                    ""path"": """",
+                    ""path"": ""<Keyboard>/backquote"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
