@@ -1,9 +1,8 @@
-using PurrNet;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEngine;
+using PurrNet;
 public class Inventory : NetworkModule
 {
     #region Events

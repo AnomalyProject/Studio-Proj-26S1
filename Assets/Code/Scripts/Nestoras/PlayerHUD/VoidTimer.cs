@@ -2,6 +2,11 @@ using UnityEngine;
 using System;
 using TMPro;
 
+/// <summary>
+/// Nestoras Angelopoulos
+/// 
+/// Timer for the Void area.
+/// </summary>
 public class VoidTimer : MonoBehaviour
 {
     private TextMeshProUGUI timerText;
@@ -19,7 +24,7 @@ public class VoidTimer : MonoBehaviour
 
         anomalyManager.OnStateChanged += (state) =>
         {
-            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false); 
+            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false);
         };
         gameManager.OnPunishmentTimerExpired.AddListener(() => timerText.color = Color.red);
 
