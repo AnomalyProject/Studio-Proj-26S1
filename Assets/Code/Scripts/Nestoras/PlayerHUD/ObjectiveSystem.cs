@@ -43,7 +43,7 @@ public class ObjectiveSystem : MonoBehaviour
     {
         objective.enabled = true;
         if (progress == 1) objective.text = "If you spot anything different, turn back. Otherwise, keep going.";
-        else objective.enabled = false;
+        else if (progress != 0) objective.enabled = false;
     }
 
     private void ResetTutorial()

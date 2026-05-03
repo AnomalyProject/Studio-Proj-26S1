@@ -39,6 +39,17 @@
                 },
                 {
                     "name": "",
+                    "id": "200ba659-6f5c-4be6-b820-1ba3b13739ae",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle UI",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "11894a8a-1b60-4710-9e6b-003c70c4ec8d",
                     "path": "<Keyboard>/backquote",
                     "interactions": "",
@@ -140,15 +151,6 @@
                     "type": "PassThrough",
                     "id": "3a49ff37-de95-43e3-974c-bcf4a4b5926a",
                     "expectedControlType": "Quaternion",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Toggle Pause Menu",
-                    "type": "Button",
-                    "id": "caa3efe6-e277-4539-8782-eb1f585a6315",
-                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -594,28 +596,6 @@
                     "action": "TrackedDeviceOrientation",
                     "isComposite": false,
                     "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f3d0a080-cc51-4225-9582-e44399787286",
-                    "path": "<Keyboard>/escape",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Toggle Pause Menu",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b7e14c5e-b57d-418a-96dc-064dfbfe4ff1",
-                    "path": "<Gamepad>/start",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Toggle Pause Menu",
-                    "isComposite": false,
-                    "isPartOfComposite": false
                 }
             ]
         },
@@ -712,6 +692,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Open Bug Reporter",
+                    "type": "Button",
+                    "id": "f93edaaa-3c57-4ea4-803c-52169b28e90d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 },
                 {
                     "name": "Look",
@@ -877,6 +866,17 @@
                     "processors": "",
                     "groups": ";Gameplay",
                     "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3444c949-7183-4bb8-8850-c52c5fac6cb5",
+                    "path": "<Keyboard>/f8",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Open Bug Reporter",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -1132,6 +1132,34 @@
                     "action": "Scroll Inventory",
                     "isComposite": false,
                     "isPartOfComposite": true
+                }
+            ]
+        },
+        {
+            "name": "BugReporter",
+            "id": "21368ab6-ee67-49ba-85bd-58d98e4ff7e4",
+            "actions": [
+                {
+                    "name": "Close",
+                    "type": "Button",
+                    "id": "2bbe58ca-e9e0-4caf-b9b5-adfa0910cbe1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "0363a57f-a636-4d79-92c6-29dcc72df2a0",
+                    "path": "<Keyboard>/f8",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Close",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

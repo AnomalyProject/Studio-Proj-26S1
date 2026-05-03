@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
 
 public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
 {
@@ -11,7 +11,7 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
     [SerializeField] UnityEvent<InputAction.CallbackContext> 
         onCrouch, onInteract, onLeanLeft, onLeanRight, 
         onLook, onMove, onNextItem, onPreviousItem, onScrollInventory,
-        onSprint, onUseFocusedItem, onZoom;
+        onSprint, onUseFocusedItem, onZoom, onOpenBugReporter;
 
     #endregion
 
@@ -42,4 +42,5 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
     void IA_Global.IPlayerActions.OnSprint(InputAction.CallbackContext context) => onSprint.Invoke(context);
     void IA_Global.IPlayerActions.OnUseFocusedItem(InputAction.CallbackContext context) => onUseFocusedItem.Invoke(context);
     void IA_Global.IPlayerActions.OnZoom(InputAction.CallbackContext context) => onZoom.Invoke(context);
+    void IA_Global.IPlayerActions.OnOpenBugReporter(InputAction.CallbackContext context) => onOpenBugReporter.Invoke(context);
 }

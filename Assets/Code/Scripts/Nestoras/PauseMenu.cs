@@ -4,63 +4,35 @@ using UnityEngine;
 /// <summary>
 /// Nestoras Angelopoulos
 /// 
-/// Pause menu that toggles the player's cursor and input.
+/// Pause menu that also toggles the player's input context.
 /// </summary>
 public class PauseMenu : MonoBehaviour
 {
-    private IA_UserInterface UIInputActions;
-    private PlayerInput playerInput;
+    private InputAction togglePauseAction;
     private Transform root;
 
     private bool isPaused;
 
     private void Awake()
     {
-        UIInputActions = new IA_UserInterface();
+        togglePauseAction = InputBridge.Actions.FindAction("Toggle UI");
         root = transform.GetChild(0);
-
-        if (PlayerBody.localPlayerBody != null) HookToLocalPlayer(PlayerBody.localPlayerBody);
-        PlayerBody.OnLocalPlayerSpawned += HookToLocalPlayer;
-        PlayerBody.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
-
     }
-    private void OnEnable()
+    private void OnEnable() => togglePauseAction.performed += TogglePauseMenu;
+    private void OnDisable() => togglePauseAction.performed -= TogglePauseMenu;
+    public void TogglePauseMenu(InputAction.CallbackContext context)
     {
-        UIInputActions.Enable();
-        UIInputActions.UI.TogglePauseMenu.performed += TogglePauseMenu;
-    }
-    private void OnDisable()
-    {
-        UIInputActions.Disable();
-        UIInputActions.UI.TogglePauseMenu.performed -= TogglePauseMenu;
-    }
-
-    private void HookToLocalPlayer(PlayerBody player)
-    {
-        playerInput = player.GetComponent<PlayerInput>();
-        if (isPaused) playerInput.DeactivateInput();
-    }
-    private void HandleLocalPlayerDespawned(PlayerBody player) => playerInput = null;
-
-    public void TogglePauseMenu(InputAction.CallbackContext context) => TogglePauseMenu();
-    public void TogglePauseMenu()
-    {
+        if (InputBridge.CurrentContext != InputBridge.InputContext.Player && InputBridge.CurrentContext != InputBridge.InputContext.UI) return;
         isPaused = !isPaused;
         root.gameObject.SetActive(isPaused);
-
-        if (isPaused)
-        {
-            if (playerInput != null) playerInput.DeactivateInput();
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            if (playerInput != null) playerInput.ActivateInput();
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
     }
+    public void Resume()
+    {
+        if (InputBridge.CurrentContext != InputBridge.InputContext.UI) return;
+        InputBridge.SetContext(InputBridge.InputContext.Player);
+        TogglePauseMenu(new InputAction.CallbackContext());
+    }
+
     public void BackToMenu() => SessionModeManager.Instance.ReturnToMenu();
     public void QuitGame() => DevConsole.commands["exit"].Execute(null);
 }

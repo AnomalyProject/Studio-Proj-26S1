@@ -13,7 +13,7 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
         if (ctx.started)
         {
             if (CurrentContext == InputContext.UI) SetContext(InputContext.Player);
-            else SetContext(InputContext.UI);
+            else if (CurrentContext == InputContext.Player) SetContext(InputContext.UI);
         }
     }
 }
