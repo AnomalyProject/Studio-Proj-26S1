@@ -22,7 +22,6 @@ public class InventoryUI : MonoBehaviour
 
     [SerializeField] private GameObject inventorySlotPrefab;
     private PlayerInventory playerInventory;
-    private InputAction scrollInventoryAction;
     private Transform UI;
 
     [SerializeField] private float focusedSlotScale = 1.2f;
@@ -30,7 +29,6 @@ public class InventoryUI : MonoBehaviour
     private void Awake()
     {
         UI = transform.GetChild(0);
-        scrollInventoryAction = InputBridge.Actions.FindAction("Scroll Inventory");
 
         if (PlayerBody.localPlayerBody != null) ConstructInventory(PlayerBody.localPlayerBody);
         PlayerBody.OnLocalPlayerSpawned += ConstructInventory;
@@ -43,6 +41,8 @@ public class InventoryUI : MonoBehaviour
     }
     private void ConstructInventory(PlayerBody player)
     {
+        if (playerInventory != null) return;
+
         playerInventory = player.GetComponent<PlayerInventory>();
         playerInventory.OnFocusedIndexChanged += SwitchSlot;
 
