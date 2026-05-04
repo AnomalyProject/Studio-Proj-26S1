@@ -23,6 +23,14 @@ public class ElevatorExit : LevelExitPoint
 
     private void Start()
     {
+
+    }
+
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+        if (asServer) return;
+
         if (openOnStart) OpenDoors();
     }
 
