@@ -52,7 +52,7 @@ public class ChatUI : MonoBehaviour
         chatInputActions.Chat.ToggleChat.performed += OnToggleChatPerformed;
         chatInputField.onSubmit.AddListener(OnChatSubmit);
 
-        GameStateManager.OnStateChanged += OnGameStateChanged;
+        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
     
     private void OnDisable()
@@ -61,7 +61,7 @@ public class ChatUI : MonoBehaviour
         chatInputActions.Chat.ToggleChat.performed -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
         
-        GameStateManager.OnStateChanged -= OnGameStateChanged;
+        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
     
     private void OnToggleChatPerformed(InputAction.CallbackContext context)
@@ -151,11 +151,7 @@ public class ChatUI : MonoBehaviour
     
     private void OnGameStateChanged(GameState previous, GameState next)
     {
-        if (next == GameState.Menu)
-        {
-            ClearChat();
-        }
-
+        if (next == GameState.Menu) ClearChat();
     }
 
 }
