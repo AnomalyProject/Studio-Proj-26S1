@@ -51,13 +51,17 @@ public class ChatUI : MonoBehaviour
         chatInputActions.Chat.Enable();
         chatInputActions.Chat.ToggleChat.performed += OnToggleChatPerformed;
         chatInputField.onSubmit.AddListener(OnChatSubmit);
-    }
 
+        GameStateManager.OnStateChanged += OnGameStateChanged;
+    }
+    
     private void OnDisable()
     {
         chatInputActions.Chat.Disable();
         chatInputActions.Chat.ToggleChat.performed -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
+        
+        GameStateManager.OnStateChanged -= OnGameStateChanged;
     }
     
     private void OnToggleChatPerformed(InputAction.CallbackContext context)
@@ -114,6 +118,13 @@ public class ChatUI : MonoBehaviour
         
         lastCloseTime = Time.unscaledTime;
     }
+
+    private void ClearChat()
+    {
+        chatHistoryText.text = "";
+        CloseChat();
+    }
+    
     public void ReceiveMessage(string displayName, string message)
     {
         string formattedMessage = $"<b>[{displayName}]:</b> {message}\n";
@@ -137,4 +148,14 @@ public class ChatUI : MonoBehaviour
             playerInput.enabled = !chatIsOpen;
         }
     }
+    
+    private void OnGameStateChanged(GameState previous, GameState next)
+    {
+        if (next == GameState.Menu)
+        {
+            ClearChat();
+        }
+
+    }
+
 }
