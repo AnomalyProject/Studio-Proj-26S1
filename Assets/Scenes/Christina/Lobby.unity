@@ -23796,11 +23796,43 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9079900345191245677, guid: fb202e1cda309c4428102a87b9310147, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4659662820949082188, guid: fb202e1cda309c4428102a87b9310147, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1843029979}
   m_SourcePrefab: {fileID: 100100000, guid: fb202e1cda309c4428102a87b9310147, type: 3}
+--- !u!1 &1843029978 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4659662820949082188, guid: fb202e1cda309c4428102a87b9310147, type: 3}
+  m_PrefabInstance: {fileID: 1843029977}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1843029979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1843029978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ced7bf28cdbee104e8cdc34ab761b039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.PlayerSpawner
+  playerPrefab: {fileID: 0}
+  _playerPrefab: {fileID: 4722490883632117968, guid: c096fa1219a645f43a22ed1b050e811a, type: 3}
+  _ignoreNetworkRules: 0
+  spawnPoints:
+  - {fileID: 1601613332}
+  - {fileID: 550329122}
+  - {fileID: 1058568374}
+  - {fileID: 1379786222}
 --- !u!1001 &1846527986
 PrefabInstance:
   m_ObjectHideFlags: 0
