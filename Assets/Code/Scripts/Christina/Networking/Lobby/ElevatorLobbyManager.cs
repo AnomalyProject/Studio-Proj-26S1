@@ -9,7 +9,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     private Coroutine loadCoroutine;
     
-    private void OnEnable()
+    /*private void OnEnable()
     {
         SessionManager.OnServerSessionChanged += CheckElevatorReady;
     }
@@ -17,7 +17,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     private void OnDisable()
     {
         SessionManager.OnServerSessionChanged -= CheckElevatorReady;
-    }
+    }*/
     
     public void PlayerEntered(PlayerID playerID)
     {
@@ -28,11 +28,10 @@ public class ElevatorLobbyManager : NetworkBehaviour
     {
         SessionManager.Instance.SetPlayerInElevator(playerID, false);
 
-        if (SessionManager.Instance.CurrentElevatorState == ElevatorLobbyState.DoorsClosing)
-            CancelDeparture();
+        if (SessionManager.Instance.CurrentElevatorState == ElevatorLobbyState.DoorsClosing) CancelDeparture();
     }
     
-    private void CheckElevatorReady()
+    /*private void CheckElevatorReady()
     {
         if (!isServer) return;
         if (SessionManager.Instance == null) return;
@@ -41,7 +40,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
         {
             StartDeparture();
         }
-    }
+    }*/
     
     private void StartDeparture()
     {
@@ -92,6 +91,17 @@ public class ElevatorLobbyManager : NetworkBehaviour
 
         elevatorExit.OpenDoors();
         OpenDoors_ObserversRpc();
+    }
+    
+    public void RequestDeparture()
+    {
+        if (!isServer) return;
+        if (SessionManager.Instance == null) return;
+
+        if (!SessionManager.Instance.CanStartElevatorSequence())
+            return;
+
+        StartDeparture();
     }
 
     [ObserversRpc(runLocally: false)]
