@@ -82,7 +82,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (stack.GetItemData().ItemPrefab == null) return;
 
-        GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
+        GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab.gameObject, parent: itemHolder);
         itemInstances.Add(stack.GetID(), itemObject);
 
         if (activeInstance == null) ChangeFocused(slotIndex);

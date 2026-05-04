@@ -17,5 +17,5 @@ public class ItemData : ScriptableObject
     public bool IsConsumable => _isConsumable;
     public int MaxStackSize => _maxStackSize;
     public int PricePerUnit => _vendorPrice;
-    public GameObject ItemPrefab => _itemPrefab.gameObject;
+    public PlayerItem ItemPrefab => _itemPrefab;
 }

@@ -8,14 +8,18 @@ using TMPro;
 /// </summary>
 public class ObjectiveSystem : MonoBehaviour
 {
-    private TextMeshProUGUI objective;
+    [SerializeField] private TextMeshProUGUI objective;
 
     private void Awake()
     {
-        objective = GetComponentInChildren<TextMeshProUGUI>(true);
         GameManager.OnInitialized += InitManager;
+        GameManager.OnDestroyed += HandleManagerDestruction;
     }
-
+    private void OnDestroy()
+    {
+        GameManager.OnInitialized -= InitManager;
+        GameManager.OnDestroyed -= HandleManagerDestruction;
+    }
     private void InitManager(GameManager gameManager)
     {
         if (gameManager == null) return;
@@ -24,12 +28,19 @@ public class ObjectiveSystem : MonoBehaviour
         gameManager.OnProgressChanged.AddListener(UpdateObjective);
         gameManager.OnWrongDecision.AddListener(ExplainVoid);
 
-        gameManager.AnomalyManager.OnStateChanged += (state) =>
-        {
-            if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(gameManager.CurrentProgress);
-        };
+        gameManager.AnomalyManager.OnStateChanged += HandleStateChanged;
 
         ResetTutorial();
+    }
+
+    private void HandleStateChanged(AnomalyManager.RoomState state)
+    {
+        if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(GameManager.Instance.CurrentProgress);
+    }
+
+    private void HandleManagerDestruction(GameManager gameManager)
+    {
+        gameManager.AnomalyManager.OnStateChanged -= HandleStateChanged;
     }
 
     private void ExplainVoid()

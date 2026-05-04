@@ -12,11 +12,16 @@ public class VoidTimer : MonoBehaviour
     private TextMeshProUGUI timerText;
     private Color defaultColor;
 
-    private void Awake()
+    private void Start()
     {
         timerText = GetComponentInChildren<TextMeshProUGUI>(true);
         defaultColor = timerText.color;
         GameManager.OnInitialized += InitManager;
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.OnInitialized -= InitManager;
     }
 
     private void InitManager(GameManager gameManager)
