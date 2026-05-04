@@ -21,7 +21,8 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
     {
         if (ctx.started)
         {
-            if (CurrentContext == InputContext.DevConsole) return; // Don't allow toggling UI while in dev console
+            // Don't allow toggling bug reporter from the dev console
+            if (CurrentContext == InputContext.DevConsole) return;
             ToggleContext(InputContext.BugReporter);
         }
     }
@@ -30,7 +31,8 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
     {
         if (ctx.started)
         {
-            if (CurrentContext == InputContext.DevConsole) return; // Don't allow toggling UI while in dev console
+            // Don't allow opening chat unless we're in the player context
+            if (CurrentContext != InputContext.Player) return;
             if (CurrentContext != InputContext.Chat) SetContext(InputContext.Chat);
         }
     }
