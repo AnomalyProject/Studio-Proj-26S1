@@ -109,6 +109,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Bug"",
+                    ""type"": ""Button"",
+                    ""id"": ""9c9f642a-070b-41bd-bcaf-f5c4f403b872"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -142,6 +151,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Toggle Dev"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""51f3c17d-4ef6-45e3-afb1-592f00b1254f"",
+                    ""path"": ""<Keyboard>/f8"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Bug"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2960acff-8b0f-43d6-9ddd-608bc5a33164"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Bug"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -780,15 +811,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Open Bug Reporter"",
-                    ""type"": ""Button"",
-                    ""id"": ""f93edaaa-3c57-4ea4-803c-52169b28e90d"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""Look"",
                     ""type"": ""Value"",
                     ""id"": ""0222da8d-588f-4a5c-95f4-0f1bf20c2940"",
@@ -952,17 +974,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Gameplay"",
                     ""action"": ""Move"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""3444c949-7183-4bb8-8850-c52c5fac6cb5"",
-                    ""path"": ""<Keyboard>/f8"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Open Bug Reporter"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -1220,34 +1231,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": true
                 }
             ]
-        },
-        {
-            ""name"": ""BugReporter"",
-            ""id"": ""21368ab6-ee67-49ba-85bd-58d98e4ff7e4"",
-            ""actions"": [
-                {
-                    ""name"": ""Close"",
-                    ""type"": ""Button"",
-                    ""id"": ""2bbe58ca-e9e0-4caf-b9b5-adfa0910cbe1"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                }
-            ],
-            ""bindings"": [
-                {
-                    ""name"": """",
-                    ""id"": ""0363a57f-a636-4d79-92c6-29dcc72df2a0"",
-                    ""path"": ""<Keyboard>/f8"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Close"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                }
-            ]
         }
     ],
     ""controlSchemes"": []
@@ -1256,6 +1239,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
         m_Global_ToggleUI = m_Global.FindAction("Toggle UI", throwIfNotFound: true);
         m_Global_ToggleDev = m_Global.FindAction("Toggle Dev", throwIfNotFound: true);
+        m_Global_ToggleBug = m_Global.FindAction("Toggle Bug", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1275,7 +1259,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
-        m_Player_OpenBugReporter = m_Player.FindAction("Open Bug Reporter", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
@@ -1287,9 +1270,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_UseFocusedItem = m_Player.FindAction("Use Focused Item", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
-        // BugReporter
-        m_BugReporter = asset.FindActionMap("BugReporter", throwIfNotFound: true);
-        m_BugReporter_Close = m_BugReporter.FindAction("Close", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1298,7 +1278,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_UI.enabled, "This will cause a leak and performance issues, IA_Global.UI.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_DevConsole.enabled, "This will cause a leak and performance issues, IA_Global.DevConsole.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
-        UnityEngine.Debug.Assert(!m_BugReporter.enabled, "This will cause a leak and performance issues, IA_Global.BugReporter.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1376,6 +1355,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private List<IGlobalActions> m_GlobalActionsCallbackInterfaces = new List<IGlobalActions>();
     private readonly InputAction m_Global_ToggleUI;
     private readonly InputAction m_Global_ToggleDev;
+    private readonly InputAction m_Global_ToggleBug;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -1395,6 +1375,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleDev".
         /// </summary>
         public InputAction @ToggleDev => m_Wrapper.m_Global_ToggleDev;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleBug".
+        /// </summary>
+        public InputAction @ToggleBug => m_Wrapper.m_Global_ToggleBug;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1427,6 +1411,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleDev.started += instance.OnToggleDev;
             @ToggleDev.performed += instance.OnToggleDev;
             @ToggleDev.canceled += instance.OnToggleDev;
+            @ToggleBug.started += instance.OnToggleBug;
+            @ToggleBug.performed += instance.OnToggleBug;
+            @ToggleBug.canceled += instance.OnToggleBug;
         }
 
         /// <summary>
@@ -1444,6 +1431,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleDev.started -= instance.OnToggleDev;
             @ToggleDev.performed -= instance.OnToggleDev;
             @ToggleDev.canceled -= instance.OnToggleDev;
+            @ToggleBug.started -= instance.OnToggleBug;
+            @ToggleBug.performed -= instance.OnToggleBug;
+            @ToggleBug.canceled -= instance.OnToggleBug;
         }
 
         /// <summary>
@@ -1784,7 +1774,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_Move;
-    private readonly InputAction m_Player_OpenBugReporter;
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Crouch;
@@ -1811,10 +1800,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Move".
         /// </summary>
         public InputAction @Move => m_Wrapper.m_Player_Move;
-        /// <summary>
-        /// Provides access to the underlying input action "Player/OpenBugReporter".
-        /// </summary>
-        public InputAction @OpenBugReporter => m_Wrapper.m_Player_OpenBugReporter;
         /// <summary>
         /// Provides access to the underlying input action "Player/Look".
         /// </summary>
@@ -1888,9 +1873,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
-            @OpenBugReporter.started += instance.OnOpenBugReporter;
-            @OpenBugReporter.performed += instance.OnOpenBugReporter;
-            @OpenBugReporter.canceled += instance.OnOpenBugReporter;
             @Look.started += instance.OnLook;
             @Look.performed += instance.OnLook;
             @Look.canceled += instance.OnLook;
@@ -1938,9 +1920,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
-            @OpenBugReporter.started -= instance.OnOpenBugReporter;
-            @OpenBugReporter.performed -= instance.OnOpenBugReporter;
-            @OpenBugReporter.canceled -= instance.OnOpenBugReporter;
             @Look.started -= instance.OnLook;
             @Look.performed -= instance.OnLook;
             @Look.canceled -= instance.OnLook;
@@ -2007,102 +1986,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="PlayerActions" /> instance referencing this action map.
     /// </summary>
     public PlayerActions @Player => new PlayerActions(this);
-
-    // BugReporter
-    private readonly InputActionMap m_BugReporter;
-    private List<IBugReporterActions> m_BugReporterActionsCallbackInterfaces = new List<IBugReporterActions>();
-    private readonly InputAction m_BugReporter_Close;
-    /// <summary>
-    /// Provides access to input actions defined in input action map "BugReporter".
-    /// </summary>
-    public struct BugReporterActions
-    {
-        private @IA_Global m_Wrapper;
-
-        /// <summary>
-        /// Construct a new instance of the input action map wrapper class.
-        /// </summary>
-        public BugReporterActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
-        /// <summary>
-        /// Provides access to the underlying input action "BugReporter/Close".
-        /// </summary>
-        public InputAction @Close => m_Wrapper.m_BugReporter_Close;
-        /// <summary>
-        /// Provides access to the underlying input action map instance.
-        /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_BugReporter; }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
-        public void Enable() { Get().Enable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
-        public void Disable() { Get().Disable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
-        public bool enabled => Get().enabled;
-        /// <summary>
-        /// Implicitly converts an <see ref="BugReporterActions" /> to an <see ref="InputActionMap" /> instance.
-        /// </summary>
-        public static implicit operator InputActionMap(BugReporterActions set) { return set.Get(); }
-        /// <summary>
-        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <param name="instance">Callback instance.</param>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
-        /// </remarks>
-        /// <seealso cref="BugReporterActions" />
-        public void AddCallbacks(IBugReporterActions instance)
-        {
-            if (instance == null || m_Wrapper.m_BugReporterActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_BugReporterActionsCallbackInterfaces.Add(instance);
-            @Close.started += instance.OnClose;
-            @Close.performed += instance.OnClose;
-            @Close.canceled += instance.OnClose;
-        }
-
-        /// <summary>
-        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <remarks>
-        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
-        /// </remarks>
-        /// <seealso cref="BugReporterActions" />
-        private void UnregisterCallbacks(IBugReporterActions instance)
-        {
-            @Close.started -= instance.OnClose;
-            @Close.performed -= instance.OnClose;
-            @Close.canceled -= instance.OnClose;
-        }
-
-        /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />.
-        /// </summary>
-        /// <seealso cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />
-        public void RemoveCallbacks(IBugReporterActions instance)
-        {
-            if (m_Wrapper.m_BugReporterActionsCallbackInterfaces.Remove(instance))
-                UnregisterCallbacks(instance);
-        }
-
-        /// <summary>
-        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
-        /// </summary>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
-        /// </remarks>
-        /// <seealso cref="BugReporterActions.AddCallbacks(IBugReporterActions)" />
-        /// <seealso cref="BugReporterActions.RemoveCallbacks(IBugReporterActions)" />
-        /// <seealso cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />
-        public void SetCallbacks(IBugReporterActions instance)
-        {
-            foreach (var item in m_Wrapper.m_BugReporterActionsCallbackInterfaces)
-                UnregisterCallbacks(item);
-            m_Wrapper.m_BugReporterActionsCallbackInterfaces.Clear();
-            AddCallbacks(instance);
-        }
-    }
-    /// <summary>
-    /// Provides a new <see cref="BugReporterActions" /> instance referencing this action map.
-    /// </summary>
-    public BugReporterActions @BugReporter => new BugReporterActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2124,6 +2007,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleDev(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Bug" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleBug(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -2240,13 +2130,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMove(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Open Bug Reporter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnOpenBugReporter(InputAction.CallbackContext context);
-        /// <summary>
         /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
@@ -2323,20 +2206,5 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnScrollInventory(InputAction.CallbackContext context);
-    }
-    /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "BugReporter" which allows adding and removing callbacks.
-    /// </summary>
-    /// <seealso cref="BugReporterActions.AddCallbacks(IBugReporterActions)" />
-    /// <seealso cref="BugReporterActions.RemoveCallbacks(IBugReporterActions)" />
-    public interface IBugReporterActions
-    {
-        /// <summary>
-        /// Method invoked when associated input action "Close" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnClose(InputAction.CallbackContext context);
     }
 }

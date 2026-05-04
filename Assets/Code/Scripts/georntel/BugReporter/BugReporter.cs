@@ -25,20 +25,13 @@ public class BugReporter : MonoBehaviour
     private string tempScreenshotPath;
     private string tempLogPath;
 
-    private InputAction openReporterAction;
-    private InputAction closeReporterAction;
-
     private void Awake()
     {
-        openReporterAction = InputBridge.Actions.FindAction("Player/Open Bug Reporter");
-        closeReporterAction = InputBridge.Actions.FindAction("BugReporter/Close");
-        openReporterAction.performed += ToggleReporter;
-        closeReporterAction.performed += CloseReporter;
+        InputBridge.OnContextChanged += ToggleReporter;
     }
     private void OnDestroy()
     {
-        openReporterAction.performed -= ToggleReporter;
-        closeReporterAction.performed -= CloseReporter;
+        InputBridge.OnContextChanged -= ToggleReporter;
     }
 
     private void Start()
@@ -54,12 +47,11 @@ public class BugReporter : MonoBehaviour
         closeButton.onClick.AddListener(() => CloseReporter(new InputAction.CallbackContext()));
     }
 
-    public void ToggleReporter(InputAction.CallbackContext context)
+    public void ToggleReporter(InputBridge.InputContext context)
     {
-        bool isActive = !bugReporterPanel.activeSelf;
+        bool isActive = context == InputBridge.InputContext.BugReporter;
         bugReporterPanel.SetActive(isActive);
         if (!isActive) thankYouMessage.SetActive(false);
-        InputBridge.SetContext(isActive ? InputBridge.InputContext.BugReporter : InputBridge.InputContext.Player);
     }
 
     private void ValidateInput(string input)
@@ -188,8 +180,7 @@ public class BugReporter : MonoBehaviour
     }
     private void CloseReporter(InputAction.CallbackContext context)
     {
-        if (InputBridge.CurrentContext != InputBridge.InputContext.BugReporter) return;
-        ToggleReporter(context);
+        InputBridge.RestorePreviousContext();
         thankYouMessage.SetActive(false); 
     }
 }

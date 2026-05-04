@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System;
-using UnityEngine.InputSystem;
+using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public static class InputBridge
 {
@@ -17,13 +18,13 @@ public static class InputBridge
         [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
         UI,
 
-        [InputContextConfig(mapName: nameof(IA_Global.BugReporter), cursorVisible: true)]
+        [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
         BugReporter,
 
         [InputContextConfig(mapName: nameof(IA_Global.DevConsole), cursorVisible: true)]
         DevConsole,
     }
-    struct MapCursorPair
+    private struct MapCursorPair
     {
         public InputActionMap map { get; private set; }
         public bool cursorVisible { get; private set; }
@@ -39,8 +40,8 @@ public static class InputBridge
     #region Fields & Properties
     public static IA_Global Actions { get; private set; }
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
-    public static InputContext PreviousContext { get; private set; } = InputContext.Player;
-    static Dictionary<InputContext, MapCursorPair> contextMap;
+    private static Stack<InputContext> contextStack = new Stack<InputContext>();
+    private static Dictionary<InputContext, MapCursorPair> contextMap;
     #endregion
 
     #region Exposed Methods
@@ -51,7 +52,7 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
-        PreviousContext = CurrentContext;
+        if (contextStack.Count == 0 || contextStack.Peek() != context) contextStack.Push(context);
         CurrentContext = context;
 
         foreach (var map in Actions.asset.actionMaps)
@@ -70,8 +71,11 @@ public static class InputBridge
     /// <summary>
     /// Restore the previously active action map.
     /// </summary>
-    public static void RestorePreviousContext() => SetContext(PreviousContext);
-
+    public static void RestorePreviousContext()
+    {
+        contextStack.Pop();
+        SetContext(contextStack.Peek());
+    }
     /// <summary>
     /// Toggle between the previous action map and the provided one.
     /// </summary>
@@ -86,7 +90,7 @@ public static class InputBridge
 
     #region Helpers
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Init()
+    private static void Init()
     {
         Actions = new IA_Global();
         contextMap = BuildContextMap();
@@ -95,12 +99,12 @@ public static class InputBridge
         Actions.Global.Enable();
         SetContext(InputContext.UI);
     }
-    static void SetCursor(bool visible)
+    private static void SetCursor(bool visible)
     {
         Cursor.visible = visible;
         Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
     }
-    static Dictionary<InputContext, MapCursorPair> BuildContextMap()
+    private static Dictionary<InputContext, MapCursorPair> BuildContextMap()
     {
         var map = new Dictionary<InputContext, MapCursorPair>();
 

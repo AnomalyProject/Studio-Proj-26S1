@@ -12,8 +12,17 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
     {
         if (ctx.started)
         {
-            if (CurrentContext == InputContext.UI) SetContext(InputContext.Player);
-            else if (CurrentContext == InputContext.Player) SetContext(InputContext.UI);
+            if (CurrentContext == InputContext.Player) SetContext(InputContext.UI);
+            else ToggleContext(CurrentContext);
+        }
+    }
+
+    void IA_Global.IGlobalActions.OnToggleBug(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started)
+        {
+            if (CurrentContext == InputContext.DevConsole) return; // Don't allow toggling UI while in dev console
+            ToggleContext(InputContext.BugReporter);
         }
     }
 }

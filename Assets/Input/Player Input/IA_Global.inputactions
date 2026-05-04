@@ -23,6 +23,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Toggle Bug",
+                    "type": "Button",
+                    "id": "9c9f642a-070b-41bd-bcaf-f5c4f403b872",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -56,6 +65,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Toggle Dev",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "51f3c17d-4ef6-45e3-afb1-592f00b1254f",
+                    "path": "<Keyboard>/f8",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Bug",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2960acff-8b0f-43d6-9ddd-608bc5a33164",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Bug",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -694,15 +725,6 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Open Bug Reporter",
-                    "type": "Button",
-                    "id": "f93edaaa-3c57-4ea4-803c-52169b28e90d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Look",
                     "type": "Value",
                     "id": "0222da8d-588f-4a5c-95f4-0f1bf20c2940",
@@ -866,17 +888,6 @@
                     "processors": "",
                     "groups": ";Gameplay",
                     "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "3444c949-7183-4bb8-8850-c52c5fac6cb5",
-                    "path": "<Keyboard>/f8",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Open Bug Reporter",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -1132,34 +1143,6 @@
                     "action": "Scroll Inventory",
                     "isComposite": false,
                     "isPartOfComposite": true
-                }
-            ]
-        },
-        {
-            "name": "BugReporter",
-            "id": "21368ab6-ee67-49ba-85bd-58d98e4ff7e4",
-            "actions": [
-                {
-                    "name": "Close",
-                    "type": "Button",
-                    "id": "2bbe58ca-e9e0-4caf-b9b5-adfa0910cbe1",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "0363a57f-a636-4d79-92c6-29dcc72df2a0",
-                    "path": "<Keyboard>/f8",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Close",
-                    "isComposite": false,
-                    "isPartOfComposite": false
                 }
             ]
         }
