@@ -21,11 +21,6 @@ public class ElevatorExit : LevelExitPoint
         audioSource = GetComponent<AudioSource>();
     }
 
-    private void Start()
-    {
-
-    }
-
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
