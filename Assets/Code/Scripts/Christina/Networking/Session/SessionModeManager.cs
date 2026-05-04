@@ -15,7 +15,7 @@ public class SessionModeManager : MonoBehaviour
 
     private bool isLocallyInitiatedTeardown = false;
     
-    [SerializeField] private string gameplaySceneName = "NetworkTestScene";
+    [SerializeField] private string gameplaySceneName = "MainGameplayScene";
     [SerializeField] private string lobbySceneName = "Lobby";
 
     private const float hostReadyTimeoutSeconds = 10f;
@@ -186,6 +186,32 @@ public class SessionModeManager : MonoBehaviour
             isLocallyInitiatedTeardown = false;
         }
     }
+
+    /// <summary>
+    /// Server-side session flow for returning all connected players from gameplay back to the lobby.
+    /// Keeps the active network session and Steam lobby alive.
+    /// </summary>
+    public void LoadLobbyScene()
+    {
+        if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
+
+        if (GameStateManager.Instance.CurrentState == GameState.InGame)
+        {
+            GameStateManager.Instance.RequestStateChange(GameState.PostGame);
+        }
+
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+
+        var settings = new PurrSceneSettings
+        {
+            isPublic = true,
+            mode = LoadSceneMode.Single
+        };
+
+        var op = NetworkManager.main.sceneModule.LoadSceneAsync(lobbySceneName, settings);
+        SceneLoader.Instance.PerformAsyncOperation(op);
+    }
+
 
     /// <summary>
     /// Begins a solo session by entering the required state flow and loading the requested gameplay scene.

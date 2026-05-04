@@ -79,4 +79,11 @@ public class MainMenuController : MonoBehaviour
         messageText.text = message;
     }
     
+    //todo: we should use MainMenuManager for these actions
+    public void OnQuitGame()
+    {
+        Application.Quit();
+        Debug.Log("Quit");
+    }
+    
 }

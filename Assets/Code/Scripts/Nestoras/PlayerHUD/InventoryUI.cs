@@ -22,10 +22,9 @@ public class InventoryUI : MonoBehaviour
 
     [SerializeField] private GameObject inventorySlotPrefab;
     private PlayerInventory playerInventory;
-    private PlayerInput playerInput;
     private Transform UI;
 
-    [SerializeField] float focusedSlotScale = 1.2f;
+    [SerializeField] private float focusedSlotScale = 1.2f;
 
     private void Awake()
     {
@@ -39,27 +38,25 @@ public class InventoryUI : MonoBehaviour
     {
         PlayerBody.OnLocalPlayerSpawned -= ConstructInventory;
         PlayerBody.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
-
-        if (playerInput != null) playerInput.actions["Scroll Inventory"].performed -= SwitchSlot;
     }
     private void ConstructInventory(PlayerBody player)
     {
-        playerInput = player.GetComponent<PlayerInput>();
+        if (playerInventory != null) return;
+
         playerInventory = player.GetComponent<PlayerInventory>();
+        playerInventory.OnFocusedIndexChanged += SwitchSlot;
 
         slots = new Dictionary<int, InventorySlotUI>(player.Inventory.TotalSlots);
         for (int i = 0; i < player.Inventory.TotalSlots; i++)
         {
             GameObject slot = Instantiate(inventorySlotPrefab, UI);
-            Image background = slot.GetComponent<Image>();
-            Image icon = slot.transform.GetChild(0).GetComponent<Image>();
-            TextMeshProUGUI count = slot.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-            GameObject usePrompt = slot.GetComponentInChildren<InputIcon>(true).gameObject;
+            Image background = slot.transform.GetChild(0).GetComponent<Image>();
+            Image icon = background.transform.GetChild(0).GetComponent<Image>();
+            TextMeshProUGUI count = background.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            GameObject usePrompt = background.transform.GetChild(2).gameObject;
             slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
-
-        playerInput.actions["Scroll Inventory"].performed += SwitchSlot;
-        SwitchSlot(0);
+        playerInventory.ChangeFocused(0);
         
         player.Inventory.OnStackAdded += (item, index) =>
         {
@@ -94,24 +91,19 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
-        playerInput.actions["Scroll Inventory"].performed -= SwitchSlot;
-        playerInput = null;
+        playerInventory.OnFocusedIndexChanged -= SwitchSlot;
         playerInventory = null;
-
-        foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.gameObject);
+        foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.transform.parent.gameObject);
         slots.Clear();
     }
-
-    private void SwitchSlot(InputAction.CallbackContext context) => SwitchSlot((context.ReadValue<float>() > 0 ? playerInventory.focusedSlot + 1 : playerInventory.focusedSlot - 1 + slots.Count) % slots.Count);
-    private void SwitchSlot(int newIndex)
+    private void SwitchSlot(int previous, int current)
     {
         if (playerInventory == null) return;
 
-        slots[playerInventory.focusedSlot].background.transform.localScale = Vector3.one;
-        slots[playerInventory.focusedSlot].usePrompt.SetActive(false);
-        slots[newIndex].background.transform.localScale = Vector3.one * focusedSlotScale;
-        playerInventory.ChangeFocused(newIndex);
+        slots[previous].background.transform.localScale = Vector3.one;
+        slots[previous].usePrompt.SetActive(false);
+        slots[current].background.transform.localScale = Vector3.one * focusedSlotScale;
 
-        if (playerInventory.CanUseFocused()) slots[newIndex].usePrompt.SetActive(true);
+        if (playerInventory.CanUseFocused()) slots[current].usePrompt.SetActive(true);
     }
 }

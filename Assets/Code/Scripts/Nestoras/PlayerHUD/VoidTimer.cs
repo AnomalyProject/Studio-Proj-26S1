@@ -10,22 +10,29 @@ using TMPro;
 public class VoidTimer : MonoBehaviour
 {
     private TextMeshProUGUI timerText;
-    private AnomalyManager anomalyManager;
-    private GameManager gameManager;
     private Color defaultColor;
 
-    private void Awake()
+    private void Start()
     {
         timerText = GetComponentInChildren<TextMeshProUGUI>(true);
-        gameManager = FindFirstObjectByType<GameManager>();
-        anomalyManager = FindFirstObjectByType<AnomalyManager>();
-
         defaultColor = timerText.color;
+        GameManager.OnInitialized += InitManager;
+    }
 
-        anomalyManager.OnStateChanged += (state) =>
+    private void OnDestroy()
+    {
+        GameManager.OnInitialized -= InitManager;
+    }
+
+    private void InitManager(GameManager gameManager)
+    {
+        if (gameManager == null) return;
+
+        gameManager.AnomalyManager.OnStateChanged += (state) =>
         {
-            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false); 
+            if (state != AnomalyManager.RoomState.PunishmentRoom) ShowTimer(false);
         };
+
         gameManager.OnPunishmentTimerExpired.AddListener(() => timerText.color = Color.red);
 
         gameManager.OnWrongDecision.AddListener(() =>
@@ -40,7 +47,6 @@ public class VoidTimer : MonoBehaviour
         gameManager.OnGameReset.AddListener(() => ShowTimer(false));
         gameManager.OnGameWon.AddListener(() => ShowTimer(false));
     }
-
     private void TickTimer(float time) => timerText.text = TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
     private void ShowTimer(bool show) => timerText.gameObject.SetActive(show);
 }

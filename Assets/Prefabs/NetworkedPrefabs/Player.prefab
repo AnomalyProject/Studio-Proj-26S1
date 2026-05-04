@@ -207,12 +207,12 @@ Transform:
   m_GameObject: {fileID: 2628281181172639720}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.2, z: 0}
+  m_LocalPosition: {x: 0, y: 1.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1964011600645829639}
-  m_Father: {fileID: 1429449122919969332}
+  m_Father: {fileID: 8782280361181020847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2578463554954130823
 MonoBehaviour:
@@ -237,6 +237,135 @@ MonoBehaviour:
   _visitiblityRules: {fileID: 0}
   nameText: {fileID: 4162076639002213397}
   nameplateVisuals: {fileID: 2628281181172639720}
+--- !u!1 &3146642001898983726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4606633856125498859}
+  - component: {fileID: 4543138664715801701}
+  - component: {fileID: 177643267097350056}
+  m_Layer: 3
+  m_Name: FPS Camera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4606633856125498859
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3146642001898983726}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7254502549408018980}
+  m_Father: {fileID: 9205874294020368231}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &4543138664715801701
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3146642001898983726}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 4
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.1
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 256
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!114 &177643267097350056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3146642001898983726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 1
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &3688201667625389418
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,7 +394,7 @@ Transform:
   m_GameObject: {fileID: 3688201667625389418}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.9, z: 0}
+  m_LocalPosition: {x: 0, y: 1.85, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -346,12 +475,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4227618509524077635}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.15, y: -0.2, z: 0.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.45, y: -0.4, z: 0.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 9205874294020368231}
+  m_Father: {fileID: 4606633856125498859}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8169330805290519254
 MonoBehaviour:
@@ -396,7 +525,7 @@ GameObject:
   - component: {fileID: 1494246198799042083}
   - component: {fileID: 3680812478694482278}
   - component: {fileID: 3412492635846844219}
-  - component: {fileID: 3390244406132924047}
+  - component: {fileID: 4720217387570742291}
   - component: {fileID: 3674273088732647212}
   - component: {fileID: 8364257794153657002}
   - component: {fileID: 7190460059898372273}
@@ -496,7 +625,7 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &3390244406132924047
+--- !u!114 &4720217387570742291
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -505,71 +634,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 4722490883632117968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Script: {fileID: 11500000, guid: b50472ef7c935d74f86d19d2bda453aa, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
-  m_Actions: {fileID: -944628639613478452, guid: c686b7a79640d5c43aae164b1f48e3d5, type: 3}
-  m_NotificationBehavior: 2
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputLink
+  playerBody: {fileID: 6675929724497548166}
+  onCrouch:
     m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1494246198799042083}
-        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
-        m_MethodName: HandleMovement
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 29027795-9a4e-4597-90ab-2d839f125ae9
-    m_ActionName: 'Player/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8945130606974342615}
-        m_TargetAssemblyTypeName: FPSCameraController, Assembly-CSharp
-        m_MethodName: ApplyLook
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 0222da8d-588f-4a5c-95f4-0f1bf20c2940
-    m_ActionName: 'Player/Look[/Mouse/delta,/DualShock4GamepadHID/rightStick]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1494246198799042083}
-        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
-        m_MethodName: HandleSprint
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: e9ad4629-ded4-44b9-b74b-7a30a6eab6ff
-    m_ActionName: 'Player/Sprint[/Keyboard/leftShift,/DualShock4GamepadHID/leftStickPress]'
-  - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1494246198799042083}
         m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
@@ -583,9 +653,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 57f2109f-f494-4eaa-8f05-f1ce07e40daf
-    m_ActionName: 'Player/Crouch[/Keyboard/leftCtrl,/DualShock4GamepadHID/buttonEast]'
-  - m_PersistentCalls:
+  onInteract:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 3680812478694482278}
         m_TargetAssemblyTypeName: PlayerInteraction, Assembly-CSharp
@@ -599,9 +668,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 4073cb0f-f3e6-4a6b-9632-f02f034b6a04
-    m_ActionName: 'Player/Interact[/Keyboard/f]'
-  - m_PersistentCalls:
+  onLeanLeft:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 5223983998993346721}
         m_TargetAssemblyTypeName: CameraLean, Assembly-CSharp
@@ -615,9 +683,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 3c28ac9d-80b3-4b8b-bb89-597b47030959
-    m_ActionName: 'Player/LeanLeft[/Keyboard/q,/XInputControllerWindows/leftTrigger]'
-  - m_PersistentCalls:
+  onLeanRight:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 5223983998993346721}
         m_TargetAssemblyTypeName: CameraLean, Assembly-CSharp
@@ -631,9 +698,38 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 4165de52-7792-4303-b593-b63c15785371
-    m_ActionName: 'Player/LeanRight[/Keyboard/e,/XInputControllerWindows/rightTrigger]'
-  - m_PersistentCalls:
+  onLook:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8945130606974342615}
+        m_TargetAssemblyTypeName: FPSCameraController, Assembly-CSharp
+        m_MethodName: ApplyLook
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onMove:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1494246198799042083}
+        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
+        m_MethodName: HandleMovement
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onNextItem:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7190460059898372273}
         m_TargetAssemblyTypeName: PlayerInventory, Assembly-CSharp
@@ -647,9 +743,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: cf332ea9-7d2a-476e-b1ba-189688b72832
-    m_ActionName: 'Player/Next Item[/DualSenseGamepadHID/dpad/right,/Keyboard/tab]'
-  - m_PersistentCalls:
+  onPreviousItem:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7190460059898372273}
         m_TargetAssemblyTypeName: PlayerInventory, Assembly-CSharp
@@ -663,9 +758,38 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: d8edcff1-642f-481c-886e-aef7cb2477d8
-    m_ActionName: 'Player/Previous Item[/DualSenseGamepadHID/dpad/left]'
-  - m_PersistentCalls:
+  onScrollInventory:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7190460059898372273}
+        m_TargetAssemblyTypeName: PlayerInventory, Assembly-CSharp
+        m_MethodName: ScrollSlot
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onSprint:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1494246198799042083}
+        m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
+        m_MethodName: HandleSprint
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onUseFocusedItem:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7190460059898372273}
         m_TargetAssemblyTypeName: PlayerInventory, Assembly-CSharp
@@ -679,9 +803,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 7fab08e1-028b-43a3-8a16-00e7e0e67053
-    m_ActionName: 'Player/Use Focused Item[/DualSenseGamepadHID/rightShoulder,/Mouse/leftButton]'
-  - m_PersistentCalls:
+  onZoom:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1719570517764467312}
         m_TargetAssemblyTypeName: PlayerZooming, Assembly-CSharp
@@ -695,13 +818,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: 73adec9e-4999-4a3a-873b-711a555ac367
-    m_ActionName: 'Player/Zoom[/Mouse/rightButton,/DualShock4GamepadHID/rightStickPress]'
-  m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 1415168984759268418}
 --- !u!114 &3674273088732647212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -838,7 +954,6 @@ MonoBehaviour:
   movement: {fileID: 1494246198799042083}
   cameraController: {fileID: 8945130606974342615}
   interaction: {fileID: 3680812478694482278}
-  playerInput: {fileID: 3390244406132924047}
   bodyVisuals: {fileID: 5348312652502001726}
   playerCamera: {fileID: 1415168984759268418}
   playerAudioListener: {fileID: 7504813844628006609}
@@ -1011,7 +1126,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8782280361181020847}
-  - {fileID: 3368825690146679725}
   m_Father: {fileID: 3679284614733776610}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6784776862103312248
@@ -1044,7 +1158,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3368825690146679725}
   m_Father: {fileID: 1429449122919969332}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &2510158040866112133
@@ -1136,7 +1251,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7254502549408018980}
+  - {fileID: 4606633856125498859}
   m_Father: {fileID: 7145071027208893932}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &1415168984759268418
@@ -1170,7 +1285,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -1178,7 +1293,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 255
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1214,7 +1329,8 @@ MonoBehaviour:
   m_RequiresDepthTextureOption: 2
   m_RequiresOpaqueTextureOption: 2
   m_CameraType: 0
-  m_Cameras: []
+  m_Cameras:
+  - {fileID: 4543138664715801701}
   m_RendererIndex: -1
   m_VolumeLayerMask:
     serializedVersion: 2

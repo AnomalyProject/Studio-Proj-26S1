@@ -1,9 +1,9 @@
-using System.IO;
-using System.Collections;
-using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using UnityEngine;
+using System.Collections;
 using System.Net.Mail;
+using System.IO;
 using System;
 using TMPro;
 
@@ -25,6 +25,9 @@ public class BugReporter : MonoBehaviour
     private string tempScreenshotPath;
     private string tempLogPath;
 
+    private void Awake() => InputBridge.OnContextChanged += ToggleReporter;
+    private void OnDestroy() => InputBridge.OnContextChanged -= ToggleReporter;
+
     private void Start()
     {
         tempScreenshotPath = Path.Combine(Application.temporaryCachePath, "Screenshot.png");
@@ -35,34 +38,14 @@ public class BugReporter : MonoBehaviour
         submitButton.interactable = false;
         descriptionInput.onValueChanged.AddListener(ValidateInput);
         submitButton.onClick.AddListener(OnSubmitClicked);
-        closeButton.onClick.AddListener(CloseReporter);
+        closeButton.onClick.AddListener(() => CloseReporter(new InputAction.CallbackContext()));
     }
 
-    private void Update()
+    public void ToggleReporter(InputBridge.InputContext context)
     {
-        if (Input.GetKeyDown(KeyCode.F8)) ToggleReporter();
-    }
-
-    public void ToggleReporter()
-    {
-        bool isActive = !bugReporterPanel.activeSelf;
+        bool isActive = context == InputBridge.InputContext.BugReporter;
         bugReporterPanel.SetActive(isActive);
         if (!isActive) thankYouMessage.SetActive(false);
-
-        // FOR PROTOTYPE LIVE DEMO. REFACTOR PLZ
-        PlayerInput[] playerControls = FindObjectsByType<PlayerInput>(FindObjectsSortMode.None);
-        foreach (PlayerInput playerInput in playerControls) playerInput.enabled = !isActive;
-
-        if (isActive)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
     }
 
     private void ValidateInput(string input)
@@ -189,10 +172,9 @@ public class BugReporter : MonoBehaviour
         ValidateInput(descriptionInput.text);
         StartCoroutine(DeleteTempFiles());
     }
-    
-    private void CloseReporter()
+    private void CloseReporter(InputAction.CallbackContext context)
     {
-        ToggleReporter();
+        InputBridge.RestorePreviousContext();
         thankYouMessage.SetActive(false); 
     }
 }

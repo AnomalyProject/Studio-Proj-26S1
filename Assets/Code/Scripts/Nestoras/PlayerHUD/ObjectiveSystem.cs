@@ -8,29 +8,39 @@ using TMPro;
 /// </summary>
 public class ObjectiveSystem : MonoBehaviour
 {
-    private TextMeshProUGUI objective;
-    private GameManager gameManager;
-    private AnomalyManager anomalyManager;
+    [SerializeField] private TextMeshProUGUI objective;
 
     private void Awake()
     {
-        objective = GetComponentInChildren<TextMeshProUGUI>(true);
-        gameManager = FindFirstObjectByType<GameManager>(FindObjectsInactive.Include);
+        GameManager.OnInitialized += InitManager;
+        GameManager.OnDestroyed += HandleManagerDestruction;
+    }
+    private void OnDestroy()
+    {
+        GameManager.OnInitialized -= InitManager;
+        GameManager.OnDestroyed -= HandleManagerDestruction;
+    }
+    private void InitManager(GameManager gameManager)
+    {
+        if (gameManager == null) return;
 
-        if (gameManager != null)
-        {
-            gameManager.OnGameReset.AddListener(ResetTutorial);
-            gameManager.OnProgressChanged.AddListener(UpdateObjective);
-            gameManager.OnWrongDecision.AddListener(ExplainVoid);
-        }
+        gameManager.OnGameReset.AddListener(ResetTutorial);
+        gameManager.OnProgressChanged.AddListener(UpdateObjective);
+        gameManager.OnWrongDecision.AddListener(ExplainVoid);
 
-        anomalyManager = FindFirstObjectByType<AnomalyManager>();
-        anomalyManager.OnStateChanged += (state) =>
-        {
-            if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(gameManager.CurrentProgress);
-        };
+        gameManager.AnomalyManager.OnStateChanged += HandleStateChanged;
 
         ResetTutorial();
+    }
+
+    private void HandleStateChanged(AnomalyManager.RoomState state)
+    {
+        if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(GameManager.Instance.CurrentProgress);
+    }
+
+    private void HandleManagerDestruction(GameManager gameManager)
+    {
+        gameManager.AnomalyManager.OnStateChanged -= HandleStateChanged;
     }
 
     private void ExplainVoid()
@@ -43,7 +53,7 @@ public class ObjectiveSystem : MonoBehaviour
     {
         objective.enabled = true;
         if (progress == 1) objective.text = "If you spot anything different, turn back. Otherwise, keep going.";
-        else objective.enabled = false;
+        else if (progress != 0) objective.enabled = false;
     }
 
     private void ResetTutorial()
