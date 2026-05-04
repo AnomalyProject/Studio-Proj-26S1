@@ -60,15 +60,13 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Unity Lifecycle
-    private void Awake()
-    {
-        ValidateDependencies();
-        Instance = this;
-        OnInitialized?.Invoke(this);
-    }
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
+
+        ValidateDependencies();
+        Instance = this;
+        OnInitialized?.Invoke(this);
 
         if (!asServer) return;
         NewGame();
