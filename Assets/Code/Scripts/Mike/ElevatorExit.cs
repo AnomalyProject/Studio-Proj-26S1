@@ -14,15 +14,14 @@ public class ElevatorExit : LevelExitPoint
     [Header("Audio")]
     [SerializeField] AudioClip openClip;
     [SerializeField] AudioClip closeClip;
-
-    private void Awake()
+    protected override void OnSpawned(bool asServer)
     {
+        base.OnSpawned(asServer);
+        if (asServer) return;
+
         anim = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
-    }
 
-    private void Start()
-    {
         if (openOnStart) OpenDoors();
     }
 

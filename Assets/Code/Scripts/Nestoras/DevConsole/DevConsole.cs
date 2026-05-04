@@ -39,7 +39,6 @@ public class DevConsole : MonoBehaviour
 
     #region Input
     [Header("Input")]
-    private InputAction toggleConsoleAction;
     private InputAction submitAction;
     private InputAction scrollAction;
     #endregion
@@ -189,9 +188,8 @@ public class DevConsole : MonoBehaviour
         commands["cls"].callback += ClearScreen;
 
         // Input
-        toggleConsoleAction = InputBridge.Actions.FindAction("Toggle Dev");
-        submitAction = InputBridge.Actions.FindAction("DevConsole/Submit");
-        scrollAction = InputBridge.Actions.FindAction("DevConsole/Scroll History");
+        submitAction = InputBridge.Actions.DevConsole.Submit;
+        scrollAction = InputBridge.Actions.DevConsole.ScrollHistory;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -315,7 +313,7 @@ public class DevConsole : MonoBehaviour
         devConsoles.Add(this);
         onCommandEntered += TryRunningAsBuiltInCommand;
 
-        toggleConsoleAction.performed += OnToggleConsole;
+        InputBridge.OnContextChanged += OnToggleConsole;
         submitAction.performed += OnSubmit;
         scrollAction.performed += OnScrollHistory;
     }
@@ -324,16 +322,16 @@ public class DevConsole : MonoBehaviour
         devConsoles.Remove(this);
         onCommandEntered -= TryRunningAsBuiltInCommand;
 
-        toggleConsoleAction.performed -= OnToggleConsole;
+        InputBridge.OnContextChanged -= OnToggleConsole;
         submitAction.performed -= OnSubmit;
         scrollAction.performed -= OnScrollHistory;
     }
     #endregion
 
     #region Navigation
-    private void OnToggleConsole(InputAction.CallbackContext context)
+    private void OnToggleConsole(InputBridge.InputContext context)
     {
-        isOpen = !isOpen;
+        isOpen = context == InputBridge.InputContext.DevConsole;
         root.SetActive(isOpen);
         
         if (isOpen)

@@ -109,6 +109,24 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Bug"",
+                    ""type"": ""Button"",
+                    ""id"": ""9c9f642a-070b-41bd-bcaf-f5c4f403b872"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Chat"",
+                    ""type"": ""Button"",
+                    ""id"": ""d1b80295-76c8-4658-b80a-5fa58076909a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -142,6 +160,50 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Toggle Dev"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""51f3c17d-4ef6-45e3-afb1-592f00b1254f"",
+                    ""path"": ""<Keyboard>/f8"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Bug"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2960acff-8b0f-43d6-9ddd-608bc5a33164"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Bug"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""67ad6826-b7b8-4398-9d3d-714e9f4e5365"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Chat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e7b5e60f-7b86-421b-9d3d-3acba9bb2442"",
+                    ""path"": ""<Keyboard>/numpadEnter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Chat"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -780,15 +842,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Open Bug Reporter"",
-                    ""type"": ""Button"",
-                    ""id"": ""f93edaaa-3c57-4ea4-803c-52169b28e90d"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""Look"",
                     ""type"": ""Value"",
                     ""id"": ""0222da8d-588f-4a5c-95f4-0f1bf20c2940"",
@@ -957,17 +1010,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""3444c949-7183-4bb8-8850-c52c5fac6cb5"",
-                    ""path"": ""<Keyboard>/f8"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Open Bug Reporter"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""bd3a73ed-88b6-4f19-bfde-08fb8fcec323"",
                     ""path"": ""<Mouse>/delta"",
                     ""interactions"": """",
@@ -1101,7 +1143,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""9e6fce0e-dfa5-4d51-a148-dd41dba9d32a"",
-                    ""path"": ""<Gamepad>/dpad/right"",
+                    ""path"": ""<Gamepad>/dpad/up"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1123,7 +1165,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""facad644-245f-4998-9354-88f5026d39bb"",
-                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""path"": ""<Gamepad>/dpad/down"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1187,48 +1229,26 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 },
                 {
-                    ""name"": ""1D Axis"",
-                    ""id"": ""a0345ffb-c551-4fd3-be71-71d8639d325a"",
-                    ""path"": ""1DAxis"",
+                    ""name"": """",
+                    ""id"": ""613b98dd-46f0-4c77-b9ac-f1f7fa6cb9a3"",
+                    ""path"": ""<Gamepad>/dpad/x"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Scroll Inventory"",
-                    ""isComposite"": true,
+                    ""isComposite"": false,
                     ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""negative"",
-                    ""id"": ""b21045a2-2614-4632-97f6-c386ecd0605d"",
-                    ""path"": ""<Gamepad>/leftShoulder"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Scroll Inventory"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""positive"",
-                    ""id"": ""84054d01-393e-4904-a37c-c154630c5a32"",
-                    ""path"": ""<Gamepad>/rightShoulder"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Scroll Inventory"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
                 }
             ]
         },
         {
-            ""name"": ""BugReporter"",
-            ""id"": ""21368ab6-ee67-49ba-85bd-58d98e4ff7e4"",
+            ""name"": ""Chat"",
+            ""id"": ""ee5ec161-69de-454e-ba11-abcaeefe9dbe"",
             ""actions"": [
                 {
-                    ""name"": ""Close"",
+                    ""name"": ""Submit"",
                     ""type"": ""Button"",
-                    ""id"": ""2bbe58ca-e9e0-4caf-b9b5-adfa0910cbe1"",
+                    ""id"": ""6a7a27c6-337c-4b06-9aa4-cfb8af22f49a"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -1238,12 +1258,23 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""0363a57f-a636-4d79-92c6-29dcc72df2a0"",
-                    ""path"": ""<Keyboard>/f8"",
+                    ""id"": ""810fcb4f-9cd7-495c-b0ea-a915cc6c68d0"",
+                    ""path"": ""<Keyboard>/enter"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Close"",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2cb2db14-3f6e-4723-86af-77cde6d48279"",
+                    ""path"": ""<Keyboard>/numpadEnter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1256,6 +1287,8 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
         m_Global_ToggleUI = m_Global.FindAction("Toggle UI", throwIfNotFound: true);
         m_Global_ToggleDev = m_Global.FindAction("Toggle Dev", throwIfNotFound: true);
+        m_Global_ToggleBug = m_Global.FindAction("Toggle Bug", throwIfNotFound: true);
+        m_Global_ToggleChat = m_Global.FindAction("Toggle Chat", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1275,7 +1308,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
-        m_Player_OpenBugReporter = m_Player.FindAction("Open Bug Reporter", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
@@ -1287,9 +1319,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_UseFocusedItem = m_Player.FindAction("Use Focused Item", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
-        // BugReporter
-        m_BugReporter = asset.FindActionMap("BugReporter", throwIfNotFound: true);
-        m_BugReporter_Close = m_BugReporter.FindAction("Close", throwIfNotFound: true);
+        // Chat
+        m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
+        m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1298,7 +1330,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_UI.enabled, "This will cause a leak and performance issues, IA_Global.UI.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_DevConsole.enabled, "This will cause a leak and performance issues, IA_Global.DevConsole.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
-        UnityEngine.Debug.Assert(!m_BugReporter.enabled, "This will cause a leak and performance issues, IA_Global.BugReporter.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Chat.enabled, "This will cause a leak and performance issues, IA_Global.Chat.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1376,6 +1408,8 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private List<IGlobalActions> m_GlobalActionsCallbackInterfaces = new List<IGlobalActions>();
     private readonly InputAction m_Global_ToggleUI;
     private readonly InputAction m_Global_ToggleDev;
+    private readonly InputAction m_Global_ToggleBug;
+    private readonly InputAction m_Global_ToggleChat;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -1395,6 +1429,14 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleDev".
         /// </summary>
         public InputAction @ToggleDev => m_Wrapper.m_Global_ToggleDev;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleBug".
+        /// </summary>
+        public InputAction @ToggleBug => m_Wrapper.m_Global_ToggleBug;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleChat".
+        /// </summary>
+        public InputAction @ToggleChat => m_Wrapper.m_Global_ToggleChat;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1427,6 +1469,12 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleDev.started += instance.OnToggleDev;
             @ToggleDev.performed += instance.OnToggleDev;
             @ToggleDev.canceled += instance.OnToggleDev;
+            @ToggleBug.started += instance.OnToggleBug;
+            @ToggleBug.performed += instance.OnToggleBug;
+            @ToggleBug.canceled += instance.OnToggleBug;
+            @ToggleChat.started += instance.OnToggleChat;
+            @ToggleChat.performed += instance.OnToggleChat;
+            @ToggleChat.canceled += instance.OnToggleChat;
         }
 
         /// <summary>
@@ -1444,6 +1492,12 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleDev.started -= instance.OnToggleDev;
             @ToggleDev.performed -= instance.OnToggleDev;
             @ToggleDev.canceled -= instance.OnToggleDev;
+            @ToggleBug.started -= instance.OnToggleBug;
+            @ToggleBug.performed -= instance.OnToggleBug;
+            @ToggleBug.canceled -= instance.OnToggleBug;
+            @ToggleChat.started -= instance.OnToggleChat;
+            @ToggleChat.performed -= instance.OnToggleChat;
+            @ToggleChat.canceled -= instance.OnToggleChat;
         }
 
         /// <summary>
@@ -1784,7 +1838,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_Move;
-    private readonly InputAction m_Player_OpenBugReporter;
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Crouch;
@@ -1811,10 +1864,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Move".
         /// </summary>
         public InputAction @Move => m_Wrapper.m_Player_Move;
-        /// <summary>
-        /// Provides access to the underlying input action "Player/OpenBugReporter".
-        /// </summary>
-        public InputAction @OpenBugReporter => m_Wrapper.m_Player_OpenBugReporter;
         /// <summary>
         /// Provides access to the underlying input action "Player/Look".
         /// </summary>
@@ -1888,9 +1937,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
-            @OpenBugReporter.started += instance.OnOpenBugReporter;
-            @OpenBugReporter.performed += instance.OnOpenBugReporter;
-            @OpenBugReporter.canceled += instance.OnOpenBugReporter;
             @Look.started += instance.OnLook;
             @Look.performed += instance.OnLook;
             @Look.canceled += instance.OnLook;
@@ -1938,9 +1984,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
-            @OpenBugReporter.started -= instance.OnOpenBugReporter;
-            @OpenBugReporter.performed -= instance.OnOpenBugReporter;
-            @OpenBugReporter.canceled -= instance.OnOpenBugReporter;
             @Look.started -= instance.OnLook;
             @Look.performed -= instance.OnLook;
             @Look.canceled -= instance.OnLook;
@@ -2008,29 +2051,29 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// </summary>
     public PlayerActions @Player => new PlayerActions(this);
 
-    // BugReporter
-    private readonly InputActionMap m_BugReporter;
-    private List<IBugReporterActions> m_BugReporterActionsCallbackInterfaces = new List<IBugReporterActions>();
-    private readonly InputAction m_BugReporter_Close;
+    // Chat
+    private readonly InputActionMap m_Chat;
+    private List<IChatActions> m_ChatActionsCallbackInterfaces = new List<IChatActions>();
+    private readonly InputAction m_Chat_Submit;
     /// <summary>
-    /// Provides access to input actions defined in input action map "BugReporter".
+    /// Provides access to input actions defined in input action map "Chat".
     /// </summary>
-    public struct BugReporterActions
+    public struct ChatActions
     {
         private @IA_Global m_Wrapper;
 
         /// <summary>
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
-        public BugReporterActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
+        public ChatActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "BugReporter/Close".
+        /// Provides access to the underlying input action "Chat/Submit".
         /// </summary>
-        public InputAction @Close => m_Wrapper.m_BugReporter_Close;
+        public InputAction @Submit => m_Wrapper.m_Chat_Submit;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_BugReporter; }
+        public InputActionMap Get() { return m_Wrapper.m_Chat; }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
         public void Enable() { Get().Enable(); }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
@@ -2038,9 +2081,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
         public bool enabled => Get().enabled;
         /// <summary>
-        /// Implicitly converts an <see ref="BugReporterActions" /> to an <see ref="InputActionMap" /> instance.
+        /// Implicitly converts an <see ref="ChatActions" /> to an <see ref="InputActionMap" /> instance.
         /// </summary>
-        public static implicit operator InputActionMap(BugReporterActions set) { return set.Get(); }
+        public static implicit operator InputActionMap(ChatActions set) { return set.Get(); }
         /// <summary>
         /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
         /// </summary>
@@ -2048,14 +2091,14 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
         /// </remarks>
-        /// <seealso cref="BugReporterActions" />
-        public void AddCallbacks(IBugReporterActions instance)
+        /// <seealso cref="ChatActions" />
+        public void AddCallbacks(IChatActions instance)
         {
-            if (instance == null || m_Wrapper.m_BugReporterActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_BugReporterActionsCallbackInterfaces.Add(instance);
-            @Close.started += instance.OnClose;
-            @Close.performed += instance.OnClose;
-            @Close.canceled += instance.OnClose;
+            if (instance == null || m_Wrapper.m_ChatActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ChatActionsCallbackInterfaces.Add(instance);
+            @Submit.started += instance.OnSubmit;
+            @Submit.performed += instance.OnSubmit;
+            @Submit.canceled += instance.OnSubmit;
         }
 
         /// <summary>
@@ -2064,21 +2107,21 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <remarks>
         /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
         /// </remarks>
-        /// <seealso cref="BugReporterActions" />
-        private void UnregisterCallbacks(IBugReporterActions instance)
+        /// <seealso cref="ChatActions" />
+        private void UnregisterCallbacks(IChatActions instance)
         {
-            @Close.started -= instance.OnClose;
-            @Close.performed -= instance.OnClose;
-            @Close.canceled -= instance.OnClose;
+            @Submit.started -= instance.OnSubmit;
+            @Submit.performed -= instance.OnSubmit;
+            @Submit.canceled -= instance.OnSubmit;
         }
 
         /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />.
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="ChatActions.UnregisterCallbacks(IChatActions)" />.
         /// </summary>
-        /// <seealso cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />
-        public void RemoveCallbacks(IBugReporterActions instance)
+        /// <seealso cref="ChatActions.UnregisterCallbacks(IChatActions)" />
+        public void RemoveCallbacks(IChatActions instance)
         {
-            if (m_Wrapper.m_BugReporterActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_ChatActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
@@ -2088,21 +2131,21 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
         /// </remarks>
-        /// <seealso cref="BugReporterActions.AddCallbacks(IBugReporterActions)" />
-        /// <seealso cref="BugReporterActions.RemoveCallbacks(IBugReporterActions)" />
-        /// <seealso cref="BugReporterActions.UnregisterCallbacks(IBugReporterActions)" />
-        public void SetCallbacks(IBugReporterActions instance)
+        /// <seealso cref="ChatActions.AddCallbacks(IChatActions)" />
+        /// <seealso cref="ChatActions.RemoveCallbacks(IChatActions)" />
+        /// <seealso cref="ChatActions.UnregisterCallbacks(IChatActions)" />
+        public void SetCallbacks(IChatActions instance)
         {
-            foreach (var item in m_Wrapper.m_BugReporterActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_ChatActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_BugReporterActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_ChatActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
     /// <summary>
-    /// Provides a new <see cref="BugReporterActions" /> instance referencing this action map.
+    /// Provides a new <see cref="ChatActions" /> instance referencing this action map.
     /// </summary>
-    public BugReporterActions @BugReporter => new BugReporterActions(this);
+    public ChatActions @Chat => new ChatActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2124,6 +2167,20 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleDev(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Bug" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleBug(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Chat" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleChat(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -2240,13 +2297,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMove(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Open Bug Reporter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnOpenBugReporter(InputAction.CallbackContext context);
-        /// <summary>
         /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
@@ -2325,18 +2375,18 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         void OnScrollInventory(InputAction.CallbackContext context);
     }
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "BugReporter" which allows adding and removing callbacks.
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
     /// </summary>
-    /// <seealso cref="BugReporterActions.AddCallbacks(IBugReporterActions)" />
-    /// <seealso cref="BugReporterActions.RemoveCallbacks(IBugReporterActions)" />
-    public interface IBugReporterActions
+    /// <seealso cref="ChatActions.AddCallbacks(IChatActions)" />
+    /// <seealso cref="ChatActions.RemoveCallbacks(IChatActions)" />
+    public interface IChatActions
     {
         /// <summary>
-        /// Method invoked when associated input action "Close" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Submit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnClose(InputAction.CallbackContext context);
+        void OnSubmit(InputAction.CallbackContext context);
     }
 }

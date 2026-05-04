@@ -15,7 +15,7 @@ public class SessionModeManager : MonoBehaviour
 
     private bool isLocallyInitiatedTeardown = false;
     
-    [SerializeField] private string gameplaySceneName = "NetworkTestScene";
+    [SerializeField] private string gameplaySceneName = "MainGameplayScene";
     [SerializeField] private string lobbySceneName = "Lobby";
 
     private const float hostReadyTimeoutSeconds = 10f;

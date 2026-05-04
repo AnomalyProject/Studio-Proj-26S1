@@ -23,6 +23,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Toggle Bug",
+                    "type": "Button",
+                    "id": "9c9f642a-070b-41bd-bcaf-f5c4f403b872",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Toggle Chat",
+                    "type": "Button",
+                    "id": "d1b80295-76c8-4658-b80a-5fa58076909a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -56,6 +74,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "Toggle Dev",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "51f3c17d-4ef6-45e3-afb1-592f00b1254f",
+                    "path": "<Keyboard>/f8",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Bug",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2960acff-8b0f-43d6-9ddd-608bc5a33164",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Bug",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "67ad6826-b7b8-4398-9d3d-714e9f4e5365",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Chat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e7b5e60f-7b86-421b-9d3d-3acba9bb2442",
+                    "path": "<Keyboard>/numpadEnter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Chat",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -694,15 +756,6 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Open Bug Reporter",
-                    "type": "Button",
-                    "id": "f93edaaa-3c57-4ea4-803c-52169b28e90d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Look",
                     "type": "Value",
                     "id": "0222da8d-588f-4a5c-95f4-0f1bf20c2940",
@@ -871,17 +924,6 @@
                 },
                 {
                     "name": "",
-                    "id": "3444c949-7183-4bb8-8850-c52c5fac6cb5",
-                    "path": "<Keyboard>/f8",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Open Bug Reporter",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "bd3a73ed-88b6-4f19-bfde-08fb8fcec323",
                     "path": "<Mouse>/delta",
                     "interactions": "",
@@ -1015,7 +1057,7 @@
                 {
                     "name": "",
                     "id": "9e6fce0e-dfa5-4d51-a148-dd41dba9d32a",
-                    "path": "<Gamepad>/dpad/right",
+                    "path": "<Gamepad>/dpad/up",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1037,7 +1079,7 @@
                 {
                     "name": "",
                     "id": "facad644-245f-4998-9354-88f5026d39bb",
-                    "path": "<Gamepad>/dpad/left",
+                    "path": "<Gamepad>/dpad/down",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1101,48 +1143,26 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "1D Axis",
-                    "id": "a0345ffb-c551-4fd3-be71-71d8639d325a",
-                    "path": "1DAxis",
+                    "name": "",
+                    "id": "613b98dd-46f0-4c77-b9ac-f1f7fa6cb9a3",
+                    "path": "<Gamepad>/dpad/x",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "Scroll Inventory",
-                    "isComposite": true,
+                    "isComposite": false,
                     "isPartOfComposite": false
-                },
-                {
-                    "name": "negative",
-                    "id": "b21045a2-2614-4632-97f6-c386ecd0605d",
-                    "path": "<Gamepad>/leftShoulder",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Scroll Inventory",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "positive",
-                    "id": "84054d01-393e-4904-a37c-c154630c5a32",
-                    "path": "<Gamepad>/rightShoulder",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Scroll Inventory",
-                    "isComposite": false,
-                    "isPartOfComposite": true
                 }
             ]
         },
         {
-            "name": "BugReporter",
-            "id": "21368ab6-ee67-49ba-85bd-58d98e4ff7e4",
+            "name": "Chat",
+            "id": "ee5ec161-69de-454e-ba11-abcaeefe9dbe",
             "actions": [
                 {
-                    "name": "Close",
+                    "name": "Submit",
                     "type": "Button",
-                    "id": "2bbe58ca-e9e0-4caf-b9b5-adfa0910cbe1",
+                    "id": "6a7a27c6-337c-4b06-9aa4-cfb8af22f49a",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -1152,12 +1172,23 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "0363a57f-a636-4d79-92c6-29dcc72df2a0",
-                    "path": "<Keyboard>/f8",
+                    "id": "810fcb4f-9cd7-495c-b0ea-a915cc6c68d0",
+                    "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Close",
+                    "action": "Submit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2cb2db14-3f6e-4723-86af-77cde6d48279",
+                    "path": "<Keyboard>/numpadEnter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Submit",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
