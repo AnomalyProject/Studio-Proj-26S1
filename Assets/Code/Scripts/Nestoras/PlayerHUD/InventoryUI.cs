@@ -51,9 +51,9 @@ public class InventoryUI : MonoBehaviour
         {
             GameObject slot = Instantiate(inventorySlotPrefab, UI);
             Image background = slot.transform.GetChild(0).GetComponent<Image>();
-            Image icon = slot.transform.GetChild(1).GetComponent<Image>();
-            TextMeshProUGUI count = slot.transform.GetChild(2).GetComponent<TextMeshProUGUI>();
-            GameObject usePrompt = slot.transform.GetChild(3).gameObject;
+            Image icon = background.transform.GetChild(0).GetComponent<Image>();
+            TextMeshProUGUI count = background.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            GameObject usePrompt = background.transform.GetChild(2).gameObject;
             slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
         playerInventory.ChangeFocused(0);
@@ -93,7 +93,7 @@ public class InventoryUI : MonoBehaviour
     {
         playerInventory.OnFocusedIndexChanged -= SwitchSlot;
         playerInventory = null;
-        foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.gameObject);
+        foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.transform.parent.gameObject);
         slots.Clear();
     }
     private void SwitchSlot(int previous, int current)
