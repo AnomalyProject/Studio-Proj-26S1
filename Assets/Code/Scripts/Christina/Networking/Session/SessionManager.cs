@@ -405,12 +405,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (playerIndex == -1) return;
 
         var playerInfo = sessionData.Players[playerIndex];
+        
         playerInfo.IsInElevator = isInside;
-
-        if (!isInside)
-        {
-            playerInfo.IsReady = false;
-        }
+        playerInfo.IsReady = isInside;
 
         sessionData.Players[playerIndex] = playerInfo;
         SendSessionUpdate();
@@ -539,17 +536,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        if (!playerInfo.IsInElevator && !playerInfo.IsReady)
+        if (!playerInfo.IsInElevator)
         {
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "Enter the elevator before readying up.");
             return;
         }
         
-        playerInfo.IsReady = !playerInfo.IsReady;
+        if (playerInfo.IsReady)
+        {
+            Debug.Log($"[SessionManager] Ready request ignored: PlayerID {sender} is already ready.");
+            return;
+        }
+        
+        playerInfo.IsReady = true;
         sessionData.Players[playerIndex] = playerInfo;
 
         SendSessionUpdate();
-        Debug.Log($"[SessionManager] Ready toggled for PlayerID: {sender}");
+        Debug.Log($"[SessionManager] Ready set for PlayerIDD: {sender}");
     }
     
     public bool TryStartMatchFromServer()
