@@ -1,12 +1,15 @@
 using PurrNet;
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class CycleVendor : InteractableVendor
 {
     public UnityEvent<IReadOnlyItemStack> OnUpdateFocused;
     [SerializeField, Min(.1f)] float cycleRatio = 0.5f;
+    [SerializeField] Image itemIcon;
 
     private IReadOnlyItemStack _focusedItem;
     public IReadOnlyItemStack FocusedItem
@@ -28,7 +31,10 @@ public class CycleVendor : InteractableVendor
 
         if (!isServer) return;
         StartCycle(player, cycleRatio);
+        OnUpdateFocused.AddListener(UpdateVisuals);
     }
+
+    private void UpdateVisuals(IReadOnlyItemStack stack) => itemIcon.sprite = stack.GetItemData().ItemIcon;
 
     [TargetRpc] private void StartCycle(PlayerID playerID, float ratio) => InvokeRepeating(nameof(Cycle), 0f, ratio);
     protected override bool TryInteractBehaviour(PlayerBody interactor)
