@@ -18,6 +18,9 @@ public static class InputBridge
         [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
         UI,
 
+        [InputContextConfig(mapName: nameof(IA_Global.Chat), cursorVisible: true)]
+        Chat,
+
         [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
         BugReporter,
 

@@ -25,14 +25,8 @@ public class BugReporter : MonoBehaviour
     private string tempScreenshotPath;
     private string tempLogPath;
 
-    private void Awake()
-    {
-        InputBridge.OnContextChanged += ToggleReporter;
-    }
-    private void OnDestroy()
-    {
-        InputBridge.OnContextChanged -= ToggleReporter;
-    }
+    private void Awake() => InputBridge.OnContextChanged += ToggleReporter;
+    private void OnDestroy() => InputBridge.OnContextChanged -= ToggleReporter;
 
     private void Start()
     {

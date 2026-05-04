@@ -188,8 +188,8 @@ public class DevConsole : MonoBehaviour
         commands["cls"].callback += ClearScreen;
 
         // Input
-        submitAction = InputBridge.Actions.FindAction("DevConsole/Submit");
-        scrollAction = InputBridge.Actions.FindAction("DevConsole/Scroll History");
+        submitAction = InputBridge.Actions.DevConsole.Submit;
+        scrollAction = InputBridge.Actions.DevConsole.ScrollHistory;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]

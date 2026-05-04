@@ -1,10 +1,11 @@
-using System;
-using UnityEngine;
-using TMPro; 
 using Steamworks;
-using UnityEngine.UI;
-using UnityEngine.InputSystem;
+using System;
 using System.Collections;
+using TMPro; 
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class ChatUI : MonoBehaviour
 {
@@ -22,9 +23,9 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private Image scrollViewBackground;
     [SerializeField] private GameObject scrollbarObject;
     
-    private Text_Chat chatInputActions;
-    
     private float lastCloseTime = 0f;
+
+    private InputAction submit;
 
     private void Awake()
     {
@@ -39,17 +40,17 @@ public class ChatUI : MonoBehaviour
         DontDestroyOnLoad(transform.root.gameObject);
         
         chatInputField.characterLimit = maxMessageLength; 
-        chatHistoryText.text = ""; 
-        
-        chatInputActions = new Text_Chat();
-        
+        chatHistoryText.text = "";
+
+        submit = InputBridge.Actions.Chat.Submit;
+
+
         CloseChat();
     }
 
     private void OnEnable()
     {
-        chatInputActions.Chat.Enable();
-        chatInputActions.Chat.ToggleChat.performed += OnToggleChatPerformed;
+        InputBridge.OnContextChanged += OnToggleChatPerformed;
         chatInputField.onSubmit.AddListener(OnChatSubmit);
 
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
@@ -57,21 +58,18 @@ public class ChatUI : MonoBehaviour
     
     private void OnDisable()
     {
-        chatInputActions.Chat.Disable();
-        chatInputActions.Chat.ToggleChat.performed -= OnToggleChatPerformed;
+        InputBridge.OnContextChanged -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
         
         GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
     
-    private void OnToggleChatPerformed(InputAction.CallbackContext context)
+    private void OnToggleChatPerformed(InputBridge.InputContext context)
     {
         if (Time.unscaledTime - lastCloseTime < 0.1f) return;
         
-        if (!chatInputField.gameObject.activeSelf)
-        {
-            OpenChat();
-        }
+        if (context == InputBridge.InputContext.Chat) OpenChat();
+        else CloseChat();
     }
     
     private void OnChatSubmit(string text)
@@ -83,6 +81,7 @@ public class ChatUI : MonoBehaviour
         }
         
         chatInputField.text = "";
+        InputBridge.RestorePreviousContext();
         CloseChat();
     }
     

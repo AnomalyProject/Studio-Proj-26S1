@@ -25,4 +25,13 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
             ToggleContext(InputContext.BugReporter);
         }
     }
+
+    public void OnToggleChat(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started)
+        {
+            if (CurrentContext == InputContext.DevConsole) return; // Don't allow toggling UI while in dev console
+            if (CurrentContext != InputContext.Chat) SetContext(InputContext.Chat);
+        }
+    }
 }

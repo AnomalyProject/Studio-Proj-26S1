@@ -118,6 +118,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Chat"",
+                    ""type"": ""Button"",
+                    ""id"": ""d1b80295-76c8-4658-b80a-5fa58076909a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -173,6 +182,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Toggle Bug"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""67ad6826-b7b8-4398-9d3d-714e9f4e5365"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Chat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e7b5e60f-7b86-421b-9d3d-3acba9bb2442"",
+                    ""path"": ""<Keyboard>/numpadEnter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Chat"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1231,6 +1262,45 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": true
                 }
             ]
+        },
+        {
+            ""name"": ""Chat"",
+            ""id"": ""ee5ec161-69de-454e-ba11-abcaeefe9dbe"",
+            ""actions"": [
+                {
+                    ""name"": ""Submit"",
+                    ""type"": ""Button"",
+                    ""id"": ""6a7a27c6-337c-4b06-9aa4-cfb8af22f49a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""810fcb4f-9cd7-495c-b0ea-a915cc6c68d0"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2cb2db14-3f6e-4723-86af-77cde6d48279"",
+                    ""path"": ""<Keyboard>/numpadEnter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -1240,6 +1310,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Global_ToggleUI = m_Global.FindAction("Toggle UI", throwIfNotFound: true);
         m_Global_ToggleDev = m_Global.FindAction("Toggle Dev", throwIfNotFound: true);
         m_Global_ToggleBug = m_Global.FindAction("Toggle Bug", throwIfNotFound: true);
+        m_Global_ToggleChat = m_Global.FindAction("Toggle Chat", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1270,6 +1341,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_UseFocusedItem = m_Player.FindAction("Use Focused Item", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
+        // Chat
+        m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
+        m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1278,6 +1352,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_UI.enabled, "This will cause a leak and performance issues, IA_Global.UI.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_DevConsole.enabled, "This will cause a leak and performance issues, IA_Global.DevConsole.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Chat.enabled, "This will cause a leak and performance issues, IA_Global.Chat.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1356,6 +1431,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Global_ToggleUI;
     private readonly InputAction m_Global_ToggleDev;
     private readonly InputAction m_Global_ToggleBug;
+    private readonly InputAction m_Global_ToggleChat;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -1379,6 +1455,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleBug".
         /// </summary>
         public InputAction @ToggleBug => m_Wrapper.m_Global_ToggleBug;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleChat".
+        /// </summary>
+        public InputAction @ToggleChat => m_Wrapper.m_Global_ToggleChat;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1414,6 +1494,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleBug.started += instance.OnToggleBug;
             @ToggleBug.performed += instance.OnToggleBug;
             @ToggleBug.canceled += instance.OnToggleBug;
+            @ToggleChat.started += instance.OnToggleChat;
+            @ToggleChat.performed += instance.OnToggleChat;
+            @ToggleChat.canceled += instance.OnToggleChat;
         }
 
         /// <summary>
@@ -1434,6 +1517,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleBug.started -= instance.OnToggleBug;
             @ToggleBug.performed -= instance.OnToggleBug;
             @ToggleBug.canceled -= instance.OnToggleBug;
+            @ToggleChat.started -= instance.OnToggleChat;
+            @ToggleChat.performed -= instance.OnToggleChat;
+            @ToggleChat.canceled -= instance.OnToggleChat;
         }
 
         /// <summary>
@@ -1986,6 +2072,102 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="PlayerActions" /> instance referencing this action map.
     /// </summary>
     public PlayerActions @Player => new PlayerActions(this);
+
+    // Chat
+    private readonly InputActionMap m_Chat;
+    private List<IChatActions> m_ChatActionsCallbackInterfaces = new List<IChatActions>();
+    private readonly InputAction m_Chat_Submit;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "Chat".
+    /// </summary>
+    public struct ChatActions
+    {
+        private @IA_Global m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public ChatActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "Chat/Submit".
+        /// </summary>
+        public InputAction @Submit => m_Wrapper.m_Chat_Submit;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_Chat; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="ChatActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(ChatActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="ChatActions" />
+        public void AddCallbacks(IChatActions instance)
+        {
+            if (instance == null || m_Wrapper.m_ChatActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ChatActionsCallbackInterfaces.Add(instance);
+            @Submit.started += instance.OnSubmit;
+            @Submit.performed += instance.OnSubmit;
+            @Submit.canceled += instance.OnSubmit;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="ChatActions" />
+        private void UnregisterCallbacks(IChatActions instance)
+        {
+            @Submit.started -= instance.OnSubmit;
+            @Submit.performed -= instance.OnSubmit;
+            @Submit.canceled -= instance.OnSubmit;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="ChatActions.UnregisterCallbacks(IChatActions)" />.
+        /// </summary>
+        /// <seealso cref="ChatActions.UnregisterCallbacks(IChatActions)" />
+        public void RemoveCallbacks(IChatActions instance)
+        {
+            if (m_Wrapper.m_ChatActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="ChatActions.AddCallbacks(IChatActions)" />
+        /// <seealso cref="ChatActions.RemoveCallbacks(IChatActions)" />
+        /// <seealso cref="ChatActions.UnregisterCallbacks(IChatActions)" />
+        public void SetCallbacks(IChatActions instance)
+        {
+            foreach (var item in m_Wrapper.m_ChatActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_ChatActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="ChatActions" /> instance referencing this action map.
+    /// </summary>
+    public ChatActions @Chat => new ChatActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2014,6 +2196,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleBug(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Chat" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleChat(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -2206,5 +2395,20 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnScrollInventory(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="ChatActions.AddCallbacks(IChatActions)" />
+    /// <seealso cref="ChatActions.RemoveCallbacks(IChatActions)" />
+    public interface IChatActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Submit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSubmit(InputAction.CallbackContext context);
     }
 }
