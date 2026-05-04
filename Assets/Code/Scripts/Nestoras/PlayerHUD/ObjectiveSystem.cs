@@ -9,23 +9,22 @@ using TMPro;
 public class ObjectiveSystem : MonoBehaviour
 {
     private TextMeshProUGUI objective;
-    private GameManager gameManager;
-    private AnomalyManager anomalyManager;
 
     private void Awake()
     {
         objective = GetComponentInChildren<TextMeshProUGUI>(true);
-        gameManager = FindFirstObjectByType<GameManager>(FindObjectsInactive.Include);
+        GameManager.OnInitialized += InitManager;
+    }
 
-        if (gameManager != null)
-        {
-            gameManager.OnGameReset.AddListener(ResetTutorial);
-            gameManager.OnProgressChanged.AddListener(UpdateObjective);
-            gameManager.OnWrongDecision.AddListener(ExplainVoid);
-        }
+    private void InitManager(GameManager gameManager)
+    {
+        if (gameManager == null) return;
 
-        anomalyManager = FindFirstObjectByType<AnomalyManager>();
-        anomalyManager.OnStateChanged += (state) =>
+        gameManager.OnGameReset.AddListener(ResetTutorial);
+        gameManager.OnProgressChanged.AddListener(UpdateObjective);
+        gameManager.OnWrongDecision.AddListener(ExplainVoid);
+
+        gameManager.AnomalyManager.OnStateChanged += (state) =>
         {
             if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(gameManager.CurrentProgress);
         };

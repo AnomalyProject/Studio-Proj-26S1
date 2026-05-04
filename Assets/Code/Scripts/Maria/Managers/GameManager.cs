@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using PurrNet;
 using UnityEngine;
@@ -15,10 +16,12 @@ using UnityEngine.Events;
 /// </summary>
 public class GameManager : NetworkBehaviour
 {
+    public static GameManager Instance { get; private set;  }
+
     #region Inspector 
     [Header("Dependencies")]
-    [SerializeField] AnomalyManager anomalyManager;
-    [SerializeField] MapOrientor mapOrientor;
+    [SerializeField] private AnomalyManager anomalyManager;
+    [SerializeField] private MapOrientor mapOrientor;
 
     [Header("Win Condition")]
     [Tooltip("How many correct decisions in a row are required to win.")]
@@ -42,10 +45,13 @@ public class GameManager : NetworkBehaviour
 
     private Coroutine punishmentTimerCoroutine;
     private Coroutine mapChangeCoroutine;
+    public AnomalyManager AnomalyManager => anomalyManager;
     #endregion
 
     #region Events
     // Events
+    public static event Action<GameManager> OnInitialized, OnDestroyed;
+
     public UnityEvent<int> OnProgressChanged;
     public UnityEvent<float> OnPunishmentTimerTick;
     public UnityEvent OnWrongDecision, OnPunishmentTimerExpired;
@@ -54,7 +60,12 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Unity Lifecycle
-    private void Awake() => ValidateDependencies();
+    private void Awake()
+    {
+        ValidateDependencies();
+        Instance = this;
+        OnInitialized?.Invoke(this);
+    }
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
@@ -72,6 +83,12 @@ public class GameManager : NetworkBehaviour
     {
         MapOrientor.OnElevatorInteracted -= HandleElevatorInteracted;
         anomalyManager.OnStateChanged -= HandleStateChanged;
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        OnDestroyed?.Invoke(this);
     }
     #endregion
 

@@ -4451,6 +4451,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8660687802128819689, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 327127992}
     - targetCorrespondingSourceObject: {fileID: 8616392211793914779, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
@@ -4465,12 +4468,39 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8684492745940543863, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
   m_PrefabInstance: {fileID: 327127988}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 327127991}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bc9922cd056cde2479db23c05812f86c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElevatorExit
+--- !u!1 &327127991 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8660687802128819689, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+  m_PrefabInstance: {fileID: 327127988}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &327127992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 327127991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af437f545009a4f458fa6c5bf6a188ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorTriggerZone
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  manager: {fileID: 899994540}
 --- !u!1 &329864568
 GameObject:
   m_ObjectHideFlags: 0
@@ -22044,11 +22074,9 @@ MonoBehaviour:
     Use
     Item - Left Click + Right Shoulder Btn
 
-    Next Item - Tab + D-Pad
+    Scroll Items - Mouse Wheel + D-PAD
 
-    :)
-
-'
+    :)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 795c79418fec80d4daaf14faa8d0eb75, type: 2}
   m_sharedMaterial: {fileID: 2220717831942814115, guid: 795c79418fec80d4daaf14faa8d0eb75, type: 2}

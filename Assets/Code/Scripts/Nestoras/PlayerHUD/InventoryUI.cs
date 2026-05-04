@@ -25,13 +25,12 @@ public class InventoryUI : MonoBehaviour
     private InputAction scrollInventoryAction;
     private Transform UI;
 
-    [SerializeField] float focusedSlotScale = 1.2f;
+    [SerializeField] private float focusedSlotScale = 1.2f;
 
     private void Awake()
     {
         UI = transform.GetChild(0);
         scrollInventoryAction = InputBridge.Actions.FindAction("Scroll Inventory");
-        scrollInventoryAction.performed += SwitchSlot;
 
         if (PlayerBody.localPlayerBody != null) ConstructInventory(PlayerBody.localPlayerBody);
         PlayerBody.OnLocalPlayerSpawned += ConstructInventory;
@@ -39,14 +38,13 @@ public class InventoryUI : MonoBehaviour
     }
     private void OnDestroy()
     {
-        scrollInventoryAction.performed -= SwitchSlot;
-
         PlayerBody.OnLocalPlayerSpawned -= ConstructInventory;
         PlayerBody.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
     }
     private void ConstructInventory(PlayerBody player)
     {
         playerInventory = player.GetComponent<PlayerInventory>();
+        playerInventory.OnFocusedIndexChanged += SwitchSlot;
 
         slots = new Dictionary<int, InventorySlotUI>(player.Inventory.TotalSlots);
         for (int i = 0; i < player.Inventory.TotalSlots; i++)
@@ -58,7 +56,7 @@ public class InventoryUI : MonoBehaviour
             GameObject usePrompt = slot.transform.GetChild(3).gameObject;
             slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
-        SwitchSlot(0);
+        playerInventory.ChangeFocused(0);
         
         player.Inventory.OnStackAdded += (item, index) =>
         {
@@ -93,21 +91,19 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
+        playerInventory.OnFocusedIndexChanged -= SwitchSlot;
         playerInventory = null;
         foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.gameObject);
         slots.Clear();
     }
-
-    private void SwitchSlot(InputAction.CallbackContext context) => SwitchSlot((context.ReadValue<float>() > 0 ? playerInventory.focusedSlot + 1 : playerInventory.focusedSlot - 1 + slots.Count) % slots.Count);
-    private void SwitchSlot(int newIndex)
+    private void SwitchSlot(int previous, int current)
     {
         if (playerInventory == null) return;
 
-        slots[playerInventory.focusedSlot].background.transform.localScale = Vector3.one;
-        slots[playerInventory.focusedSlot].usePrompt.SetActive(false);
-        slots[newIndex].background.transform.localScale = Vector3.one * focusedSlotScale;
-        playerInventory.ChangeFocused(newIndex);
+        slots[previous].background.transform.localScale = Vector3.one;
+        slots[previous].usePrompt.SetActive(false);
+        slots[current].background.transform.localScale = Vector3.one * focusedSlotScale;
 
-        if (playerInventory.CanUseFocused()) slots[newIndex].usePrompt.SetActive(true);
+        if (playerInventory.CanUseFocused()) slots[current].usePrompt.SetActive(true);
     }
 }

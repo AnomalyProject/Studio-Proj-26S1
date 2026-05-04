@@ -2,6 +2,7 @@ using PurrNet;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -11,6 +12,7 @@ using UnityEngine.InputSystem;
 public class PlayerInventory : NetworkBehaviour
 {
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
+    public event Action<int, int> OnFocusedIndexChanged;
 
     [SerializeField, Min(1)] private int inventorySize = 5;
     [SerializeField] private Transform itemHolder;
@@ -135,6 +137,7 @@ public class PlayerInventory : NetworkBehaviour
             itemObject?.SetActive(false);
         }
 
+        int previous = focusedSlot;
         focusedSlot = focusAtIndex;
 
         if (Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
@@ -143,6 +146,7 @@ public class PlayerInventory : NetworkBehaviour
         }
 
         activeInstance = itemObject;
+        OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
@@ -191,6 +195,10 @@ public class PlayerInventory : NetworkBehaviour
     public void PreviousItem(InputAction.CallbackContext ctx)
     {
         if (ctx.started) PreviousItem();
+    }
+    public void ScrollSlot(InputAction.CallbackContext ctx)
+    {
+        if(ctx.performed) ChangeFocused((ctx.ReadValue<float>() > 0 ? focusedSlot + 1 : focusedSlot - 1 + Inventory.TotalSlots) % Inventory.TotalSlots);
     }
     #endregion
 
