@@ -25,13 +25,18 @@ public class CycleVendor : InteractableVendor
     }
     private int focusedIndex = 0;
 
+    protected override void OnSpawned()
+    {
+        base.OnSpawned();
+        OnUpdateFocused.AddListener(UpdateVisuals);
+    }
+
     protected override void OnObserverAdded(PlayerID player)
     {
         base.OnObserverAdded(player);
 
         if (!isServer) return;
         StartCycle(player, cycleRatio);
-        OnUpdateFocused.AddListener(UpdateVisuals);
     }
 
     private void UpdateVisuals(IReadOnlyItemStack stack) => itemIcon.sprite = stack.GetItemData().ItemIcon;
