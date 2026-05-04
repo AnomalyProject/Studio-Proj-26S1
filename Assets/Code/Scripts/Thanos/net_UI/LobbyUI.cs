@@ -147,6 +147,7 @@ public class LobbyUI : MonoBehaviour
         {
             readyButton.interactable =
                 isLocalPlayerInElevator &&
+                !isLocalPlayerReady &&
                 sessionData.ElevatorState == ElevatorLobbyState.Open;
         }
 
@@ -162,7 +163,18 @@ public class LobbyUI : MonoBehaviour
             }
             else
             {
-                readyButtonText.text = isLocalPlayerReady ? "Unready" : "Ready";
+                if (isLocalPlayerReady && isLocalPlayerInElevator)
+                {
+                    readyButtonText.text = "Ready";
+                }
+                else if (!isLocalPlayerInElevator)
+                {
+                    readyButtonText.text = "Enter Elevator";
+                }
+                else
+                {
+                    readyButtonText.text = "Ready";
+                }
             }
         }
 
