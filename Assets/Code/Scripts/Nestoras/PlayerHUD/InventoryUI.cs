@@ -52,10 +52,10 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < player.Inventory.TotalSlots; i++)
         {
             GameObject slot = Instantiate(inventorySlotPrefab, UI);
-            Image background = slot.GetComponent<Image>();
-            Image icon = slot.transform.GetChild(0).GetComponent<Image>();
-            TextMeshProUGUI count = slot.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-            GameObject usePrompt = slot.GetComponentInChildren<InputIcon>(true).gameObject;
+            Image background = slot.transform.GetChild(0).GetComponent<Image>();
+            Image icon = slot.transform.GetChild(1).GetComponent<Image>();
+            TextMeshProUGUI count = slot.transform.GetChild(2).GetComponent<TextMeshProUGUI>();
+            GameObject usePrompt = slot.transform.GetChild(3).gameObject;
             slots.Add(i, new InventorySlotUI { background = background, icon = icon, count = count, usePrompt = usePrompt });
         }
         SwitchSlot(0);
