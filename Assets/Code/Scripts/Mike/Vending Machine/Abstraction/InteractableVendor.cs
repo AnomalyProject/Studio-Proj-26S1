@@ -21,13 +21,11 @@ public abstract class InteractableVendor : VendorBase, IInteractable<PlayerBody>
         bool canInteract = await CanInteract(interactor);
         if (!canInteract) return false;
 
+        interactor.Inventory.Remove(CurrencyItem, usageCost); // Remove currency to make space just in case
         bool success = TryInteractBehaviour(interactor);
 
-        if (success)
-        {
-            interactor.Inventory.Remove(CurrencyItem, usageCost);
-            InvokeTransferSuccess();
-        }
+        if (success) InvokeTransferSuccess();
+        else interactor.Inventory.Add(CurrencyItem, usageCost); // Return currency on failure.
         return success;
     }
 
