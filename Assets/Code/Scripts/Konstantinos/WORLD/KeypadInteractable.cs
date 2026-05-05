@@ -41,7 +41,8 @@ public class KeypadInteractable : NetworkBehaviour
         _initialized = true;
         InitializeButtons();
 
-        currentInput.value = "";
+        if(asServer) currentInput.value = "";
+
         if (inputText != null && statusText != null) 
         { 
             inputText.text = statusText.text = ""; // texts clear

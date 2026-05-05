@@ -57,6 +57,11 @@ public class GameManager : NetworkBehaviour
     public UnityEvent OnWrongDecision, OnPunishmentTimerExpired;
     public UnityEvent OnGameWon;
     public UnityEvent OnGameReset;
+
+    [ObserversRpc] void InvokeOnWrongDecision() => OnWrongDecision?.Invoke();
+    [ObserversRpc] void InvokeOnGameWon() => OnGameWon?.Invoke();
+    [ObserversRpc] void InvokeOnGameReset() => OnGameReset?.Invoke();
+    [ObserversRpc] void InvokeOnProgressChanged(int prog) => OnProgressChanged?.Invoke(prog);
     #endregion
 
     #region Unity Lifecycle
@@ -113,8 +118,8 @@ public class GameManager : NetworkBehaviour
         anomalyManager.PickMap_Server();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
-        OnProgressChanged?.Invoke(CurrentProgress);
-        OnGameReset?.Invoke();
+        InvokeOnProgressChanged(CurrentProgress);
+        InvokeOnGameReset();
 
         LogProgress("Game reset.");
     }
@@ -152,7 +157,7 @@ public class GameManager : NetworkBehaviour
             case AnomalyManager.RoomState.WinRoom:
                 SetElevatorInteraction(entryEnabled: true, exitEnabled: true);
                 SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
-                OnGameWon?.Invoke();
+                InvokeOnGameWon();
                 LogProgress("Game won! Use the entry elevator to play again, or use the exit elevator to return to the Lobby!");
                 break;
         }
@@ -222,7 +227,7 @@ public class GameManager : NetworkBehaviour
     private void HandleCorrectDecision()
     {
         CurrentProgress++;
-        OnProgressChanged?.Invoke(CurrentProgress);
+        InvokeOnProgressChanged(CurrentProgress);
 
         LogProgress($"Correct!");
 
@@ -260,7 +265,7 @@ public class GameManager : NetworkBehaviour
 
         //BeginPunishmentRoomTimer_ObserversRpc(punishmentTimeLimit);
 
-        OnWrongDecision?.Invoke();
+        InvokeOnWrongDecision();
         LogProgress($"Wrong decision — punishment room. Use the exit elevator to resume." +
             $"{punishmentTimeLimit}s to reach the exit elevator.");
     }
