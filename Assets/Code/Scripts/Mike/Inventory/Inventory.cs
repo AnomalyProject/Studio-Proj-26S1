@@ -35,17 +35,22 @@ public class Inventory : NetworkModule
 
     #endregion
 
-    #region Constructor
+    #region Constructor & Initialization
     public Inventory(int size, params ItemStack[] startingItems)
     {
         size = Math.Max(size, 1);
         slots = new(size, ownerAuth: false);
-        OnStackChanged += (_, index) => slots.SetDirty(index);
 
         for (int i = 0; i < startingItems.Length && !IsInventoryFull(); i++)
         {
             Add(startingItems[i]);
         }
+    }
+
+    public override void OnSpawn(bool asServer)
+    {
+        base.OnSpawn(asServer);
+        if(asServer) OnStackChanged += (_, index) => slots.SetDirty(index);
     }
     #endregion
 
