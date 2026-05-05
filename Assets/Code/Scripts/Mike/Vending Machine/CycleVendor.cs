@@ -8,7 +8,6 @@ public class CycleVendor : InteractableVendor
     public UnityEvent<IReadOnlyItemStack> OnUpdateFocused;
     [SerializeField, Min(.1f)] float cycleRatio = 0.5f;
     [SerializeField] Image itemIcon;
-    private IReadOnlyItemStack focusedItem;
     private SyncVar<int> focusedIndex = new(0, ownerAuth: false);
     protected override void OnSpawned(bool asServer)
     {
@@ -20,7 +19,6 @@ public class CycleVendor : InteractableVendor
     }
     protected override bool TryInteractBehaviour(PlayerBody interactor)
     {
-        if (focusedItem == null) return false;
         return itemStash.Transfer(focusedIndex.value, interactor.Inventory) > 0;
     }
 
@@ -34,12 +32,7 @@ public class CycleVendor : InteractableVendor
 
     private void UpdateFocused(int newIndex)
     {
-        if(itemStash.TryGet(newIndex, out var stack))
-        {
-            focusedItem = stack;
-            OnUpdateFocused?.Invoke(stack);
-        }
-
+        if(itemStash.TryGet(newIndex, out var stack)) OnUpdateFocused?.Invoke(stack);
         UpdateVisuals(stack);
     }
     private void UpdateVisuals(IReadOnlyItemStack stack)
