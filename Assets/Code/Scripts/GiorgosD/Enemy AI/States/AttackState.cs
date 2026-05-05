@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class AttackState : BaseState
 {
-    private Transform player;
+    private Transform target;
     public event Action<GameObject> OnPlayerAttacked;
 
-    public AttackState(EnemyBrain brain, EnemyPawn body, Transform player) : base(brain, body)
+    public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        this.player = player;
+        
     }
 
     public override void Enter()
@@ -16,12 +16,14 @@ public class AttackState : BaseState
         Debug.Log("Attacking");
         //OnPlayerAttacked?.Invoke(player.gameObject); //this if we want the attack event to happen even if not hit.
 
-        bool isHit = body.IsHitSuccess(player) ? DoAttack(player) : ChangeToChaseState();
+        target = brain.TargetPos;
+
+        bool isHit = body.IsHitSuccess(target) ? DoAttack(target) : ChangeToChaseState();
     }
 
     public override void Update()
     {
-        
+
     }
 
     /// <summary>
@@ -50,14 +52,14 @@ public class AttackState : BaseState
 
         OnPlayerAttacked?.Invoke(player.gameObject);   //this if we want event to happen only if hit is successful.
 
-        brain.ChangeState(new IdleState(brain, body));
+        brain.ChangeState(EnemyBrain.StateID.Idle);
 
         return true;
     }
 
     private bool ChangeToChaseState()
     {
-        brain.ChangeState(new AlertState(brain, body, player));
+        brain.ChangeState(EnemyBrain.StateID.Chase, target);
 
         return true;
     }

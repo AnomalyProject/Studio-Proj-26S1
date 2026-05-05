@@ -3,40 +3,44 @@ using UnityEngine;
 public class InvestigateState : BaseState
 {
     private Vector3 lastKnownPos;
-    private Transform player;
+    private Transform target;
 
-    public InvestigateState(EnemyBrain brain, EnemyPawn body, Vector3 lastPos, Transform player) : base(brain, body)
+    public InvestigateState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        this.lastKnownPos = lastPos;
-        this.player = player;
+
     }
 
     public override void Enter()
     {
         body.SetMoveSpeed(true);
 
+        lastKnownPos = brain.TargetPos.position;
+
         body.MoveToTarget(lastKnownPos);
 
         body.OnPlayerSpotted += PlayerFound;
     }
+
     public override void Update()
     {
+        target = brain.TargetPos;
+
         // If the player is close enough, switch to chase state because sometimes when the it reaches the player it goes idle.
-        if (Vector3.Distance(body.transform.position, player.position) < 3.0f && player.CompareTag("Player"))
+        if (Vector3.Distance(body.transform.position, target.position) < 3.0f && target.CompareTag("Player"))
         {
-            brain.ChangeState(new ChaseState(brain, body, player));
+            brain.ChangeState(EnemyBrain.StateID.Chase, target);
             return;
         }
 
         if (body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
-           brain.ChangeState(new IdleState(brain, body));
+           brain.ChangeState(EnemyBrain.StateID.Idle);
         }
     }
 
     private void PlayerFound(GameObject player)
     {
-        brain.ChangeState(new ChaseState(brain, body, player.transform));
+       brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
     }
 
     public override void Exit()

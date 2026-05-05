@@ -10,7 +10,7 @@ public class IdleState : BaseState
 
     public override void Enter()
     {
-        body.IdleSearch(true);
+        body.Search(true);
         // Idle animation/search animation (looking left and right animation)
         timer = brain.IdleTime;
         body.OnPlayerSpotted += HandlePlayerSpotted;
@@ -21,17 +21,19 @@ public class IdleState : BaseState
         timer -= Time.deltaTime;
         if (timer <= 0)
         {
-            brain.ChangeState(new PatrolState(brain, body));
+            brain.ChangeState(EnemyBrain.StateID.Patrol);
         }
     }
-    
-    private void HandlePlayerSpotted(GameObject player) => brain.ChangeState(new AlertState(brain, body, player.transform));
-    
+
+    private void HandlePlayerSpotted(GameObject player)
+    {
+        brain.ChangeState(EnemyBrain.StateID.Alert, player.transform);
+    }
 
     public override void Exit()
     {
         body.OnPlayerSpotted -= HandlePlayerSpotted;
 
-        body.IdleSearch(false);
+        body.Search(false);
     }
 }

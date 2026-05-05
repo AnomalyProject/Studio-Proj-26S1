@@ -62,8 +62,9 @@ public class EnemyPawn : NetworkBehaviour
     /// Tells the enemy to move to the target possition.
     /// </summary>
     /// <param name="target"> either the player or the point whatever the brain thinks </param>
-    public void MoveToTarget(Vector3 target) 
-    { 
+
+    public void MoveToTarget(Vector3 target)
+    {
         agent.SetDestination(target);
     }
 
@@ -140,6 +141,7 @@ public class EnemyPawn : NetworkBehaviour
     /// </summary>
     /// <param name="targetPos"></param>
     /// <returns></returns>
+
     public void RotateTowards(Vector3 targetPos)
     {
         Vector3 direction = (targetPos - transform.position);
@@ -152,7 +154,7 @@ public class EnemyPawn : NetworkBehaviour
             agent.angularSpeed * Time.deltaTime
         );
 
-        agent.isStopped = false; 
+        agent.isStopped = false;
     }
 
     /// <summary>
@@ -199,7 +201,7 @@ public class EnemyPawn : NetworkBehaviour
 
         if (closestDetectedPlayer != null)
         {
-            if (cachedPlayer == null || cachedPlayer != closestDetectedPlayer)
+            if (cachedPlayer != closestDetectedPlayer)
             {
                 cachedPlayer = closestDetectedPlayer;
                 OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
@@ -246,7 +248,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <summary>
     /// This func increases and decreases the Sight angle to mimic the enemy looking around for the player when it loses sight.
     /// </summary>
-    public void IdleSearch(bool isSearching)
+    public void Search(bool isSearching)
     {
         if (isSearching)
         {
@@ -263,6 +265,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <summary>
     /// Safty stops evrything gives brain more control.
     /// </summary>
+
     public void StopAll()
     {
         StopAllCoroutines();

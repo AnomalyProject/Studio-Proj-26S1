@@ -1,6 +1,7 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
@@ -13,26 +14,53 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
 
-    public event Action<BaseState> OnStateChanged;
+    private Transform targetPos;
+
+    public enum StateID
+    {
+        Idle,
+        Alert,
+        Patrol,
+        Chase,
+        Attack,
+        Investigate
+    }
+    [SerializeField] private StateID currentStateID;
+
+    private Dictionary<StateID, BaseState> stateDictionary = new Dictionary<StateID, BaseState>();
 
     private EnemyPawn body;
     private BaseState currentState;
+
+    public event Action<BaseState> OnStateChanged;
 
     // TEMP stuff bc no events fire at the moment
     public bool tempStuffEnabled;
     public bool poiIsEnabled;
     private AI_TestHelper testHelper;
+    // TEMP END
 
     public List<Transform> PatrolPoints => patrolPoints;
     public List<Transform> PatrolPriorities => patrolPriorities;
+    public Transform TargetPos => targetPos;
     public float IdleTime => idleTimer;
     public List<Transform> RespawnPoints => respawnPoints;
 
-    private void Start()
+    private void Awake()
     {
         body = GetComponent<EnemyPawn>();
 
-        if (!tempStuffEnabled)
+        stateDictionary.Add(StateID.Idle, new IdleState(this, body));
+        stateDictionary.Add(StateID.Alert, new AlertState(this, body));
+        stateDictionary.Add(StateID.Patrol, new PatrolState(this, body));
+        stateDictionary.Add(StateID.Chase, new ChaseState(this, body));
+        stateDictionary.Add(StateID.Attack, new AttackState(this, body));
+        stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
+    }
+
+    private void Start()
+    {  
+        if (tempStuffEnabled)
         {
             testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
 
@@ -41,14 +69,17 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
             testHelper.onItemPicked.AddListener(OnItemPicked);
         }
 
-        ChangeState(new PatrolState(this, body));
+        ChangeState(StateID.Idle, null);
     }
 
-    public void ChangeState(BaseState newState)
+    public void ChangeState(StateID newStateID, Transform target = null)
     {
+        if (target != null) targetPos = target;
+
         currentState?.Exit();
         body.StopAll();
-        currentState = newState;
+        currentStateID = newStateID;
+        currentState = stateDictionary[newStateID];
         currentState.Enter();
         OnStateChanged?.Invoke(currentState);
     }
@@ -63,7 +94,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     /// </summary>
     private void OnObservedTooMuch(Transform player)
     {
-        ChangeState(new AlertState(this, body, player));
+        ChangeState(StateID.Alert, player);
     }
 
     private void OnItemPicked()
@@ -73,9 +104,11 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
     public void Alert<TTarget>(TTarget alertedBy) where TTarget : MonoBehaviour
     {
-        if (currentState is ChaseState || currentState is AttackState || currentState is AlertState) return;
+        if (currentStateID == StateID.Chase 
+            || currentStateID == StateID.Attack 
+            || currentStateID == StateID.Alert) return;
 
-        ChangeState(new AlertState(this, body, alertedBy.transform));
+        ChangeState(StateID.Alert, alertedBy.transform);
     }
 
     private void OnDestroy()

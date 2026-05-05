@@ -13,7 +13,7 @@ public class AI_TestHelper : MonoBehaviour
 
     void Update()
     {
-        if (!brain.tempStuffEnabled)
+        if (brain.tempStuffEnabled)
         {
             // Increase aggression level.
             if (Input.GetKeyDown(KeyCode.Alpha1))
