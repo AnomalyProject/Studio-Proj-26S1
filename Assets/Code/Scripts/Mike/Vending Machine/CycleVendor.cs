@@ -1,6 +1,4 @@
 using PurrNet;
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -10,60 +8,43 @@ public class CycleVendor : InteractableVendor
     public UnityEvent<IReadOnlyItemStack> OnUpdateFocused;
     [SerializeField, Min(.1f)] float cycleRatio = 0.5f;
     [SerializeField] Image itemIcon;
-
-    private IReadOnlyItemStack _focusedItem;
-    public IReadOnlyItemStack FocusedItem
+    private IReadOnlyItemStack focusedItem;
+    private SyncVar<int> focusedIndex = new(0, ownerAuth: false);
+    protected override void OnSpawned(bool asServer)
     {
-        get => _focusedItem;
-        private set
-        {
-            if (_focusedItem == value) return;
+        base.OnSpawned(asServer);
 
-            _focusedItem = value;
-            if (FocusedItem != null) OnUpdateFocused?.Invoke(value);
-        }
+        focusedIndex.onChanged += UpdateFocused;
+        if (asServer) InvokeRepeating(nameof(Cycle), 0, cycleRatio);
+        UpdateFocused(focusedIndex.value);
     }
-    private int focusedIndex = 0;
-
-    protected override void OnSpawned()
-    {
-        base.OnSpawned();
-        OnUpdateFocused.AddListener(UpdateVisuals);
-    }
-
-    protected override void OnObserverAdded(PlayerID player)
-    {
-        base.OnObserverAdded(player);
-
-        if (!isServer) return;
-        StartCycle(player, cycleRatio);
-    }
-
-    private void UpdateVisuals(IReadOnlyItemStack stack) => itemIcon.sprite = stack.GetItemData().ItemIcon;
-
-    [TargetRpc] private void StartCycle(PlayerID playerID, float ratio) => InvokeRepeating(nameof(Cycle), 0f, ratio);
     protected override bool TryInteractBehaviour(PlayerBody interactor)
     {
-        if (FocusedItem == null) return false;
-        return itemStash.Transfer(focusedIndex, interactor.Inventory) > 0;
+        if (focusedItem == null) return false;
+        return itemStash.Transfer(focusedIndex.value, interactor.Inventory) > 0;
     }
 
     private void Cycle()
     {
-        if(itemStash.TryGetNext(focusedIndex, out IReadOnlyItemStack newFocused, out int newIndex))
-        {
-            FocusedItem = newFocused;
-            focusedIndex = newIndex;
-            DebugFocused();
-        }
+        if (!isServer) return;
+
+        itemStash.TryGetNext(focusedIndex, out _, out int newIndex);
+        focusedIndex.value = newIndex;
     }
-    public void DebugFocused()
+
+    private void UpdateFocused(int newIndex)
     {
-        if(FocusedItem == null)
+        if(itemStash.TryGet(newIndex, out var stack))
         {
-            Debug.Log("No item in focus");
-            return;
+            focusedItem = stack;
+            OnUpdateFocused?.Invoke(stack);
         }
-        Debug.Log($"Focused item: {FocusedItem.GetItemData().name} x{FocusedItem.GetQuantity()}");
+
+        UpdateVisuals(stack);
+    }
+    private void UpdateVisuals(IReadOnlyItemStack stack)
+    {
+        itemIcon.enabled = priceText.enabled = stack != null;
+        itemIcon.sprite = stack?.GetItemData().ItemIcon;
     }
 }
