@@ -31,12 +31,13 @@ public class FPSController : MonoBehaviour
 
     #region Public Accessors
     //Public Accessors(for other systems, e.g.audio, UI)
-
+    public bool IsLocalPlayer { get; set; }
     public bool IsCrouching => isCrouching;
     public bool IsSprinting => isSprinting;
     public bool IsGrounded => isGrounded;
     public bool IsMoving => moveInput.sqrMagnitude > 0;
     public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
+    public float SpeedBoostTimeRemaining => _speedBoostTimeRemaining;
     #endregion
 
     #region Private Fields
@@ -54,10 +55,15 @@ public class FPSController : MonoBehaviour
     private bool isSprinting = false;
     private float targetHeight;
     private float targetCameraLocalY;
-    public bool IsLocalPlayer { get; set; }
     
     // Cached camera holder standing Y so crouch offset is relative
     private float cameraStandingLocalY;
+
+    // Speed boost multiplier
+    private float speedBoostMultiplier = 1f;
+    private const float maxSpeedBoostMultiplier = 1.5f;
+    private float _speedBoostTimeRemaining = 0f;
+
     #endregion
 
     #region Unity Lifecycle
@@ -148,7 +154,10 @@ public class FPSController : MonoBehaviour
     {
         // Cast upward from current position to check for overhead obstacles
         float castDistance = standingHeight - crouchHeight;
-        return !Physics.SphereCast(transform.position, groundCheckRadius, Vector3.up, out _, castDistance, groundLayers, QueryTriggerInteraction.Ignore);
+        return !Physics.SphereCast(transform.position,
+                groundCheckRadius, Vector3.up, out _,
+                castDistance, groundLayers, 
+                QueryTriggerInteraction.Ignore);
 
     }
     #endregion
@@ -171,15 +180,38 @@ public class FPSController : MonoBehaviour
         if (isCrouching) speed = crouchSpeed;
         else if (isSprinting) speed = sprintSpeed;
         else speed = walkSpeed;
+
+        speed *= speedBoostMultiplier;
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         character.Move(move * (speed * Time.deltaTime));
+    }
+    #endregion
+
+    #region Speed Boost
+    public void ApplySpeedBoost(float multiplierAdditive, float duration)
+    {
+        if(multiplierAdditive <= 0) return;
+
+        speedBoostMultiplier = Mathf.Min(speedBoostMultiplier + multiplierAdditive, maxSpeedBoostMultiplier);
+        _speedBoostTimeRemaining += duration;
+
+        // Cancel any pending reset and restart with the updated total time
+        CancelInvoke(nameof(RevertSpeedBoost));
+        Invoke(nameof(RevertSpeedBoost), _speedBoostTimeRemaining);
+    }
+    private void RevertSpeedBoost()
+    {
+        speedBoostMultiplier = 1f;
+        _speedBoostTimeRemaining = 0;
     }
     #endregion
 
     #region Gravity
     private void HandleGravity()
     {
-        velocity.y += gravity * Time.deltaTime;
+        if(!character.isGrounded) velocity.y += gravity * Time.deltaTime;
+        else velocity.y = 0f;
+
         character.Move(velocity * Time.deltaTime);
     }
     #endregion
