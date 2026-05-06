@@ -44,6 +44,7 @@ public static class InputBridge
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
     private static Stack<InputContext> contextStack = new Stack<InputContext>();
     private static Dictionary<InputContext, MapCursorPair> contextMap;
+    public static bool isLocked { get; private set; } = false;
     #endregion
 
     #region Exposed Methods
@@ -54,6 +55,12 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
+        if (isLocked)
+        {
+            Debug.LogWarning("Input context is currently locked and cannot change.");
+            return;
+        }
+
         if (contextStack.Count == 0 || contextStack.Peek() != context) contextStack.Push(context);
         CurrentContext = context;
 
@@ -75,7 +82,7 @@ public static class InputBridge
     /// </summary>
     public static void RestorePreviousContext()
     {
-        contextStack.Pop();
+        if(contextStack.Count > 1) contextStack.Pop();
         SetContext(contextStack.Peek());
     }
     /// <summary>
@@ -87,6 +94,13 @@ public static class InputBridge
         if (context == CurrentContext) RestorePreviousContext();
         else SetContext(context);
     }
+    public static void LockAt(InputContext context)
+    {
+        isLocked = false;
+        SetContext(context);
+        isLocked = true;
+    }
+    public static void Unlock() => isLocked = false;
 
     #endregion
 
