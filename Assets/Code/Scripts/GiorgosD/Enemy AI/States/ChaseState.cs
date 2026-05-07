@@ -12,6 +12,8 @@ public class ChaseState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         body.SetMoveSpeed(true);
 
         body.OnLostPlayer += LostPlayer;
@@ -24,7 +26,11 @@ public class ChaseState : BaseState
     {
         target = brain.TargetPos;
 
-        if (target == null) return;
+        if (target == null) 
+        {
+            brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
+        }
 
         body.RotateTowards(target.position);
         body.MoveToTarget(target.position);

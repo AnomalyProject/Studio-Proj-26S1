@@ -17,7 +17,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player")] private float sightAngleSearch;
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when its doing anything other than searching for the player, this should match the sightAngle value")] private float sightAngleNormal;
-    [SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
+    //[SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
@@ -28,16 +28,13 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the auto Detection")] private float autoDetectMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the Sight Range")] private float sightRangeMultiplier;
-    [SerializeField, Tooltip("Controls how much each aggression level decreases the check Frequency of sight")] private float checkFrequencyReduction;
+    //[SerializeField, Tooltip("Controls how much each aggression level decreases the check Frequency of sight")] private float checkFrequencyReduction;
     [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
     [Header("Attack")]
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
-
-    [Header("Turning")]
-    [SerializeField] private float turnThreshold;
     #endregion
 
     #region Events
@@ -51,9 +48,17 @@ public class EnemyPawn : NetworkBehaviour
         agent = GetComponent<NavMeshAgent>();
     }
 
-    private void Start()
+    private float sightTimer;
+    private void Update()
     {
-        InvokeRepeating(nameof(Sight), 0f, checkFrequency);
+        if (!isServer) return;
+
+        sightTimer += Time.deltaTime;
+        if (sightTimer >= 0)
+        {
+            sightTimer = 0f;
+            Sight();
+        }
     }
     #endregion
 
@@ -62,10 +67,13 @@ public class EnemyPawn : NetworkBehaviour
     /// Tells the enemy to move to the target possition.
     /// </summary>
     /// <param name="target"> either the player or the point whatever the brain thinks </param>
-
     public void MoveToTarget(Vector3 target)
     {
-        agent.SetDestination(target);
+        if (!isServer) return;
+
+        Debug.Log($"Moving to {target}");
+
+        if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }
 
     /// <summary>
@@ -92,6 +100,26 @@ public class EnemyPawn : NetworkBehaviour
 
         return Array.Exists(hitColliders, c => c.transform == player);
     }
+
+    /// <summary>
+    /// It teleports the player to a random spawn point when attacked by the enemy.
+    /// </summary>
+    /// <param name="spawn"></param>
+    /// <param name="player"></param>
+    [ObserversRpc]
+    public void TeleportToSpawn(Vector3 spawn, NetworkIdentity player)
+    {
+        if (!player.isOwner || player.transform.position == null) return;
+
+        var controller = player.GetComponent<CharacterController>();
+
+        if (controller != null) controller.enabled = false;
+
+        player.transform.position = spawn;
+
+        if (controller != null) controller.enabled = true;
+
+    }
     #endregion
 
     #region Aggression
@@ -106,7 +134,7 @@ public class EnemyPawn : NetworkBehaviour
             runSpeed *= runMultiplier;
             autoDetectRange *= autoDetectMultiplier;
             sightRange *= sightRangeMultiplier;
-            checkFrequency -= checkFrequencyReduction;
+            //checkFrequency -= checkFrequencyReduction;
 
             Debug.Log($"Aggression increased to level {aggressionLevel}");
             return;
@@ -126,7 +154,7 @@ public class EnemyPawn : NetworkBehaviour
             runSpeed /= runMultiplier;
             autoDetectRange /= autoDetectMultiplier;
             sightRange /= sightRangeMultiplier;
-            checkFrequency += checkFrequencyReduction;
+            //checkFrequency += checkFrequencyReduction;
             Debug.Log($"Aggression decreased to level {aggressionLevel}");
             return;
         }
@@ -141,9 +169,10 @@ public class EnemyPawn : NetworkBehaviour
     /// </summary>
     /// <param name="targetPos"></param>
     /// <returns></returns>
-
     public void RotateTowards(Vector3 targetPos)
     {
+        if (!isServer) return;
+
         Vector3 direction = (targetPos - transform.position);
         direction.y = 0;
 
@@ -180,6 +209,8 @@ public class EnemyPawn : NetworkBehaviour
     /// </summary>
     private void Sight()
     {
+        if (!isServer) return;
+
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
         Transform closestDetectedPlayer = null;
@@ -201,21 +232,18 @@ public class EnemyPawn : NetworkBehaviour
 
         if (closestDetectedPlayer != null)
         {
-            if (cachedPlayer != closestDetectedPlayer)
+            if (cachedPlayer != closestDetectedPlayer || cachedPlayer != null)
             {
                 cachedPlayer = closestDetectedPlayer;
                 OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
             }
         }
-        else
+        else if (cachedPlayer != null)
         {
-            if (cachedPlayer != null)
-            {
-                cachedPlayer = null;
-                OnLostPlayer?.Invoke();
-                Debug.Log("Target Lost.");
-            }
+            cachedPlayer = null;
+            OnLostPlayer?.Invoke();
+            Debug.Log("Target Lost.");
         }
     }
 
@@ -248,6 +276,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <summary>
     /// This func increases and decreases the Sight angle to mimic the enemy looking around for the player when it loses sight.
     /// </summary>
+    [ObserversRpc]
     public void Search(bool isSearching)
     {
         if (isSearching)
@@ -265,9 +294,10 @@ public class EnemyPawn : NetworkBehaviour
     /// <summary>
     /// Safty stops evrything gives brain more control.
     /// </summary>
-
     public void StopAll()
     {
+        if (!isServer) return;
+
         StopAllCoroutines();
         agent.ResetPath();
     }

@@ -10,6 +10,8 @@ public class AlertState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         target = brain.TargetPos;
         
         // Play sound and/or animation to indicate the enemy is alert.

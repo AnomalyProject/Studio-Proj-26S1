@@ -1,3 +1,4 @@
+using PurrNet;
 using System;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ public class AttackState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         Debug.Log("Attacking");
         //OnPlayerAttacked?.Invoke(player.gameObject); //this if we want the attack event to happen even if not hit.
 
@@ -34,19 +37,9 @@ public class AttackState : BaseState
         int randomIndex = UnityEngine.Random.Range(0, brain.RespawnPoints.Count);
         Transform targetPoint = brain.RespawnPoints[randomIndex];
 
-        var controller = player.gameObject.GetComponent<CharacterController>();
+        var playerID = player.GetComponent<NetworkIdentity>();
 
-        if (controller != null) 
-        {
-            controller.enabled = false;
-        }
-
-        player.position = targetPoint.position;
-
-        if(player != null)
-        {
-            controller.enabled = true;
-        }
+        body.TeleportToSpawn(targetPoint.position, playerID);
 
         Debug.Log("Player Attacked");
 

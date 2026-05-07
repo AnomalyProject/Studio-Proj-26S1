@@ -6,16 +6,6 @@ using UnityEngine;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
 {
-    [Header("Patrol Settings")]
-    [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
-    [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
-    [SerializeField, Tooltip("How long the AI will stay idle before it continues to other stuff")] private float idleTimer;
-
-    [Header("Chase Settings")]
-    [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
-
-    private Transform targetPos;
-
     public enum StateID
     {
         Idle,
@@ -25,7 +15,18 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         Attack,
         Investigate
     }
+    [Header("STATE")]
     [SerializeField] private StateID currentStateID;
+
+    [Header("Patrol Settings")]
+    [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
+    [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
+    [SerializeField, Tooltip("How long the AI will stay idle before it continues to other stuff")] private float idleTimer;
+
+    [Header("Chase Settings")]
+    [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
+
+    private Transform targetPos;
 
     private Dictionary<StateID, BaseState> stateDictionary = new Dictionary<StateID, BaseState>();
 
@@ -58,8 +59,11 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
     }
 
-    private void Start()
-    {  
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+
+        // TEMP
         if (tempStuffEnabled)
         {
             testHelper = FindFirstObjectByType<AI_TestHelper>().GetComponent<AI_TestHelper>();
@@ -68,24 +72,32 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
             testHelper.onItemPicked.AddListener(OnItemPicked);
         }
+        // TEMP END
 
-        ChangeState(StateID.Idle, null);
+        if (!isServer) return;
+
+        ChangeState(StateID.Idle);
     }
 
     public void ChangeState(StateID newStateID, Transform target = null)
     {
+        if (!isServer) return;
+
         if (target != null) targetPos = target;
 
         currentState?.Exit();
-        body.StopAll();
         currentStateID = newStateID;
         currentState = stateDictionary[newStateID];
         currentState.Enter();
         OnStateChanged?.Invoke(currentState);
+
+        Debug.Log($"State changed to {newStateID}");
     }
 
     private void Update()
     {
+        if (!isServer) return;
+
         currentState?.Update();
     }
 
@@ -94,25 +106,37 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     /// </summary>
     private void OnObservedTooMuch(Transform player)
     {
+        if (!isServer) return;
+
         ChangeState(StateID.Alert, player);
     }
 
+    /// <summary>
+    /// Gets Called when the player picks up the item the enemy is interested in.
+    /// </summary>
     private void OnItemPicked()
     {
+        if (!isServer) return;
+
         poiIsEnabled = !poiIsEnabled;
     }
 
     public void Alert<TTarget>(TTarget alertedBy) where TTarget : MonoBehaviour
     {
+        if (!isServer) return;
+
         if (currentStateID == StateID.Chase 
             || currentStateID == StateID.Attack 
-            || currentStateID == StateID.Alert) return;
+            || currentStateID == StateID.Alert
+            || currentStateID == StateID.Investigate) return;
 
         ChangeState(StateID.Alert, alertedBy.transform);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
+
         testHelper.onItemPicked.RemoveListener(OnItemPicked);
         testHelper.onWatched.RemoveListener(OnObservedTooMuch);
     }

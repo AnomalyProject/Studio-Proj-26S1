@@ -10,6 +10,8 @@ public class IdleState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         body.Search(true);
         // Idle animation/search animation (looking left and right animation)
         timer = brain.IdleTime;

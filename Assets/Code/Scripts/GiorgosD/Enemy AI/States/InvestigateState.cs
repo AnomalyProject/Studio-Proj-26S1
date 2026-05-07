@@ -12,6 +12,8 @@ public class InvestigateState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         body.SetMoveSpeed(true);
 
         lastKnownPos = brain.TargetPos.position;
@@ -23,6 +25,8 @@ public class InvestigateState : BaseState
 
     public override void Update()
     {
+        if (body.agent.pathPending) return;
+
         target = brain.TargetPos;
 
         // If the player is close enough, switch to chase state because sometimes when the it reaches the player it goes idle.
@@ -32,9 +36,13 @@ public class InvestigateState : BaseState
             return;
         }
 
-        if (body.agent.remainingDistance <= body.agent.stoppingDistance)
+        if (body.agent.remainingDistance <= body.agent.stoppingDistance && body.agent.hasPath)
         {
            brain.ChangeState(EnemyBrain.StateID.Idle);
+        }
+        else if (!body.agent.hasPath)
+        {
+            brain.ChangeState(EnemyBrain.StateID.Idle);
         }
     }
 
