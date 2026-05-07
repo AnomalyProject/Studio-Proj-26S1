@@ -1,13 +1,15 @@
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine.Events;
+using PurrNet;
 /// <summary>
 /// Flashlight class that implements an interaction interface , basically switch lights on and off
 /// There is a capacity of energy that keeps on the light and when its durability fails turns off 
 /// and cannot open untill energy comes back 
 /// </summary>
-public class Flashlight : MonoBehaviour, IInteractable<MonoBehaviour>
+public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
 {
     [SerializeField] Light flashlightLight;
     [SerializeField, Range(30, 600)] private float maxDurabilitySeconds = 10f;
@@ -15,42 +17,51 @@ public class Flashlight : MonoBehaviour, IInteractable<MonoBehaviour>
     [SerializeField] private bool canBeUsed = false;
     [SerializeField] private bool drainsBattery;
 
-    float durability = 0f;
+    SyncVar<float> durability = new(0f, ownerAuth: false);
     float minDrainSpeedMult = .1f;
-    private bool flashlightOn = false;
+    private SyncVar<bool> flashlightOn = new(false, ownerAuth: false);
     public UnityEvent OnToggleOn, OnToggleOff, OnDrained;
     public float NormalizedDurability => durability / maxDurabilitySeconds;
 
+    private Coroutine drainRoutine;
+    // Initializes flashlight state when the network object spawns
+
+    private void Awake()
+    {
+        flashlightOn.onChanged += SetFlashlight;
+    }
+
+    protected override void OnSpawned(bool asServer)
+    {
+        base.OnSpawned(asServer);
+
+        if (asServer) durability.value = maxDurabilitySeconds;
+
+        flashlightLight.enabled = flashlightOn.value;
+    }
+
     public Task<bool> CanInteract(MonoBehaviour Interactor)
     {
-        Debug.Log("canBeUsed: " + canBeUsed + " durability: " + durability);
-        bool result = canBeUsed && (!drainsBattery || durability > 0f); //If it has no durability or cant be used doesnt allow to interact
-        return Task.FromResult(result); 
+        Debug.Log("canBeUsed: " + canBeUsed + " durability: " + durability.value);
+        bool result = canBeUsed && (!drainsBattery || durability.value > 0f); //If it has no durability or cant be used doesnt allow to interact
+        return Task.FromResult(result);
     }
     //Atemps to interact with flashlight
+    [ServerRpc]
     public Task<bool> TryInteract(MonoBehaviour Interactor)
     {
         ToggleFlashlight();
         Debug.Log("Flashlight Interacted with " + Interactor.name);
         return Task.FromResult(true);
-    }   
-    private void Start()
-    {
-        durability = maxDurabilitySeconds;
-        flashlightLight.enabled = false;
     }
-    private void Update()
-    {
-        if (flashlightOn && drainsBattery)
-        {
-            DurabilityDrop(Time.deltaTime);
-        }
-    }
+
 
     //Switch States if requirements for toggle are true opens the light else closes it
     private void ToggleFlashlight()
     {
-        if (!flashlightOn)
+        if (!isServer || !canBeUsed) return;
+
+        if (!flashlightOn.value)
         {
             ToggleFlashlightOn();
         }
@@ -58,54 +69,101 @@ public class Flashlight : MonoBehaviour, IInteractable<MonoBehaviour>
         {
             ToggleFlashlightOff();
         }
-     }
+    }
 
     //On light
     private void ToggleFlashlightOn()
     {
-        Debug.Log("TURN ON");
-        if (drainsBattery && durability <= 0f) return;
-        flashlightOn = true;
-        flashlightLight.enabled = true;
-        OnToggleOn?.Invoke();
+        if (!isServer) return;
+        if (drainsBattery && durability.value <= 0f) return;
+        flashlightOn.value = true;
+
+        if (drainsBattery && drainRoutine == null)
+        {
+            drainRoutine = StartCoroutine(DrainRoutine());
+        }
     }
 
     //Off light
     private void ToggleFlashlightOff()
     {
-        Debug.Log("TURN Off");
-        flashlightOn = false;
-        flashlightLight.enabled = false;
-        OnToggleOff?.Invoke();
-    }
-    //Drops Battery by dropBattery time and if reach 0 closes light
-    private void DurabilityDrop(float deltaTime)
-    {
-        if (!drainsBattery) return;
+        if (!isServer) return;
+        flashlightOn.value = false;
 
-        durability -= deltaTime * drainSpeedMultiplier;
-
-        if (durability <= 0f)
+        if (drainRoutine != null)
         {
-            durability = 0f;
-            ToggleFlashlightOff();
-            OnDrained?.Invoke();
+            StopCoroutine(drainRoutine);
+            drainRoutine = null;
         }
     }
 
-    public void ChangeDrainSpeed(float speedMultiplier) => drainSpeedMultiplier = Mathf.Max(speedMultiplier, minDrainSpeedMult);
-    public void SetDrainsBattery(bool drainsBattery) => this.drainsBattery = drainsBattery;
-    public void SetCanBeUsed(bool canBeUsed) => this.canBeUsed = canBeUsed;
+    private void SetFlashlight(bool state)
+    {
+        if (flashlightOn.value == flashlightLight.enabled) return;
+
+        flashlightLight.enabled = state;
+
+        if (state)
+        {
+            OnToggleOn?.Invoke();
+        }
+        else
+        {
+            OnToggleOff?.Invoke();
+        }
+    }
+
+    // Drains battery in fixed time intervals (instead of every frame) while the flashlight is on.
+    private IEnumerator DrainRoutine()
+    {
+        if (!isServer) yield break;
+
+        WaitForSeconds wait = new WaitForSeconds(0.25f);
+
+        while (flashlightOn.value && drainsBattery)
+        {
+            yield return wait;
+            durability.value -= 0.25f * drainSpeedMultiplier;
+
+            if (durability <= 0f)
+            {
+                durability.value = 0f;
+                flashlightOn.value = false;
+                OnDrained?.Invoke();
+                drainRoutine = null;
+                yield break;
+            }
+        }
+        drainRoutine = null;
+    }
+
+    public void ChangeDrainSpeed(float speedMultiplier)
+    {
+        if (!isServer) return;
+        drainSpeedMultiplier = Mathf.Max(speedMultiplier, minDrainSpeedMult);
+    }
+    public void SetDrainsBattery(bool drainsBattery)
+    {
+        if (!isServer) return;
+        this.drainsBattery = drainsBattery;
+    }
+    public void SetCanBeUsed(bool canBeUsed)
+    {
+        if (!isServer) return;
+        this.canBeUsed = canBeUsed;
+    }
 
     //Fully Recharges on call
     public void FullRecharge()
     {
-        durability = maxDurabilitySeconds;
+        if (!isServer) return;
+        durability.value = maxDurabilitySeconds;
     }
     //Recharge by adding from something 
     public void AffectDurability(float amountEnergy)
     {
+        if (!isServer) return;
         //Ensures that the new value will never be less than 0 nor greater than maxDurability
-        durability = Math.Clamp(durability + amountEnergy, 0f, maxDurabilitySeconds);
+        durability.value = Math.Clamp(durability.value + amountEnergy, 0f, maxDurabilitySeconds);
     }
 }
