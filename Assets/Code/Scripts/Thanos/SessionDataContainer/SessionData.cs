@@ -13,6 +13,8 @@ public struct PlayerSessionInfo
     public bool IsHost;
     public DateTime JoinedAt;
     public bool IsInElevator;
+    
+    public int ColorIndex;
 
 
     public PlayerSessionInfo(ulong steamID, string name, bool isHost = false, int teamID = -1, bool isInElevator = false)
@@ -24,6 +26,7 @@ public struct PlayerSessionInfo
         IsReady = false;
         JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
         IsInElevator = isInElevator;
+        ColorIndex = 0;
     }
 
 }
@@ -85,6 +88,16 @@ public class SessionData
     {
         if (Players.Any(pp => pp.SteamID == newPlayer.SteamID))
         {
+            List<int> usedColors = Players.Select(p => p.ColorIndex).ToList();
+            List<int> availableColors = new List<int> { 0, 1, 2, 3 };
+            availableColors.RemoveAll(c => usedColors.Contains(c));
+            
+            if (availableColors.Count > 0)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, availableColors.Count);
+                newPlayer.ColorIndex = availableColors[randomIndex];
+            }
+            
             Debug.Log($"[SessionDataManager] Player {newPlayer.SteamID} already exists. Skipping to next player.");
             return;
         }

@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
 
 public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
 {

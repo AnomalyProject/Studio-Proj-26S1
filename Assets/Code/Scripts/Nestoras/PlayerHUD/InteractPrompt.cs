@@ -14,6 +14,7 @@ public class InteractPrompt : MonoBehaviour
         visual = transform.GetChild(0).gameObject;
         visual.SetActive(false);
 
+        if (PlayerBody.localPlayerBody != null) HandleLocalPlayerSpawned(PlayerBody.localPlayerBody);
         PlayerBody.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
         PlayerBody.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
     }

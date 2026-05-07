@@ -1,66 +1,18 @@
-using UnityEngine.InputSystem;
 using UnityEngine;
 
 /// <summary>
 /// Nestoras Angelopoulos
 /// 
-/// Pause menu that toggles the player's cursor and input.
+/// Pause menu
 /// </summary>
 public class PauseMenu : MonoBehaviour
 {
-    private IA_UserInterface UIInputActions;
-    private PlayerInput playerInput;
     private Transform root;
-
-    private bool isPaused;
-
-    private void Awake()
-    {
-        UIInputActions = new IA_UserInterface();
-        root = transform.GetChild(0);
-
-        if (PlayerBody.localPlayerBody != null) HookToLocalPlayer(PlayerBody.localPlayerBody);
-        PlayerBody.OnLocalPlayerSpawned += HookToLocalPlayer;
-        PlayerBody.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
-
-    }
-    private void OnEnable()
-    {
-        UIInputActions.Enable();
-        UIInputActions.UI.TogglePauseMenu.performed += TogglePauseMenu;
-    }
-    private void OnDisable()
-    {
-        UIInputActions.Disable();
-        UIInputActions.UI.TogglePauseMenu.performed -= TogglePauseMenu;
-    }
-
-    private void HookToLocalPlayer(PlayerBody player)
-    {
-        playerInput = player.GetComponent<PlayerInput>();
-        if (isPaused) playerInput.DeactivateInput();
-    }
-    private void HandleLocalPlayerDespawned(PlayerBody player) => playerInput = null;
-
-    public void TogglePauseMenu(InputAction.CallbackContext context) => TogglePauseMenu();
-    public void TogglePauseMenu()
-    {
-        isPaused = !isPaused;
-        root.gameObject.SetActive(isPaused);
-
-        if (isPaused)
-        {
-            if (playerInput != null) playerInput.DeactivateInput();
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            if (playerInput != null) playerInput.ActivateInput();
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-    }
+    private void Awake() => root = transform.GetChild(0);
+    private void OnEnable() => InputBridge.OnContextChanged += TogglePauseMenu;
+    private void OnDisable() => InputBridge.OnContextChanged -= TogglePauseMenu;
+    public void TogglePauseMenu(InputBridge.InputContext context) => root.gameObject.SetActive(context == InputBridge.InputContext.UI);
+    public void Resume() => InputBridge.SetContext(InputBridge.InputContext.Player);
     public void BackToMenu() => SessionModeManager.Instance.ReturnToMenu();
     public void QuitGame() => DevConsole.commands["exit"].Execute(null);
 }
