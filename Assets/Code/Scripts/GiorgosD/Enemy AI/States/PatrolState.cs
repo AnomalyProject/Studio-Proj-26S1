@@ -36,6 +36,7 @@ public class PatrolState : BaseState
         if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
         }
     }
 
@@ -63,8 +64,8 @@ public class PatrolState : BaseState
 
     private void HandlePlayerSpotted(GameObject player)
     {
-        if (!brain.isServer) return;
         brain.ChangeState(EnemyBrain.StateID.Alert, player.transform);
+        return;
     }
 
     public override void Exit()

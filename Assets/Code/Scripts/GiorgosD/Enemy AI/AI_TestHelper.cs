@@ -7,6 +7,7 @@ public class AI_TestHelper : MonoBehaviour
     [SerializeField] private EnemyBrain brain;
 
     [SerializeField] private Transform player;
+    [SerializeField] private AudioSource audioSource;
     public UnityEvent<Transform> onWatched;
     public UnityEvent onItemPicked;
 
@@ -37,6 +38,11 @@ public class AI_TestHelper : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha4))
             {
                 onWatched.Invoke(player);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                audioSource.Play();
             }
         }
     }

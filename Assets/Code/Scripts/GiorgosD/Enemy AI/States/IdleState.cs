@@ -24,12 +24,14 @@ public class IdleState : BaseState
         if (timer <= 0)
         {
             brain.ChangeState(EnemyBrain.StateID.Patrol);
+            return;
         }
     }
 
     private void HandlePlayerSpotted(GameObject player)
     {
         brain.ChangeState(EnemyBrain.StateID.Alert, player.transform);
+        return;
     }
 
     public override void Exit()
