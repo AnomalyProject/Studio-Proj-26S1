@@ -19,7 +19,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
 
     SyncVar<float> durability = new(0f, ownerAuth: false);
     float minDrainSpeedMult = .1f;
-    private bool flashlightOn = false;
+    private SyncVar<bool> flashlightOn = new(false, ownerAuth: false);
     public UnityEvent OnToggleOn, OnToggleOff, OnDrained;
     public float NormalizedDurability => durability / maxDurabilitySeconds;
 
@@ -28,8 +28,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
 
     private void Awake()
     {
-        flashlightLight.enabled = false;
-        flashlightOn = false;
+        flashlightOn.onChanged += SetFlashlight;
     }
 
     protected override void OnSpawned(bool asServer)
@@ -37,12 +36,8 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
         base.OnSpawned(asServer);
 
         if (asServer) durability.value = maxDurabilitySeconds;
-    }
 
-    protected override void OnObserverAdded(PlayerID player)
-    {
-        base.OnObserverAdded(player);
-        if (isServer) flashlightTargetRpc(player, flashlightLight.enabled);
+        flashlightLight.enabled = flashlightOn.value;
     }
 
     public Task<bool> CanInteract(MonoBehaviour Interactor)
@@ -65,7 +60,8 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
     private void ToggleFlashlight()
     {
         if (!isServer || !canBeUsed) return;
-        if (!flashlightOn)
+
+        if (!flashlightOn.value)
         {
             ToggleFlashlightOn();
         }
@@ -80,8 +76,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
     {
         if (!isServer) return;
         if (drainsBattery && durability.value <= 0f) return;
-
-        flashlightObserversState(true);
+        flashlightOn.value = true;
 
         if (drainsBattery && drainRoutine == null)
         {
@@ -93,7 +88,8 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
     private void ToggleFlashlightOff()
     {
         if (!isServer) return;
-        flashlightObserversState(false);
+        flashlightOn.value = false;
+
         if (drainRoutine != null)
         {
             StopCoroutine(drainRoutine);
@@ -101,14 +97,10 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
         }
     }
 
-    // Called on all clients to sync the flashlight's On/Off state and triggers events
-    [ObserversRpc] private void flashlightObserversState(bool state) => SetFlashlight(state);
-    [TargetRpc] private void flashlightTargetRpc(PlayerID player, bool state) => SetFlashlight(state);
     private void SetFlashlight(bool state)
     {
-        if (flashlightOn == state) return;
+        if (flashlightOn.value == flashlightLight.enabled) return;
 
-        flashlightOn = state;
         flashlightLight.enabled = state;
 
         if (state)
@@ -128,7 +120,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
 
         WaitForSeconds wait = new WaitForSeconds(0.25f);
 
-        while (flashlightOn && drainsBattery)
+        while (flashlightOn.value && drainsBattery)
         {
             yield return wait;
             durability.value -= 0.25f * drainSpeedMultiplier;
@@ -136,7 +128,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
             if (durability <= 0f)
             {
                 durability.value = 0f;
-                flashlightObserversState(false);
+                flashlightOn.value = false;
                 OnDrained?.Invoke();
                 drainRoutine = null;
                 yield break;
