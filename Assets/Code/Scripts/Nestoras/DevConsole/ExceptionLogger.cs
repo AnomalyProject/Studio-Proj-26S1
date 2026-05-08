@@ -41,7 +41,7 @@ public static class ExceptionLogger
         else entry = new LogEntry($"UNHANDLED: {e}", "", LogType.Exception);
 
         WriteToFile(entry.Format(true, true));
-        Propagate(entry);
+        Log(entry);
     }
 
     private static void HandleTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -50,7 +50,7 @@ public static class ExceptionLogger
         {
             LogEntry entry = new LogEntry($"TASK EXCEPTION: {ex.Message}", ex.StackTrace, LogType.Exception);
             WriteToFile(entry.Format(true, true));
-            Propagate(entry);
+            Log(entry);
         }
         e.SetObserved();
     }
@@ -60,7 +60,7 @@ public static class ExceptionLogger
         LogEntry entry = new LogEntry(condition, stackTrace, type);
         // if (type != LogType.Log) // Use this to skip Debug.Log events in the log file
         WriteToFile(entry.Format(includeStackTrace: true, includeTimestamp: true));
-        Propagate(entry);
+        Log(entry);
     }
 
     public static void WriteToFile(string text)
