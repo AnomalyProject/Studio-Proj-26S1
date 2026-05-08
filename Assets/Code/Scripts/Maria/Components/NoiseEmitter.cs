@@ -50,7 +50,7 @@ public abstract class NoiseEmitter : NetworkBehaviour
         if (radius <= 0) return;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, radius, hearableLayers);
-        Debug.Log($"[NoiseEmitter] Emit radius={radius}, hits={hits.Length}");
+        //Debug.Log($"[NoiseEmitter] Emit radius={radius}, hits={hits.Length}");
 
         foreach (Collider hit in hits)
         {

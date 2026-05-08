@@ -130,6 +130,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
             || currentStateID == StateID.Alert
             || currentStateID == StateID.Investigate) return;
 
+        Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
         ChangeState(StateID.Alert, alertedBy.transform);
     }
 
