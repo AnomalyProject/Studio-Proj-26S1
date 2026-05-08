@@ -55,7 +55,7 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
-        if (isLocked)
+        if (isLocked && context != InputContext.DevConsole && !DevConsole.instance.isOpen)
         {
             Debug.LogWarning("Input context is currently locked and cannot change.");
             return;
