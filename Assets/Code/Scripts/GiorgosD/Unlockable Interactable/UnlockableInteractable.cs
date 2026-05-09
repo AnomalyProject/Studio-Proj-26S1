@@ -11,6 +11,10 @@ public class UnlockableInteractable : NetworkBehaviour, IInteractable<PlayerBody
     [Header("Status")]
     [SerializeField] private bool isLocked = true;
 
+
+    public bool IsUnlocked => !isLocked; //Stratos's addition
+
+
     [Header("Event")]
     public UnityEvent OnSuccess;
     public UnityEvent OnReset;
