@@ -16,18 +16,18 @@ public class MasterUnlockable : NetworkBehaviour, IInteractable<PlayerBody>
         return Task.FromResult(true);
     }
 
-    [ServerRpc]
+    [ServerRpc]                                               //ensures that the server handles the logic check
     public Task<bool> TryInteract(PlayerBody interactor)
     {
-        bool isFullyUnlocked = CheckIfAllUnlocked();
+        bool isFullyUnlocked = CheckIfAllUnlocked();         //checks if player has all requirments
 
         TriggerEvent_Observers(isFullyUnlocked);
 
         return Task.FromResult(isFullyUnlocked);
     }
 
-
-    private bool CheckIfAllUnlocked()
+    //method that loops through the checklist and verify if every lock is open
+    private bool CheckIfAllUnlocked()      
     {
         if (requiredUnlockables.Count == 0) return true;
 
@@ -43,7 +43,7 @@ public class MasterUnlockable : NetworkBehaviour, IInteractable<PlayerBody>
     }
 
 
-    [ObserversRpc]
+    [ObserversRpc]                                              //the information goes to all players in the game
     private void TriggerEvent_Observers(bool success)
     {
         OnInteractionAttempt?.Invoke(success);
