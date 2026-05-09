@@ -5,19 +5,19 @@ using UnityEngine.Events;
 using System.Threading.Tasks;
 
 
-public class MasterUnlockable : NetworkBehaviour, IInteractable<PlayerBody>
+public class MasterUnlockable : NetworkBehaviour, IInteractable<MonoBehaviour>
 {
     [SerializeField] private List<UnlockableInteractable> requiredUnlockables = new List<UnlockableInteractable>();
 
     public UnityEvent<bool> OnInteractionAttempt;
 
-    public Task<bool> CanInteract(PlayerBody interactor)
+    public Task<bool> CanInteract(MonoBehaviour interactor)
     {
         return Task.FromResult(true);
     }
 
     [ServerRpc]                                               //ensures that the server handles the logic check
-    public Task<bool> TryInteract(PlayerBody interactor)
+    public Task<bool> TryInteract(MonoBehaviour interactor)
     {
         bool isFullyUnlocked = CheckIfAllUnlocked();         //checks if player has all requirments
 
@@ -29,6 +29,8 @@ public class MasterUnlockable : NetworkBehaviour, IInteractable<PlayerBody>
     //method that loops through the checklist and verify if every lock is open
     private bool CheckIfAllUnlocked()      
     {
+        if (!isServer) return false;
+
         if (requiredUnlockables.Count == 0) return true;
 
         foreach (UnlockableInteractable item in requiredUnlockables)
@@ -48,9 +50,7 @@ public class MasterUnlockable : NetworkBehaviour, IInteractable<PlayerBody>
     {
         OnInteractionAttempt?.Invoke(success);
 
-        if (success)
-            Debug.Log("[ConditionalInteractable]: Interaction Successful. All requirements met.");
-        else
-            Debug.Log("[ConditionalInteractable]: Interaction Failed. Missing requirements.");
+        if (success) Debug.Log("[MasterUnlockable]: Interaction Successful. All requirements met.");
+        else Debug.Log("[MasterUnlockable]: Interaction Failed. Missing requirements.");
     }
 }
