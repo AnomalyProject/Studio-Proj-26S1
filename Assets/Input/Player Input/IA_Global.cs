@@ -1024,7 +1024,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""id"": ""61f14b77-4921-4a37-85a6-3823f6d95c74"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
-                    ""processors"": ""ScaleVector2(x=5,y=5)"",
+                    ""processors"": ""ScaleVector2(x=10,y=10)"",
                     ""groups"": "";Gameplay"",
                     ""action"": ""Look"",
                     ""isComposite"": false,
