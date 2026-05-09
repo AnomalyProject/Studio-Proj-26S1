@@ -245,6 +245,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d218db7396aef9241a92a2d24a433a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPawn
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   walkSpeed: 2
   runSpeed: 3
   sightRange: 10
@@ -259,6 +268,12 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 1
+  runMultiplier: 0
+  autoDetectMultiplier: 0
+  sightRangeMultiplier: 0
+  checkFrequencyReduction: 0
+  aggressionLevel: 0
+  maxAggressionLevel: 0
   attackHitBox: {x: 1.4, y: 2, z: 1}
   attackOffset: 1
   turnThreshold: 0
@@ -274,16 +289,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d080cf1b27d97af45aa189d232e09f3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBrain
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  patrolPriorities: []
   idleTimer: 3
   respawnPoints:
   - {fileID: 0}
   - {fileID: 0}
+  tempStuffEnabled: 0
+  poiIsEnabled: 0
 --- !u!114 &5959614427112140600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,7 +340,7 @@ MonoBehaviour:
   _minBufferSize: 1
   _maxBufferSize: 2
   _characterControllerPatch: 0
-  _ownerAuth: 1
+  _ownerAuth: 0
   _interpolationTiming: 0
 --- !u!114 &6470632256649549061
 MonoBehaviour:
