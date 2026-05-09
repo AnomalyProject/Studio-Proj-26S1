@@ -45,6 +45,7 @@ public static class InputBridge
     private static Stack<InputContext> contextStack = new Stack<InputContext>();
     private static Dictionary<InputContext, MapCursorPair> contextMap;
     public static bool isLocked { get; private set; } = false;
+    public static float Sensitivity { get; private set; } = PlayerPrefs.GetFloat(nameof(Sensitivity), defaultValue: 1);
     #endregion
 
     #region Exposed Methods
@@ -101,6 +102,11 @@ public static class InputBridge
         isLocked = true;
     }
     public static void Unlock() => isLocked = false;
+    public static void ChangeSensitivity(float value)
+    {
+        Sensitivity = Mathf.Max(.1f, value);
+        PlayerPrefs.SetFloat(nameof(Sensitivity), Sensitivity);
+    }
 
     #endregion
 
