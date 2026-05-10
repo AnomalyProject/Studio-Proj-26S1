@@ -15,10 +15,7 @@ public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
 
     AudioSource audioSource;
 
-    void Awake()
-    {
-        audioSource = GetComponent<AudioSource>();
-    }
+    void Awake() => audioSource = GetComponent<AudioSource>();
 
     private void OnEnable()
     {
