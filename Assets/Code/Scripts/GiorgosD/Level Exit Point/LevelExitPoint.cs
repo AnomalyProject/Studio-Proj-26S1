@@ -16,7 +16,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
-    public UnityEvent<bool> OnActivateExit;
+    public UnityEvent<bool> OnActivateExit, OnPlayersChanged;
 
     /// <summary>
     /// Fires when an exit point is interacted with and the corresponding decision (Has Anomaly or not).
@@ -32,7 +32,10 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
 
         col = GetComponent<Collider>();
         col.isTrigger = true;
+        playersInArea.onChanged += HandlePlayersChanged;
     }
+
+    private void HandlePlayersChanged(SyncHashSetChange<NetworkID> change) => OnPlayersChanged.Invoke(HasEnoughPlayers() && bIsAvailable.value);
     public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(HasEnoughPlayers() && bIsAvailable.value);
     public Task<bool> TryInteract(PlayerBody interactor)
     {
