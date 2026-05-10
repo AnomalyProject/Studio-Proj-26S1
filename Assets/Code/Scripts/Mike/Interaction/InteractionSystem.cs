@@ -147,8 +147,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
     #endregion
 
     #region Helpers
-
-    void ChangeFocused(IInteractable<TInteractor> newFocus)
+    private void ChangeFocused(IInteractable<TInteractor> newFocus)
     {
         if (_focusedInteractable == newFocus) return;
 
@@ -160,9 +159,7 @@ public class InteractionSystem<TInteractor> where TInteractor : MonoBehaviour
         if (_focusedInteractable != null)
             OnFocusedInteractable?.Invoke(_focusedInteractable);
     }
-
     #endregion
-
 }
 public static class InteractionUtils
 {
