@@ -48,15 +48,11 @@ public class SettingsManager : MonoBehaviour
     // Saveable variables: 
 
     // Audio
-    private float masterVolume = 1.0f, musicVolume = 1.0f, SFXVolume = 1.0f, UIVolume = 1.0f;
+    private float masterVolume = 1.0f, musicVolume = 0.5f, SFXVolume = 1.0f, UIVolume = 1.0f;
 
     // Graphics 
     private int resolutionValue;
     private bool vSync, fullscreen;
-
-    // Controls
-    private float lookSensitivity = 0.7f;
-    private bool invertLookX, invertLookY;
 
     //------------------------------------------------------------//
 
@@ -174,23 +170,11 @@ public class SettingsManager : MonoBehaviour
     void InitializeControls()
     {
         // Initialize Look Sensitivity
-        if (PlayerPrefs.HasKey("Look Sensitivity")) lookSensitivity = PlayerPrefs.GetFloat("Look Sensitivity");
+        lookSensitivitySlider.value = InputBridge.Sensitivity;
         
-        lookSensitivitySlider.value = lookSensitivity;
-
-
-
         // Initialize Invert Look
-        if (PlayerPrefs.HasKey("Invert Look X")) invertLookX = bool.Parse(PlayerPrefs.GetString("Invert Look X"));
-        else invertLookX = false;
-
-        invertLookXToggle.isOn = invertLookX;
-
-
-        if (PlayerPrefs.HasKey("Invert Look Y")) invertLookY = bool.Parse(PlayerPrefs.GetString("Invert Look Y"));
-        else invertLookY = false;
-        
-        invertLookYToggle.isOn = invertLookY;
+        invertLookXToggle.isOn = InputBridge.invertX;
+        invertLookYToggle.isOn = InputBridge.invertY;
     }
 
     void InitializeAccessibility()
@@ -377,34 +361,20 @@ public class SettingsManager : MonoBehaviour
     // Controls
     public void OnLookSensitivityChanged(float value)
     {
-        lookSensitivity = value;
-
-        Debug.Log($"[SettingsManager] Look Sensitivity changed to {lookSensitivity}");
-        //TODO: Hook this to the player
-
-        PlayerPrefs.SetFloat("Look Sensitivity", lookSensitivity);
+        Debug.Log($"[SettingsManager] Look Sensitivity changed to {value}");
+        InputBridge.ChangeSensitivity(value);
     }
 
     public void ToggleInvertXLook(bool value)
     {
-        invertLookX = value;
-
-        Debug.Log($"[SettingsManager] Invert Look X changed to {invertLookX}");
-
-        PlayerPrefs.SetString("Invert Look X", invertLookX.ToString());
-
-        //TODO: Hook this to the player
+        Debug.Log($"[SettingsManager] Invert Look X changed to {value}");
+        InputBridge.ChangeInvertX(value);
     }
 
     public void ToggleInvertYLook(bool value)
     {
-        invertLookY = value;
-
-        Debug.Log($"[SettingsManager] Invert Look Y changed to {invertLookY}");
-
-        PlayerPrefs.SetString("Invert Look Y", invertLookY.ToString());
-
-        //TODO: Hook this to the player
+        Debug.Log($"[SettingsManager] Invert Look Y changed to {value}");
+        InputBridge.ChangeInvertY(value);
     }
     #endregion
 }

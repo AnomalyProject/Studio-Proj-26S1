@@ -16,29 +16,23 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] GameObject mainMenuCanvas;
     
     [SerializeField] private GameObject startPanel;
-    [SerializeField] GameObject firstSelectedButtonStart;
+    [SerializeField] private GameObject firstSelectedButtonStart;
 
     [SerializeField] private GameObject modePanel;
-    [SerializeField] GameObject firstSelectedButtonMode;
+    [SerializeField] private GameObject firstSelectedButtonMode;
 
     [SerializeField] private GameObject coopPanel;
-    [SerializeField] GameObject firstSelectedButtonCoop;
+    [SerializeField] private GameObject firstSelectedButtonCoop;
 
     [SerializeField] private GameObject joinPanel;
-    [SerializeField] GameObject firstSelectedButtonJoin;
+    [SerializeField] private GameObject firstSelectedButtonJoin;
 
     [SerializeField] private GameObject messagePanel;
     [SerializeField] private TMP_Text messageText;
 
     [Space(10)]
     [Header("Manager Settings")]
-    [SerializeField] bool enableOnStart = true;
-
-    [Space(10)]
-    [Header("Start Settings")]
-    [SerializeField] SceneLoadingMethod currentSceneLoading;
-    [SerializeField] string startSceneString = "MainGameplayScene";
-    [SerializeField] int startSceneIndex = 1;
+    [SerializeField] private bool enableOnStart = true;
 
 
     private void Awake()
@@ -69,7 +63,7 @@ public class MainMenuManager : MonoBehaviour
         SetMenuActivity(true);
     }
 
-    IEnumerator Start()
+    private IEnumerator Start()
     {
         if (enableOnStart)
         {
@@ -140,16 +134,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void StartGame()
     {
-        switch (currentSceneLoading)
-        {
-            case SceneLoadingMethod.WithIndex:
-                SceneLoader.Instance.LoadSceneWithAsync(startSceneIndex); 
-                break;
-            case SceneLoadingMethod.WithString:
-                SceneLoader.Instance.LoadSceneWithAsync(startSceneString);
-                break;
-
-        }
+        SessionModeManager.Instance.StartSolo();
     }
 
     public void HostCoOp()
