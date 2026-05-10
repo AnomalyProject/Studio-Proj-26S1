@@ -29,7 +29,13 @@ public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
     public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(true);
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
-        if (!InValidArea()) return false;
+
+        if (!InValidArea())
+        {
+            SetDisplay(inactiveColor, "No Signal...");
+            return false;
+        }
+
         await PerformAreaScan();
         return true;
     }
