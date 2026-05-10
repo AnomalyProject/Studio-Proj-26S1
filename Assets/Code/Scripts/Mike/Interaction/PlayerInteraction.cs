@@ -153,7 +153,7 @@ public class PlayerInteraction : MonoBehaviour
     private static void ResetOutline()
     {
         if (renderers == null) return;
-        foreach (Renderer renderer in renderers) renderer.gameObject.layer = defaultLayer;
+        foreach (Renderer renderer in renderers) if (renderer != null) renderer.gameObject.layer = defaultLayer;
         renderers = null;
 
         objectOutlineMaterial.color = new Color(1, 1, 1, 0);
