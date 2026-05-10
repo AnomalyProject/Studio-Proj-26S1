@@ -45,7 +45,9 @@ public static class InputBridge
     private static Stack<InputContext> contextStack = new Stack<InputContext>();
     private static Dictionary<InputContext, MapCursorPair> contextMap;
     public static bool isLocked { get; private set; } = false;
-    public static float Sensitivity { get; private set; } = PlayerPrefs.GetFloat(nameof(Sensitivity), defaultValue: 1);
+    public static float Sensitivity { get; private set; } = PlayerPrefs.GetFloat(nameof(Sensitivity), defaultValue: 0.7f);
+    public static bool invertX { get; private set; } = bool.Parse(PlayerPrefs.GetString(nameof(invertX), defaultValue: "false"));
+    public static bool invertY { get; private set; } = bool.Parse(PlayerPrefs.GetString(nameof(invertY), defaultValue: "false"));
     #endregion
 
     #region Exposed Methods
@@ -107,7 +109,16 @@ public static class InputBridge
         Sensitivity = Mathf.Max(.1f, value);
         PlayerPrefs.SetFloat(nameof(Sensitivity), Sensitivity);
     }
-
+    public static void ChangeInvertX(bool value)
+    {
+        invertX = value;
+        PlayerPrefs.SetString(nameof(invertX), invertX.ToString());
+    }
+    public static void ChangeInvertY(bool value)
+    {
+        invertY = value;
+        PlayerPrefs.SetString(nameof(invertY), invertY.ToString());
+    }
     #endregion
 
     #region Helpers

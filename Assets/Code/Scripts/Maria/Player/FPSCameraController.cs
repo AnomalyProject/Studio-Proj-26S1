@@ -11,8 +11,6 @@ public class FPSCameraController : MonoBehaviour
 {
     #region Inspector Configuration
     [Header("Sensitivity")]
-    [SerializeField] private float mouseSensitivityX = 0.15f;
-    [SerializeField] private float mouseSensitivityY = 0.15f;
 
     [Header("Pitch Clamp (degrees)")]
     [SerializeField] private float pitchMin = -80f;
@@ -54,10 +52,10 @@ public class FPSCameraController : MonoBehaviour
         if (playerBody == null) return;
 
         // Horizontal -> rotate the player body (yaw)
-        playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX * InputBridge.Sensitivity, Space.World);
+        playerBody.Rotate(Vector3.up, lookInput.x * (InputBridge.invertX ? -1 : 1) * InputBridge.Sensitivity, Space.World);
 
         // Vertical -> rotate the camera holder (pitch), clamped
-        currentPitch -= lookInput.y * mouseSensitivityY * InputBridge.Sensitivity;
+        currentPitch -= lookInput.y * (InputBridge.invertY ? -1 : 1) * InputBridge.Sensitivity;
         currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
         transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
     }
