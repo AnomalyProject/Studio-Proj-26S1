@@ -4,12 +4,21 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(AudioSource))]
 public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
 {
     [SerializeField] private Image bg;
     [SerializeField] private TextMeshProUGUI displayText;
     [SerializeField, Min(1)] private int waitSeconds = 2;
     [SerializeField] Color inactiveColor, analyzingColor, anomalyColor, clearAreaColor;
+    [SerializeField] AudioClip anomalyFoundClip, areaClearClip, scanPerformClip;
+
+    AudioSource audioSource;
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     private void OnEnable()
     {
@@ -27,14 +36,13 @@ public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
 
     private async Task PerformAreaScan()
     {
-        SetDisplay(analyzingColor, "Analyzing Area...");
-
+        SetDisplay(analyzingColor, "Analyzing Area...", scanPerformClip);
         await Task.Delay(waitSeconds * 1000);
 
         bool hasAnomaly = RefrenceManager.Instance.Gameplay.AnomalyManager.HasAnomaly;
 
-        if (hasAnomaly) SetDisplay(anomalyColor, "Anomalies Spotted!");
-        else SetDisplay(clearAreaColor, "Area Clear.");
+        if (hasAnomaly) SetDisplay(anomalyColor, "Anomalies Spotted!", anomalyFoundClip);
+        else SetDisplay(clearAreaColor, "Area Clear.", areaClearClip);
 
         await Task.Delay(waitSeconds * 1000);
     }
@@ -53,8 +61,10 @@ public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
         return true;
     }
 
-    private void SetDisplay(Color color, string msg)
+    private void SetDisplay(Color color, string msg, AudioClip clip = null)
     {
+        if (clip != null) audioSource.PlayOneShot(clip);
+
         bg.color = color;
         displayText.text = msg;
     }
