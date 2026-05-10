@@ -4,9 +4,9 @@ public class PlayerListUI : MonoBehaviour
 {
     [Header("Player List UI")]
     [Space(2)]
-    [Tooltip("Player Name text")]
+    [Tooltip("Player Name displayText")]
     [SerializeField] private TMP_Text nameText;
-    [Tooltip("Ready, Not Ready text")]
+    [Tooltip("Ready, Not Ready displayText")]
     [SerializeField] private TMP_Text statusText;
     [Tooltip("is Host badge")]
     [SerializeField] private GameObject hostIndicator;
