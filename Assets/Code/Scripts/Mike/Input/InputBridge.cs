@@ -45,6 +45,7 @@ public static class InputBridge
     private static Stack<InputContext> contextStack = new Stack<InputContext>();
     private static Dictionary<InputContext, MapCursorPair> contextMap;
     public static bool isLocked { get; private set; } = false;
+    public static float Sensitivity { get; private set; } = PlayerPrefs.GetFloat(nameof(Sensitivity), defaultValue: 1);
     #endregion
 
     #region Exposed Methods
@@ -55,7 +56,7 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
-        if (isLocked)
+        if (isLocked && context != InputContext.DevConsole && !DevConsole.instance.isOpen)
         {
             Debug.LogWarning("Input context is currently locked and cannot change.");
             return;
@@ -101,6 +102,11 @@ public static class InputBridge
         isLocked = true;
     }
     public static void Unlock() => isLocked = false;
+    public static void ChangeSensitivity(float value)
+    {
+        Sensitivity = Mathf.Max(.1f, value);
+        PlayerPrefs.SetFloat(nameof(Sensitivity), Sensitivity);
+    }
 
     #endregion
 

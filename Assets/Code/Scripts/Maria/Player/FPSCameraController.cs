@@ -54,10 +54,10 @@ public class FPSCameraController : MonoBehaviour
         if (playerBody == null) return;
 
         // Horizontal -> rotate the player body (yaw)
-        playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX, Space.World);
+        playerBody.Rotate(Vector3.up, lookInput.x * mouseSensitivityX * InputBridge.Sensitivity, Space.World);
 
         // Vertical -> rotate the camera holder (pitch), clamped
-        currentPitch -= lookInput.y * mouseSensitivityY;
+        currentPitch -= lookInput.y * mouseSensitivityY * InputBridge.Sensitivity;
         currentPitch = Mathf.Clamp(currentPitch, pitchMin, pitchMax);
         transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
     }
