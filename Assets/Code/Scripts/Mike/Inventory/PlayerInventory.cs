@@ -26,6 +26,7 @@ public class PlayerInventory : NetworkBehaviour
     private Dictionary<string, GameObject> itemInstances = new();
     private PlayerBody playerBody;
     private Task<bool> currentUseTask;
+    public bool IsUsingItem => currentUseTask != null && !currentUseTask.IsCompleted;
 
     private void Awake()
     {
@@ -124,6 +125,8 @@ public class PlayerInventory : NetworkBehaviour
     }
     public void ChangeFocused(int focusAtIndex)
     {
+        if(IsUsingItem) return;
+
         bool differentIndex = focusedSlot != focusAtIndex;
 
         if (!differentIndex && activeInstance != null) return;
@@ -184,7 +187,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (ctx.started)
         {
-            if(currentUseTask != null && !currentUseTask.IsCompleted) return;
+            if(IsUsingItem) return;
             currentUseTask = TryUseFocused();
         }
     }
