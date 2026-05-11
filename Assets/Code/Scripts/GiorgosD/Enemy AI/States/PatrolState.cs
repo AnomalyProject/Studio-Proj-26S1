@@ -12,6 +12,8 @@ public class PatrolState : BaseState
 
     public override void Enter()
     {
+        base.Enter();
+
         body.SetMoveSpeed(false);
 
         body.OnPlayerSpotted += HandlePlayerSpotted;
@@ -31,9 +33,10 @@ public class PatrolState : BaseState
     /// </summary>
     public override void Update()
     {
-        if (!body.agent.pathPending && body.agent.remainingDistance <= body.agent.stoppingDistance)
+        if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
-            brain.ChangeState(new IdleState(brain, body));
+            brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
         }
     }
 
@@ -61,7 +64,8 @@ public class PatrolState : BaseState
 
     private void HandlePlayerSpotted(GameObject player)
     {
-        brain.ChangeState(new AlertState(brain, body, player.transform));
+        brain.ChangeState(EnemyBrain.StateID.Alert, player.transform);
+        return;
     }
 
     public override void Exit()

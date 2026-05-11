@@ -44,6 +44,10 @@ public static class InputBridge
     public static InputContext CurrentContext { get; private set; } = InputContext.Player;
     private static Stack<InputContext> contextStack = new Stack<InputContext>();
     private static Dictionary<InputContext, MapCursorPair> contextMap;
+    public static bool isLocked { get; private set; } = false;
+    public static float Sensitivity { get; private set; } = PlayerPrefs.GetFloat(nameof(Sensitivity), defaultValue: 0.7f);
+    public static bool invertX { get; private set; } = bool.Parse(PlayerPrefs.GetString(nameof(invertX), defaultValue: "false"));
+    public static bool invertY { get; private set; } = bool.Parse(PlayerPrefs.GetString(nameof(invertY), defaultValue: "false"));
     #endregion
 
     #region Exposed Methods
@@ -54,6 +58,12 @@ public static class InputBridge
     /// <param name="context"></param>
     public static void SetContext(InputContext context)
     {
+        if (isLocked && context != InputContext.DevConsole && !DevConsole.instance.isOpen)
+        {
+            Debug.LogWarning("Input context is currently locked and cannot change.");
+            return;
+        }
+
         if (contextStack.Count == 0 || contextStack.Peek() != context) contextStack.Push(context);
         CurrentContext = context;
 
@@ -75,7 +85,7 @@ public static class InputBridge
     /// </summary>
     public static void RestorePreviousContext()
     {
-        contextStack.Pop();
+        if(contextStack.Count > 1) contextStack.Pop();
         SetContext(contextStack.Peek());
     }
     /// <summary>
@@ -87,7 +97,28 @@ public static class InputBridge
         if (context == CurrentContext) RestorePreviousContext();
         else SetContext(context);
     }
-
+    public static void LockAt(InputContext context)
+    {
+        isLocked = false;
+        SetContext(context);
+        isLocked = true;
+    }
+    public static void Unlock() => isLocked = false;
+    public static void ChangeSensitivity(float value)
+    {
+        Sensitivity = Mathf.Max(.1f, value);
+        PlayerPrefs.SetFloat(nameof(Sensitivity), Sensitivity);
+    }
+    public static void ChangeInvertX(bool value)
+    {
+        invertX = value;
+        PlayerPrefs.SetString(nameof(invertX), invertX.ToString());
+    }
+    public static void ChangeInvertY(bool value)
+    {
+        invertY = value;
+        PlayerPrefs.SetString(nameof(invertY), invertY.ToString());
+    }
     #endregion
 
     #region Helpers
