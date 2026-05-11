@@ -229,12 +229,15 @@ public class DevConsole : MonoBehaviour
     }
     private void OnDestroy()
     {
-        if (instance == this) instance = null;
+        if (instance == this)
+        {
+            commands.Remove("cls");
+            instance = null;
+        }
         submitAction.performed -= OnSubmit;
         scrollAction.performed -= OnScrollHistory;
         InputBridge.OnContextChanged -= OnToggleConsole;
         onCommandEntered -= TryRunningAsBuiltInCommand;
-        commands.Remove("cls");
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
