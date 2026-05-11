@@ -34,11 +34,14 @@ public class MainMenuManager : MonoBehaviour
     [Header("Manager Settings")]
     [SerializeField] private bool enableOnStart = true;
 
+    public static MainMenuManager instance;
 
     private void Awake()
     {
+        instance = this;
         SetMenuActivity(false);
     }
+    private void OnDestroy() => instance = null;
 
     private void OnEnable()
     {
