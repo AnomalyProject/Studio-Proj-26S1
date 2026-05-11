@@ -106,6 +106,8 @@ public class PlayerInteraction : MonoBehaviour
     private void HideOutline(IInteractable<PlayerBody> interactable) => StartCoroutine(FadeOutline(interactable, false));
     private static IEnumerator FadeOutline(IInteractable<PlayerBody> interactable, bool show)
     {
+        if (interactable is LevelExitPoint) yield break;
+
         if (outlineMaterial == null)
         {
             outlineLayer = LayerMask.NameToLayer("Outlined");
