@@ -26,7 +26,6 @@ public class AnomalyDetector : PlayerItem, IInteractable<PlayerBody>
     public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(true);
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
-
         if (!InValidArea())
         {
             SetDisplay(inactiveColor, "No Signal...");
