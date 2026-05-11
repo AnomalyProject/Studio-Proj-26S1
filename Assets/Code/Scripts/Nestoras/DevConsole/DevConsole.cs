@@ -1,14 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System;
-using UnityEngine.InputSystem;
-using UnityEngine.Events;
-using UnityEngine.UI;
-using UnityEngine;
+using System.Threading.Tasks;
 using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using static UnityEngine.Rendering.GPUSort;
 
 /// <summary>
 /// Nestoras
@@ -153,7 +154,11 @@ public class DevConsole : MonoBehaviour
     private void Awake()
     {
         if (instance == null) instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         // Set up UI references
         root = transform.GetChild(0).gameObject;
@@ -181,6 +186,13 @@ public class DevConsole : MonoBehaviour
             }
         }
 
+        RegisterCommand("cls", new CommandData("Clears the screen.", (args) =>
+        {
+            while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
+            logs.Clear();
+            if (focusedEntry != null) OnEntryClicked(focusedEntry);
+        }));
+
         screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
         stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
         stackTraceTransform = (RectTransform)stackTraceInputField.transform;
@@ -189,7 +201,6 @@ public class DevConsole : MonoBehaviour
 
         // Instance specific assignments
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        commands["cls"].callback += ClearScreen;
 
         // Input
         submitAction = InputBridge.Actions.DevConsole.Submit;
@@ -249,7 +260,6 @@ public class DevConsole : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void InternalCommands()
     {
-        RegisterCommand("cls", new CommandData("Clears the screen.", args => { }));
         RegisterCommand("exit", new CommandData("Closes the game.", args =>
         {
             Application.Quit();
@@ -337,12 +347,6 @@ public class DevConsole : MonoBehaviour
         }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection.\n<color=green>stack</color> causes a stack overflow.\n<color=green>crash</color> crashes the running process."));
     }
     private static void StackOverflow() => StackOverflow();
-    private void ClearScreen(string[] args)
-    {
-        while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
-        logs.Clear();
-        if (focusedEntry != null) OnEntryClicked(focusedEntry);
-    }
     #endregion
 
     #region Navigation
@@ -539,8 +543,8 @@ public class DevConsole : MonoBehaviour
 
         entry.textComponent = log.GetComponent<TextMeshProUGUI>();
         AdvancedButton button = log.GetComponent<AdvancedButton>();
-        Image icon = log.GetComponentsInChildren<Image>().First();
-        entry.background = log.GetComponentsInChildren<Image>().Last();
+        Image icon = log.GetComponentsInChildren<Image>(true).First();
+        entry.background = log.GetComponentsInChildren<Image>(true).Last();
         entry.isCommand = isCommand;
 
         if (entry.isCommand)
@@ -573,6 +577,8 @@ public class DevConsole : MonoBehaviour
     }
     private void OnEntryClicked(LogEntry entry)
     {
+        if (entry.background == null) return;
+
         // Remove color from last focused entry
         Color color = entry.background.color;
         color.a = 0;
