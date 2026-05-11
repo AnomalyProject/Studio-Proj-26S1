@@ -37,6 +37,7 @@ public class MainMenuManager : MonoBehaviour
 
     private void Awake()
     {
+        InputBridge.ReInitializeContextStack(InputBridge.InputContext.UI);
         SetMenuActivity(false);
     }
 

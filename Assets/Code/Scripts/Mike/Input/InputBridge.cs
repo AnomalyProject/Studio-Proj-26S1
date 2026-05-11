@@ -119,6 +119,11 @@ public static class InputBridge
         invertY = value;
         PlayerPrefs.SetString(nameof(invertY), invertY.ToString());
     }
+    public static void ReInitializeContextStack(InputContext newContext)
+    {
+        contextStack.Clear();
+        SetContext(newContext);
+    }
     #endregion
 
     #region Helpers
