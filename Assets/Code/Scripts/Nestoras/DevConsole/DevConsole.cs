@@ -186,12 +186,7 @@ public class DevConsole : MonoBehaviour
             }
         }
 
-        RegisterCommand("cls", new CommandData("Clears the screen.", (args) =>
-        {
-            while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
-            logs.Clear();
-            if (focusedEntry != null) OnEntryClicked(focusedEntry);
-        }));
+        RegisterCommand("cls", new CommandData("Clears the screen.", ClearScreen));
 
         screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
         stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
@@ -239,6 +234,7 @@ public class DevConsole : MonoBehaviour
         scrollAction.performed -= OnScrollHistory;
         InputBridge.OnContextChanged -= OnToggleConsole;
         onCommandEntered -= TryRunningAsBuiltInCommand;
+        commands.Remove("cls");
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -347,6 +343,12 @@ public class DevConsole : MonoBehaviour
         }, "Arguments: <color=green>null</color> causes a null reference exception.\n<color=green>divide0</color> causes a devide by zero exception.\n<color=green>tasksetup</color> throws an unobserved exception on a new thread.\nUse <color=green>taskflush</color> to force garbage collection.\n<color=green>stack</color> causes a stack overflow.\n<color=green>crash</color> crashes the running process."));
     }
     private static void StackOverflow() => StackOverflow();
+    private void ClearScreen(string[] args)
+    {
+        while (logObjects.Count > 0) Destroy(logObjects.Dequeue());
+        logs.Clear();
+        if (focusedEntry != null) OnEntryClicked(focusedEntry);
+    }
     #endregion
 
     #region Navigation
@@ -582,7 +584,7 @@ public class DevConsole : MonoBehaviour
         // Remove color from last focused entry
         Color color = entry.background.color;
         color.a = 0;
-        if (focusedEntry != null) focusedEntry.background.color = color;
+        if (focusedEntry?.background != null) focusedEntry.background.color = color;
 
         if (focusedEntry == entry)
         {
