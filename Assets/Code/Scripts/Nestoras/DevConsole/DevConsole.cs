@@ -210,7 +210,12 @@ public class DevConsole : MonoBehaviour
         {
             if (notification.clip.name.Equals("log_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Log] = notification;
             else if (notification.clip.name.Equals("warning_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Warning] = notification;
-            else if (notification.clip.name.Equals("error_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Error] = notification;
+            else if (notification.clip.name.Equals("error_alert", StringComparison.OrdinalIgnoreCase))
+            {
+                notifications[LogType.Error] = notification;
+                notifications[LogType.Exception] = notification;
+                notifications[LogType.Assert] = notification;
+            }
         }
         onLogReceived.AddListener(entry =>
         {
@@ -231,11 +236,11 @@ public class DevConsole : MonoBehaviour
     {
         if (instance == this)
         {
-            commands.Remove("cls");
+            if (TryGetCommand("cls", out CommandData commandData)) commands.Remove("cls");
             instance = null;
         }
-        submitAction.performed -= OnSubmit;
-        scrollAction.performed -= OnScrollHistory;
+        if (submitAction != null) submitAction.performed -= OnSubmit;
+        if (scrollAction != null) scrollAction.performed -= OnScrollHistory;
         InputBridge.OnContextChanged -= OnToggleConsole;
         onCommandEntered -= TryRunningAsBuiltInCommand;
     }
