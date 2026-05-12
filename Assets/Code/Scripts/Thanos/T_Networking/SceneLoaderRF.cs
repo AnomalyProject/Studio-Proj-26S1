@@ -23,7 +23,6 @@ public class SceneLoaderRF : NetworkBehaviour
 
     [Header("Loading logic")]
     [SerializeField] private float fakeLoadSpeed = 1.0f;
-    [SerializeField] private float fakeLoadTime = 3.5f;
 
     [Header("Events")]
     public Action OnLoadStarted;
@@ -52,13 +51,8 @@ public class SceneLoaderRF : NetworkBehaviour
         SceneManager.sceneLoaded -= OnSceneLoadedLocally;
     }
 
-    /// <summary>
-    /// Call this from a button or game event. 
-    /// It validates the session and initiates the network scene load.
-    /// </summary>
     public void TryLoadMultiplayerScene()
     {
-        // 1. Only the server should dictate a networked scene change
         if (!isServer)
         {
             Debug.LogWarning("Only the Server/Host can trigger a networked scene change.");
@@ -73,16 +67,7 @@ public class SceneLoaderRF : NetworkBehaviour
 
         if (sessionData.AllPlayersReady && sessionData.AllPlayersReadyInElevator)
         {
-
-            RpcShowLoadingScreen();
-
-            PurrSceneSettings settings = new()
-            {
-                isPublic = true,
-                mode = LoadSceneMode.Single,
-            };
-
-            networkManager.sceneModule.LoadSceneAsync(targetSceneName, settings);
+            StartCoroutine(ServerLoadSequence());
         }
         else
         {
@@ -91,19 +76,30 @@ public class SceneLoaderRF : NetworkBehaviour
     }
 
     /// <summary>
-    /// Tells all clients (including the host) to bring up their UI and start the progress bar.
+    /// Handles the timing so the RPC reaches clients before the scene change destroys/pauses everything.
     /// </summary>
+    private IEnumerator ServerLoadSequence()
+    {
+        RpcShowLoadingScreen();
+
+        yield return new WaitForSeconds(0.3f);
+
+        PurrSceneSettings settings = new()
+        {
+            isPublic = true,
+            mode = LoadSceneMode.Single,
+        };
+
+        networkManager.sceneModule.LoadSceneAsync(targetSceneName, settings);
+    }
+
     [ObserversRpc(runLocally: true)]
     private void RpcShowLoadingScreen()
     {
         if (isLoading) return;
-
         StartCoroutine(LocalVisualLoadingCoroutine());
     }
 
-    /// <summary>
-    /// Handles the visual progress bar locally for each player while PurrNet handles the actual loading in the background.
-    /// </summary>
     private IEnumerator LocalVisualLoadingCoroutine()
     {
         isLoading = true;
@@ -128,9 +124,6 @@ public class SceneLoaderRF : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Triggered automatically on every client when Unity finishes loading the new scene.
-    /// </summary>
     private void OnSceneLoadedLocally(Scene scene, LoadSceneMode mode)
     {
         if (isLoading)
