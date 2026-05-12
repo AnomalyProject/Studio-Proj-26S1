@@ -702,6 +702,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: fakeLoadTime
       value: 0
       objectReference: {fileID: 0}
@@ -780,8 +784,60 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1115065490054501729, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1091350252}
   m_SourcePrefab: {fileID: 100100000, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+--- !u!1 &1091350249 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1115065490054501729, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+  m_PrefabInstance: {fileID: 1091350248}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1091350250 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3691054118621929863, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+  m_PrefabInstance: {fileID: 1091350248}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
+--- !u!1 &1091350251 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5824465469042521464, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+  m_PrefabInstance: {fileID: 1091350248}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1091350252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1091350249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba46601fd01b73949bbeaf167ef73fe0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoaderRF
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  targetSceneName: 
+  sessionData:
+    ElevatorState: 0
+  loadingScreen: {fileID: 1091350251}
+  progressBar: {fileID: 1091350250}
+  fakeLoadSpeed: 10
+  fakeLoadTime: 0
 --- !u!1 &1344741923
 GameObject:
   m_ObjectHideFlags: 0
