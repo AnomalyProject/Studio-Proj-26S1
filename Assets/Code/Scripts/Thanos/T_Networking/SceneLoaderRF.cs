@@ -93,7 +93,7 @@ public class SceneLoaderRF : NetworkBehaviour
         networkManager.sceneModule.LoadSceneAsync(targetSceneName, settings);
     }
 
-    [ObserversRpc(runLocally: true)]
+    [ObserversRpc]
     private void RpcShowLoadingScreen()
     {
         if (isLoading) return;
