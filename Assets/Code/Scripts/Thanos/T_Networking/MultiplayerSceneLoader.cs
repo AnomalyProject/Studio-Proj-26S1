@@ -7,16 +7,32 @@ public class MultiplayerSceneLoader : NetworkBehaviour
 {
     [PurrScene] public string sceneName;
 
+    SessionData sessionData;
 
-    [ContextMenu("Change Scene")]
+
+    [ObserversRpc(excludeSender: true, runLocally: true)]
     private void ChangeScene()
     {
-        PurrSceneSettings settings = new()
+        if (sessionData == null)
         {
-            isPublic = true,
-            mode = LoadSceneMode.Single,
-        };
+            Debug.LogError("Session Data is NULL");
+            return;
+        }
 
-        networkManager.sceneModule.LoadSceneAsync(sceneName);
+        if(sessionData.AllPlayersReady && sessionData.AllPlayersReadyInElevator)
+        {
+
+            PurrSceneSettings settings = new()
+            {
+                isPublic = true,
+                mode = LoadSceneMode.Single,
+            };
+
+            networkManager.sceneModule.LoadSceneAsync(sceneName);
+        }
+        else
+        {
+            Debug.Log("Players were not ready");
+        }
     }
 }
