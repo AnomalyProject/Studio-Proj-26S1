@@ -12,6 +12,7 @@ public class InteractPrompt : MonoBehaviour
     private const float FADE_SPEED = 5f;
     private Transform crosshair;
     private Image prompt;
+    private IInteractable<PlayerBody> currentInteractable;
 
     private void Awake()
     {
@@ -26,6 +27,7 @@ public class InteractPrompt : MonoBehaviour
     {
         PlayerBody.OnLocalPlayerSpawned -= HandleLocalPlayerSpawned;
         PlayerBody.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
+        if (currentInteractable != null) OnInteractableLostFocus(currentInteractable);
     }
     private void HandleLocalPlayerSpawned(PlayerBody player)
     {
@@ -36,15 +38,21 @@ public class InteractPrompt : MonoBehaviour
     {
         player.Interaction.interactionSystem.OnFocusedInteractable -= OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus -= OnInteractableLostFocus;
+        if (currentInteractable != null) OnInteractableLostFocus(currentInteractable);
     }
 
     private void OnFocusedInteractable(IInteractable<PlayerBody> interactable)
     {
+        currentInteractable = interactable;
         StopAllCoroutines();
-        StartCoroutine(FadeOutline(interactable, true));
+        StartCoroutine(FadePrompt(interactable, true));
     }
-    private void OnInteractableLostFocus(IInteractable<PlayerBody> interactable) => StartCoroutine(FadeOutline(interactable, false));
-    private IEnumerator FadeOutline(IInteractable<PlayerBody> interactable, bool show)
+    private void OnInteractableLostFocus(IInteractable<PlayerBody> interactable)
+    {
+        currentInteractable = null;
+        StartCoroutine(FadePrompt(interactable, false));
+    }
+    private IEnumerator FadePrompt(IInteractable<PlayerBody> interactable, bool show)
     {
         Color promptColor = prompt.color;
         while (promptColor.a < 1f && show || promptColor.a > 0f && !show)

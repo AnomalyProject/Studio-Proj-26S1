@@ -106,7 +106,7 @@ public class PlayerInteraction : MonoBehaviour
     private void HideOutline(IInteractable<PlayerBody> interactable) => StartCoroutine(FadeOutline(interactable, false));
     private static IEnumerator FadeOutline(IInteractable<PlayerBody> interactable, bool show)
     {
-        if (interactable is LevelExitPoint) yield break;
+        if (interactable == null || interactable is LevelExitPoint) yield break;
 
         if (outlineMaterial == null)
         {
@@ -115,8 +115,11 @@ public class PlayerInteraction : MonoBehaviour
             outlineMaterial.color = new Color(outlineMaterial.color.r, outlineMaterial.color.g, outlineMaterial.color.b, 0f);
         }
 
+        MonoBehaviour component = interactable as MonoBehaviour;
+        if (component == null) yield break;
+
         // Get all renderers that aren't attatched to text objects
-        renderers = (interactable as MonoBehaviour)?.gameObject.GetComponentsInChildren<Renderer>(true).Where(r => r.GetComponent<TextMeshPro>() == null).ToList();
+        renderers = component.gameObject.GetComponentsInChildren<Renderer>(true).Where(r => r.GetComponent<TextMeshPro>() == null).ToList();
 
         // Get all meshes on renderers
         meshes.AddRange(from renderer in renderers let filter = renderer.GetComponent<MeshFilter>() where filter != null && !meshes.Contains(filter.mesh) select filter.mesh);

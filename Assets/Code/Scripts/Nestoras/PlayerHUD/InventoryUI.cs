@@ -91,8 +91,13 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
-        playerInventory.OnFocusedIndexChanged -= SwitchSlot;
-        playerInventory = null;
+        if (playerInventory != null)
+        {
+            playerInventory.OnFocusedIndexChanged -= SwitchSlot;
+            playerInventory = null;
+        }
+
+        if (slots.Count == 0) return;
         foreach (KeyValuePair<int, InventorySlotUI> slot in slots) Destroy(slot.Value.background.transform.parent.gameObject);
         slots.Clear();
     }
