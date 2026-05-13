@@ -23,18 +23,18 @@ public class PasscodeSpreader : NetworkBehaviour
         if (!isServer) return;
         if (texts == null || texts.Length == 0 || string.IsNullOrEmpty(input)) return;
         
-        List<int> indices = Enumerable.Range(0, texts.Length).ToList();
+        int[] indices = Enumerable.Range(0, texts.Length).ToArray();
         
         ShufleIndices(indices);
 
-        SyncPasscodes(indices.ToArray(), input);  // Made it a ToArray() cause i heard array is easier than list to pass on network
+        SyncPasscodes(indices, input);  // Made it a ToArray() cause i heard array is easier than list to pass on network
     }
 
     /// <summary>
     /// Shufles the indices (idk what you expected).
     /// </summary>
     /// <param name="indices"></param>
-    private void ShufleIndices(List<int> indices)
+    private void ShufleIndices(IList<int> indices)
     {
         for (int i = indices.Count - 1; i > 0; i--)
         {
