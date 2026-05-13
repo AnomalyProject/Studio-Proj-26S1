@@ -14,7 +14,7 @@ public class SceneLoaderRF : NetworkBehaviour
     private float currentFakeProgress = 0f;
 
     [Header("Multiplayer Logic")]
-    [PurrScene] public string targetSceneName;
+    [PurrScene] private string targetSceneName;
     public SessionData sessionData;
 
     [Header("Loading UI")]
@@ -31,6 +31,8 @@ public class SceneLoaderRF : NetworkBehaviour
 
     private void Awake()
     {
+        targetSceneName = "MainGameplayScene";
+
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
