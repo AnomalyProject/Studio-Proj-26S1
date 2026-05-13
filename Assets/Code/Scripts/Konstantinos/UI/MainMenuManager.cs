@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -11,27 +14,46 @@ public class MainMenuManager : MonoBehaviour
 
     [Header("References")]
     [SerializeField] GameObject mainMenuCanvas;
-    [SerializeField] GameObject firstSelectedButton;
+    
+    [SerializeField] private GameObject startPanel;
+    [SerializeField] private GameObject firstSelectedButtonStart;
+
+    [SerializeField] private GameObject modePanel;
+    [SerializeField] private GameObject firstSelectedButtonMode;
+
+    [SerializeField] private GameObject coopPanel;
+    [SerializeField] private GameObject firstSelectedButtonCoop;
+
+    [SerializeField] private GameObject joinPanel;
+    [SerializeField] private GameObject firstSelectedButtonJoin;
+
+    [SerializeField] private GameObject messagePanel;
+    [SerializeField] private TMP_Text messageText;
 
     [Space(10)]
     [Header("Manager Settings")]
-    [SerializeField] bool enableOnStart = true;
+    [SerializeField] private bool enableOnStart = true;
 
-    [Space(10)]
-    [Header("Start Settings")]
-    [SerializeField] SceneLoadingMethod currentSceneLoading;
-    [SerializeField] string startSceneString = "MainGameplayScene";
-    [SerializeField] int startSceneIndex = 1;
-
+    public static MainMenuManager instance;
 
     private void Awake()
     {
+        instance = this;
         SetMenuActivity(false);
     }
+    private void OnDestroy() => instance = null;
 
     private void OnEnable()
     {
         SettingsManager.OnSettingsClosed += HandleSettingsClosed;
+
+        string message = SessionModeManager.Instance.LastJoinFailureMessage;
+
+        if (!String.IsNullOrWhiteSpace(message))
+        {
+            ShowMessage(message);
+            SessionModeManager.Instance.ClearLastJoinFailureMessage();
+        }
     }
 
     private void OnDisable()
@@ -44,12 +66,15 @@ public class MainMenuManager : MonoBehaviour
         SetMenuActivity(true);
     }
 
-    void Start()
+    private IEnumerator Start()
     {
         if (enableOnStart)
         {
             SetMenuActivity(true);
         }
+
+        yield return null;
+        SetPanel(0);
     }
 
     public void SetMenuActivity(bool active)
@@ -59,7 +84,7 @@ public class MainMenuManager : MonoBehaviour
             case true:
                 // activate canvas and select first button
                 mainMenuCanvas?.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(firstSelectedButton);
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonStart);
                 break;
             case false:
                 // deactivate canvas and clear selected button
@@ -70,18 +95,54 @@ public class MainMenuManager : MonoBehaviour
     }
 
     #region Canvas Button Methods
+
+    public void SetPanel(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                startPanel.SetActive(true);
+                modePanel.SetActive(false);
+                coopPanel.SetActive(false);
+                joinPanel.SetActive(false);
+
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonStart);
+                break;
+            case 1:
+                startPanel.SetActive(false);
+                modePanel.SetActive(true);
+                coopPanel.SetActive(false);
+                joinPanel.SetActive(false);
+
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonMode);
+                break;
+            case 2:
+                startPanel.SetActive(false);
+                modePanel.SetActive(false);
+                coopPanel.SetActive(true);
+                joinPanel.SetActive(false);
+
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonCoop);
+                break;
+            case 3:
+                startPanel.SetActive(false);
+                modePanel.SetActive(false);
+                coopPanel.SetActive(false);
+                joinPanel.SetActive(true);
+
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonJoin);
+                break;
+        }
+    }
+
     public void StartGame()
     {
-        switch (currentSceneLoading)
-        {
-            case SceneLoadingMethod.WithIndex:
-                SceneLoader.Instance.LoadSceneWithAsync(startSceneIndex); 
-                break;
-            case SceneLoadingMethod.WithString:
-                SceneLoader.Instance.LoadSceneWithAsync(startSceneString);
-                break;
+        SessionModeManager.Instance.StartSolo();
+    }
 
-        }
+    public void HostCoOp()
+    {
+        SessionModeManager.Instance.StartHosting();
     }
 
     public void OpenSettings()
@@ -96,4 +157,12 @@ public class MainMenuManager : MonoBehaviour
         Debug.Log("Player has quit the game!");
     }
     #endregion
+
+    private void ShowMessage(string message)
+    {
+        if (messagePanel == null || messageText == null) return;
+
+        messagePanel.SetActive(true);
+        messageText.text = message;
+    }
 }

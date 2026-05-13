@@ -163,7 +163,7 @@ public class SessionModeManager : MonoBehaviour
             float deadline = Time.realtimeSinceStartup + 3f;
             while (Time.realtimeSinceStartup < deadline)
             {
-                menuScene = SceneManager.GetSceneByName("MainMenuChristina");
+                menuScene = SceneManager.GetSceneByName("MainMenu");
                 if (menuScene.IsValid() && menuScene.isLoaded) break;
                 yield return null;
             }
@@ -176,7 +176,7 @@ public class SessionModeManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("[SessionModeManager] PurrNet didn't restore MainMenu.. Manually loading.");
-                SceneLoader.Instance.LoadScene("MainMenuChristina");
+                SceneLoader.Instance.LoadScene("MainMenu");
             }
             
             SetMode(SessionMode.None);

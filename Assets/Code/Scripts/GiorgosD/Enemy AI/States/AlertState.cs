@@ -2,14 +2,18 @@ using UnityEngine;
 
 public class AlertState : BaseState
 {
-    private Transform player;
-    public AlertState(EnemyBrain brain, EnemyPawn body, Transform player) : base(brain, body)
+    private Transform target;
+    public AlertState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        this.player = player;
+
     }
 
     public override void Enter()
     {
+        base.Enter();
+
+        target = brain.TargetPos;
+        
         // Play sound and/or animation to indicate the enemy is alert.
 
         body.OnPlayerSpotted += PlayerFound;
@@ -17,17 +21,19 @@ public class AlertState : BaseState
 
     public override void Update()
     {
-        body.RotateTowards(player.position);
+        body.RotateTowards(target.position);
 
-        if (body.IsFacingTarget(player.position))
+        if (body.IsFacingTarget(target.position))
         {
-            brain.ChangeState(new InvestigateState(brain, body, player.position, player));
+            brain.ChangeState(EnemyBrain.StateID.Investigate, target);
+            return;
         }
     }
 
     private void PlayerFound(GameObject player)
     {
-        brain.ChangeState(new ChaseState(brain, body, player.transform));
+       brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
+        return;
     }
 
     public override void Exit()

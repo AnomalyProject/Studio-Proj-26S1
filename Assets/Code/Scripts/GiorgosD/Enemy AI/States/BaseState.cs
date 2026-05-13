@@ -1,4 +1,4 @@
-public abstract class BaseState
+public class BaseState
 {
     protected EnemyBrain brain;
     protected EnemyPawn body;
@@ -9,7 +9,7 @@ public abstract class BaseState
         this.body = body;
     }
 
-    public abstract void Enter();
-    public abstract void Update();
-    public abstract void Exit();
+    public virtual void Enter() { body.StopAll(); }
+    public virtual void Update() { }
+    public virtual void Exit() { }
 }
