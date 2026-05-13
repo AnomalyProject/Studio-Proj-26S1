@@ -20,15 +20,40 @@ public class PasscodeSpreader : NetworkBehaviour
     /// <param name="input"> its a string that OnPasswordGenerated passes. </param>
     public void Spread(string input)
     {
+        if (!isServer) return;
         if (texts == null || texts.Length == 0 || string.IsNullOrEmpty(input)) return;
-        
-        DisableTexts();
-        
-        Random.InitState(input.GetHashCode());
         
         List<int> indices = Enumerable.Range(0, texts.Length).ToList();
         
         ShufleIndices(indices);
+
+        SyncPasscodes(indices.ToArray(), input);  // Made it a ToArray() cause i heard array is easier than list to pass on network
+    }
+
+    /// <summary>
+    /// Shufles the indices (idk what you expected).
+    /// </summary>
+    /// <param name="indices"></param>
+    private void ShufleIndices(List<int> indices)
+    {
+        for (int i = indices.Count - 1; i > 0; i--)
+        {
+            int randIndex = Random.Range(0, i + 1);
+            int temp = indices[i];
+            indices[i] = indices[randIndex];
+            indices[randIndex] = temp;
+        }
+    }
+    #endregion
+
+    #region  Network Sync
+    /// <summary>
+    /// Syncs the Passcode TextMeshes on Network.
+    /// </summary>
+    [ObserversRpc(bufferLast: true)]
+    private void SyncPasscodes(int[] indices, string input)
+    {
+        DisableTexts();
         
         int textLength = input.Length;
         int meshCount = texts.Length;
@@ -50,23 +75,6 @@ public class PasscodeSpreader : NetworkBehaviour
             }
             
             textTarget.gameObject.SetActive(true);
-        }
-        
-        Random.InitState((int)System.DateTime.Now.Ticks);
-    }
-
-    /// <summary>
-    /// Shufles the indices (idk what you expected).
-    /// </summary>
-    /// <param name="indices"></param>
-    private void ShufleIndices(List<int> indices)
-    {
-        for (int i = indices.Count - 1; i > 0; i--)
-        {
-            int randIndex = Random.Range(0, i + 1);
-            int temp = indices[i];
-            indices[i] = indices[randIndex];
-            indices[randIndex] = temp;
         }
     }
     #endregion
