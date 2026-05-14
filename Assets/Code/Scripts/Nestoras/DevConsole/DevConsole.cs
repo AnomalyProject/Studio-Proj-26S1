@@ -1,14 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System;
-using UnityEngine.InputSystem;
-using UnityEngine.Events;
-using UnityEngine.UI;
-using UnityEngine;
+using System.Threading.Tasks;
 using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using static UnityEngine.Rendering.GPUSort;
 
 /// <summary>
 /// Nestoras
@@ -153,7 +154,11 @@ public class DevConsole : MonoBehaviour
     private void Awake()
     {
         if (instance == null) instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         // Set up UI references
         root = transform.GetChild(0).gameObject;
@@ -181,6 +186,8 @@ public class DevConsole : MonoBehaviour
             }
         }
 
+        RegisterCommand("cls", new CommandData("Clears the screen.", ClearScreen));
+
         screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
         stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
         stackTraceTransform = (RectTransform)stackTraceInputField.transform;
@@ -189,7 +196,6 @@ public class DevConsole : MonoBehaviour
 
         // Instance specific assignments
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        commands["cls"].callback += ClearScreen;
 
         // Input
         submitAction = InputBridge.Actions.DevConsole.Submit;
@@ -204,7 +210,12 @@ public class DevConsole : MonoBehaviour
         {
             if (notification.clip.name.Equals("log_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Log] = notification;
             else if (notification.clip.name.Equals("warning_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Warning] = notification;
-            else if (notification.clip.name.Equals("error_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Error] = notification;
+            else if (notification.clip.name.Equals("error_alert", StringComparison.OrdinalIgnoreCase))
+            {
+                notifications[LogType.Error] = notification;
+                notifications[LogType.Exception] = notification;
+                notifications[LogType.Assert] = notification;
+            }
         }
         onLogReceived.AddListener(entry =>
         {
@@ -223,9 +234,13 @@ public class DevConsole : MonoBehaviour
     }
     private void OnDestroy()
     {
-        if (instance == this) instance = null;
-        submitAction.performed -= OnSubmit;
-        scrollAction.performed -= OnScrollHistory;
+        if (instance == this)
+        {
+            if (TryGetCommand("cls", out CommandData commandData)) commands.Remove("cls");
+            instance = null;
+        }
+        if (submitAction != null) submitAction.performed -= OnSubmit;
+        if (scrollAction != null) scrollAction.performed -= OnScrollHistory;
         InputBridge.OnContextChanged -= OnToggleConsole;
         onCommandEntered -= TryRunningAsBuiltInCommand;
     }
@@ -249,7 +264,6 @@ public class DevConsole : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void InternalCommands()
     {
-        RegisterCommand("cls", new CommandData("Clears the screen.", args => { }));
         RegisterCommand("exit", new CommandData("Closes the game.", args =>
         {
             Application.Quit();
@@ -539,8 +553,8 @@ public class DevConsole : MonoBehaviour
 
         entry.textComponent = log.GetComponent<TextMeshProUGUI>();
         AdvancedButton button = log.GetComponent<AdvancedButton>();
-        Image icon = log.GetComponentsInChildren<Image>().First();
-        entry.background = log.GetComponentsInChildren<Image>().Last();
+        Image icon = log.GetComponentsInChildren<Image>(true).First();
+        entry.background = log.GetComponentsInChildren<Image>(true).Last();
         entry.isCommand = isCommand;
 
         if (entry.isCommand)
@@ -573,10 +587,12 @@ public class DevConsole : MonoBehaviour
     }
     private void OnEntryClicked(LogEntry entry)
     {
+        if (entry.background == null) return;
+
         // Remove color from last focused entry
         Color color = entry.background.color;
         color.a = 0;
-        if (focusedEntry != null) focusedEntry.background.color = color;
+        if (focusedEntry?.background != null) focusedEntry.background.color = color;
 
         if (focusedEntry == entry)
         {

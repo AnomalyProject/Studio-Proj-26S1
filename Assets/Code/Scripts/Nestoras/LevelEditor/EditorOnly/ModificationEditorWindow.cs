@@ -138,7 +138,7 @@ public class ModificationEditorWindow : EditorWindow
         GUI.enabled &= lastModification != null;
         if (GUILayout.Button("Save Asset", GUILayout.Width(80)))
         {
-            string path = EditorUtility.SaveFilePanelInProject("Save Modification", modificationName, "asset", "Choose location", lastSaveLocation ?? "Assets/Scenes");
+            string path = EditorUtility.SaveFilePanelInProject("Save Modification", modificationName, "asset", "Choose location", lastSaveLocation ?? "Assets/Anomalies");
             if (!string.IsNullOrEmpty(path))
             {
                 lastSaveLocation = path;
