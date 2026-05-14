@@ -18,6 +18,8 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
 
     [Tooltip("Duration in seconds the boost lasts. Stacks additively if another boost is already active")]
     [SerializeField] private float duration = 10f;
+
+    [SerializeField] private AudioSource consumeSound;
     #endregion
 
     #region IInteractable
@@ -43,6 +45,8 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
     {
         if(!await CanInteract(interactor)) return false;
         interactor.Movement.ApplySpeedBoost(multiplierAdditive, duration);
+        if(consumeSound != null) consumeSound.Play();
+        await Task.Delay((int)(consumeSound.clip.length * 1000));
         return true;
     }
     #endregion
