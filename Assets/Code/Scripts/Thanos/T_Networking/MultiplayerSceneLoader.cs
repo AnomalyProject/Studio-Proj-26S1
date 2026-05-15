@@ -1,38 +1,103 @@
-using PurrNet;
-using PurrNet.Modules; 
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using PurrNet;
+using PurrNet.Modules;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
-public class MultiplayerSceneLoader : NetworkBehaviour
+public class SceneTransitionHandler : MonoBehaviour
 {
-    [PurrScene] public string sceneName;
+    [Header("References")]
+    [SerializeField] private CanvasGroup loadingOverlay;
+    [SerializeField] private Slider progressBar;
+    [SerializeField] private float fadeDuration = 0.5f;
 
-    SessionData sessionData;
-
-
-    [ObserversRpc(excludeSender: true, runLocally: true)]
-    private void ChangeScene()
+    private readonly Dictionary<GameState, string> _stateToScene = new Dictionary<GameState, string>
     {
-        if (sessionData == null)
+        { GameState.Menu, "MainMenuScene" },
+        { GameState.Lobby, "LobbyScene" },
+        { GameState.InGame, "World_Map_01" }
+    };
+
+    private void Start()
+    {
+        GameStateManager.Instance.OnStateChanged += HandleStateChange;
+
+        loadingOverlay.alpha = 0;
+        loadingOverlay.blocksRaycasts = false;
+
+        progressBar.value = 0f;
+    }
+
+    private void OnDestroy()
+    {
+        if (GameStateManager.Instance != null)
         {
-            Debug.LogError("Session Data is NULL");
-            return;
+            GameStateManager.Instance.OnStateChanged -= HandleStateChange;
+        }
+    }
+
+    private void HandleStateChange(GameState prev, GameState next)
+    {
+        if (next == GameState.Loading)
+        {
+            GameState targetState = (prev == GameState.Lobby) ? GameState.InGame : GameState.Lobby;
+            StartCoroutine(PerformTransition(targetState));
+        }
+        else if (prev == GameState.Loading)
+        {
+            StartCoroutine(Fade(0));
+        }
+    }
+
+    private System.Collections.IEnumerator PerformTransition(GameState targetState)
+    {
+        progressBar.value = 0f;
+
+        yield return StartCoroutine(Fade(1));
+
+        float simulatedLoadTime = 2f;
+        float timer = 0;
+        while (timer < simulatedLoadTime)
+        {
+            timer += Time.deltaTime;
+            progressBar.value = timer / simulatedLoadTime;
+            yield return null;
         }
 
-        if(sessionData.AllPlayersReady && sessionData.AllPlayersReadyInElevator)
+        if (NetworkManager.isServerStatic)
         {
-
-            PurrSceneSettings settings = new()
+            if (_stateToScene.TryGetValue(targetState, out string sceneName))
             {
-                isPublic = true,
-                mode = LoadSceneMode.Single,
-            };
+                PurrSceneSettings settings = new()
+                {
+                    isPublic = true,
+                    mode = LoadSceneMode.Single,
+                };
 
-            networkManager.sceneModule.LoadSceneAsync(sceneName);
+                NetworkManager.main.sceneModule.LoadSceneAsync(sceneName, settings);
+
+                GameStateManager.Instance.RequestStateChange(targetState);
+            }
+            else
+            {
+                Debug.LogError($"[SceneTransition]: No scene mapped for state {targetState}");
+            }
         }
-        else
+    }
+
+    private System.Collections.IEnumerator Fade(float targetAlpha)
+    {
+        float startAlpha = loadingOverlay.alpha;
+        float timer = 0;
+        loadingOverlay.blocksRaycasts = targetAlpha > 0;
+
+        while (timer < fadeDuration)
         {
-            Debug.Log("Players were not ready");
+            timer += Time.deltaTime;
+            loadingOverlay.alpha = Mathf.Lerp(startAlpha, targetAlpha, timer / fadeDuration);
+            yield return null;
         }
+        loadingOverlay.alpha = targetAlpha;
     }
 }
