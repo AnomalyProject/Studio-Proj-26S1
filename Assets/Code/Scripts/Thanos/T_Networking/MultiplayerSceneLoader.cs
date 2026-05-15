@@ -164,10 +164,6 @@ public class MultiplayerSceneLoader : NetworkBehaviour
     {
         if (asServer)
         {
-            if (GameStateManager.Instance.CurrentState == GameState.Loading)
-            {
-                GameStateManager.Instance.RequestStateChange(_pendingTargetState);
-            }
             return;
         }
 
