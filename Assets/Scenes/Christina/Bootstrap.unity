@@ -788,6 +788,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1115065490054501729, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1091350252}
+    - targetCorrespondingSourceObject: {fileID: 1937607851709536876, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1091350253}
   m_SourcePrefab: {fileID: 100100000, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
 --- !u!1 &1091350249 stripped
 GameObject:
@@ -807,7 +810,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
 --- !u!1 &1091350251 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5824465469042521464, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1937607851709536876, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
   m_PrefabInstance: {fileID: 1091350248}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1091350252
@@ -819,24 +822,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 1091350249}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba46601fd01b73949bbeaf167ef73fe0, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f86703471d4afb47a78d7a69e1ab25d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneLoaderRF
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  targetSceneName: 
-  sessionData:
-    ElevatorState: 0
-  loadingScreen: {fileID: 1091350251}
+  m_EditorClassIdentifier: Assembly-CSharp::SceneTransitionHandler
+  loadingOverlay: {fileID: 1091350253}
   progressBar: {fileID: 1091350250}
-  fakeLoadSpeed: 10
+  fadeDuration: 0.5
+--- !u!225 &1091350253
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1091350251}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &1344741923
 GameObject:
   m_ObjectHideFlags: 0
