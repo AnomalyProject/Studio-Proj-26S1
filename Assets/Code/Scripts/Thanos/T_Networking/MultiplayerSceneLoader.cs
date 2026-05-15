@@ -17,6 +17,8 @@ using System.Collections;
 /// coordination are required.</remarks>
 public class MultiplayerSceneLoader : NetworkBehaviour
 {
+    [HideInInspector] public MultiplayerSceneLoader Instance {get; private set;}
+
     [Header("UI References")]
     [SerializeField] private CanvasGroup loadingOverlay;
     [SerializeField] private Slider progressBar;
@@ -38,6 +40,16 @@ public class MultiplayerSceneLoader : NetworkBehaviour
     private GameState _pendingTargetState;
     private int _playersReady = 0;
 
+    private void Awake()
+    {
+        if (Instance != null & Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
     private void Start()
     {
         GameStateManager.Instance.OnStateChanged += HandleStateChange;
@@ -109,7 +121,7 @@ public class MultiplayerSceneLoader : NetworkBehaviour
     {
         RpcShowLoadingScreen();
 
-        yield return new WaitForSeconds(fadeDuration + 0.1f);
+        yield return new WaitForSecondsRealtime(fadeDuration + 3f);
 
         PurrSceneSettings settings = new()
         {
