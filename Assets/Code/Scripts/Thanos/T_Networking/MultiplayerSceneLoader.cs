@@ -5,9 +5,9 @@ using PurrNet.Modules;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class SceneTransitionHandler : MonoBehaviour
+public class SceneTransitionCoordinator : MonoBehaviour
 {
-    [Header("References")]
+    [Header("UI References")]
     [SerializeField] private CanvasGroup loadingOverlay;
     [SerializeField] private Slider progressBar;
     [SerializeField] private float fadeDuration = 0.5f;
@@ -16,16 +16,21 @@ public class SceneTransitionHandler : MonoBehaviour
     {
         { GameState.Menu, "MainMenuScene" },
         { GameState.Lobby, "LobbyScene" },
-        { GameState.InGame, "MainGameplayScene" }
+        { GameState.InGame, "World_Map_01" }
     };
 
     private void Start()
     {
         GameStateManager.Instance.OnStateChanged += HandleStateChange;
 
+        if (NetworkManager.main != null && NetworkManager.main.sceneModule != null)
+        {
+            NetworkManager.main.sceneModule.onPreSceneLoaded += OnPreSceneLoaded;
+            NetworkManager.main.sceneModule.onPostSceneLoaded += OnPostSceneLoaded;
+        }
+
         loadingOverlay.alpha = 0;
         loadingOverlay.blocksRaycasts = false;
-
         progressBar.value = 0f;
     }
 
@@ -35,38 +40,22 @@ public class SceneTransitionHandler : MonoBehaviour
         {
             GameStateManager.Instance.OnStateChanged -= HandleStateChange;
         }
+
+        if (NetworkManager.main != null && NetworkManager.main.sceneModule != null)
+        {
+            NetworkManager.main.sceneModule.onPreSceneLoaded -= OnPreSceneLoaded;
+            NetworkManager.main.sceneModule.onPostSceneLoaded -= OnPostSceneLoaded;
+        }
     }
 
     private void HandleStateChange(GameState prev, GameState next)
     {
-        if (next == GameState.Loading)
+        if (NetworkManager.main == null) return;
+
+        if (next == GameState.Loading && NetworkManager.isServerStatic)
         {
             GameState targetState = (prev == GameState.Lobby) ? GameState.InGame : GameState.Lobby;
-            StartCoroutine(PerformTransition(targetState));
-        }
-        else if (prev == GameState.Loading)
-        {
-            StartCoroutine(Fade(0));
-        }
-    }
 
-    private System.Collections.IEnumerator PerformTransition(GameState targetState)
-    {
-        progressBar.value = 0f;
-
-        yield return StartCoroutine(Fade(1));
-
-        float simulatedLoadTime = 2f;
-        float timer = 0;
-        while (timer < simulatedLoadTime)
-        {
-            timer += Time.deltaTime;
-            progressBar.value = timer / simulatedLoadTime;
-            yield return null;
-        }
-
-        if (NetworkManager.isServerStatic)
-        {
             if (_stateToScene.TryGetValue(targetState, out string sceneName))
             {
                 PurrSceneSettings settings = new()
@@ -81,9 +70,27 @@ public class SceneTransitionHandler : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"[SceneTransition]: No scene mapped for state {targetState}");
+                Debug.LogError($"[SceneCoordinator]: No scene mapped for state {targetState}");
             }
         }
+    }
+
+    private void OnPreSceneLoaded(SceneID scene, bool asServer)
+    {
+        if (asServer) return;
+
+        StopAllCoroutines();
+        progressBar.value = 0f;
+        StartCoroutine(Fade(1));
+    }
+
+    private void OnPostSceneLoaded(SceneID scene, bool asServer)
+    {
+        if (asServer) return;
+
+        StopAllCoroutines();
+        progressBar.value = 1f;
+        StartCoroutine(Fade(0));
     }
 
     private System.Collections.IEnumerator Fade(float targetAlpha)
