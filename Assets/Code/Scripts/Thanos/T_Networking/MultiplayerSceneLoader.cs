@@ -5,7 +5,7 @@ using PurrNet.Modules;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class SceneTransitionCoordinator : MonoBehaviour
+public class MultiplayerSceneLoader : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private CanvasGroup loadingOverlay;
@@ -16,8 +16,10 @@ public class SceneTransitionCoordinator : MonoBehaviour
     {
         { GameState.Menu, "MainMenuScene" },
         { GameState.Lobby, "LobbyScene" },
-        { GameState.InGame, "MainGameplayScene" }
+        { GameState.InGame, "World_Map_01" }
     };
+
+    private GameState _pendingTargetState;
 
     private void Start()
     {
@@ -54,25 +56,32 @@ public class SceneTransitionCoordinator : MonoBehaviour
 
         if (next == GameState.Loading && NetworkManager.isServerStatic)
         {
-            GameState targetState = (prev == GameState.Lobby) ? GameState.InGame : GameState.Lobby;
+            _pendingTargetState = (prev == GameState.Lobby) ? GameState.InGame : GameState.Lobby;
 
-            if (_stateToScene.TryGetValue(targetState, out string sceneName))
+            if (_stateToScene.TryGetValue(_pendingTargetState, out string sceneName))
             {
-                PurrSceneSettings settings = new()
-                {
-                    isPublic = true,
-                    mode = LoadSceneMode.Single,
-                };
-
-                NetworkManager.main.sceneModule.LoadSceneAsync(sceneName, settings);
-
-                GameStateManager.Instance.RequestStateChange(targetState);
+                StartCoroutine(ServerLoadSequence(sceneName));
             }
             else
             {
-                Debug.LogError($"[SceneCoordinator]: No scene mapped for state {targetState}");
+                Debug.LogError($"[SceneCoordinator]: No scene mapped for state {_pendingTargetState}");
             }
         }
+    }
+
+    private System.Collections.IEnumerator ServerLoadSequence(string sceneName)
+    {
+        StopAllCoroutines();
+        progressBar.value = 0f;
+        yield return StartCoroutine(Fade(1));
+
+        PurrSceneSettings settings = new()
+        {
+            isPublic = true,
+            mode = LoadSceneMode.Single,
+        };
+
+        NetworkManager.main.sceneModule.LoadSceneAsync(sceneName, settings);
     }
 
     private void OnPreSceneLoaded(SceneID scene, bool asServer)
@@ -86,7 +95,14 @@ public class SceneTransitionCoordinator : MonoBehaviour
 
     private void OnPostSceneLoaded(SceneID scene, bool asServer)
     {
-        if (asServer) return;
+        if (asServer)
+        {
+            if (GameStateManager.Instance.CurrentState == GameState.Loading)
+            {
+                GameStateManager.Instance.RequestStateChange(_pendingTargetState);
+            }
+            return;
+        }
 
         StopAllCoroutines();
         progressBar.value = 1f;
