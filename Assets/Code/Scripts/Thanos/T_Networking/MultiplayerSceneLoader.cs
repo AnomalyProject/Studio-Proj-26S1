@@ -16,7 +16,7 @@ public class MultiplayerSceneLoader : MonoBehaviour
     {
         { GameState.Menu, "MainMenuScene" },
         { GameState.Lobby, "LobbyScene" },
-        { GameState.InGame, "World_Map_01" }
+        { GameState.InGame, "MainGameplayScene" }
     };
 
     private GameState _pendingTargetState;
