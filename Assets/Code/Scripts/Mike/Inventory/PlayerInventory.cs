@@ -14,10 +14,15 @@ public class PlayerInventory : NetworkBehaviour
     public event Action<ItemData> OnFocusedChanged, OnItemUsed;
     public event Action<int, int> OnFocusedIndexChanged;
 
+    [Header("Inventory Setup")]
     [SerializeField, Min(1)] private int inventorySize = 5;
     [SerializeField] private Transform itemHolder;
+
+    [Header("Unity Events")]
     [SerializeField] private UnityEvent<ItemData> _OnFocusedChanged, _OnItemUsed;
     [SerializeField] private UnityEvent<ItemData, int> OnItemAdded, OnItemRemoved;
+
+    [Header("Item Discard Options")]
     [SerializeField] private float throwItemForce = 5f;
     [SerializeField, Range(5, 30)] private float destroyDropAfterSeconds = 15f;
 
