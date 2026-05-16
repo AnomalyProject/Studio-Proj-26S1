@@ -18,6 +18,8 @@ public class PlayerInventory : NetworkBehaviour
     [SerializeField] private Transform itemHolder;
     [SerializeField] private UnityEvent<ItemData> _OnFocusedChanged, _OnItemUsed;
     [SerializeField] private UnityEvent<ItemData, int> OnItemAdded, OnItemRemoved;
+    [SerializeField] private float throwItemForce = 5f;
+    [SerializeField, Range(5, 30)] private float destroyDropAfterSeconds = 15f;
 
     public Inventory Inventory { get; private set; }
 
@@ -106,7 +108,7 @@ public class PlayerInventory : NetworkBehaviour
     #endregion
 
     #region Inventory Control
-    public void NextItem()
+    private void NextItem()
     {
         DebugInventory();
         if (Inventory.TryGetNext(focusedSlot, out var stack, out int nextIndex))
@@ -115,7 +117,7 @@ public class PlayerInventory : NetworkBehaviour
             return;
         }
     }
-    public void PreviousItem()
+    private void PreviousItem()
     {
         if (Inventory.TryGetPrevious(focusedSlot, out IReadOnlyItemStack stack, out int nextIndex))
         {
@@ -153,7 +155,7 @@ public class PlayerInventory : NetworkBehaviour
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
     }
-    public async Task<bool> TryUseFocused()
+    private async Task<bool> TryUseFocused()
     {
         if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
         if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
@@ -175,8 +177,28 @@ public class PlayerInventory : NetworkBehaviour
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
+    [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
+    {
+        if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
 
-    [ServerRpc] async Task RegisterUsage_ServerRpc(int slotIndex)
+        int quantityRemoved = Inventory.Remove(slotIndex, stack.GetQuantity());
+        if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;
+
+        Vector3 throwDirection = playerBody.transform.forward + Vector3.up;
+
+        ItemPickup droppedItem = Instantiate(
+            stack.GetItemData().PickupPrefab, 
+            playerBody.transform.position + throwDirection, 
+            Quaternion.identity);
+
+        droppedItem.SetQuantity(quantityRemoved);
+        droppedItem.Rigidbody.AddForce(throwDirection.normalized * throwItemForce, ForceMode.Impulse);
+        droppedItem.Rigidbody.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
+
+        Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
+    }
+
+    [ServerRpc] private async Task RegisterUsage_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) await Task.CompletedTask;
         if (stack.GetItemData().IsConsumable) Inventory.TryRemoveOne(slotIndex);
@@ -189,6 +211,14 @@ public class PlayerInventory : NetworkBehaviour
         {
             if(IsUsingItem) return;
             currentUseTask = TryUseFocused();
+        }
+    }
+    public void DropFocused(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started)
+        {
+            if (IsUsingItem) return;
+            DropItem_ServerRpc(focusedSlot);
         }
     }
     public void NextItem(InputAction.CallbackContext ctx)
