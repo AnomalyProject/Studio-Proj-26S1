@@ -253,6 +253,91 @@ public class SessionModeManager : MonoBehaviour
         StartCoroutine(BeginSoloFlowForScene(sceneName));
     }
     
+    public void StartDevHost(string sceneName, DevBootstrapRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("[SessionModeManager] Cannot start dev host. Scene name was empty.");
+            ReturnToMenu();
+            return;
+        }
+
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start dev host, already in {currentMode} mode.");
+            return;
+        }
+
+        SetMode(SessionMode.DevHost);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        StartCoroutine(BeginDevHostFlow(sceneName, request));
+    }
+    
+      private IEnumerator BeginDevHostFlow(string sceneName, DevBootstrapRequest request)
+  {
+      NetworkManager netManager = NetworkManager.main;
+      if (netManager == null)
+      {
+          Debug.LogError("[SessionModeManager] NetworkManager.main not found. Cannot start dev host.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      UDPTransport udpTransport = netManager.GetComponent<UDPTransport>();
+      if (udpTransport == null)
+      {
+          Debug.LogError("[SessionModeManager] UDPTransport missing on NetworkManager. Add it to the Network Manager prefab.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      // Dev host should uses UDP, disable the others so nothing else is live.
+      LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+      SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+      if (localTransport != null) localTransport.enabled = false;
+      if (steamTransport != null) steamTransport.enabled = false;
+
+      udpTransport.address        = request.address;          
+      udpTransport.serverPort     = (ushort)request.port;
+      udpTransport.maxConnections = request.maxPlayers;
+      udpTransport.enabled        = true;
+      netManager.transport        = udpTransport;
+
+      Debug.Log($"[SessionModeManager] Dev host on UDP port {udpTransport.serverPort}. Starting host...");
+      netManager.StartHost();
+
+      float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+      while (!netManager.isHost && Time.realtimeSinceStartup < hostDeadline) yield return null;
+
+      if (!netManager.isHost)
+      {
+          Debug.LogError("[SessionModeManager] Timed out waiting for dev listen-host to become ready.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+      while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+             && Time.realtimeSinceStartup < sessionDeadline) yield return null;
+
+      if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+      {
+          Debug.LogError("[SessionModeManager] Timed out waiting for SessionManager to create the dev session.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      // loading the dev target scene through PurrNet so it replicates to clients that join later.
+      var settings = new PurrSceneSettings { isPublic = true, mode = LoadSceneMode.Single };
+      var op = netManager.sceneModule.LoadSceneAsync(sceneName, settings);
+      SceneLoader.Instance.PerformAsyncOperation(op);
+      while (op != null && !op.isDone) yield return null;
+
+      GameStateManager.Instance.RequestStateChange(GameState.InGame);
+      Debug.Log("[SessionModeManager] Dev host ready. -> InGame");
+  }
+    
 
     /// <summary>
     /// Starts the co-op host flow by entering lobby/loading states and loading the gameplay scene before
