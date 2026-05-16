@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 992094993978892894}
+  - component: {fileID: 7214280939903465020}
   - component: {fileID: 1985872602987531451}
   - component: {fileID: 8513434792825166750}
   - component: {fileID: 7404547016157385072}
-  - component: {fileID: 7214280939903465020}
   m_Layer: 0
   m_Name: Flashlight Pickup
   m_TagString: Untagged
@@ -36,6 +36,33 @@ Transform:
   - {fileID: 854789840465130821}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7214280939903465020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4405830728345010543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2b66ab46ab08b54b9a3b49f514a474e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  onPickup:
+    m_PersistentCalls:
+      m_Calls: []
+  itemStack:
+    itemData: {fileID: 11400000, guid: 66d486fa154e2db49b94e82748db2b09, type: 2}
+    quantity: 1
 --- !u!65 &1985872602987531451
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -83,7 +110,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!114 &7404547016157385072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -125,33 +152,6 @@ MonoBehaviour:
   _velocityStopThreshold: 0.001
   _debugGizmos: 0
   _debugTextOffset: 2
---- !u!114 &7214280939903465020
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4405830728345010543}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2b66ab46ab08b54b9a3b49f514a474e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  onPickup:
-    m_PersistentCalls:
-      m_Calls: []
-  itemStack:
-    itemData: {fileID: 11400000, guid: 66d486fa154e2db49b94e82748db2b09, type: 2}
-    quantity: 1
 --- !u!1 &5406014884303792932
 GameObject:
   m_ObjectHideFlags: 0
