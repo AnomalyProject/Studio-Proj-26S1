@@ -445,7 +445,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c239db77a72ea604aa659110d9654906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerZooming
-  playerCamera: {fileID: 1415168984759268418}
+  affectedCameras:
+  - {fileID: 1415168984759268418}
+  - {fileID: 4543138664715801701}
   defaultFOV: 60
   zoomScale: 0.5
   zoomTransitionSpeed: 12
@@ -944,6 +946,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   throwItemForce: 5
+  destroyDropAfterSeconds: 15
 --- !u!114 &6675929724497548166
 MonoBehaviour:
   m_ObjectHideFlags: 0
