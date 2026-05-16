@@ -182,14 +182,14 @@ public class PlayerInventory : NetworkBehaviour
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
-    [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
+    [ServerRpc] private void DropItem_ServerRpc(int slotIndex, Vector3 throwForward)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
 
         int quantityRemoved = Inventory.Remove(slotIndex, stack.GetQuantity());
         if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;
 
-        Vector3 throwDirection = playerBody.transform.forward + Vector3.up;
+        Vector3 throwDirection = throwForward + Vector3.up;
 
         ItemPickup droppedItem = Instantiate(
             stack.GetItemData().PickupPrefab, 
@@ -223,7 +223,7 @@ public class PlayerInventory : NetworkBehaviour
         if (ctx.started)
         {
             if (IsUsingItem) return;
-            DropItem_ServerRpc(focusedSlot);
+            DropItem_ServerRpc(focusedSlot, itemHolder.transform.forward);
         }
     }
     public void NextItem(InputAction.CallbackContext ctx)
