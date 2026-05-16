@@ -54,6 +54,7 @@ public class ButtonJuice : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
         PlaySound(hoverSound);
         isHovering = true;
+        EventSystem.current.SetSelectedGameObject(gameObject);
         StopAllCoroutines();
         StartCoroutine(ScaleButton(transform.localScale, hoverScale));
     }
