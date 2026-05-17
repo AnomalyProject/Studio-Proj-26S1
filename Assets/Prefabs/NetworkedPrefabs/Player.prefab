@@ -413,8 +413,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e974ad9a76972b4cacf0f2257b6d00f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FPSCameraController
-  mouseSensitivityX: 0.15
-  mouseSensitivityY: 0.15
+  sensitivityMultiplier: 20
   pitchMin: -80
   pitchMax: 80
   playerBody: {fileID: 3679284614733776610}
@@ -446,7 +445,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c239db77a72ea604aa659110d9654906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerZooming
-  playerCamera: {fileID: 1415168984759268418}
+  affectedCameras:
+  - {fileID: 1415168984759268418}
+  - {fileID: 4543138664715801701}
   defaultFOV: 60
   zoomScale: 0.5
   zoomTransitionSpeed: 12
@@ -818,6 +819,21 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onDropItem:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7190460059898372273}
+        m_TargetAssemblyTypeName: PlayerInventory, Assembly-CSharp
+        m_MethodName: DropFocused
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3674273088732647212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -929,6 +945,8 @@ MonoBehaviour:
   OnItemRemoved:
     m_PersistentCalls:
       m_Calls: []
+  throwItemForce: 5
+  destroyDropAfterSeconds: 15
 --- !u!114 &6675929724497548166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1293,7 +1311,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 255
+    m_Bits: 767
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0

@@ -853,6 +853,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Drop Item",
+                    "type": "Button",
+                    "id": "9d7b6beb-7f2a-45a5-8f43-76030ab9d6b8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -938,7 +947,7 @@
                     "id": "61f14b77-4921-4a37-85a6-3823f6d95c74",
                     "path": "<Gamepad>/rightStick",
                     "interactions": "",
-                    "processors": "ScaleVector2(x=5,y=5)",
+                    "processors": "ScaleVector2(x=25,y=25)",
                     "groups": ";Gameplay",
                     "action": "Look",
                     "isComposite": false,
@@ -1150,6 +1159,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Scroll Inventory",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "258af77e-daa1-4bfa-b0f5-cd515199aca8",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Drop Item",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "05e2ff7a-73d6-4fa1-badb-73b66045aeaf",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Drop Item",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

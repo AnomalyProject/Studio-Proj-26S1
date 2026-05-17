@@ -1,14 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System;
-using UnityEngine.InputSystem;
-using UnityEngine.Events;
-using UnityEngine.UI;
-using UnityEngine;
+using System.Threading.Tasks;
 using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using static UnityEngine.Rendering.GPUSort;
 
 /// <summary>
 /// Nestoras
@@ -35,6 +36,7 @@ public class DevConsole : MonoBehaviour
     private LogTypeToggle logsToggle;
     private LogTypeToggle warningsToggle;
     private LogTypeToggle errorsToggle;
+    private Dictionary<LogType, AudioSource> notifications = new Dictionary<LogType, AudioSource>();
     #endregion
 
     #region Input
@@ -61,7 +63,7 @@ public class DevConsole : MonoBehaviour
 
     #region Structures
     [Header("Structures")]
-    private static readonly List<DevConsole> devConsoles = new List<DevConsole>();
+    public static DevConsole instance;
     private readonly Queue<GameObject> logObjects = new Queue<GameObject>();
     private readonly Queue<LogEntry> logs = new Queue<LogEntry>();
     [Serializable]
@@ -135,7 +137,7 @@ public class DevConsole : MonoBehaviour
 
     #region Console State
     [Header("Console State")]
-    private bool isOpen;
+    public bool isOpen { get; private set; }
     private static bool logCommands = true; // echo
     private bool screenIsVertical;
     private bool showLogs = true;
@@ -151,6 +153,13 @@ public class DevConsole : MonoBehaviour
     #region Init
     private void Awake()
     {
+        if (instance == null) instance = this;
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         // Set up UI references
         root = transform.GetChild(0).gameObject;
         screen = root.transform.GetChild(0).gameObject;
@@ -177,6 +186,8 @@ public class DevConsole : MonoBehaviour
             }
         }
 
+        RegisterCommand("cls", new CommandData("Clears the screen.", ClearScreen));
+
         screenIsVertical = screenLayoutGroup is VerticalLayoutGroup;
         stackTraceContentTransform = (RectTransform)stackTraceInputField.transform.parent;
         stackTraceTransform = (RectTransform)stackTraceInputField.transform;
@@ -185,11 +196,53 @@ public class DevConsole : MonoBehaviour
 
         // Instance specific assignments
         mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        commands["cls"].callback += ClearScreen;
 
         // Input
         submitAction = InputBridge.Actions.DevConsole.Submit;
         scrollAction = InputBridge.Actions.DevConsole.ScrollHistory;
+        submitAction.performed += OnSubmit;
+        scrollAction.performed += OnScrollHistory;
+        InputBridge.OnContextChanged += OnToggleConsole;
+        onCommandEntered += TryRunningAsBuiltInCommand;
+
+        // Notifications
+        foreach (AudioSource notification in transform.GetComponentsInChildren<AudioSource>(true))
+        {
+            if (notification.clip.name.Equals("log_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Log] = notification;
+            else if (notification.clip.name.Equals("warning_alert", StringComparison.OrdinalIgnoreCase)) notifications[LogType.Warning] = notification;
+            else if (notification.clip.name.Equals("error_alert", StringComparison.OrdinalIgnoreCase))
+            {
+                notifications[LogType.Error] = notification;
+                notifications[LogType.Exception] = notification;
+                notifications[LogType.Assert] = notification;
+            }
+        }
+        onLogReceived.AddListener(entry =>
+        {
+            if (!isOpen && notifications.TryGetValue(entry.type, out AudioSource notification))
+            {
+                // Only play once
+                bool shouldPlaySound = !notification.gameObject.activeInHierarchy;
+                notification.gameObject.SetActive(true);
+                if (shouldPlaySound) notification.Play();
+            }
+        });
+        onConsoleToggledOn.AddListener(() =>
+        {
+            foreach (AudioSource notification in notifications.Values) notification.gameObject.SetActive(false);
+        });
+    }
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            if (TryGetCommand("cls", out CommandData commandData)) commands.Remove("cls");
+            instance = null;
+        }
+        if (submitAction != null) submitAction.performed -= OnSubmit;
+        if (scrollAction != null) scrollAction.performed -= OnScrollHistory;
+        InputBridge.OnContextChanged -= OnToggleConsole;
+        onCommandEntered -= TryRunningAsBuiltInCommand;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
@@ -211,7 +264,6 @@ public class DevConsole : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     private static void InternalCommands()
     {
-        RegisterCommand("cls", new CommandData("Clears the screen.", args => { }));
         RegisterCommand("exit", new CommandData("Closes the game.", args =>
         {
             Application.Quit();
@@ -307,27 +359,6 @@ public class DevConsole : MonoBehaviour
     }
     #endregion
 
-    #region Attach / Detach
-    private void OnEnable()
-    {
-        devConsoles.Add(this);
-        onCommandEntered += TryRunningAsBuiltInCommand;
-
-        InputBridge.OnContextChanged += OnToggleConsole;
-        submitAction.performed += OnSubmit;
-        scrollAction.performed += OnScrollHistory;
-    }
-    private void OnDisable()
-    {
-        devConsoles.Remove(this);
-        onCommandEntered -= TryRunningAsBuiltInCommand;
-
-        InputBridge.OnContextChanged -= OnToggleConsole;
-        submitAction.performed -= OnSubmit;
-        scrollAction.performed -= OnScrollHistory;
-    }
-    #endregion
-
     #region Navigation
     private void OnToggleConsole(InputBridge.InputContext context)
     {
@@ -338,6 +369,8 @@ public class DevConsole : MonoBehaviour
         {
             onConsoleToggledOn?.Invoke();
             commandLine.ActivateInputField();
+            // Scroll to bottom only if we were previously near the top or bottom
+            if (Mathf.Pow(logsScrollRect.verticalNormalizedPosition * 2 - 1, 2) >= 0.95f) StartCoroutine(nameof(ScrollToBottomNextFrame));
         }
         else onConsoleToggledOff?.Invoke();
     }
@@ -352,7 +385,7 @@ public class DevConsole : MonoBehaviour
         if (historyDepth >= 0 && commandHistory.Count -1 >= historyDepth) commandHistory.RemoveAt(0);
         historyIndex = commandHistory.Count;
 
-        if (logCommands && input[0] != '@') Log(new LogEntry($"> {input}", "", LogType.Log), true); // Suppress echo optionally
+        if (logCommands && input[0] != '@') LogToUI(new LogEntry($"> {input}", "", LogType.Log), true); // Suppress echo optionally
 
         commandLine.text = "";
         commandLine.ActivateInputField();
@@ -478,12 +511,12 @@ public class DevConsole : MonoBehaviour
     #endregion
 
     #region Logging
-    public static void Propagate(LogEntry entry, bool isCommand = false)
+    public static void Log(LogEntry entry, bool isCommand = false)
     {
-        if (devConsoles.Count == 0) return;
+        if (instance == null) return;
 
         // Log instantly if on main thread, otherwise enqueue for next update
-        if (UnityMainThreadDispatcher.IsMainThread) foreach (DevConsole console in devConsoles) console.Log(entry, isCommand);
+        if (UnityMainThreadDispatcher.IsMainThread) instance.LogToUI(entry, isCommand);
         else lock (queueLock) mainThreadLogQueue.Enqueue(entry);
     }
     private void Update()
@@ -498,13 +531,13 @@ public class DevConsole : MonoBehaviour
                 else break;
             }
 
-            if (entry != null) Log(entry);
+            if (entry != null) LogToUI(entry);
         }
 
         // Manualy update scroll rect content height so that it works with the input field
         stackTraceContentTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, stackTraceTransform.rect.height + 10);
     }
-    private void Log(LogEntry entry, bool isCommand = false)
+    private void LogToUI(LogEntry entry, bool isCommand = false)
     {
         if (entry.message == null || entry.stackTrace == null) return;
 
@@ -520,8 +553,8 @@ public class DevConsole : MonoBehaviour
 
         entry.textComponent = log.GetComponent<TextMeshProUGUI>();
         AdvancedButton button = log.GetComponent<AdvancedButton>();
-        Image icon = log.GetComponentsInChildren<Image>().First();
-        entry.background = log.GetComponentsInChildren<Image>().Last();
+        Image icon = log.GetComponentsInChildren<Image>(true).First();
+        entry.background = log.GetComponentsInChildren<Image>(true).Last();
         entry.isCommand = isCommand;
 
         if (entry.isCommand)
@@ -554,10 +587,12 @@ public class DevConsole : MonoBehaviour
     }
     private void OnEntryClicked(LogEntry entry)
     {
+        if (entry.background == null) return;
+
         // Remove color from last focused entry
         Color color = entry.background.color;
         color.a = 0;
-        if (focusedEntry != null) focusedEntry.background.color = color;
+        if (focusedEntry?.background != null) focusedEntry.background.color = color;
 
         if (focusedEntry == entry)
         {

@@ -3,15 +3,17 @@ using UnityEngine.UIElements;
 
 public class ChaseState : BaseState
 {
-    private Transform player;
+    private Transform target;
 
-    public ChaseState(EnemyBrain brain, EnemyPawn body, Transform player) : base(brain, body)
+    public ChaseState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        this.player = player;
+        
     }
 
     public override void Enter()
     {
+        base.Enter();
+
         body.SetMoveSpeed(true);
 
         body.OnLostPlayer += LostPlayer;
@@ -22,14 +24,21 @@ public class ChaseState : BaseState
     /// </summary>
     public override void Update()
     {
-        if (player == null) return;
+        target = brain.TargetPos;
 
-        body.RotateTowards(player.position);
-        body.MoveToTarget(player.position);
-
-        if (Vector3.Distance(body.transform.position, player.position) <= 2.0f)
+        if (target == null) 
         {
-            brain.ChangeState(new AttackState(brain, body, player));
+            brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
+        }
+
+        body.RotateTowards(target.position);
+        body.MoveToTarget(target.position);
+
+        if (Vector3.Distance(body.transform.position, target.position) <= 2.0f)
+        {
+            brain.ChangeState(EnemyBrain.StateID.Attack, target);
+            return;
         }
     }
 
@@ -38,7 +47,8 @@ public class ChaseState : BaseState
     /// </summary>
     private void LostPlayer()
     {
-        brain.ChangeState(new InvestigateState(brain, body, player.position, player));
+        brain.ChangeState(EnemyBrain.StateID.Investigate, target);
+        return;
     }
 
     public override void Exit()
