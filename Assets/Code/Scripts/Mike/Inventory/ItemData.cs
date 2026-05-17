@@ -10,6 +10,7 @@ public class ItemData : ScriptableObject
     [SerializeField, Min(1)] private int _maxStackSize;
     [SerializeField, Min(0)] private int _vendorPrice = 1;
     [SerializeField] private PlayerItem _itemPrefab;
+    [SerializeField] private ItemPickup _pickupPrefab;
 
     public string ItemName => _itemName;
     public string ItemDescription => _itemDescription;
@@ -18,4 +19,5 @@ public class ItemData : ScriptableObject
     public int MaxStackSize => _maxStackSize;
     public int PricePerUnit => _vendorPrice;
     public PlayerItem ItemPrefab => _itemPrefab;
+    public ItemPickup PickupPrefab => _pickupPrefab;
 }
