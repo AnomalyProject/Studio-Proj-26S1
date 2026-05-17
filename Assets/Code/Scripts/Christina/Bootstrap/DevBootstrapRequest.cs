@@ -6,6 +6,7 @@ public class DevBootstrapRequest
     
     public const string LaunchRequestPrefKey =  "Anomaly.DevBootstrap.LaunchRequest";
     public const string LegacyDevScenePrefKey = "Christina.DevScenePath";
+    public const string NextJoinIndexPrefKey = "Anomaly.DevBootstrap.NextJoinIndex";
     
     public DevLaunchMode mode;
     public string scenePath;        

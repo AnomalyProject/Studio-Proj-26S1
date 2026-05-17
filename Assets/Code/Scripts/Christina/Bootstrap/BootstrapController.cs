@@ -135,7 +135,6 @@ public class BootstrapController : MonoBehaviour
 
     private void BootDevClient(DevBootstrapRequest request)
     {
-        Debug.Log($"[BootstrapController] DevClient dispatch OK — address={request.address}:{request.port}, " +
-                  $"playerIndex={request.playerIndex}.");
+        SessionModeManager.Instance.StartDevClient(request);
     }
 }
