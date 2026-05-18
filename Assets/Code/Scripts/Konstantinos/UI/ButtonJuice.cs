@@ -54,7 +54,14 @@ public class ButtonJuice : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
         PlaySound(hoverSound);
         isHovering = true;
-        EventSystem.current.SetSelectedGameObject(gameObject);
+        if (GetComponent<UISelectableMenuItem>() == null)
+        {
+            EventSystem.current.SetSelectedGameObject(gameObject);
+        }
+        else
+        {
+            GetComponent<UISelectableMenuItem>().Select();
+        }
         StopAllCoroutines();
         StartCoroutine(ScaleButton(transform.localScale, hoverScale));
     }

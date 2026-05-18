@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class MainMenuExitDoor : MonoBehaviour
+public class MainMenuExitDoor : MonoBehaviour, IMenuSelectable
 {
+    public MenuNavigation MenuNavigation;
     public Animator DoorAnimator;
     public GameObject WarningIndicator;
 
@@ -12,6 +13,8 @@ public class MainMenuExitDoor : MonoBehaviour
 
     public float TimeToExit = 2f;
     private float exitTimer;
+
+    private bool isSelected;
 
 
     private void Update()
@@ -30,18 +33,51 @@ public class MainMenuExitDoor : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        DoorAnimator.SetBool("hover", true);
-        WarningIndicator.SetActive(true);
+        if (MenuNavigation != null)
+        {
+            MenuNavigation.Select(1);
+        }
+        else
+        {
+            Select();
+        }
     }
 
     private void OnMouseExit()
     {
-        DoorAnimator.SetBool("hover", false);
-        WarningIndicator.SetActive(false);
+        Deselect();
     }
 
     private void OnMouseUp()
     {
+        Submit();
+    }
+
+    public void Select()
+    {
+        Debug.Log("Door Selected");
+        isSelected = true;
+
+        // Highlight door
+        DoorAnimator.SetBool("hover", true);
+        WarningIndicator.SetActive(true);
+    }
+
+    public void Deselect()
+    {
+        Debug.Log("Door Deselected");
+        isSelected = false;
+
+        // Remove highlight
+        DoorAnimator.SetBool("hover", false);
+        WarningIndicator.SetActive(false);
+    }
+
+    public void Submit()
+    {
+        Debug.Log("Door Activated");
+
+        // Open door
         if (!Opened && enabled)
         {
             exitTimer = TimeToExit;
