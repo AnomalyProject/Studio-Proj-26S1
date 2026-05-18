@@ -72,5 +72,8 @@ public class LureItem : NoiseEmitter
         CancelInvoke();
         Destroy(gameObject);
     }
+
+    private void OnDrawGizmos() => Gizmos.DrawWireSphere(transform.position, noiseRadius);
+
     #endregion
 }
