@@ -38,6 +38,7 @@ public class FPSController : MonoBehaviour
     public bool IsMoving => moveInput.sqrMagnitude > 0;
     public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
     public float SpeedBoostTimeRemaining => _speedBoostTimeRemaining;
+    public Vector2 MoveInput => moveInput;
     #endregion
 
     #region Private Fields
