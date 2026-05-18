@@ -1,8 +1,6 @@
-using NUnit.Framework;
-using PurrNet;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using PurrNet;
 
 public class PickUpSpawner : NetworkBehaviour
 {
