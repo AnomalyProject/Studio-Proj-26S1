@@ -201,6 +201,7 @@ public class PlayerInventory : NetworkBehaviour
         droppedItem.Rigidbody.AddForce(throwDirection.normalized * throwItemForce, ForceMode.Impulse);
         droppedItem.Rigidbody.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
 
+        if(!stack.GetItemData().IsKeyItem)
         Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
     }
 
