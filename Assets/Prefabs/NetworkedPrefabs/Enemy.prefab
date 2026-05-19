@@ -259,9 +259,8 @@ MonoBehaviour:
   sightRange: 10
   autoDetectRange: 4.5
   sightAngle: 40
-  sightAngleSearch: 0
-  sightAngleNormal: 0
-  checkFrequency: 0.1
+  sightAngleSearch: 40
+  sightAngleNormal: 40
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -271,12 +270,10 @@ MonoBehaviour:
   runMultiplier: 0
   autoDetectMultiplier: 0
   sightRangeMultiplier: 0
-  checkFrequencyReduction: 0
   aggressionLevel: 0
   maxAggressionLevel: 0
   attackHitBox: {x: 1.4, y: 2, z: 1}
   attackOffset: 1
-  turnThreshold: 0
 --- !u!114 &5561190351584055429
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,6 +295,7 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
+  currentStateID: 0
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}

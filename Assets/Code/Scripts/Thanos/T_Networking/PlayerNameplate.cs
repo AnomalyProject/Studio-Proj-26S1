@@ -36,6 +36,8 @@ public class PlayerNameplate : NetworkBehaviour
     
     protected override void OnSpawned() 
     {
+        if (!SteamManager.Initialized) return;
+        
         ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
         
         SessionData currentSession = SessionManager.Instance.CurrentSession;

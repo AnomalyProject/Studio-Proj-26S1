@@ -437,10 +437,21 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
         {
-            // should reject the request
-            Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is in the wrong game state.");
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
-            return;
+            // dev tool exception: a dev bootstrapped host boots straight to InGame, so allow joins into
+            // an in progress DEV session only. 
+            bool devInGameJoin =
+                SessionModeManager.Instance != null &&
+                SessionModeManager.Instance.CurrentMode == SessionMode.DevHost &&
+                GameStateManager.Instance.CurrentState == GameState.InGame;
+            
+            if (!devInGameJoin)
+            {
+                Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is in the wrong game state.");
+                SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
+                return;
+            }
+
+            Debug.Log($"[SessionManager] Dev join: allowing PlayerID {sender} into in-progress dev session.");
         }
 
         // check if player is already in session

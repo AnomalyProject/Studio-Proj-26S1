@@ -3,8 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System;
+using PurrNet;
 
-public class SceneLoader : MonoBehaviour
+public class SceneLoader : NetworkBehaviour
 {
     public static SceneLoader Instance { get; private set; }
 

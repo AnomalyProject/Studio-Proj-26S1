@@ -4,11 +4,21 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(NetworkRigidbody))]
 public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
 {
             
     [SerializeField] private UnityEvent onPickup; //add event to connect sound and other stuff for designer Inspector
     [SerializeField] InspectorItemStack itemStack;
+
+    Rigidbody _rb;
+    public Rigidbody Rigidbody => _rb;
+
+    private void Awake()
+    {
+        _rb = GetComponent<Rigidbody>();
+    }
+
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
@@ -31,7 +41,9 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
     {
         return HandlePickup_Server(player);
     }
- 
+
+    public void SetQuantity(int amount) => itemStack.ChangeQuantity(amount);
+
     private Task<bool> HandlePickup_Server(PlayerBody player)
     {
         if (!isServer) return Task.FromResult(false);
