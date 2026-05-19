@@ -1,13 +1,18 @@
 using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
+using System;
 
 public class TextChatManager : NetworkBehaviour 
 {
     public static TextChatManager Instance { get; private set; }
 
     public static Dictionary<ulong, string> PlayerNames = new Dictionary<ulong, string>();
+
+    private HashSet<string> mutedPlayers = new HashSet<string>();
+    private bool muteAll = false;
+
+    RPCInfo info = default;
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
@@ -129,6 +134,11 @@ public class TextChatManager : NetworkBehaviour
     [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
     private void BroadcastMessage(string displayName, string message)
     {
+        if (muteAll) return;
+        string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", "").ToLower(); //Remove rich text tags for mute checks
+
+        if (mutedPlayers.Contains(cleanName)) return;
+
         if (ChatUI.Instance != null)
         {
             ChatUI.Instance.ReceiveMessage(displayName, message);
@@ -142,5 +152,73 @@ public class TextChatManager : NetworkBehaviour
         string systemName = "<color=#FFD700>System</color>";
 
         BroadcastMessage(systemName, message);
+    }
+
+    public void SetMute(string playerName, bool muted)
+    {
+        if (playerName.ToLower() == "all")
+        {
+            muteAll = muted;
+        }
+        else
+        {
+            if (muted) mutedPlayers.Add(playerName);
+            else mutedPlayers.Remove(playerName);
+        }
+    }
+
+    [ServerRpc(requireOwnership: false)]
+    public void SendWhisper(string targetName, string message, ulong senderSteamID)
+    {
+        ulong targetSteamID = 0;
+
+        SessionData currsession = SessionManager.Instance.CurrentSession;
+
+        if(currsession != null)
+        {
+            foreach(var player in currsession.Players)
+            {
+                if (player.DisplayName.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetSteamID = player.SteamID;
+                    break;
+                }
+            }
+        }
+
+        if(targetSteamID == 0)
+        {
+            SendWhisperError(info.sender, $"Player '{targetName}' not found.");
+            return;
+        }
+
+        PlayerID? targetNetworkID = SessionManager.Instance.GetPlayerIDForSteam(targetSteamID);
+        if(targetSteamID == 0)
+        {
+            SendWhisperToClient(targetNetworkID.Value, message, senderSteamID);
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperToClient(PlayerID target, string message, ulong senderSteamID)
+    {
+        string senderName = "Unknown";
+        SessionData session = SessionManager.Instance.CurrentSession;
+        var senderInfo = session.GetPlayer(senderSteamID);
+        if(senderInfo.HasValue) senderName = senderInfo.Value.DisplayName;
+
+        if(ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper from {senderName}]</color>", message);
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperError(PlayerID target, string errorMessage)
+    {
+        if(ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=red>[System]</color>", errorMessage);
+        }
     }
 }

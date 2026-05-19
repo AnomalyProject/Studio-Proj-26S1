@@ -13,10 +13,10 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private TMP_InputField chatInputField;
     [SerializeField] private TextMeshProUGUI chatHistoryText;
     [SerializeField] private ScrollRect scrollRect;
-    
+
     [Header("Dependencies")]
     [SerializeField] private int maxMessageLength = 200;
-    
+
     [Header("UI Toggling")]
     [SerializeField] private Image scrollViewBackground;
     [SerializeField] private GameObject scrollbarObject;
@@ -43,10 +43,10 @@ public class ChatUI : MonoBehaviour
             return;
         }
         Instance = this;
-        
+
         DontDestroyOnLoad(transform.root.gameObject);
-        
-        chatInputField.characterLimit = maxMessageLength; 
+
+        chatInputField.characterLimit = maxMessageLength;
         chatHistoryText.text = "";
 
         submit = InputBridge.Actions.Chat.Submit;
@@ -54,7 +54,7 @@ public class ChatUI : MonoBehaviour
 
         CloseChat();
 
-        if(chatCanvasGroup != null)
+        if (chatCanvasGroup != null)
         {
             chatCanvasGroup.alpha = 0f;
         }
@@ -67,12 +67,12 @@ public class ChatUI : MonoBehaviour
 
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
-    
+
     private void OnDisable()
     {
         InputBridge.OnContextChanged -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
-        
+
         GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
 
@@ -96,35 +96,67 @@ public class ChatUI : MonoBehaviour
     private void OnToggleChatPerformed(InputBridge.InputContext context)
     {
         if (Time.unscaledTime - lastCloseTime < 0.1f) return;
-        
+
         if (context == InputBridge.InputContext.Chat) OpenChat();
         else CloseChat();
     }
-    
+
     private void OnChatSubmit(string text)
     {
         if (!string.IsNullOrWhiteSpace(text))
         {
+            CloseChat();
+            return;
+        }
+
+        if (text.StartsWith("/"))
+        {
+            ProcessCommand(text);
+        }
+        else
+        {
             ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
             TextChatManager.Instance.SendChatMessage(text, localSteamID);
         }
-        
+
         chatInputField.text = "";
         InputBridge.RestorePreviousContext();
         CloseChat();
     }
-    
+
+    private void ProcessCommand(string input)
+    {
+        string[] parts = input.Split(' ');
+        string command = parts[0].ToLower();
+
+        switch (command)
+        {
+            case "/mute":
+                if (parts.Length > 1) MutePlayer(parts[1]);
+                break;
+            case "/unmute":
+                if (parts.Length > 1) UnmutePlayer(parts[1]);
+                break;
+            case "/whisper":
+                if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
+                break;
+            default:
+                ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command: {command}");
+                break;
+        }
+    }
+
     private void OpenChat()
     {
         isChatOpen = true;
         timeSinceLastMessage = 0f;
 
-        if(chatCanvasGroup != null)
+        if (chatCanvasGroup != null)
         {
             chatCanvasGroup.alpha = 1f;
         }
 
-        if(chatContainerRect != null)
+        if (chatContainerRect != null)
         {
             chatContainerRect.sizeDelta = new Vector2(chatContainerRect.sizeDelta.x, expandedHeight);
         }
@@ -132,30 +164,30 @@ public class ChatUI : MonoBehaviour
         chatInputField.gameObject.SetActive(true);
         if (scrollViewBackground != null) scrollViewBackground.enabled = true;
         if (scrollbarObject != null) scrollbarObject.SetActive(true);
-        
+
         ToggleGameplayInputs(true);
-        
+
         StartCoroutine(FocusChatNextFrame());
     }
     private IEnumerator FocusChatNextFrame()
     {
-        yield return null; 
+        yield return null;
         chatInputField.ActivateInputField();
         chatInputField.Select();
     }
-    
+
     private void CloseChat()
     {
         isChatOpen = false;
         timeSinceLastMessage = 0f;
 
-        if(chatContainerRect != null)
+        if (chatContainerRect != null)
         {
             chatContainerRect.sizeDelta = new Vector2(chatContainerRect.sizeDelta.x, compactHeight);
         }
 
         Canvas.ForceUpdateCanvases();
-        if(scrollRect != null) 
+        if (scrollRect != null)
         {
             scrollRect.verticalNormalizedPosition = 0f;
         }
@@ -163,48 +195,48 @@ public class ChatUI : MonoBehaviour
         chatInputField.gameObject.SetActive(false);
         if (scrollViewBackground != null) scrollViewBackground.enabled = false;
         if (scrollbarObject != null) scrollbarObject.SetActive(false);
-        
+
         if (UnityEngine.EventSystems.EventSystem.current != null)
         {
             UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         }
-        
+
         ToggleGameplayInputs(false);
-        
+
         lastCloseTime = Time.unscaledTime;
     }
 
     private void ClearChat()
     {
         chatHistoryText.text = "";
-        if(chatCanvasGroup != null)
+        if (chatCanvasGroup != null)
         {
             chatCanvasGroup.alpha = 0f;
         }
         CloseChat();
     }
-    
+
     public void ReceiveMessage(string displayName, string message)
     {
         string formattedMessage = $"<b>[{displayName}]:</b> {message}\n";
         chatHistoryText.text += formattedMessage;
-        
+
         timeSinceLastMessage = 0f;
 
-        if(chatCanvasGroup != null)
+        if (chatCanvasGroup != null)
         {
             chatCanvasGroup.alpha = 1f;
         }
 
         Canvas.ForceUpdateCanvases();
-        if (scrollRect != null) 
+        if (scrollRect != null)
         {
             scrollRect.verticalNormalizedPosition = 0f;
         }
     }
-    
+
     public bool IsTyping => chatInputField.isFocused; //Bool that we can use to stop other actions when the player is typing ex: if(ChatUI.Instance.IsTyping) return;
-    
+
     //Remove this ugly shi when we refactor inputs like human beings
     private void ToggleGameplayInputs(bool chatIsOpen)
     {
@@ -214,10 +246,29 @@ public class ChatUI : MonoBehaviour
             playerInput.enabled = !chatIsOpen;
         }
     }
-    
+
     private void OnGameStateChanged(GameState previous, GameState next)
     {
         if (next == GameState.Menu) ClearChat();
     }
 
+    private void MutePlayer(string playerName)
+    {
+        TextChatManager.Instance.SetMute(playerName, true);
+        ReceiveMessage("<color=#FFD700>[System]</color>", $"Muted {playerName}.");
+    }
+
+    private void UnmutePlayer(string playerName)
+    {
+        TextChatManager.Instance.SetMute(playerName, false);
+        ReceiveMessage("<color=#FFD700>[System]</color>", $"Unmuted {playerName}.");
+    }
+
+    private void WhisperToPlayer(string targetName, string message)
+    {
+        ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
+        TextChatManager.Instance.SendWhisper(targetName, message, localSteamID);
+
+        ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);
+    }
 }
