@@ -197,9 +197,11 @@ public class PlayerInventory : NetworkBehaviour
             Quaternion.identity);
 
         droppedItem.SetQuantity(quantityRemoved);
+        droppedItem.Rigidbody.isKinematic = false;
         droppedItem.Rigidbody.AddForce(throwDirection.normalized * throwItemForce, ForceMode.Impulse);
         droppedItem.Rigidbody.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
 
+        if(!stack.GetItemData().IsKeyItem)
         Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
     }
 

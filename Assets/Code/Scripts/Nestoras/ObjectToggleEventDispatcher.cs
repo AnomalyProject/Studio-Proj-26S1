@@ -6,7 +6,7 @@ using UnityEngine;
 /// 
 /// Simple utility for triggering wstuff when GameObjects are toggled
 /// </summary>
-public class EnableOnSceneLoad : MonoBehaviour
+public class ObjectToggleEventDispatcher : MonoBehaviour
 {
     public UnityEvent onEnable = new UnityEvent();
     public UnityEvent onDisable = new UnityEvent();
