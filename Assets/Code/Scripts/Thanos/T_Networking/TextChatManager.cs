@@ -60,11 +60,4 @@ public class TextChatManager : NetworkBehaviour
             ChatUI.Instance.ReceiveMessage(displayName, message);
         }
     }
-
-    /* //Testing input handling with component
-    public void SetInputState(PlayerInput input)
-    {
-        input = GetComponent<PlayerInput>();
-    }
-    */
 }
