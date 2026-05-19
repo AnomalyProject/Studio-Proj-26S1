@@ -12,8 +12,6 @@ public class TextChatManager : NetworkBehaviour
     private HashSet<string> mutedPlayers = new HashSet<string>();
     private bool muteAll = false;
 
-    RPCInfo info = default;
-
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
     private void Awake()
@@ -168,9 +166,10 @@ public class TextChatManager : NetworkBehaviour
     }
 
     [ServerRpc(requireOwnership: false)]
-    public void SendWhisper(string targetName, string message, ulong senderSteamID)
+    public void SendWhisper(string targetName, string message, ulong senderSteamID, RPCInfo info = default)
     {
         ulong targetSteamID = 0;
+        string actualTargetName = targetName;
 
         SessionData currsession = SessionManager.Instance.CurrentSession;
 
@@ -181,6 +180,7 @@ public class TextChatManager : NetworkBehaviour
                 if (player.DisplayName.Equals(targetName, StringComparison.OrdinalIgnoreCase))
                 {
                     targetSteamID = player.SteamID;
+                    actualTargetName = player.DisplayName;
                     break;
                 }
             }
@@ -193,9 +193,14 @@ public class TextChatManager : NetworkBehaviour
         }
 
         PlayerID? targetNetworkID = SessionManager.Instance.GetPlayerIDForSteam(targetSteamID);
-        if(targetSteamID == 0)
+        if(targetNetworkID.HasValue)
         {
             SendWhisperToClient(targetNetworkID.Value, message, senderSteamID);
+            SendWhisperConfirmation(info.sender, actualTargetName, message);
+        }
+        else
+        {
+            SendWhisperError(info.sender, $"Player '{targetName}' not found.");
         }
     }
 
@@ -210,6 +215,15 @@ public class TextChatManager : NetworkBehaviour
         if(ChatUI.Instance != null)
         {
             ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper from {senderName}]</color>", message);
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperConfirmation(PlayerID target, string targetName, string message)
+    {
+        if (ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);
         }
     }
 

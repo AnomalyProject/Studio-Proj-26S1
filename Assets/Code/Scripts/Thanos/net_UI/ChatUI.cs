@@ -140,7 +140,7 @@ public class ChatUI : MonoBehaviour
                 if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
                 break;
             default:
-                ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command: {command}");
+                ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command");
                 break;
         }
     }
@@ -268,6 +268,6 @@ public class ChatUI : MonoBehaviour
         ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
         TextChatManager.Instance.SendWhisper(targetName, message, localSteamID);
 
-        ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);
+        //ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);   <-- Debug
     }
 }
