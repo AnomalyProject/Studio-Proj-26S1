@@ -103,9 +103,8 @@ public class ChatUI : MonoBehaviour
 
     private void OnChatSubmit(string text)
     {
-        if (!string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrWhiteSpace(text))
         {
-            CloseChat();
             return;
         }
 
