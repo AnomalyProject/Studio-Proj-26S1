@@ -154,6 +154,12 @@ public class ChatUI : MonoBehaviour
             chatContainerRect.sizeDelta = new Vector2(chatContainerRect.sizeDelta.x, compactHeight);
         }
 
+        Canvas.ForceUpdateCanvases();
+        if(scrollRect != null) 
+        {
+            scrollRect.verticalNormalizedPosition = 0f;
+        }
+
         chatInputField.gameObject.SetActive(false);
         if (scrollViewBackground != null) scrollViewBackground.enabled = false;
         if (scrollbarObject != null) scrollbarObject.SetActive(false);
