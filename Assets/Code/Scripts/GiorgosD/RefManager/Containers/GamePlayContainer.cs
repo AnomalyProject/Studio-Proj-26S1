@@ -9,5 +9,11 @@ using UnityEngine;
 [Serializable]
 public class GamePlayContainer
 {
-    
+    [SerializeField] private GameManager _gameManager;
+    [SerializeField] private AnomalyManager _anomalyManager;
+    [SerializeField] private MapOrientor _mapOrientor;
+
+    public GameManager GameManager => _gameManager;
+    public AnomalyManager AnomalyManager => _anomalyManager;
+    public MapOrientor MapOrientor => _mapOrientor;
 }

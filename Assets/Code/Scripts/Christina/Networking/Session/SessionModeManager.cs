@@ -20,6 +20,9 @@ public class SessionModeManager : MonoBehaviour
 
     private const float hostReadyTimeoutSeconds = 10f;
     private const float sessionReadyTimeoutSeconds = 5f;
+    private const float devClientSpawnTimeoutSeconds = 15f;
+    // because devtool is too fast for the system we've build and causes issues.
+    private const float devClientStartupDelaySeconds = 1f; 
     
     public string LastJoinFailureMessage { get; private set; }
     
@@ -163,7 +166,7 @@ public class SessionModeManager : MonoBehaviour
             float deadline = Time.realtimeSinceStartup + 3f;
             while (Time.realtimeSinceStartup < deadline)
             {
-                menuScene = SceneManager.GetSceneByName("MainMenuChristina");
+                menuScene = SceneManager.GetSceneByName("MainMenu");
                 if (menuScene.IsValid() && menuScene.isLoaded) break;
                 yield return null;
             }
@@ -176,7 +179,7 @@ public class SessionModeManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("[SessionModeManager] PurrNet didn't restore MainMenu.. Manually loading.");
-                SceneLoader.Instance.LoadScene("MainMenuChristina");
+                SceneLoader.Instance.LoadScene("MainMenu");
             }
             
             SetMode(SessionMode.None);
@@ -252,6 +255,91 @@ public class SessionModeManager : MonoBehaviour
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
         StartCoroutine(BeginSoloFlowForScene(sceneName));
     }
+    
+    public void StartDevHost(string sceneName, DevBootstrapRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("[SessionModeManager] Cannot start dev host. Scene name was empty.");
+            ReturnToMenu();
+            return;
+        }
+
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start dev host, already in {currentMode} mode.");
+            return;
+        }
+
+        SetMode(SessionMode.DevHost);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        StartCoroutine(BeginDevHostFlow(sceneName, request));
+    }
+    
+      private IEnumerator BeginDevHostFlow(string sceneName, DevBootstrapRequest request)
+  {
+      NetworkManager netManager = NetworkManager.main;
+      if (netManager == null)
+      {
+          Debug.LogError("[SessionModeManager] NetworkManager.main not found. Cannot start dev host.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      UDPTransport udpTransport = netManager.GetComponent<UDPTransport>();
+      if (udpTransport == null)
+      {
+          Debug.LogError("[SessionModeManager] UDPTransport missing on NetworkManager. Add it to the Network Manager prefab.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      // Dev host should uses UDP, disable the others so nothing else is live.
+      LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+      SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+      if (localTransport != null) localTransport.enabled = false;
+      if (steamTransport != null) steamTransport.enabled = false;
+
+      udpTransport.address        = request.address;          
+      udpTransport.serverPort     = (ushort)request.port;
+      udpTransport.maxConnections = request.maxPlayers;
+      udpTransport.enabled        = true;
+      netManager.transport        = udpTransport;
+
+      Debug.Log($"[SessionModeManager] Dev host on UDP port {udpTransport.serverPort}. Starting host...");
+      netManager.StartHost();
+
+      float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+      while (!netManager.isHost && Time.realtimeSinceStartup < hostDeadline) yield return null;
+
+      if (!netManager.isHost)
+      {
+          Debug.LogError("[SessionModeManager] Timed out waiting for dev listen-host to become ready.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+      while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+             && Time.realtimeSinceStartup < sessionDeadline) yield return null;
+
+      if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+      {
+          Debug.LogError("[SessionModeManager] Timed out waiting for SessionManager to create the dev session.");
+          ReturnToMenu();
+          yield break;
+      }
+
+      // loading the dev target scene through PurrNet so it replicates to clients that join later.
+      var settings = new PurrSceneSettings { isPublic = true, mode = LoadSceneMode.Single };
+      var op = netManager.sceneModule.LoadSceneAsync(sceneName, settings);
+      SceneLoader.Instance.PerformAsyncOperation(op);
+      while (op != null && !op.isDone) yield return null;
+
+      GameStateManager.Instance.RequestStateChange(GameState.InGame);
+      Debug.Log("[SessionModeManager] Dev host ready. -> InGame");
+  }
     
 
     /// <summary>
@@ -476,6 +564,93 @@ public class SessionModeManager : MonoBehaviour
 
         SteamSessionBridge.Instance.BeginPendingSteamJoin();
     }
+    
+    /// <summary>
+    /// Dev tool flow
+    /// </summary>
+    /// <param name="request"></param>
+    public void StartDevClient(DevBootstrapRequest request)
+    {
+        if (currentMode != SessionMode.None)
+        {
+            Debug.LogWarning($"[SessionModeManager] Cannot start dev client, already in {currentMode} mode.");
+            return;
+        }
+
+        SetMode(SessionMode.DevClient);
+        GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        StartCoroutine(BeginDevClientFlow(request));
+    }
+    
+     private IEnumerator BeginDevClientFlow(DevBootstrapRequest request)
+      {
+          NetworkManager netManager = NetworkManager.main;
+          if (netManager == null)
+          {
+              Debug.LogError("[SessionModeManager] NetworkManager.main not found. Cannot start dev client.");
+              ReturnToMenu();
+              yield break;
+          }
+
+          UDPTransport udpTransport = netManager.GetComponent<UDPTransport>();
+          if (udpTransport == null)
+          {
+              Debug.LogError("[SessionModeManager] UDPTransport missing on NetworkManager.");
+              ReturnToMenu();
+              yield break;
+          }
+
+          LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+          SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+          if (localTransport != null) localTransport.enabled = false;
+          if (steamTransport != null) steamTransport.enabled = false;
+
+          udpTransport.address    = request.address;
+          udpTransport.serverPort = (ushort)request.port;
+          udpTransport.enabled    = true;
+          netManager.transport    = udpTransport;
+
+          // letting client's bootstrap scene + PurrNet hierarchy finish registering before we connect.
+          // connecting mid-initialization makes the host's earliest spawn packets arrive before we can build them
+          // and then PurrNets drops them permanently and client cannot connect.
+          yield return new WaitForSeconds(devClientStartupDelaySeconds);
+          
+          Debug.Log($"[SessionModeManager] Dev client connecting to {request.address}:{request.port}...");
+          netManager.StartClient();
+
+          // waiting for the transport to connect
+          float connectDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+          while (!netManager.isClient && Time.realtimeSinceStartup < connectDeadline) yield return null;
+
+          if (!netManager.isClient)
+          {
+              Debug.LogError("[SessionModeManager] Dev client failed to connect to host.");
+              ReturnToMenu();
+              yield break;
+          }
+
+          // waiting for SessionManager to exist and be network spawned
+          float instanceDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+          while (SessionManager.Instance == null && Time.realtimeSinceStartup < instanceDeadline) yield return null;
+
+          NetworkIdentity identity = SessionManager.Instance != null
+              ? SessionManager.Instance.GetComponent<NetworkIdentity>()
+              : null;
+          
+          float spawnDeadline = Time.realtimeSinceStartup + devClientSpawnTimeoutSeconds;
+          while (identity != null && !identity.isSpawned && Time.realtimeSinceStartup < spawnDeadline) yield return null;
+
+          if (identity == null || !identity.isSpawned)
+          {
+              Debug.LogError("[SessionModeManager] Dev client: SessionManager not network-spawned in time.");
+              ReturnToMenu();
+              yield break;
+          }
+
+          // requesting to join with our deterministic dev identity
+          Debug.Log($"[SessionModeManager] Dev client connected. Joining as '{request.displayName}' (id {request.fakeSteamId}).");
+          SessionManager.Instance.RequestJoinSession(request.fakeSteamId, request.displayName);
+      }
     
     /// <summary>
     ///  Runs after the join scene finishes loading to begin the pending Steam join process.

@@ -41,24 +41,8 @@ public static class PlayFromScene
             return;
         }
 
-        // in case there are unsaved changes in the scene, save them. 
-        if (currentScene.isDirty && !EditorSceneManager.SaveOpenScenes())
-        {
-            Debug.LogWarning("[PlayFromScene] Aborted. User cancelled save.");
-            return;
-        }
-        
-        EditorPrefs.SetString(DevScenePrefKey, currentScene.path);
-        
-        SceneAsset bootstrapAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapScenePath);
-        if (bootstrapAsset == null)
-        {
-            Debug.LogError($"[PlayFromScene] Bootstrap scene not found at '{BootstrapScenePath}'.");
-            return;
-        }
-        
-        EditorSceneManager.playModeStartScene = bootstrapAsset;
-        EditorApplication.isPlaying = true;
+        DevBootstrapLauncher.EnterPlayModeThroughBootstrap(() =>
+            EditorPrefs.SetString(DevBootstrapRequest.LegacyDevScenePrefKey, currentScene.path));
     }
 
     /// <summary>
@@ -68,7 +52,7 @@ public static class PlayFromScene
     [MenuItem("Dev/Play Clear Dev Scene Override")]
     public static void Clear()
     {
-        EditorPrefs.DeleteKey(DevScenePrefKey);
+        EditorPrefs.DeleteKey(DevBootstrapRequest.LegacyDevScenePrefKey);
         Debug.Log("[PlayFromScene] Dev scene override cleared. Bootstrap will load MainMenu.");
     }
     
@@ -78,7 +62,7 @@ public static class PlayFromScene
     [MenuItem("Dev/Play Show Current Dev Scene")]
     public static void Show()
     {
-        string scene = EditorPrefs.GetString(DevScenePrefKey, "");
+        string scene = EditorPrefs.GetString(DevBootstrapRequest.LegacyDevScenePrefKey, "");
         Debug.Log(string.IsNullOrEmpty(scene) ? "[PlayFromScene] No dev scene set so Bootstrap will load MainMenu." : $"[PlayFromScene] Dev scene: {scene}");
     }
 

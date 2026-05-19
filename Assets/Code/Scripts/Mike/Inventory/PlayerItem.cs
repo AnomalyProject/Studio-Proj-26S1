@@ -3,17 +3,19 @@ using UnityEngine;
 
 public class PlayerItem : NetworkBehaviour
 {
-    [SerializeField, HideInInspector] MeshRenderer[] renderers;
+    [SerializeField, HideInInspector] private MeshRenderer[] renderers;
+    [SerializeField, HideInInspector] private Canvas[] canvases;
     protected override void OnSpawned()
     {
         base.OnSpawned();
 
         if (!isOwner)
         {
-            foreach(MeshRenderer rend in renderers) // Hide Visuals on other clients
-            {
-                rend.enabled = false;
-            }
+            // Hide Visuals on other clients
+            foreach (MeshRenderer rend in renderers) rend.enabled = false;
+
+            // Hide UI on other clients
+            foreach (Canvas canvas in canvases) canvas.enabled = false;
         }
     }
 
@@ -21,6 +23,8 @@ public class PlayerItem : NetworkBehaviour
     private void OnValidate()
     {
         if (Application.isPlaying) return;
+
         renderers = GetComponentsInChildren<MeshRenderer>();
+        canvases = GetComponentsInChildren<Canvas>();
     }
 }
