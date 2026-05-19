@@ -18,15 +18,14 @@ public class ModificationEditorWindow : EditorWindow
     private GameObject lastRoot; // For detecting changes in the root object and clearing baseline/modifications
     private Transform modificationsRoot; // Parent of modification objects
 
-    private static List<GameObjectSnapshot> baseline; // Original state of the hierarchy
+    public static List<GameObjectSnapshot> baseline { get; private set; } // Original state of the hierarchy
     private static LevelModification lastModification; // Difference between the baseline and the latest captured state of the hierarchy
 
     private string modificationName; // For modification asset naming and corresponding applier gameobject naming
     private static string lastSaveLocation; // For remembering the last save location when saving multiple modifications
 
     // For warning
-    private static bool baselineHasNativeFieldWithoutApplier;
-    public static bool capturedNativeFieldWithoutApplier;
+    public static bool diffContainsNativeFieldWithoutApplier;
 
     // Diagram UI
     private Vector2 scroll;
@@ -43,17 +42,15 @@ public class ModificationEditorWindow : EditorWindow
     private static void Initialize()
     {
         baseline = null;
-        baselineHasNativeFieldWithoutApplier = false;
-        capturedNativeFieldWithoutApplier = false;
+        diffContainsNativeFieldWithoutApplier = false;
     }
 
-    private void ClearSnapshots()
+    private void ClearSnapshots(bool clearModificationName = true)
     {
         baseline = null;
         lastModification = null;
-        baselineHasNativeFieldWithoutApplier = false;
-        capturedNativeFieldWithoutApplier = false;
-        modificationName = null;
+        diffContainsNativeFieldWithoutApplier = false;
+        if (clearModificationName) modificationName = null;
     }
 
     [MenuItem("Window/Modification Editor")]
@@ -83,10 +80,8 @@ public class ModificationEditorWindow : EditorWindow
         GUI.backgroundColor = hasBaseline ? Color.lawnGreen : Color.softRed;
         if (GUILayout.Button("Capture Baseline"))
         {
+            ClearSnapshots(false);
             baseline = Capture(root);
-            lastModification = null;
-            baselineHasNativeFieldWithoutApplier = capturedNativeFieldWithoutApplier;
-            capturedNativeFieldWithoutApplier = false;
         }
         GUI.backgroundColor = defaultColor;
 
@@ -94,7 +89,7 @@ public class ModificationEditorWindow : EditorWindow
         GUI.enabled &= hasBaseline;
         if (GUILayout.Button("Capture Modifications"))
         {
-            capturedNativeFieldWithoutApplier = false;
+            diffContainsNativeFieldWithoutApplier = false;
             lastModification = Diff(baseline, Capture(root));
         }
 
@@ -183,7 +178,7 @@ public class ModificationEditorWindow : EditorWindow
     private void DrawDiff()
     {
         EditorGUILayout.Space();
-        GUIContent labelContent = lastModification != null && baselineHasNativeFieldWithoutApplier != capturedNativeFieldWithoutApplier ? new GUIContent("Modifications", EditorGUIUtility.IconContent("console.warnicon").image, "Captured fields of native components without custom appliers: setting these values via reflection may fail.") : new GUIContent("Modifications");
+        GUIContent labelContent = lastModification != null && diffContainsNativeFieldWithoutApplier ? new GUIContent("Modifications", EditorGUIUtility.IconContent("console.warnicon").image, "Captured fields of native components without custom appliers: setting these values via reflection may fail.") : new GUIContent("Modifications");
         EditorGUILayout.LabelField(labelContent, EditorStyles.boldLabel);
 
         scroll = EditorGUILayout.BeginScrollView(scroll, false, false, GUILayout.ExpandHeight(true));

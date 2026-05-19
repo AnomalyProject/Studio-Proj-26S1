@@ -939,6 +939,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Drop Item"",
+                    ""type"": ""Button"",
+                    ""id"": ""9d7b6beb-7f2a-45a5-8f43-76030ab9d6b8"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1238,6 +1247,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Scroll Inventory"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""258af77e-daa1-4bfa-b0f5-cd515199aca8"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drop Item"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""05e2ff7a-73d6-4fa1-badb-73b66045aeaf"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drop Item"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -1319,6 +1350,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_UseFocusedItem = m_Player.FindAction("Use Focused Item", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
+        m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
@@ -1849,6 +1881,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_UseFocusedItem;
     private readonly InputAction m_Player_Zoom;
     private readonly InputAction m_Player_ScrollInventory;
+    private readonly InputAction m_Player_DropItem;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1908,6 +1941,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/ScrollInventory".
         /// </summary>
         public InputAction @ScrollInventory => m_Wrapper.m_Player_ScrollInventory;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/DropItem".
+        /// </summary>
+        public InputAction @DropItem => m_Wrapper.m_Player_DropItem;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1970,6 +2007,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ScrollInventory.started += instance.OnScrollInventory;
             @ScrollInventory.performed += instance.OnScrollInventory;
             @ScrollInventory.canceled += instance.OnScrollInventory;
+            @DropItem.started += instance.OnDropItem;
+            @DropItem.performed += instance.OnDropItem;
+            @DropItem.canceled += instance.OnDropItem;
         }
 
         /// <summary>
@@ -2017,6 +2057,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ScrollInventory.started -= instance.OnScrollInventory;
             @ScrollInventory.performed -= instance.OnScrollInventory;
             @ScrollInventory.canceled -= instance.OnScrollInventory;
+            @DropItem.started -= instance.OnDropItem;
+            @DropItem.performed -= instance.OnDropItem;
+            @DropItem.canceled -= instance.OnDropItem;
         }
 
         /// <summary>
@@ -2373,6 +2416,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnScrollInventory(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Drop Item" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDropItem(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.

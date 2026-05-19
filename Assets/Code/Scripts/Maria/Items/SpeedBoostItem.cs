@@ -29,10 +29,10 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
     /// </summary>
     /// <param name="interactor"></param>
     /// <returns></returns>
-    public async Task<bool> CanInteract(PlayerBody interactor)
+    public Task<bool> CanInteract(PlayerBody interactor)
     {
-        if(interactor == null || !interactor.isActiveAndEnabled) return false;
-        return true;
+        if(interactor == null || !interactor.isActiveAndEnabled) return Task.FromResult(false);
+        return Task.FromResult(true);
     }
 
     /// <summary>

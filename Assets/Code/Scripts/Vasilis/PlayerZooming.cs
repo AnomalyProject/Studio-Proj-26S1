@@ -5,7 +5,7 @@ public class PlayerZooming : MonoBehaviour
 {
     #region Inspector Configuration
     [Header("Zoom Settings")]
-    [SerializeField] private Camera playerCamera;
+    [SerializeField] private Camera[] affectedCameras;
 
     [Header("FOV Configuration")]
     [SerializeField] private float defaultFOV = 60f;
@@ -24,16 +24,16 @@ public class PlayerZooming : MonoBehaviour
     #region Unity Lifecycle
     private void Awake()
     {
-        if (playerCamera == null)
+        if (affectedCameras.Length == 0)
         {
-            playerCamera = GetComponentInChildren<Camera>();
+            affectedCameras = GetComponentsInChildren<Camera>();
         }
 
         targetFOV = defaultFOV;
 
-        if (playerCamera != null)
+        foreach (var camera in affectedCameras)
         {
-            playerCamera.fieldOfView = defaultFOV;
+            camera.fieldOfView = defaultFOV;
         }
     }
 
@@ -67,8 +67,11 @@ public class PlayerZooming : MonoBehaviour
 
     private void ApplySmoothZoom()
     {
-        if (playerCamera == null) return;
-        playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, targetFOV, zoomTransitionSpeed * Time.deltaTime);
+        if (affectedCameras.Length == 0) return;
+        foreach (var camera in affectedCameras)
+        {
+            camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, targetFOV, zoomTransitionSpeed * Time.deltaTime);
+        }
     }
     #endregion
 }

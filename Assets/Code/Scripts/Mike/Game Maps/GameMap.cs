@@ -1,5 +1,5 @@
-using PurrNet;
 using UnityEngine;
+using PurrNet;
 
 public class GameMap : NetworkBehaviour
 {
