@@ -1,10 +1,13 @@
 using UnityEngine;
 using PurrNet;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
 public class TextChatManager : NetworkBehaviour 
 {
     public static TextChatManager Instance { get; private set; }
+
+    public static Dictionary<ulong, string> PlayerNames = new Dictionary<ulong, string>();
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
@@ -31,39 +34,64 @@ public class TextChatManager : NetworkBehaviour
         SessionEvents.OnPlayerLeft -= HandlePlayerLeft;
     }
 
+    /// <summary>
+    /// Handles the event when a player joins the session by broadcasting a system message to all connected users.
+    /// </summary>
+    /// <param name="steamID">The unique Steam identifier of the player who joined.</param>
+    /// <param name="displayName">The display name of the player who joined the session.</param>
     private void HandlePlayerJoined(ulong steamID, string displayName)
     {
-        if (isServer)
+        if(!PlayerNames.ContainsKey(steamID))
         {
-            BroadcastSystemMessage($"Player <b>{displayName}</b> has joined the session.");
+            PlayerNames.Add(steamID, displayName);
         }
+        else
+        {
+            PlayerNames[steamID] = displayName;
+        }
+
+        if(!isServer) return;
+
+        BroadcastSystemMessage($"Player <b>{displayName}</b> has joined the session.");
     }
 
+    /// <summary>
+    /// Handles the event when a player leaves the session and broadcasts a system message to all connected users.
+    /// </summary>
+    /// <remarks>This method should be called only on the server. If the player's display name cannot be
+    /// determined, a default name is used and a warning is logged.</remarks>
+    /// <param name="steamID">The unique Steam identifier of the player who has left the session.</param>
+    /// <param name="reason">The reason for the player's departure, as provided by the session or system.</param>
     private void HandlePlayerLeft(ulong steamID, string reason)
     {
         if(!isServer) return;
 
         string displayName = "John Anomaly";
-        SessionData currentSession = SessionManager.Instance.CurrentSession;
 
-        if(currentSession != null)
+        if(PlayerNames.TryGetValue(steamID, out string name))
         {
-            PlayerSessionInfo? playerInfo = currentSession.GetPlayer(steamID);
-            if (playerInfo.HasValue)
-            {
-                displayName = playerInfo.Value.DisplayName;
-            }
-            else
-            {
-                Debug.LogWarning($"[ChatManager] Player left with unknown SteamID: {steamID}");
-            }
+            displayName = name;
+            PlayerNames.Remove(steamID);
         }
+
+        SessionData currentSession = SessionManager.Instance.CurrentSession;
 
         if (isServer)
         {
             BroadcastSystemMessage($"Player <b>{displayName}</b> has left the session.");
         }
     }
+
+    /// <summary>
+    /// Sends a chat message from the specified sender to all connected clients on the server.
+    /// </summary>
+    /// <remarks>If the sender's SteamID does not correspond to a known player in the current session, the
+    /// message is not sent and a warning is logged. This method can be called by any client, regardless of
+    /// ownership.</remarks>
+    /// <param name="message">The text of the chat message to send. Leading and trailing whitespace is ignored. If the message exceeds the
+    /// maximum allowed length, it is truncated.</param>
+    /// <param name="senderSteamID">The SteamID of the player sending the message. Used to identify the sender and display their name and color in
+    /// the chat.</param>
 
     [ServerRpc (requireOwnership: false)] 
     public void SendChatMessage(string message, ulong senderSteamID)
@@ -98,7 +126,7 @@ public class TextChatManager : NetworkBehaviour
         BroadcastMessage(displayName, message);
     }
     
-    [ObserversRpc(bufferLast: true)] //Save last RPC message to be broadcasted to the next player that joins the room 
+    [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
     private void BroadcastMessage(string displayName, string message)
     {
         if (ChatUI.Instance != null)
