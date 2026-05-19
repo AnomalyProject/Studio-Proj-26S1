@@ -18,7 +18,53 @@ public class TextChatManager : NetworkBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
-    
+
+    private void OnEnable()
+    {
+        SessionEvents.OnPlayerJoined += HandlePlayerJoined;
+        SessionEvents.OnPlayerLeft += HandlePlayerLeft;
+    }
+
+    private void OnDisable()
+    {
+        SessionEvents.OnPlayerJoined -= HandlePlayerJoined;
+        SessionEvents.OnPlayerLeft -= HandlePlayerLeft;
+    }
+
+    private void HandlePlayerJoined(ulong steamID, string displayName)
+    {
+        if (isServer)
+        {
+            BroadcastSystemMessage($"Player <b>{displayName}</b> has joined the session.");
+        }
+    }
+
+    private void HandlePlayerLeft(ulong steamID, string reason)
+    {
+        if(!isServer) return;
+
+        string displayName = "John Anomaly";
+        SessionData currentSession = SessionManager.Instance.CurrentSession;
+
+        if(currentSession != null)
+        {
+            PlayerSessionInfo? playerInfo = currentSession.GetPlayer(steamID);
+            if (playerInfo.HasValue)
+            {
+                displayName = playerInfo.Value.DisplayName;
+            }
+            else
+            {
+                Debug.LogWarning($"[ChatManager] Player left with unknown SteamID: {steamID}");
+            }
+        }
+
+        if (isServer)
+        {
+            BroadcastSystemMessage($"Player <b>{displayName}</b> has left the session.");
+        }
+    }
+
     [ServerRpc (requireOwnership: false)] 
     public void SendChatMessage(string message, ulong senderSteamID)
     {
@@ -59,5 +105,14 @@ public class TextChatManager : NetworkBehaviour
         {
             ChatUI.Instance.ReceiveMessage(displayName, message);
         }
+    }
+
+    private void BroadcastSystemMessage(string message)
+    {
+        if(!isServer) return; //Only the server can send system messages
+
+        string systemName = "<color=#FFD700>System</color>";
+
+        BroadcastMessage(systemName, message);
     }
 }
