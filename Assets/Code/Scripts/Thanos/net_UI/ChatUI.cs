@@ -1,5 +1,7 @@
 using Steamworks;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro; 
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -28,6 +30,15 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private float expandedHeight = 400f;
     [SerializeField] private float fadeDelay = 4f; //Seconds before chat fades out
     [SerializeField] private float fadeSpeed = 2f;
+
+    [Header("Autocomplete")]
+    private string[] availableCommands = new string[] { "/mute", "/unmute", "/whisper", "/clear" };
+    private List<string> autocompleteMatches = new List<string>();
+    private int autocompleteIndex = -1;
+    private bool isAutocompleting = false;
+    private string originalPrefix = "";
+    private bool isCompletingName = false;
+    private string originalCommand = "";
 
     private float lastCloseTime = 0f;
     private float timeSinceLastMessage = 0f;
@@ -64,6 +75,7 @@ public class ChatUI : MonoBehaviour
     {
         InputBridge.OnContextChanged += OnToggleChatPerformed;
         chatInputField.onSubmit.AddListener(OnChatSubmit);
+        chatInputField.onValueChanged.AddListener(OnChatValueChanged);
 
         GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
@@ -72,6 +84,7 @@ public class ChatUI : MonoBehaviour
     {
         InputBridge.OnContextChanged -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
+        chatInputField.onValueChanged.RemoveListener(OnChatValueChanged);
 
         GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
@@ -87,10 +100,79 @@ public class ChatUI : MonoBehaviour
                 chatCanvasGroup.alpha = Mathf.MoveTowards(chatCanvasGroup.alpha, 0f, Time.unscaledDeltaTime * fadeSpeed);
             }
         }
-        else if (chatCanvasGroup != null)
+        else if (isChatOpen && chatInputField.isFocused)
         {
-            chatCanvasGroup.alpha = 1f;
-            timeSinceLastMessage = 0f;
+            if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+            {
+                HandleAutocomplete();
+            }
+        }
+    }
+
+    private void HandleAutocomplete()
+    {
+        string currentText = chatInputField.text;
+
+        if (string.IsNullOrWhiteSpace(currentText) || !currentText.StartsWith("/")) return;
+
+        if (autocompleteMatches.Count == 0)
+        {
+            string[] parts = currentText.Split(' ');
+
+            if (parts.Length == 1)
+            {
+                isCompletingName = false;
+                originalPrefix = parts[0].ToLower();
+                autocompleteMatches = availableCommands
+                    .Where(cmd => cmd.StartsWith(originalPrefix))
+                    .ToList();
+            }
+            else
+            {
+                isCompletingName = true;
+                originalCommand = parts[0];
+                originalPrefix = string.Join(" ", parts.Skip(1)).ToLower();
+
+                SessionData session = SessionManager.Instance.CurrentSession;
+                if (session != null)
+                {
+                    autocompleteMatches = session.Players
+                        .Select(p => p.DisplayName)
+                        .Where(name => name.ToLower().StartsWith(originalPrefix))
+                        .ToList();
+                }
+            }
+        }
+
+        if (autocompleteMatches.Count > 0)
+        {
+            isAutocompleting = true;
+
+            autocompleteIndex = (autocompleteIndex + 1) % autocompleteMatches.Count;
+            string match = autocompleteMatches[autocompleteIndex];
+
+            if (!isCompletingName)
+            {
+                chatInputField.text = match + " ";
+            }
+            else
+            {
+                chatInputField.text = $"{originalCommand} {match} ";
+            }
+
+            chatInputField.caretPosition = chatInputField.text.Length;
+            StartCoroutine(FocusChatNextFrame());
+
+            isAutocompleting = false;
+        }
+    }
+
+    private void OnChatValueChanged(string text)
+    {
+        if (!isAutocompleting)
+        {
+            autocompleteMatches.Clear();
+            autocompleteIndex = -1;
         }
     }
     private void OnToggleChatPerformed(InputBridge.InputContext context)
@@ -138,6 +220,9 @@ public class ChatUI : MonoBehaviour
                 break;
             case "/whisper":
                 if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
+                break;
+            case "/help":
+                ReceiveMessage($"\"<color=red>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
                 break;
             default:
                 ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command");

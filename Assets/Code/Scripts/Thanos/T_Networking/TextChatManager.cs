@@ -170,14 +170,20 @@ public class TextChatManager : NetworkBehaviour
     {
         ulong targetSteamID = 0;
         string actualTargetName = targetName;
+        string senderName = "Unknown";
 
         SessionData currsession = SessionManager.Instance.CurrentSession;
 
         if(currsession != null)
         {
-            foreach(var player in currsession.Players)
+
+            var senderInfo = currsession.GetPlayer(senderSteamID);
+            if (senderInfo.HasValue) senderName = senderInfo.Value.DisplayName;
+
+
+            foreach (var player in currsession.Players)
             {
-                if (player.DisplayName.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                if (player.DisplayName.Contains(targetName, StringComparison.OrdinalIgnoreCase))
                 {
                     targetSteamID = player.SteamID;
                     actualTargetName = player.DisplayName;
@@ -193,9 +199,10 @@ public class TextChatManager : NetworkBehaviour
         }
 
         PlayerID? targetNetworkID = SessionManager.Instance.GetPlayerIDForSteam(targetSteamID);
+
         if(targetNetworkID.HasValue)
         {
-            SendWhisperToClient(targetNetworkID.Value, message, senderSteamID);
+            SendWhisperToClient(targetNetworkID.Value, senderName, message);
             SendWhisperConfirmation(info.sender, actualTargetName, message);
         }
         else
@@ -205,14 +212,9 @@ public class TextChatManager : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void SendWhisperToClient(PlayerID target, string message, ulong senderSteamID)
+    private void SendWhisperToClient(PlayerID target, string senderName, string message)
     {
-        string senderName = "Unknown";
-        SessionData session = SessionManager.Instance.CurrentSession;
-        var senderInfo = session.GetPlayer(senderSteamID);
-        if(senderInfo.HasValue) senderName = senderInfo.Value.DisplayName;
-
-        if(ChatUI.Instance != null)
+        if (ChatUI.Instance != null)
         {
             ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper from {senderName}]</color>", message);
         }
