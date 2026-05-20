@@ -197,7 +197,7 @@ public class PlayerInventory : NetworkBehaviour
             Quaternion.identity);
 
         droppedItem.SetQuantity(quantityRemoved);
-        ApplyThrowForce(droppedItem.Rigidbody, throwDirection);
+        ApplyThrowForce_Server(droppedItem.Rigidbody, throwDirection);
 
         if (!stack.GetItemData().IsKeyItem)
         Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
@@ -212,11 +212,11 @@ public class PlayerInventory : NetworkBehaviour
             playerBody.transform.position + throwDirection, 
             Quaternion.identity);
 
-        ApplyThrowForce(consumedDrop, throwDirection);
+        ApplyThrowForce_Server(consumedDrop, throwDirection);
         Destroy(consumedDrop, 5);
     }
 
-    private void ApplyThrowForce(NetworkRigidbody rb, Vector3 throwDirection)
+    private void ApplyThrowForce_Server(NetworkRigidbody rb, Vector3 throwDirection)
     {
         if (!isServer) return;
 
