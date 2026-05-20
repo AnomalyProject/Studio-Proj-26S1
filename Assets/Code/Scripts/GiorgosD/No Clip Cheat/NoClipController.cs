@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class NoClipController : MonoBehaviour
 {
+    #region NoClip Controller
     #region Variables
     // Move Stuff
     [SerializeField] private float runSpeed = 30.0f;
@@ -115,5 +116,6 @@ public class NoClipController : MonoBehaviour
     {
         isRunning = false;
     }
+    #endregion
     #endregion
 }
