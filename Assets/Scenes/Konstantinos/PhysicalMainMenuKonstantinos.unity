@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0.3333335, b: 1, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 909419558}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1618,7 +1618,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 193673067}
   - {fileID: 1201585985}
   - {fileID: 601739555}
   - {fileID: 998661694}
@@ -1644,7 +1643,7 @@ MonoBehaviour:
   submitActionName: Submit
   menuItemBehaviours:
   - {fileID: 1750809407}
-  - {fileID: 193673071}
+  - {fileID: 1201585990}
 --- !u!1 &101841477
 GameObject:
   m_ObjectHideFlags: 0
@@ -3276,103 +3275,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2832716681259360489, guid: 8decddd697717ac4c8e76022b6823bc5, type: 3}
   m_PrefabInstance: {fileID: 193184390}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &193673066
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 193673067}
-  - component: {fileID: 193673068}
-  - component: {fileID: 193673071}
-  m_Layer: 0
-  m_Name: Exit Mouse Trigger
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &193673067
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193673066}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.2, y: 1.6, z: -0.15}
-  m_LocalScale: {x: 0.2, y: 3.2, z: 1.75}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 101714167}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &193673068
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193673066}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &193673071
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193673066}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39130f0ade74ab6429c7cdd7d0a725cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MainMenuExitDoor
-  MenuNavigation: {fileID: 101714168}
-  DoorAnimator: {fileID: 1201585989}
-  WarningIndicator: {fileID: 465499926}
-  OnExitClicked:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1244979072}
-        m_TargetAssemblyTypeName: Unity.Cinemachine.CinemachineCamera, Unity.Cinemachine
-        m_MethodName: Prioritize
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1115047394}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  TimeToExit: 2
 --- !u!1001 &199096410
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18232,6 +18134,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 941539231020804673, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1201585989}
+    - targetCorrespondingSourceObject: {fileID: 941539231020804673, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1201585990}
   m_SourcePrefab: {fileID: 100100000, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
 --- !u!4 &1201585985 stripped
 Transform:
@@ -18260,6 +18165,49 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1201585990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663409580}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39130f0ade74ab6429c7cdd7d0a725cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainMenuExitDoor
+  MenuNavigation: {fileID: 101714168}
+  DoorAnimator: {fileID: 1201585989}
+  WarningIndicator: {fileID: 465499926}
+  OnExitClicked:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1244979072}
+        m_TargetAssemblyTypeName: Unity.Cinemachine.CinemachineCamera, Unity.Cinemachine
+        m_MethodName: Prioritize
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1115047394}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  TimeToExit: 2
 --- !u!1 &1225183130
 GameObject:
   m_ObjectHideFlags: 0
@@ -24853,7 +24801,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1201585990}
         m_TargetAssemblyTypeName: MainMenuExitDoor, Assembly-CSharp
         m_MethodName: set_enabled
         m_Mode: 6
@@ -26501,7 +26449,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 193673071}
+      - m_Target: {fileID: 1201585990}
         m_TargetAssemblyTypeName: MainMenuExitDoor, Assembly-CSharp
         m_MethodName: set_enabled
         m_Mode: 6
