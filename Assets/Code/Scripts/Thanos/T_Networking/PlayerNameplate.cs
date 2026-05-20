@@ -17,7 +17,6 @@ public class PlayerNameplate : NetworkBehaviour
     public void SetName(string displayName, int colourIndex)
     {
         nameText.text = displayName;
-        nameText.color = PlayerColour.GetColor(colourIndex);
     }
     
     
@@ -47,7 +46,7 @@ public class PlayerNameplate : NetworkBehaviour
         if (playerInfo.HasValue)
         {
             nameText.text = playerInfo.Value.DisplayName;
-            //nameText.color = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
+            nameText.color = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
         }
     }
 }
