@@ -108,7 +108,8 @@ public class TextChatManager : NetworkBehaviour
         }
 
         string displayName = "John Anomaly";
-        
+        string formattedName = "John Anomaly";
+
         SessionData currentSession = SessionManager.Instance.CurrentSession; 
         
         if (currentSession != null)
@@ -116,9 +117,9 @@ public class TextChatManager : NetworkBehaviour
             PlayerSessionInfo? playerInfo = currentSession.GetPlayer(senderSteamID);
             if (playerInfo.HasValue)
             {
-                string name = playerInfo.Value.DisplayName;
+                displayName = playerInfo.Value.DisplayName;
                 string hexColor = PlayerColour.GetHex(playerInfo.Value.ColorIndex);
-                displayName = $"<color={hexColor}>{name}</color>";
+                formattedName = $"<color={hexColor}>{name}</color>";
             }
             else
             {
@@ -127,11 +128,11 @@ public class TextChatManager : NetworkBehaviour
             }
         }
         
-        BroadcastMessage(displayName, message);
+        BroadcastMessage(formattedName, displayName, message);
     }
     
     [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
-    private void BroadcastMessage(string displayName, string message)
+    private void BroadcastMessage(string formattedName, string displayName, string message)
     {
         bool isSystem = displayName.Contains("<color=#FFD700>System</color>");
 
@@ -139,13 +140,13 @@ public class TextChatManager : NetworkBehaviour
         { 
             if (muteAll) return;
 
-            string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", "").ToLower();
+            string cleanName = displayName.ToLower().Trim();
             if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
         }
 
         if (ChatUI.Instance != null)
         {
-            ChatUI.Instance.ReceiveMessage(displayName, message);
+            ChatUI.Instance.ReceiveMessage(formattedName, message);
         }
     }
 
@@ -155,7 +156,7 @@ public class TextChatManager : NetworkBehaviour
 
         string systemName = "<color=#FFD700>System</color>";
 
-        BroadcastMessage(systemName, message);
+        BroadcastMessage(systemName,"System", message);
     }
 
     public void SetMute(string playerName, bool muted)

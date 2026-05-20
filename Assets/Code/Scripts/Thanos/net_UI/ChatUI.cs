@@ -25,10 +25,10 @@ public class ChatUI : MonoBehaviour
 
     [Header("Style & Functionality Settings")]
     [SerializeField] private CanvasGroup chatCanvasGroup;
-    [SerializeField] private RectTransform chatContainerRect; //ScrollRect's RectTransform
+    [SerializeField] private RectTransform chatContainerRect;
     [SerializeField] private float compactHeight = 150f;
     [SerializeField] private float expandedHeight = 400f;
-    [SerializeField] private float fadeDelay = 4f; //Seconds before chat fades out
+    [SerializeField] private float fadeDelay = 4f;
     [SerializeField] private float fadeSpeed = 2f;
 
     [Header("Autocomplete")]
@@ -123,9 +123,7 @@ public class ChatUI : MonoBehaviour
             {
                 isCompletingName = false;
                 originalPrefix = parts[0].ToLower();
-                autocompleteMatches = availableCommands
-                    .Where(cmd => cmd.StartsWith(originalPrefix))
-                    .ToList();
+                autocompleteMatches = availableCommands.Where(cmd => cmd.StartsWith(originalPrefix)).ToList();
             }
             else
             {
@@ -133,14 +131,21 @@ public class ChatUI : MonoBehaviour
                 originalCommand = parts[0];
                 originalPrefix = string.Join(" ", parts.Skip(1)).ToLower();
 
-                SessionData session = SessionManager.Instance.CurrentSession;
-                if (session != null)
+                IEnumerable<string> playerNames = Enumerable.Empty<string>();
+
+                SessionData serverSession = SessionManager.Instance.CurrentSession;
+                ClientSessionData clientSession = SessionManager.Instance.LatestClientSession;
+
+                if (serverSession != null && serverSession.Players != null)
                 {
-                    autocompleteMatches = session.Players
-                        .Select(p => p.DisplayName)
-                        .Where(name => name.ToLower().StartsWith(originalPrefix))
-                        .ToList();
+                    playerNames = serverSession.Players.Select(p => p.DisplayName);
                 }
+                else if (clientSession.Players != null)
+                {
+                    playerNames = clientSession.Players.Select(p => p.DisplayName);
+                }
+
+                autocompleteMatches = playerNames.Where(name => name.ToLower().Contains(originalPrefix)).ToList();
             }
         }
 
