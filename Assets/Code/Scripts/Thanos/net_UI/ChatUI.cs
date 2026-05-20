@@ -213,16 +213,16 @@ public class ChatUI : MonoBehaviour
         switch (command)
         {
             case "/mute":
-                if (parts.Length > 1) MutePlayer(parts[1]);
+                if (parts.Length > 1) MutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
             case "/unmute":
-                if (parts.Length > 1) UnmutePlayer(parts[1]);
+                if (parts.Length > 1) UnmutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
             case "/whisper":
                 if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
                 break;
             case "/help":
-                ReceiveMessage($"\"<color=red>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
+                ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
                 break;
             default:
                 ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command");

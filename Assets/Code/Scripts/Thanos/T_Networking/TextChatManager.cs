@@ -1,7 +1,8 @@
-using UnityEngine;
 using PurrNet;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class TextChatManager : NetworkBehaviour 
 {
@@ -132,10 +133,15 @@ public class TextChatManager : NetworkBehaviour
     [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
     private void BroadcastMessage(string displayName, string message)
     {
-        if (muteAll) return;
-        string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", "").ToLower(); //Remove rich text tags for mute checks
+        bool isSystem = displayName.Contains("<color=#FFD700>System</color>");
 
-        if (mutedPlayers.Contains(cleanName)) return;
+        if (!isSystem) 
+        { 
+            if (muteAll) return;
+
+            string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", "").ToLower();
+            if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
+        }
 
         if (ChatUI.Instance != null)
         {
@@ -154,7 +160,9 @@ public class TextChatManager : NetworkBehaviour
 
     public void SetMute(string playerName, bool muted)
     {
-        if (playerName.ToLower() == "all")
+        string cleanName = playerName.ToLower().Trim();
+
+        if (cleanName == "all")
         {
             muteAll = muted;
         }
