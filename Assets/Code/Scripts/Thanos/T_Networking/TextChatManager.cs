@@ -128,11 +128,11 @@ public class TextChatManager : NetworkBehaviour
             }
         }
         
-        BroadcastMessage(formattedName, displayName, message);
+        RPCMessage(formattedName, displayName, message);
     }
     
     [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
-    private void BroadcastMessage(string formattedName, string displayName, string message)
+    private void RPCMessage(string formattedName, string displayName, string message)
     {
         bool isSystem = displayName.Contains("<color=#FFD700>System</color>");
 
@@ -156,7 +156,7 @@ public class TextChatManager : NetworkBehaviour
 
         string systemName = "<color=#FFD700>System</color>";
 
-        BroadcastMessage(systemName,"System", message);
+        RPCMessage(systemName,"System", message);
     }
 
     public void SetMute(string playerName, bool muted)
