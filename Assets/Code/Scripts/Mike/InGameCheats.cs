@@ -1,3 +1,4 @@
+using System;
 using PurrNet;
 using UnityEngine;
 
@@ -22,6 +23,8 @@ public class InGameCheats : MonoBehaviour
 
         DevConsole.CommandData mapVarComm = new DevConsole.CommandData("Change to a new map variation. (server only, optional args: true = with anomalies, false = no anomaly)", NextAnomaly);
         DevConsole.RegisterCommand("nextvar", mapVarComm);
+
+        NoClip.CreateNoClip();
 
         Registered = true;
     }

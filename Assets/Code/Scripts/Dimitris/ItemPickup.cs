@@ -11,12 +11,12 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
     [SerializeField] private UnityEvent onPickup; //add event to connect sound and other stuff for designer Inspector
     [SerializeField] InspectorItemStack itemStack;
 
-    Rigidbody _rb;
-    public Rigidbody Rigidbody => _rb;
+    NetworkRigidbody _rb;
+    public NetworkRigidbody Rigidbody => _rb;
 
     private void Awake()
     {
-        _rb = GetComponent<Rigidbody>();
+        _rb = GetComponent<NetworkRigidbody>();
     }
 
     protected override void OnSpawned(bool asServer)
