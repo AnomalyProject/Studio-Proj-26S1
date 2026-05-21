@@ -138,7 +138,10 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         base.OnDestroy();
 
-        testHelper.onItemPicked.RemoveListener(OnItemPicked);
-        testHelper.onWatched.RemoveListener(OnObservedTooMuch);
+        if (tempStuffEnabled)
+        {
+            testHelper.onItemPicked.RemoveListener(OnItemPicked);
+            testHelper.onWatched.RemoveListener(OnObservedTooMuch);
+        }
     }
 }
