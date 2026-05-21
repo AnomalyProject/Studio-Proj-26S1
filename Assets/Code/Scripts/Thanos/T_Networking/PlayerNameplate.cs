@@ -40,7 +40,7 @@ public class PlayerNameplate : NetworkBehaviour
         
         ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
         
-        SessionData currentSession = SessionManager.Instance.CurrentSession;
+        SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
         if (playerInfo.HasValue)

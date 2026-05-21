@@ -25,6 +25,11 @@ public static class ComponentApplierRegistry
 
     private static Dictionary<Type, IComponentApplier> appliers = new Dictionary<Type, IComponentApplier>();
 
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod()]
+    private static void ResetObjectGUIDRegistryReferenceOnPlayModeStateChange() => EditorApplication.playModeStateChanged += state => objectGuidRegistry = null;
+#endif
+
 
 #if UNITY_EDITOR
     [InitializeOnLoadMethod()]
