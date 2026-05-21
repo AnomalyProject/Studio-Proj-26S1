@@ -6,6 +6,7 @@ using PurrNet;
 public class EventVolume : NetworkBehaviour
 
 {
+    [SerializeField, Tooltip("Attached events happen only once.")] private bool doOnce;
     [Header("Detection Settings")]
     [Tooltip("Only objects on these layers will fire the events.")]
     [SerializeField] private LayerMask detectionLayers;
@@ -15,6 +16,7 @@ public class EventVolume : NetworkBehaviour
     public UnityEvent TriggerExited;
 
     private Collider col;
+    private bool didEnter = false, didExit = false;
 
     private void Awake()
     {
@@ -32,22 +34,26 @@ public class EventVolume : NetworkBehaviour
     {
 
         if (!isServer) return;
+        if (doOnce && didEnter) return;
 
         if (((1 << other.gameObject.layer) & detectionLayers) != 0)
         {
             Debug.Log($"{other.name} entered {gameObject.name}");
             InvokeTrigger_ObserversRPC(true);
+            didEnter = true;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!isServer) return;
+        if(doOnce && didExit) return;
 
         if (((1 << other.gameObject.layer) & detectionLayers) != 0)
         {
             Debug.Log($"{other.name} exited {gameObject.name}");
             InvokeTrigger_ObserversRPC(false);
+            didExit = true;
         }
     }
 }
