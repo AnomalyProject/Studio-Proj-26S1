@@ -1,14 +1,44 @@
 using PurrNet;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class CompositeVendor : VendorBase
 {
     public event Action<int> OnSlotChanged;
+    [SerializeField] TextMeshPro stockText;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        itemStash.OnStackRemoved += (_, _) => UpdateStockText();
+        OnRestock.AddListener(UpdateStockText);
+    }
+    protected override void OnSpawned()
+    {
+        base.OnSpawned();
+        UpdateStockText();
+    }
+    private void UpdateStockText()
+    {
+        int usedSlots = itemStash.UsedSlots;
+        stockText.text = usedSlots > 0? $"Stock x{usedSlots}" : "Out of Stock";
+    }
+
+    private void OnValidate()
+    {
+        if (Application.isPlaying) return;
+
+        int i = 0;
+        foreach(var button in GetComponentsInChildren<VendorButton>())
+        {
+            button.SetSlotIndex(i);
+            i++;
+        }
+
+        stashSize = i;
+    }
 
     public bool CanBuyerAfford(int itemIndex, Inventory buyerInventory)
     {
@@ -30,10 +60,10 @@ public class CompositeVendor : VendorBase
     }
     private int GetStackPrice(IReadOnlyItemStack stack) => stack.GetItemData().PricePerUnit * stack.GetQuantity();
 
-    public ItemData GetDataFromSlot(int slotIndex)
+    public IReadOnlyItemStack GetStackFromSlot(int slotIndex)
     {
         if (!itemStash.TryGet(slotIndex, out var stack)) return null;
-        return stack.GetItemData();
+        return stack;
     }
 
     [ServerRpc] public Task<bool> RequestTransfer_Server(int slotIndex, Inventory toInventory)

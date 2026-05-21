@@ -5,7 +5,7 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public abstract class VendorBase : NetworkBehaviour
 {
-    [SerializeField] private int stashSize = 5;
+    [SerializeField] protected int stashSize = 5;
     [SerializeField] private bool randomizeStashContent = true;
     [SerializeField, Tooltip("What will be requested by the player to pay.")] private ItemData currencyItem;
     [SerializeField] private InspectorItemStack[] itemsForSale;
