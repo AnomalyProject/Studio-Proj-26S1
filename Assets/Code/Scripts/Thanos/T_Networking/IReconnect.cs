@@ -1,6 +1,6 @@
 using System;
 
-public interface IReconnectService
+public interface IReconnect
 {
     event Action OnConnectionLost;
     event Action OnHostMigrating;
