@@ -7,7 +7,8 @@ using UnityEngine;
 public class CompositeVendor : VendorBase
 {
     public event Action<int> OnSlotChanged;
-    [SerializeField] TextMeshPro stockText;
+    [SerializeField] private TextMeshPro stockText;
+    [SerializeField] private VendorButton[] vendorButtons;
 
     protected override void Awake()
     {
@@ -18,26 +19,15 @@ public class CompositeVendor : VendorBase
     protected override void OnSpawned()
     {
         base.OnSpawned();
+
+        for (int i = 0; i < vendorButtons.Length; i++) vendorButtons[i].SlotIndex = i;
+
         UpdateStockText();
     }
     private void UpdateStockText()
     {
         int usedSlots = itemStash.UsedSlots;
         stockText.text = usedSlots > 0? $"Stock x{usedSlots}" : "Out of Stock";
-    }
-
-    private void OnValidate()
-    {
-        if (Application.isPlaying) return;
-
-        int i = 0;
-        foreach(var button in GetComponentsInChildren<VendorButton>())
-        {
-            button.SetSlotIndex(i);
-            i++;
-        }
-
-        stashSize = i;
     }
 
     public bool CanBuyerAfford(int itemIndex, Inventory buyerInventory)
@@ -76,6 +66,15 @@ public class CompositeVendor : VendorBase
         {
             Debug.Log("Transfer Success");
             toInventory.Remove(CurrencyItem, stackPrice);
+
+            if(vendorButtons.Length < itemStash.TotalSlots)
+            {
+                if (itemStash.TryGetNext(vendorButtons.Length -1, out _, out int nextSlot) && nextSlot >= vendorButtons.Length)
+                {
+                    itemStash.MoveSlot(nextSlot, slotIndex);
+                }
+            }
+
             InvokeTransferSuccess(slotIndex);
         }
         return Task.FromResult(success);

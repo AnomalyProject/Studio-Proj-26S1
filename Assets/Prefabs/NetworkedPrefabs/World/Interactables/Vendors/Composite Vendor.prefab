@@ -258,11 +258,28 @@ MonoBehaviour:
     quantity: 1
   OnTransferSuccess:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: -2621733869638028124}
+        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
+        m_MethodName: PlayOneShot
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 8300000, guid: 3fcda9baa8451194c8978a491884a45d, type: 3}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.AudioClip, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnRestock:
     m_PersistentCalls:
       m_Calls: []
   stockText: {fileID: 4004608879310784565}
+  vendorButtons:
+  - {fileID: 778258926753804753}
+  - {fileID: 1888787549817067407}
+  - {fileID: 6761807961668124372}
+  - {fileID: 7047166912351946060}
 --- !u!1 &3569899047225660949
 GameObject:
   m_ObjectHideFlags: 0
@@ -558,6 +575,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+--- !u!114 &6761807961668124372 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6550184467694774234, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+  m_PrefabInstance: {fileID: 517960765053376782}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0962d50a66daf5246a4d3d122a25926c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VendorButton
 --- !u!4 &7033640104922304257 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7398474081895273999, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
@@ -691,6 +719,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7398474081895273999, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
   m_PrefabInstance: {fileID: 4263359538761409174}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7047166912351946060 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6550184467694774234, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+  m_PrefabInstance: {fileID: 4263359538761409174}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0962d50a66daf5246a4d3d122a25926c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VendorButton
 --- !u!1001 &4670439888338595925
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -752,6 +791,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+--- !u!114 &1888787549817067407 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6550184467694774234, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+  m_PrefabInstance: {fileID: 4670439888338595925}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0962d50a66daf5246a4d3d122a25926c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VendorButton
 --- !u!4 &2773114215935895130 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7398474081895273999, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
@@ -819,6 +869,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+--- !u!114 &778258926753804753 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6550184467694774234, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}
+  m_PrefabInstance: {fileID: 5776429813276710411}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0962d50a66daf5246a4d3d122a25926c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VendorButton
 --- !u!4 &3929013224449032196 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7398474081895273999, guid: 3e4cb801f66a1564c80baef5983e154e, type: 3}

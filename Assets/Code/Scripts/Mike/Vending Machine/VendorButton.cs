@@ -5,12 +5,11 @@ using UnityEngine.UI;
 
 public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 {
-    [SerializeField, HideInInspector] private int _slotIndex;
     [SerializeField] private Canvas buttonCanvas;
     [SerializeField] private Image itemIcon;
     [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText;
     private CompositeVendor vendorHost;
-    public int SlotIndex => _slotIndex;
+    public int SlotIndex;
 
     void Awake()
     {
@@ -27,7 +26,6 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         vendorHost.OnSpawnedEvent += UpdateContent;
     }
 
-    public void SetSlotIndex(int index) => _slotIndex = Mathf.Max(0, index);
     public Task<bool> CanInteract(PlayerBody interactor)
     {
         if (vendorHost == null) return Task.FromResult(false);
