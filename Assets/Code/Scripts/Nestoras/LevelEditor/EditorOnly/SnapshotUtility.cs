@@ -148,6 +148,11 @@ public static class SnapshotUtility
     {
         List<GameObjectSnapshot> list = new List<GameObjectSnapshot>();
         Traverse(root.transform, list); // Recursively traverse hierarchy starting from root
+
+        // Refresh the ObjectGUIDRegistry asset
+        ObjectGuidRegistry objectGuidRegistry = ComponentApplierRegistry.GetRegistry();
+        if (objectGuidRegistry != null) AssetDatabase.SaveAssetIfDirty(objectGuidRegistry);
+
         return list;
     }
 
