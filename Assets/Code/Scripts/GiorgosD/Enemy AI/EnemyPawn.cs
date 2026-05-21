@@ -24,9 +24,11 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private Transform cachedPlayer;
+    
+    [Header("Lost Player Timer")]
+    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
     private bool hasPlayer = false;
     private float timer;
-    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
 
     // Aggression will be revised later.
     [Header("Aggression Settings")]
@@ -222,12 +224,10 @@ public class EnemyPawn : NetworkBehaviour
 
         if (!agent.isOnNavMesh)
             return false;
-
-        // Make sure target is actually on navmesh
+        
         if (!NavMesh.SamplePosition(player.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
             return false;
-
-        // Calculate path from AI -> player
+        
         bool foundPath = NavMesh.CalculatePath(
             transform.position,
             hit.position,
@@ -237,8 +237,7 @@ public class EnemyPawn : NetworkBehaviour
 
         if (!foundPath)
             return false;
-
-        // THIS is the important part
+        
         return path.status == NavMeshPathStatus.PathComplete;
     }
     #endregion
