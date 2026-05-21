@@ -2,6 +2,7 @@ using PurrNet;
 using System;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 
 public class EnemyPawn : NetworkBehaviour
 {
@@ -19,8 +20,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
     private float sightAngleNormal;
     [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
-    //[SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
-    private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
+    private Collider[] playersInSight = new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private Transform cachedPlayer;
@@ -35,7 +35,6 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the auto Detection")] private float autoDetectMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the Sight Range")] private float sightRangeMultiplier;
-    //[SerializeField, Tooltip("Controls how much each aggression level decreases the check Frequency of sight")] private float checkFrequencyReduction;
     [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
@@ -46,8 +45,10 @@ public class EnemyPawn : NetworkBehaviour
 
     
     #region Events
-    public event Action<GameObject> OnPlayerSpotted;
-    public event Action OnLostPlayer;
+    public UnityEvent<GameObject> OnPlayerSpottedState;
+    public UnityEvent OnPlayerSpotted;
+    public UnityEvent OnLostPlayer;
+    public UnityEvent<GameObject> OnPlayerAttacked;
     #endregion
 
     #region Body Set up
@@ -253,7 +254,7 @@ public class EnemyPawn : NetworkBehaviour
         
         if (timer >= timeToLost)
         {
-            OnLostPlayer?.Invoke();
+            InvokeOnLost();
             timer = 0;
         }
         else
@@ -298,7 +299,7 @@ public class EnemyPawn : NetworkBehaviour
             {
                 hasPlayer = true;
                 cachedPlayer = closestDetectedPlayer;
-                OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
+                InvokeSpotted();
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
             }
         }
@@ -310,6 +311,7 @@ public class EnemyPawn : NetworkBehaviour
         }
     }
 
+    
     /// <summary>
     /// Checks if the enemy can actually see the player.
     /// </summary>
@@ -396,6 +398,42 @@ public class EnemyPawn : NetworkBehaviour
         Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
         Gizmos.matrix = Matrix4x4.TRS(hitboxCenter, transform.rotation, Vector3.one);
         Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
+    }
+    #endregion
+    
+    #region Event Helpers
+    /// <summary>
+    /// Invokes Spotted Helper
+    /// </summary>
+    private void InvokeSpotted()
+    {
+        if (!isServer) return;
+        
+        OnPlayerSpottedState?.Invoke(cachedPlayer.gameObject);
+    }
+    [ObserversRpc]
+    private void SendInvokeSpotted()
+    {
+        OnPlayerSpotted?.Invoke();
+    }
+    
+
+    /// <summary>
+    /// Invokes OnLost Helper
+    /// </summary>
+    [ObserversRpc]
+    private void InvokeOnLost()
+    {
+        OnLostPlayer?.Invoke();
+    }
+
+    /// <summary>
+    /// Invokes Attack Helper
+    /// </summary>
+    [ObserversRpc]
+    public void InvokeAttacked(GameObject playerObj)
+    { 
+        OnPlayerAttacked?.Invoke(playerObj);
     }
     #endregion
 }
