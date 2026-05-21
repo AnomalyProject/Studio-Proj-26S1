@@ -10,18 +10,23 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
     public NavMeshAgent agent { get; private set; }
+    public NavMeshPath path { get; private set; }
 
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
     [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
-    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player")] private float sightAngleSearch;
+    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when its doing anything other than searching for the player, this should match the sightAngle value")] private float sightAngleNormal;
+    [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
     //[SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private Transform cachedPlayer;
+    private bool hasPlayer = false;
+    private float timer;
+    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
 
     // Aggression will be revised later.
     [Header("Aggression Settings")]
@@ -37,6 +42,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
     #endregion
 
+    
     #region Events
     public event Action<GameObject> OnPlayerSpotted;
     public event Action OnLostPlayer;
@@ -46,18 +52,18 @@ public class EnemyPawn : NetworkBehaviour
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        path = new();
     }
-
-    private float sightTimer;
+    
     private void Update()
     {
         if (!isServer) return;
 
-        sightTimer += Time.deltaTime;
-        if (sightTimer >= 0)
+        Sight();
+
+        if (!hasPlayer)
         {
-            sightTimer = 0f;
-            Sight();
+            LostTimer();
         }
     }
     #endregion
@@ -203,6 +209,60 @@ public class EnemyPawn : NetworkBehaviour
     }
     #endregion
 
+    #region NavMesh Check
+    /// <summary>
+    /// Checks if player is in NavMesh
+    /// </summary>
+    /// <param name="player"></param>
+    /// <returns></returns>
+    private bool IsOnNavMesh(Transform player)
+    {
+        if (player == null)
+            return false;
+
+        if (!agent.isOnNavMesh)
+            return false;
+
+        // Make sure target is actually on navmesh
+        if (!NavMesh.SamplePosition(player.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+            return false;
+
+        // Calculate path from AI -> player
+        bool foundPath = NavMesh.CalculatePath(
+            transform.position,
+            hit.position,
+            NavMesh.AllAreas,
+            path
+        );
+
+        if (!foundPath)
+            return false;
+
+        // THIS is the important part
+        return path.status == NavMeshPathStatus.PathComplete;
+    }
+    #endregion
+    
+    #region Sight Lost Timer
+    /// <summary>
+    /// A timer that checkes when the ai actually should lose the player and stop following his live pos
+    /// </summary>
+    private void LostTimer()
+    {
+        if (!isServer) return;
+        
+        if (timer >= timeToLost)
+        {
+            OnLostPlayer?.Invoke();
+            timer = 0;
+        }
+        else
+        {
+            timer += 1 * Time.deltaTime;
+        }
+    }
+    #endregion
+    
     #region Sight
     /// <summary>
     /// Checks for players in sight and if it finds any.
@@ -219,7 +279,7 @@ public class EnemyPawn : NetworkBehaviour
         for (int i = 0; i < count; i++)
         {
             Transform player = playersInSight[i].transform;
-            if (IsPlayerDetected(player, out Vector3 direction, out float distance))
+            if (IsPlayerDetected(player, out Vector3 direction, out float distance) && IsOnNavMesh(player))
             {
                 float sqrDist = distance * distance;
                 if (sqrDist < minSqrDist)
@@ -230,10 +290,13 @@ public class EnemyPawn : NetworkBehaviour
             }
         }
 
+        for (int i = 0; i < count; i++) playersInSight[i] = null;
+        
         if (closestDetectedPlayer != null)
         {
-            if (cachedPlayer != closestDetectedPlayer || cachedPlayer != null)
+            if (cachedPlayer != closestDetectedPlayer)
             {
+                hasPlayer = true;
                 cachedPlayer = closestDetectedPlayer;
                 OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
@@ -242,7 +305,7 @@ public class EnemyPawn : NetworkBehaviour
         else if (cachedPlayer != null)
         {
             cachedPlayer = null;
-            OnLostPlayer?.Invoke();
+            hasPlayer = false;
             Debug.Log("Target Lost.");
         }
     }
@@ -256,18 +319,24 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     private bool IsPlayerDetected(Transform player, out Vector3 direction, out float distance)
     {
-        Vector3 offset = player.position - transform.position;
-        distance = offset.magnitude;
+        Vector3 offset = (player.position + Vector3.up * eyePos) - (transform.position + Vector3.up * eyePos);
+        float sqrDistance = offset.sqrMagnitude;
+        distance = Mathf.Sqrt(sqrDistance);
         direction = offset / distance;
-
+        Vector3 flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        Vector3 flatDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
+        
         bool inAutoRange = distance <= autoDetectRange;
 
         float thresholdAngle = Mathf.Cos(sightAngle * 0.5f * Mathf.Deg2Rad);
-        bool inSightAngle = Vector3.Dot(transform.forward, direction) > thresholdAngle;
+        bool inSightAngle = Vector3.Dot(flatForward, flatDirection) > thresholdAngle;
 
         if (inAutoRange || inSightAngle)
         {
-            return !Physics.Raycast(transform.position, direction, distance, obstacleLayer);
+            float rayLength = Mathf.Max(distance - 0.1f, 0f);
+            if (rayLength <= 0) return true;
+            Debug.DrawRay(transform.position + Vector3.up * eyePos, direction * distance, Color.darkGreen);
+            return !Physics.Raycast(transform.position + Vector3.up * eyePos, direction, rayLength, obstacleLayer);
         }
 
         return false;
