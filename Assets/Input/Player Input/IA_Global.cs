@@ -1455,45 +1455,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
-        },
-        {
-            ""name"": ""Pinging"",
-            ""id"": ""b6e37311-41ee-4858-a5ea-aa32d6defa82"",
-            ""actions"": [
-                {
-                    ""name"": ""UsePing"",
-                    ""type"": ""Button"",
-                    ""id"": ""e1c1e5e0-af61-4012-ac4d-60a4fc6197fd"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                }
-            ],
-            ""bindings"": [
-                {
-                    ""name"": """",
-                    ""id"": ""fb60cdce-3273-4a25-b02d-80685a088abe"",
-                    ""path"": ""<Keyboard>/b"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""UsePing"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""4be5f09f-47cf-4ee5-abd9-2453d1c4728c"",
-                    ""path"": ""<Gamepad>/dpad/down"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""UsePing"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                }
-            ]
         }
     ],
     ""controlSchemes"": []
@@ -1543,9 +1504,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_NoClip_Move = m_NoClip.FindAction("Move", throwIfNotFound: true);
         m_NoClip_Sprint = m_NoClip.FindAction("Sprint", throwIfNotFound: true);
         m_NoClip_Look = m_NoClip.FindAction("Look", throwIfNotFound: true);
-        // Pinging
-        m_Pinging = asset.FindActionMap("Pinging", throwIfNotFound: true);
-        m_Pinging_UsePing = m_Pinging.FindAction("UsePing", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1556,7 +1514,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Chat.enabled, "This will cause a leak and performance issues, IA_Global.Chat.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_NoClip.enabled, "This will cause a leak and performance issues, IA_Global.NoClip.Disable() has not been called.");
-        UnityEngine.Debug.Assert(!m_Pinging.enabled, "This will cause a leak and performance issues, IA_Global.Pinging.Disable() has not been called.");
     }
 
     /// <summary>
@@ -2501,102 +2458,6 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="NoClipActions" /> instance referencing this action map.
     /// </summary>
     public NoClipActions @NoClip => new NoClipActions(this);
-
-    // Pinging
-    private readonly InputActionMap m_Pinging;
-    private List<IPingingActions> m_PingingActionsCallbackInterfaces = new List<IPingingActions>();
-    private readonly InputAction m_Pinging_UsePing;
-    /// <summary>
-    /// Provides access to input actions defined in input action map "Pinging".
-    /// </summary>
-    public struct PingingActions
-    {
-        private @IA_Global m_Wrapper;
-
-        /// <summary>
-        /// Construct a new instance of the input action map wrapper class.
-        /// </summary>
-        public PingingActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
-        /// <summary>
-        /// Provides access to the underlying input action "Pinging/UsePing".
-        /// </summary>
-        public InputAction @UsePing => m_Wrapper.m_Pinging_UsePing;
-        /// <summary>
-        /// Provides access to the underlying input action map instance.
-        /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_Pinging; }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
-        public void Enable() { Get().Enable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
-        public void Disable() { Get().Disable(); }
-        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
-        public bool enabled => Get().enabled;
-        /// <summary>
-        /// Implicitly converts an <see ref="PingingActions" /> to an <see ref="InputActionMap" /> instance.
-        /// </summary>
-        public static implicit operator InputActionMap(PingingActions set) { return set.Get(); }
-        /// <summary>
-        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <param name="instance">Callback instance.</param>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
-        /// </remarks>
-        /// <seealso cref="PingingActions" />
-        public void AddCallbacks(IPingingActions instance)
-        {
-            if (instance == null || m_Wrapper.m_PingingActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_PingingActionsCallbackInterfaces.Add(instance);
-            @UsePing.started += instance.OnUsePing;
-            @UsePing.performed += instance.OnUsePing;
-            @UsePing.canceled += instance.OnUsePing;
-        }
-
-        /// <summary>
-        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
-        /// </summary>
-        /// <remarks>
-        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
-        /// </remarks>
-        /// <seealso cref="PingingActions" />
-        private void UnregisterCallbacks(IPingingActions instance)
-        {
-            @UsePing.started -= instance.OnUsePing;
-            @UsePing.performed -= instance.OnUsePing;
-            @UsePing.canceled -= instance.OnUsePing;
-        }
-
-        /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="PingingActions.UnregisterCallbacks(IPingingActions)" />.
-        /// </summary>
-        /// <seealso cref="PingingActions.UnregisterCallbacks(IPingingActions)" />
-        public void RemoveCallbacks(IPingingActions instance)
-        {
-            if (m_Wrapper.m_PingingActionsCallbackInterfaces.Remove(instance))
-                UnregisterCallbacks(instance);
-        }
-
-        /// <summary>
-        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
-        /// </summary>
-        /// <remarks>
-        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
-        /// </remarks>
-        /// <seealso cref="PingingActions.AddCallbacks(IPingingActions)" />
-        /// <seealso cref="PingingActions.RemoveCallbacks(IPingingActions)" />
-        /// <seealso cref="PingingActions.UnregisterCallbacks(IPingingActions)" />
-        public void SetCallbacks(IPingingActions instance)
-        {
-            foreach (var item in m_Wrapper.m_PingingActionsCallbackInterfaces)
-                UnregisterCallbacks(item);
-            m_Wrapper.m_PingingActionsCallbackInterfaces.Clear();
-            AddCallbacks(instance);
-        }
-    }
-    /// <summary>
-    /// Provides a new <see cref="PingingActions" /> instance referencing this action map.
-    /// </summary>
-    public PingingActions @Pinging => new PingingActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2875,20 +2736,5 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnLook(InputAction.CallbackContext context);
-    }
-    /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Pinging" which allows adding and removing callbacks.
-    /// </summary>
-    /// <seealso cref="PingingActions.AddCallbacks(IPingingActions)" />
-    /// <seealso cref="PingingActions.RemoveCallbacks(IPingingActions)" />
-    public interface IPingingActions
-    {
-        /// <summary>
-        /// Method invoked when associated input action "UsePing" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnUsePing(InputAction.CallbackContext context);
     }
 }
