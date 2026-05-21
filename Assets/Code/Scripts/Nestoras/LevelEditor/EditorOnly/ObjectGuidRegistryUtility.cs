@@ -92,6 +92,7 @@ public static class ObjectGuidRegistryUtility
         // Remvove unused entries from the registry.
         for (int i = registry.entries.Count - 1; i >= 0; i--) if (!entryUsageBuffer[registry.entries[i].guid]) registry.entries.RemoveAt(i);
         EditorUtility.SetDirty(registry);
+        AssetDatabase.SaveAssetIfDirty(registry);
 
         Debug.Log($"Cleaned ObjectGUIDRegistry. Removed {entries - registry.entries.Count} unused entries.");
     }
