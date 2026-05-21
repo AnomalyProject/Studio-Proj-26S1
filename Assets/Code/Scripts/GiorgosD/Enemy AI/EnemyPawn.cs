@@ -17,7 +17,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
-    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when its doing anything other than searching for the player, this should match the sightAngle value")] private float sightAngleNormal;
+    private float sightAngleNormal;
     [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
     //[SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
     private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
@@ -55,6 +55,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         path = new();
+        sightAngleNormal = sightAngle;
     }
     
     private void Update()
