@@ -20,7 +20,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
     private float sightAngleNormal;
     [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
-    private Collider[] playersInSight = new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
+    private Collider[] playersInSight = new Collider[4]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private Transform cachedPlayer;
