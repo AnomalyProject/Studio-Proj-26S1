@@ -10,11 +10,10 @@ public class PingObject : NetworkBehaviour
     private void LateUpdate()
     {
         if (PlayerBody.localPlayerBody == null) return;
-        Vector3 targetPos = PlayerBody.localPlayerBody.CameraController.transform.position;
-        transform.LookAt(targetPos);
+        Transform target = PlayerBody.localPlayerBody.CameraController.transform;
+        transform.LookAt(target.position, target.up);
 
-        float distance = Vector3.Distance(targetPos, transform.position);
-
+        float distance = Vector3.Distance(target.position, transform.position);
         float scale = distance * scaleMultiplier;
 
         transform.localScale = Vector3.one * scale;
