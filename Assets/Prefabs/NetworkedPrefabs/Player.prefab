@@ -590,6 +590,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7254502549408018980}
   - component: {fileID: 8169330805290519254}
+  - component: {fileID: 3789239434298404568}
   m_Layer: 3
   m_Name: Item Holder
   m_TagString: Untagged
@@ -643,6 +644,34 @@ MonoBehaviour:
   _characterControllerPatch: 0
   _ownerAuth: 1
   _interpolationTiming: 0
+--- !u!114 &3789239434298404568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4227618509524077635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3ea0de6a4b1d7f42a2071d4459e76c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BobAndSway
+  controller: {fileID: 1494246198799042083}
+  step: 0.015
+  maxStepDistance: 0.08
+  rotationStep: 1
+  maxRotationStep: 3
+  positionSmooth: 5
+  rotationSmooth: 6
+  idleFrequency: 2
+  idleAmplitude: 0.0015
+  bobFrequency: 11
+  sprintMultiplier: 1.5
+  crouchedMultiplier: 0.6
+  bobAmplitude: 3
+  travelLimit: {x: 0.015, y: 0.015, z: 0.015}
+  bobLimit: {x: 0.005, y: 0.005, z: 0.005}
+  rotationMultiplier: {x: 1.5, y: 1.5, z: 1.5}
 --- !u!1 &4722490883632117968
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,12 +873,36 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 3789239434298404568}
+        m_TargetAssemblyTypeName: BobAndSway, Assembly-CSharp
+        m_MethodName: GetLookInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onMove:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1494246198799042083}
         m_TargetAssemblyTypeName: FPSController, Assembly-CSharp
         m_MethodName: HandleMovement
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3789239434298404568}
+        m_TargetAssemblyTypeName: BobAndSway, Assembly-CSharp
+        m_MethodName: GetWalkInput
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
