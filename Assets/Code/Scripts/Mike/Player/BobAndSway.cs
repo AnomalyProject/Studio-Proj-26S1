@@ -5,12 +5,12 @@ public class BobAndSway : MonoBehaviour
 {
     [SerializeField] private FPSController controller;
 
-    [Header("UpdateSway Position")]
+    [Header("Sway Position")]
     [SerializeField, Tooltip("Position offset intensity from mouse movement.")] private float step = 0.01f;
     [SerializeField, Tooltip("Maximum sway position distance.")] private float maxStepDistance = 0.06f;
 
 
-    [Header("UpdateSway Rotation")]
+    [Header("Sway Rotation")]
     [SerializeField, Tooltip("Rotation intensity from mouse movement.")] private float rotationStep = 4f;
     [SerializeField, Tooltip("Maximum sway rotation.")] private float maxRotationStep = 5f;
 
