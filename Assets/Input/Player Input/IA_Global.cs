@@ -957,6 +957,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Shove"",
+                    ""type"": ""Button"",
+                    ""id"": ""9d9806c2-1dbf-43ff-93b5-6caa18760adb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1300,6 +1309,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Ping Location"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7c613889-4468-49fc-a0af-09b766703a9d"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""87f6f74d-d3e4-4b7d-a6f1-5bb4c9b16bc5"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -1528,6 +1559,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
         m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
         m_Player_PingLocation = m_Player.FindAction("Ping Location", throwIfNotFound: true);
+        m_Player_Shove = m_Player.FindAction("Shove", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
@@ -2066,6 +2098,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_ScrollInventory;
     private readonly InputAction m_Player_DropItem;
     private readonly InputAction m_Player_PingLocation;
+    private readonly InputAction m_Player_Shove;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -2134,6 +2167,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @PingLocation => m_Wrapper.m_Player_PingLocation;
         /// <summary>
+        /// Provides access to the underlying input action "Player/Shove".
+        /// </summary>
+        public InputAction @Shove => m_Wrapper.m_Player_Shove;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -2201,6 +2238,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @PingLocation.started += instance.OnPingLocation;
             @PingLocation.performed += instance.OnPingLocation;
             @PingLocation.canceled += instance.OnPingLocation;
+            @Shove.started += instance.OnShove;
+            @Shove.performed += instance.OnShove;
+            @Shove.canceled += instance.OnShove;
         }
 
         /// <summary>
@@ -2254,6 +2294,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @PingLocation.started -= instance.OnPingLocation;
             @PingLocation.performed -= instance.OnPingLocation;
             @PingLocation.canceled -= instance.OnPingLocation;
+            @Shove.started -= instance.OnShove;
+            @Shove.performed -= instance.OnShove;
+            @Shove.canceled -= instance.OnShove;
         }
 
         /// <summary>
@@ -2742,6 +2785,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPingLocation(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Shove" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnShove(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
