@@ -20,7 +20,7 @@ public class InvestigateState : BaseState
 
         body.MoveToTarget(lastKnownPos);
 
-        body.OnPlayerSpotted += PlayerFound;
+        body.OnPlayerSpottedState.AddListener(PlayerFound);
     }
 
     public override void Update()
@@ -56,6 +56,6 @@ public class InvestigateState : BaseState
 
     public override void Exit()
     {
-        body.OnPlayerSpotted -= PlayerFound;
+        body.OnPlayerSpottedState.RemoveListener(PlayerFound);
     }
 }

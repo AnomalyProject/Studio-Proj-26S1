@@ -77,7 +77,7 @@ public class ChatUI : MonoBehaviour
         chatInputField.onSubmit.AddListener(OnChatSubmit);
         chatInputField.onValueChanged.AddListener(OnChatValueChanged);
 
-        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged += OnGameStateChanged; 
     }
 
     private void OnDisable()
@@ -86,7 +86,8 @@ public class ChatUI : MonoBehaviour
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
         chatInputField.onValueChanged.RemoveListener(OnChatValueChanged);
 
-        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+
     }
 
     private void Update()
