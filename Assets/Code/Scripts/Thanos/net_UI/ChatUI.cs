@@ -53,15 +53,15 @@ public class ChatUI : MonoBehaviour
         InputBridge.OnContextChanged += OnToggleChatPerformed;
         chatInputField.onSubmit.AddListener(OnChatSubmit);
 
-        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
     
     private void OnDisable()
     {
         InputBridge.OnContextChanged -= OnToggleChatPerformed;
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
-        
-        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+
+        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
     
     private void OnToggleChatPerformed(InputBridge.InputContext context)
