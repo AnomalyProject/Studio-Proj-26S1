@@ -16,7 +16,7 @@ public class PatrolState : BaseState
 
         body.SetMoveSpeed(false);
 
-        body.OnPlayerSpotted += HandlePlayerSpotted;
+        body.OnPlayerSpottedState.AddListener(HandlePlayerSpotted);
 
         if (brain.poiIsEnabled)
         {
@@ -70,6 +70,6 @@ public class PatrolState : BaseState
 
     public override void Exit()
     {
-        body.OnPlayerSpotted -= HandlePlayerSpotted;
+        body.OnPlayerSpottedState.RemoveListener(HandlePlayerSpotted);
     }
 }
