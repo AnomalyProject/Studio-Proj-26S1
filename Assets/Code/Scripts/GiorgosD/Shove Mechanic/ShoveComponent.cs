@@ -13,7 +13,6 @@ public class ShoveComponent : NetworkBehaviour
     [SerializeField, Tooltip("Power of the shove.")] private float shoveForce;
     [SerializeField, Tooltip("How quicly the shove velocity stops. Higher valeus means faster stop time.")] private float shoveFriction;
     [SerializeField, Tooltip("From how far the Shove will be able to affect players. (Good values are 1.5 and under)")] private float shoveRange;
-    [SerializeField, Tooltip("How wide the Shove area is.")] private float shoveArea;
     [SerializeField, Tooltip("Cooldown timer of shove.")] private float shoveCooldownTimer;
     [SerializeField, Tooltip("Masks that are checked from Spherecast.")] private LayerMask checkMask;
     
@@ -73,9 +72,10 @@ public class ShoveComponent : NetworkBehaviour
         
         Ray shoveRay = new Ray(transform.position + Vector3.up, transform.forward);
         RaycastHit hit;
-        
-        if (Physics.SphereCast(shoveRay, shoveArea, out hit, shoveRange, checkMask))
+
+        if (Physics.Raycast(shoveRay, out hit, shoveRange, checkMask, QueryTriggerInteraction.Collide))
         {
+            Debug.DrawRay(transform.position + Vector3.up, transform.forward * shoveRange, Color.red);
             PlayerBody target = hit.collider.GetComponent<PlayerBody>();
             
             if (!target) return;
