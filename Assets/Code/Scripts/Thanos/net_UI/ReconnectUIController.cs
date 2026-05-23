@@ -10,6 +10,7 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text headerText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text timerText;
+    [SerializeField] private Slider loadingSlider;
 
     [Header("Toast Reference")]
     [SerializeField] private GameObject toastPanel;
@@ -17,10 +18,19 @@ public class ReconnectUIController : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float timeoutDuration = 30f;
+    [SerializeField] private float sliderSpeed = 2f;
 
     private IReconnect _networkService;
     private Coroutine _countdownRoutine;
 
+    //Debug keys to simulate connection events
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha9))
+        {
+            HandleConnectionLost();
+        }
+    }
     //@Christina : call this method and add the actual service
     public void InjectDependencies(IReconnect networkService)
     {
@@ -64,6 +74,11 @@ public class ReconnectUIController : MonoBehaviour
         {
             timerText.text = $"Reconnect timeout: 0:{Mathf.CeilToInt(timeLeft):D2}";
 
+            if (loadingSlider != null)
+            {
+                loadingSlider.value = Mathf.PingPong(Time.unscaledTime * sliderSpeed, 1f);
+            }
+
             timeLeft -= Time.unscaledDeltaTime;
             yield return null;
         }
@@ -96,7 +111,7 @@ public class ReconnectUIController : MonoBehaviour
         _networkService?.CancelAndReturnToMenu();
     }
 
-    private void OnReturnToMenuClicked()
+    public void OnReturnToMenuClicked()
     {
         HandleTimeout();
     }
