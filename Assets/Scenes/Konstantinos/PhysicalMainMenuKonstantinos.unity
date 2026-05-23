@@ -2115,7 +2115,7 @@ MonoBehaviour:
     DefaultMode: 2
   DefaultBlend:
     Style: 5
-    Time: 1.5
+    Time: 1
     CustomCurve:
       serializedVersion: 2
       m_Curve: []
@@ -16334,15 +16334,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e5448c268138bc149b29a2b901b6fba8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.7959995
+      value: 0.864
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e5448c268138bc149b29a2b901b6fba8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.04789996
+      value: 0.048
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e5448c268138bc149b29a2b901b6fba8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.26600075
+      value: -0.416
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e5448c268138bc149b29a2b901b6fba8, type: 3}
       propertyPath: m_LocalRotation.w
@@ -18034,13 +18034,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1186377645}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0019376549, y: -0.9913926, z: 0.13001488, w: 0.015266539}
-  m_LocalPosition: {x: -2.0267847, y: 1.9356992, z: -10.56838}
+  m_LocalRotation: {x: 0.0019335139, y: -0.9913922, z: 0.1300186, w: 0.0152620785}
+  m_LocalPosition: {x: -2.2, y: 1.838, z: -10.934}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 14.943, y: -178.235, z: 0.008}
 --- !u!95 &1186377648
 Animator:
   serializedVersion: 7
@@ -18127,7 +18127,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6843744882717910102, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 6843744882717910102, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -18137,6 +18142,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 941539231020804673, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1201585990}
+    - targetCorrespondingSourceObject: {fileID: 941539231020804673, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1201585991}
   m_SourcePrefab: {fileID: 100100000, guid: c028c7a9fd9798f4b9302ba480eb018b, type: 3}
 --- !u!4 &1201585985 stripped
 Transform:
@@ -18207,7 +18215,28 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  TimeToExit: 2
+  TimeToExit: 0.7
+--- !u!65 &1201585991
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663409580}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.58, y: 2.1409016, z: 0.86}
+  m_Center: {x: 0.5298028, y: 1.0704505, z: 0.024843466}
 --- !u!1 &1225183130
 GameObject:
   m_ObjectHideFlags: 0
@@ -18378,7 +18407,7 @@ Transform:
   m_GameObject: {fileID: 1244979071}
   serializedVersion: 2
   m_LocalRotation: {x: 0.014814669, y: 0.70695156, z: -0.01474067, w: 0.7069531}
-  m_LocalPosition: {x: 5.3, y: 2.29, z: -14.145672}
+  m_LocalPosition: {x: 4.73, y: 2.31, z: -14.145672}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24089,13 +24118,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1692181890}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.021009497, y: -0.97189707, z: 0.09494793, w: -0.21438189}
-  m_LocalPosition: {x: -5.575, y: 1.873, z: -10.882}
+  m_LocalRotation: {x: 0.021005753, y: 0.9718964, z: -0.09494841, w: 0.2143851}
+  m_LocalPosition: {x: -5.498, y: 1.804, z: -11.049}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 11.161, y: 155.122, z: 0.007}
 --- !u!95 &1692181893
 Animator:
   serializedVersion: 7
@@ -25805,7 +25834,7 @@ MonoBehaviour:
   mainCamera: {fileID: 1186377646}
   mainCameraAnim: {fileID: 1186377648}
   ElevatorDoorAnim: {fileID: 406354254}
-  mainCameraAnimDuration: 8
+  mainCameraAnimDuration: 2.5
   startPanel: {fileID: 566998311}
   firstSelectedButtonStart: {fileID: 984842116}
   modePanel: {fileID: 1656158411}
