@@ -5,6 +5,23 @@ public class GameSounds : SoundCaller
     [SerializeField] AnomalyManager anomalyManager;
     [SerializeField] AudioClip voidTimerTick, voidTimerOver, enteredVoidClip, winGameClip;
     [SerializeField, Min(1)] int warningTicksAtSeconds;
+
+    AudioClip currentMapTrack;
+
+    private void Awake()
+    {
+        anomalyManager.OnMapChanged += UpdateMusicTrack;
+        MapOrientor.OnElevatorInteracted += HandleElevatorInteraction;
+        StopMusic();
+    }
+
+    private void OnDestroy()
+    {
+        MapOrientor.OnElevatorInteracted -= HandleElevatorInteraction;
+    }
+
+    private void HandleElevatorInteraction(LevelExitPoint point, bool arg2) => FadeOutMusic(null);
+    private void UpdateMusicTrack(GameMap map) => currentMapTrack = map.MapMusicTheme;
     public void OnVoidTimerOver() => PlaySFXClip(voidTimerOver);
     public void OnVoidTimerTick(float currentTime)
     {
@@ -24,5 +41,9 @@ public class GameSounds : SoundCaller
                 PlaySFXClip(winGameClip);
                 break;
         }
+    }
+    public void OnElevatorFullyOpened()
+    {
+        PlayMusic(currentMapTrack);
     }
 }
