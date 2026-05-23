@@ -376,6 +376,62 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 8426018813743827814, guid: 0f3c2d46ac1114744a5c2cc6d8f51c7f, type: 3}
   m_PrefabInstance: {fileID: 512496382}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &568111019 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7421927831068137199, guid: 69c7171269118c24099129d122d3e1e1, type: 3}
+  m_PrefabInstance: {fileID: 473443017}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d218db7396aef9241a92a2d24a433a77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPawn
+--- !u!1 &667972082
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 667972084}
+  - component: {fileID: 667972083}
+  m_Layer: 0
+  m_Name: Test
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &667972083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 667972082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd99af0b56340d4b975be55a88b05f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestEvents
+  pawn: {fileID: 568111019}
+--- !u!4 &667972084
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 667972082}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.10174, y: 6.33269, z: 58.15504}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &691801328
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -961,3 +1017,4 @@ SceneRoots:
   - {fileID: 1775157943}
   - {fileID: 1070739531}
   - {fileID: 473443017}
+  - {fileID: 667972084}
