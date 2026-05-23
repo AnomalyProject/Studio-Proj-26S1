@@ -1,10 +1,10 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
+using System.Linq;
 using static ObjectGuidRegistry;
 using static SnapshotUtility;
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
-using System.Collections.Generic;
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -19,6 +19,9 @@ public static class ObjectGuidRegistryUtility
 
     [InitializeOnLoadMethod()]
     private static void FetchIcon() => registryIcon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Code/Scripts/Nestoras/LevelEditor/registry.png");
+
+    [InitializeOnLoadMethod()]
+    private static void ResetRegistryReferenceOnPlayModeStateChange() => EditorApplication.playModeStateChanged += state => registry = null;
 
     private static ObjectGuidRegistry GetRegistry()
     {
@@ -89,6 +92,7 @@ public static class ObjectGuidRegistryUtility
         // Remvove unused entries from the registry.
         for (int i = registry.entries.Count - 1; i >= 0; i--) if (!entryUsageBuffer[registry.entries[i].guid]) registry.entries.RemoveAt(i);
         EditorUtility.SetDirty(registry);
+        AssetDatabase.SaveAssetIfDirty(registry);
 
         Debug.Log($"Cleaned ObjectGUIDRegistry. Removed {entries - registry.entries.Count} unused entries.");
     }

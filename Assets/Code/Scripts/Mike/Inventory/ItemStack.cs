@@ -111,6 +111,13 @@ public class ItemStack : IReadOnlyItemStack
         return newStack;
     }
 
+    public void ChangeQuantity(int newQuantity)
+    {
+        if (quantity == newQuantity) return;
+        quantity = newQuantity;
+        Validate();
+    }
+
     /// <summary>
     /// Validates the current quantity value, ensuring it is within the allowed range for the associated item.
     /// </summary>

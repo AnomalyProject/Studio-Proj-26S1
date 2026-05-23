@@ -38,6 +38,7 @@ public class FPSController : MonoBehaviour
     public bool IsMoving => moveInput.sqrMagnitude > 0;
     public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
     public float SpeedBoostTimeRemaining => _speedBoostTimeRemaining;
+    public Vector2 MoveInput => moveInput;
     #endregion
 
     #region Private Fields
@@ -95,8 +96,7 @@ public class FPSController : MonoBehaviour
     private void HandleGroundCheck()
     {
         // Sphere at the bottom of the CharacterController
-        Vector3 sphereOrigin = transform.position + Vector3.up * (character.radius);
-        isGrounded = Physics.CheckSphere(sphereOrigin, groundCheckRadius, groundLayers, QueryTriggerInteraction.Ignore);
+        isGrounded = Physics.CheckSphere(transform.position, groundCheckRadius, groundLayers, QueryTriggerInteraction.Ignore);
 
         // Reset downward velocity when grounded so we don't accumulate
         if (isGrounded && velocity.y < 0f)

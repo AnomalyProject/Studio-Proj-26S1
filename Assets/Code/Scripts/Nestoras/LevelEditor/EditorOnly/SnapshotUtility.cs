@@ -148,6 +148,11 @@ public static class SnapshotUtility
     {
         List<GameObjectSnapshot> list = new List<GameObjectSnapshot>();
         Traverse(root.transform, list); // Recursively traverse hierarchy starting from root
+
+        // Refresh the ObjectGUIDRegistry asset
+        ObjectGuidRegistry objectGuidRegistry = ComponentApplierRegistry.GetRegistry();
+        if (objectGuidRegistry != null) AssetDatabase.SaveAssetIfDirty(objectGuidRegistry);
+
         return list;
     }
 
@@ -191,7 +196,7 @@ public static class SnapshotUtility
 
             if (!typeCounts.ContainsKey(type)) typeCounts[type] = 0;
             int index = typeCounts[type]++;
-
+            
             SerializedObject so = new SerializedObject(component);
             SerializedProperty iterator = so.GetIterator();
             SerializedProperty previous = null;
@@ -220,8 +225,13 @@ public static class SnapshotUtility
                         if (!iterator.isArray && !iterator.hasVisibleChildren) Debug.LogWarning($"Skipping unsupported field: {component.GetType().Name}.{iterator.propertyPath}");
                         fields.RemoveAt(fields.Count - 1);
                     }
+
+                    ////////////
+                    // REMOVE://
+                    ////////////
+                    
                     // Warn if change can't be recreated at runtime (MonoBehaviour fields can be modified directly via reflections)
-                    else if (component is not MonoBehaviour) ModificationEditorWindow.capturedNativeFieldWithoutApplier = true;
+                    //else if (component is not MonoBehaviour) ModificationEditorWindow.capturedNativeFieldWithoutApplier = true;
                 }
             }
 
@@ -423,7 +433,22 @@ public static class SnapshotUtility
         Dictionary<string, GameObjectSnapshot> modMap = ToGameObjectMap(modified);
 
         // Detect added objects
-        foreach (KeyValuePair<string, GameObjectSnapshot> go in modMap) if (!origMap.ContainsKey(go.Key)) result.addedGameObjects.Add(go.Value);
+        foreach (KeyValuePair<string, GameObjectSnapshot> go in modMap)
+        {
+            if (!origMap.ContainsKey(go.Key))
+            {
+                result.addedGameObjects.Add(go.Value);
+
+                foreach (var component in go.Value.components)
+                {
+                    if (ComponentSnapshotHasUnsupportedFields(component))
+                    {
+                        ModificationEditorWindow.diffContainsNativeFieldWithoutApplier = true;
+                        break;
+                    }
+                }
+            }
+        }
 
         // Detect modified objects
         foreach (KeyValuePair<string, GameObjectSnapshot> go in origMap)
@@ -432,6 +457,16 @@ public static class SnapshotUtility
             if (!modMap.ContainsKey(go.Key))
             {
                 result.removedGameObjects.Add(go.Value);
+                foreach (var component in go.Value.components)
+                {
+                    if (ModificationEditorWindow.diffContainsNativeFieldWithoutApplier) break;
+                    if (ComponentSnapshotHasUnsupportedFields(component))
+                    {
+                        // Update warning icon
+                        ModificationEditorWindow.diffContainsNativeFieldWithoutApplier = true;
+                        break;
+                    }
+                }
                 continue;
             }
 
@@ -460,7 +495,16 @@ public static class SnapshotUtility
             Dictionary<string, ComponentSnapshot> mapB = ToComponentMap(after.components);
 
             // Detect added components
-            foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB) if (!mapA.ContainsKey(comp.Key)) goModification.addedComponents.Add(comp.Value);
+            foreach (KeyValuePair<string, ComponentSnapshot> comp in mapB)
+            {
+                if (!mapA.ContainsKey(comp.Key))
+                {
+                    goModification.addedComponents.Add(comp.Value);
+
+                    // Update warning icon
+                    if (ComponentSnapshotHasUnsupportedFields(comp.Value)) ModificationEditorWindow.diffContainsNativeFieldWithoutApplier = true;
+                }
+            }
 
             // Detect modified components
             foreach (KeyValuePair<string, ComponentSnapshot> comp in mapA)
@@ -469,6 +513,9 @@ public static class SnapshotUtility
                 if (!mapB.ContainsKey(comp.Key))
                 {
                     goModification.removedComponents.Add(comp.Value);
+
+                    // Update warning icon
+                    if (ComponentSnapshotHasUnsupportedFields(comp.Value)) ModificationEditorWindow.diffContainsNativeFieldWithoutApplier = true;
                     continue;
                 }
 
@@ -496,12 +543,14 @@ public static class SnapshotUtility
                         before = fieldA,
                         after = fieldB
                     });
+
+                    // Update warning icon
+                    Type componentType = Type.GetType(compA.type);
+                    if (fieldA.type != SerializedValueType.None && !componentType.IsSubclassOf(typeof(MonoBehaviour)) && !ComponentApplierRegistry.IsFieldSupported(componentType, fieldA.path)) ModificationEditorWindow.diffContainsNativeFieldWithoutApplier = true;
                 }
 
                 // Skip component if all properties are the same
-                if (compA.enabled == compB.enabled &&
-                    componentModification.fieldModifications.Count == 0)
-                    continue;
+                if (compA.enabled == compB.enabled && componentModification.fieldModifications.Count == 0) continue;
 
                 // Add component to GameObjectModification if any changes detected
                 goModification.componentModifications.Add(new ComponentModification()
@@ -551,6 +600,13 @@ public static class SnapshotUtility
         return map;
     }
 
+    // Checks if a ComponentSnapshot is of a native component and contains fields without an applier
+    private static bool ComponentSnapshotHasUnsupportedFields(ComponentSnapshot component)
+    {
+        Type copmonentType = Type.GetType(component.type);
+        foreach (FieldSnapshot field in component.fields) if (field.type != SerializedValueType.None && !copmonentType.IsSubclassOf(typeof(MonoBehaviour)) && !ComponentApplierRegistry.IsFieldSupported(copmonentType, field.path)) return true;
+        return false;
+    }
 #endif
     #endregion
 }
