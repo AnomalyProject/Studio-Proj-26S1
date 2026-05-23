@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class ReconnectUIController : MonoBehaviour
 {
@@ -22,15 +23,22 @@ public class ReconnectUIController : MonoBehaviour
 
     private IReconnect _networkService;
     private Coroutine _countdownRoutine;
+    private Coroutine _toastRoutine;
 
     //Debug keys to simulate connection events
     private void Update()
-    {
+    { 
         if (Input.GetKeyDown(KeyCode.Alpha9))
         {
             HandleConnectionLost();
         }
+
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            HandleReconnected();
+        }
     }
+    
     //@Christina : call this method and add the actual service
     public void InjectDependencies(IReconnect networkService)
     {
@@ -41,26 +49,45 @@ public class ReconnectUIController : MonoBehaviour
         _networkService.OnHostMigrating += HandleHostMigrating;
         _networkService.OnReconnected += HandleReconnected;
 
-        //Default state
+        ResetUIState();
+    }
+
+    private void ResetUIState()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+
         overlayPanel.SetActive(false);
         toastPanel.SetActive(false);
+
+        timerText.text = "";
+        toastText.text = "";
     }
 
     private void HandleConnectionLost()
     {
-        ShowOverlay("Connection Lost", "Attempting to reconnect...");
+        ShowOverlay("Connection Lost", "Reconnecting");
     }
 
     private void HandleHostMigrating()
     {
-        ShowOverlay("Connection Lost", "Host disconnected — migrating session...");
+        ShowOverlay("Connection Lost", "Host disconnected ï¿½ migrating session...");
     }
 
     private void ShowOverlay(string header, string status)
     {
+        //Do not show reconnect UI if player is on Menu
+        if (SceneManager.GetActiveScene().name == "MainMenu") return;
+        
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        toastPanel.SetActive(false);
+        toastText.text = "";
+
         overlayPanel.SetActive(true);
         headerText.text = header;
         statusText.text = status;
+
+        HandleInput();
 
         if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
         _countdownRoutine = StartCoroutine(CountdownRoutine());
@@ -91,7 +118,11 @@ public class ReconnectUIController : MonoBehaviour
         if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
 
         overlayPanel.SetActive(false);
-        StartCoroutine(ShowToastRoutine("Reconnected!"));
+
+        HandleInput();
+
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
     }
 
     private IEnumerator ShowToastRoutine(string message)
@@ -106,8 +137,10 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleTimeout()
     {
-        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
-
+        ResetUIState();
+        
+        HandleInput();
+        
         _networkService?.CancelAndReturnToMenu();
     }
 
@@ -123,6 +156,18 @@ public class ReconnectUIController : MonoBehaviour
             _networkService.OnConnectionLost -= HandleConnectionLost;
             _networkService.OnHostMigrating -= HandleHostMigrating;
             _networkService.OnReconnected -= HandleReconnected;
+        }
+    }
+
+    private void HandleInput()
+    {
+        if (InputBridge.CurrentContext == InputBridge.InputContext.Player)
+        {
+            InputBridge.SetContext(InputBridge.InputContext.None);
+        }
+        else if (InputBridge.CurrentContext == InputBridge.InputContext.None)
+        {
+            InputBridge.SetContext(InputBridge.InputContext.Player);
         }
     }
 }
