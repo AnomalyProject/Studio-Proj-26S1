@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.Rendering;
 
 public class AudioManager : MonoBehaviour
 {
@@ -183,11 +182,6 @@ public class AudioManager : MonoBehaviour
     // See summary above PlayMusic
     public void FadeOutMusic(AudioClip clip)
     {
-        if (clip == null)
-        {
-            return;
-        }
-
         if (musicTranasitionCorouine != null)
         {
             StopCoroutine(musicTranasitionCorouine);
@@ -320,6 +314,8 @@ public class AudioManager : MonoBehaviour
 
         source.Stop();
         source.volume = 0f;    // Safty check
+
+        if (clip == null) yield break;
 
         // Delay Fade in start
         yield return new WaitForSeconds(fadePauseDelay);
