@@ -23,6 +23,7 @@ public class PingLocation : NetworkBehaviour
 
         if (asServer)
         {
+            if(RefrenceManager.Instance)
             RefrenceManager.Instance.Gameplay.AnomalyManager.OnMapChanged += (_) => DestroyCurrentPing_Server();
             return;
         }
