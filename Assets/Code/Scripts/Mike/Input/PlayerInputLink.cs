@@ -11,7 +11,7 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
     [SerializeField] UnityEvent<InputAction.CallbackContext> 
         onCrouch, onInteract, onLeanLeft, onLeanRight, 
         onLook, onMove, onNextItem, onPreviousItem, onScrollInventory,
-        onSprint, onUseFocusedItem, onZoom, onDropItem, onPingLocation;
+        onSprint, onUseFocusedItem, onZoom, onDropItem, onPingLocation, onShove;
 
     #endregion
 
@@ -44,4 +44,5 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
     void IA_Global.IPlayerActions.OnZoom(InputAction.CallbackContext context) => onZoom.Invoke(context);
     void IA_Global.IPlayerActions.OnDropItem(InputAction.CallbackContext context) => onDropItem.Invoke(context);
     void IA_Global.IPlayerActions.OnPingLocation(InputAction.CallbackContext context) => onPingLocation.Invoke(context);
+    void IA_Global.IPlayerActions.OnShove(InputAction.CallbackContext context) => onShove.Invoke(context);
 }

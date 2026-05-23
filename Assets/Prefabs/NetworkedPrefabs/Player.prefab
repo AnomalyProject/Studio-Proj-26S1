@@ -834,6 +834,7 @@ GameObject:
   - component: {fileID: 2519213704156087875}
   - component: {fileID: 7679387548974304968}
   - component: {fileID: 7412561033432568348}
+  - component: {fileID: 4187899725846059103}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -1174,6 +1175,21 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onShove:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4187899725846059103}
+        m_TargetAssemblyTypeName: ShoveComponent, Assembly-CSharp
+        m_MethodName: OnShovePreformed
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3674273088732647212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1486,6 +1502,34 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &4187899725846059103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4722490883632117968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6749db40f4fa4d4693dcef1ddfac612, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShoveComponent
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  shoveForce: 6
+  shoveFriction: 2
+  shoveRange: 3
+  shoveCooldownTimer: 3
+  checkMask:
+    serializedVersion: 2
+    m_Bits: 9
 --- !u!1 &5348312652502001726
 GameObject:
   m_ObjectHideFlags: 0
