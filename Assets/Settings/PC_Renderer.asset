@@ -67,28 +67,27 @@ MonoBehaviour:
     probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
-  - {fileID: 4427704658120902990}
   - {fileID: 7833122117494664109}
   - {fileID: -7584957736940942065}
   - {fileID: 1122831484484313960}
-  m_RendererFeatureMap: 4e89a375ed5d723dad6b866f10d7b46c0fcd480520d1bc9668e34f3f4919950f
+  m_RendererFeatureMap: ad6b866f10d7b46c0fcd480520d1bc9668e34f3f4919950f
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
   m_PrepassLayerMask:
     serializedVersion: 2
-    m_Bits: 511
+    m_Bits: 1535
   m_OpaqueLayerMask:
     serializedVersion: 2
-    m_Bits: 511
+    m_Bits: 1535
   m_TransparentLayerMask:
     serializedVersion: 2
-    m_Bits: 511
+    m_Bits: 1535
   m_DefaultStencilState:
     overrideStencilState: 0
     stencilReference: 0
-    stencilCompareFunction: 3
+    stencilCompareFunction: 4
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
@@ -134,48 +133,6 @@ MonoBehaviour:
       overrideStencilState: 1
       stencilReference: 1
       stencilCompareFunction: 6
-      passOperation: 0
-      failOperation: 0
-      zFailOperation: 0
-    cameraSettings:
-      overrideCamera: 0
-      restoreCamera: 1
-      offset: {x: 0, y: 0, z: 0, w: 0}
-      cameraFieldOfView: 60
---- !u!114 &4427704658120902990
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b3d386ba5cd94485973aee1479b272e, type: 3}
-  m_Name: Gameplay Elements
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.RenderObjects
-  m_Active: 1
-  settings:
-    passTag: Gameplay Elements
-    Event: 200
-    filterSettings:
-      RenderQueueType: 0
-      LayerMask:
-        serializedVersion: 2
-        m_Bits: 1024
-      PassNames: []
-    overrideMaterial: {fileID: 0}
-    overrideMaterialPassIndex: 0
-    overrideShader: {fileID: 0}
-    overrideShaderPassIndex: 0
-    overrideMode: 2
-    overrideDepthState: 0
-    depthCompareFunction: 4
-    enableWrite: 1
-    stencilSettings:
-      overrideStencilState: 0
-      stencilReference: 0
-      stencilCompareFunction: 8
       passOperation: 0
       failOperation: 0
       zFailOperation: 0
