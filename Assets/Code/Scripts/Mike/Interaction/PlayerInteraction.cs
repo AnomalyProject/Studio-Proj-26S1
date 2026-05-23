@@ -32,10 +32,9 @@ public class PlayerInteraction : MonoBehaviour
     [Header("Outlines")]
     public const float OUTLINE_FADE_SPEED = 10f;
     public static LayerMask outlineLayer;
-    public static LayerMask defaultLayer = 0;
     public static Material outlineMaterial;
 
-    private static List<Renderer> renderers = new List<Renderer>();
+    private static Dictionary<Renderer, int> rendererData = new Dictionary<Renderer, int>();
     private static List<Mesh> meshes = new List<Mesh>();
 
     private void Awake()
@@ -118,16 +117,19 @@ public class PlayerInteraction : MonoBehaviour
         MonoBehaviour component = interactable as MonoBehaviour;
         if (component == null) yield break;
 
-        // Get all renderers that aren't attatched to text objects
-        renderers = component.gameObject.GetComponentsInChildren<Renderer>(true).Where(r => r.GetComponent<TextMeshPro>() == null).ToList();
+        if (show)
+        {
+            // Get all renderers that aren't attatched to text objects
+            rendererData = component.gameObject.GetComponentsInChildren<Renderer>(true).Where(r => r.GetComponent<TextMeshPro>() == null).ToDictionary(r => r, r => r.gameObject.layer);
 
-        // Get all meshes on renderers
-        meshes.AddRange(from renderer in renderers let filter = renderer.GetComponent<MeshFilter>() where filter != null && !meshes.Contains(filter.mesh) select filter.mesh);
-        meshes.AddRange(from renderer in renderers where renderer is SkinnedMeshRenderer && !meshes.Contains(((SkinnedMeshRenderer)renderer).sharedMesh) select ((SkinnedMeshRenderer)renderer).sharedMesh);
-        foreach (Mesh mesh in meshes) SmoothNormals(mesh);
+            // Get all meshes on renderers
+            meshes.AddRange(from renderer in rendererData.Keys let filter = renderer.GetComponent<MeshFilter>() where filter != null && !meshes.Contains(filter.mesh) select filter.mesh);
+            meshes.AddRange(from renderer in rendererData.Keys where renderer is SkinnedMeshRenderer && !meshes.Contains(((SkinnedMeshRenderer)renderer).sharedMesh) select ((SkinnedMeshRenderer)renderer).sharedMesh);
+            foreach (Mesh mesh in meshes) SmoothNormals(mesh);
 
-        // Outline them
-        if (show) foreach (Renderer renderer in renderers) renderer.gameObject.layer = outlineLayer;
+            // Outline them
+            foreach (Renderer renderer in rendererData.Keys) renderer.gameObject.layer = outlineLayer;
+        }
 
         // Animate towards the correct direction
         Color outlineColor = outlineMaterial.color;
@@ -138,7 +140,7 @@ public class PlayerInteraction : MonoBehaviour
             yield return null;
         }
         // Snap to desired values
-        outlineColor.a += show ? 1 : 0;
+        outlineColor.a = show ? 1 : 0;
         outlineMaterial.color = outlineColor;
 
         // Reset layers
@@ -146,9 +148,9 @@ public class PlayerInteraction : MonoBehaviour
     }
     private static void ResetOutline()
     {
-        if (renderers.Count == 0) return;
-        foreach (Renderer renderer in renderers) if (renderer != null) renderer.gameObject.layer = defaultLayer;
-        renderers.Clear();
+        if (rendererData.Count == 0) return;
+        foreach (KeyValuePair<Renderer, int> rd in rendererData) if (rd.Key != null) rd.Key.gameObject.layer = rd.Value;
+        rendererData.Clear();
 
         foreach (Mesh mesh in meshes) mesh.RecalculateNormals();
         meshes.Clear();
