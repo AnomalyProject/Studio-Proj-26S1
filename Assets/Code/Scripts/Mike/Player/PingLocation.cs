@@ -66,7 +66,7 @@ public class PingLocation : NetworkBehaviour
 
     [ObserversRpc] private void InvokeOnPingLocation_Observers()
     {
-        if(pingSFX) AudioManager.Instance.PlaySFX(pingSFX);
+        if(pingSFX && AudioManager.Instance != null) AudioManager.Instance.PlaySFX(pingSFX);
         OnPingLocation?.Invoke();
     }
 }
