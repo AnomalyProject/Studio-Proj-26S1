@@ -4,7 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class ExitInteractable : MonoBehaviour, IInteractable<PlayerBody>
 {
-    [SerializeField] LevelExitPoint exitPoint;
+    [SerializeField] protected LevelExitPoint exitPoint;
 
      void Start()
     {
