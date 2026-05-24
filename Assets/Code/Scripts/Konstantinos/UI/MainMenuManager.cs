@@ -73,13 +73,14 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator Start()
     {
+        yield return null;
         if (enableOnStart)
         {
             SetMenuActivity(true);
+            SetPanel(0);
+            SettingsManager.Instance?.CaptureWorldTransform();
+            SettingsManager.Instance?.SwitchCanvasMode(RenderMode.WorldSpace); // makes Settings world space
         }
-
-        yield return null;
-        SetPanel(0);
     }
 
     public void SetMenuActivity(bool active)
@@ -148,6 +149,7 @@ public class MainMenuManager : MonoBehaviour
     IEnumerator StartGameWithDelay()
     {
         SetMenuActivity(false);
+        SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim?.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration/ 1.5f);
         if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
@@ -162,6 +164,7 @@ public class MainMenuManager : MonoBehaviour
     IEnumerator HostCoOpWithDelay()
     {
         SetMenuActivity(false);
+        SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
         if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
