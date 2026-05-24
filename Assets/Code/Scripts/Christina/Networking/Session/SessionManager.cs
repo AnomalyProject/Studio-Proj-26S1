@@ -21,29 +21,18 @@ using Steamworks;
 /// </summary>
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
-
-    // the authoritative session container. Null means no session exists.
-    // SessionManager decides WHEN to modify it. SessionData handles the HOW.
-    private SessionData sessionData;
-    // PurrNet ConnectionID for the Host. Used for authority checks in RPCs.
-    // This is not like PlayerSessionInfo.IsHost -> that's for game logic. This one is for network authority.
-    private PlayerID? hostPlayerID;
-    private PlayerID? pendingHostConnection;
-
     private SessionPlayerRegistry registry = new SessionPlayerRegistry();
+
+    private SessionStateStore sessionStore = new SessionStateStore();
     
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
-
-    // this Dictionary maps PurrNet's PlayerID to Steam ulong IDs. This is nessecary because SessionData
-    // only know SteamIDs, but RPCs only know PlayerIDs. Every RPC must look up Stem ID here first.
-    private readonly Dictionary<PlayerID, ulong> playerConnectionMap = new();
 
     // Convenience check for whether this machine isn the host.
     public bool IsHost => NetworkManager.main != null && NetworkManager.main.isHost;
 
     // Read-only access for UI and external systems. 
-    public SessionData CurrentSession => sessionData;
+    public SessionData CurrentSession => sessionStore.Current;
     
     private ClientSessionData latestClientSession;
     public ClientSessionData LatestClientSession => latestClientSession;
@@ -55,7 +44,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     public static event Action OnServerSessionChanged;
     
-    public ElevatorLobbyState CurrentElevatorState => sessionData != null ? sessionData.ElevatorState : ElevatorLobbyState.Open;
+    public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
 
 
     // Singleton instance. Accessible globally so RPCs can be called from UI.
@@ -113,7 +102,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        sessionData = null;
+        sessionStore.Clear();
         hostRegistrationCoroutine = null;
         latestClientSession = default;
         registry.Clear();
@@ -135,7 +124,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        hostPlayerID = playerID;
         var hostIdentity = LocalIdentity.ResolveHost();
 
         AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
@@ -144,7 +132,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private void SendSessionUpdate()
     {
-        OnSessionUpdated_Client( SessionSnapshotFactory.Build(sessionData));
+        OnSessionUpdated_Client( SessionSnapshotFactory.Build(CurrentSession));
         OnServerSessionChanged?.Invoke();
     }
 
@@ -160,7 +148,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         while (Time.realtimeSinceStartup < deadline)
         {
-            if (playerConnectionMap.Count != 0)
+            if (registry.Count != 0)
             {
                 hostRegistrationCoroutine = null;
                 yield break;
@@ -199,7 +187,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (registry.Count != 0) return;
         
-        if (sessionData == null)
+        if (!sessionStore.HasSession)
         {
             registry.PendingHostConnection = playerID;
             Debug.Log("[SessionManager] Storing pending host connection until session exists.");
@@ -248,16 +236,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
-
-        var hostIdentity = LocalIdentity.ResolveHost();
         
-        sessionData = new SessionData
-        {
-            HostSteamID =  hostIdentity.steamID,
-            MapName = "Default",
-            GameMode = "Default",
-            MaxPlayers = 2
-        };
+        var hostIdentity = LocalIdentity.ResolveHost();
+
+        sessionStore.CreateSession(hostIdentity.steamID);
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
@@ -275,7 +257,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
 
         var playerInfo = new PlayerSessionInfo(steamID, displayName, isHost);
-        sessionData.AddPlayer(playerInfo);
+        CurrentSession.AddPlayer(playerInfo);
 
         registry.Register(playerID, steamID, isHost);
 
@@ -288,7 +270,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             // snapshot for the joining player. This guarantees they receive the full state even if the 
             // ObserverRpc timing has issues.
-            SendSessionSnapshot(playerID,  SessionSnapshotFactory.Build(sessionData));
+            SendSessionSnapshot(playerID,  SessionSnapshotFactory.Build(CurrentSession));
             
             // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
             SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
@@ -304,11 +286,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     private void RemovePlayerFromSession(PlayerID playerID, ulong steamID, string reason)
     {
-        sessionData.RemovePlayer(steamID);
+        CurrentSession.RemovePlayer(steamID);
 
         registry.Unregister(playerID);
         
-        sessionData.ResetReadyStates();
+        CurrentSession.ResetReadyStates();
 
         OnPlayerLeft_Client(steamID, reason);
         SendSessionUpdate();
@@ -331,38 +313,38 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// <returns></returns>
     public bool CanStartElevatorSequence()
     {
-        if (sessionData == null) return false;
+        if (!sessionStore.HasSession) return false;
         if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open) return false;
+        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open) return false;
 
-        return sessionData.AllPlayersReadyInElevator;
+        return CurrentSession.AllPlayersReadyInElevator;
     }
     
     public void SetElevatorState(ElevatorLobbyState state)
     {
-        if (!isServer || sessionData == null) return;
+        if (!isServer || !sessionStore.HasSession) return;
 
-        sessionData.ElevatorState = state;
+        CurrentSession.ElevatorState = state;
         SendSessionUpdate();
     }
     
     public void SetPlayerInElevator(PlayerID playerID, bool isInside)
     {
-        if (!isServer || sessionData == null) return;
+        if (!isServer || !sessionStore.HasSession) return;
         if (!registry.IsRegistered(playerID)) return;
-        if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosed) return;
+        if (CurrentSession.ElevatorState == ElevatorLobbyState.DoorsClosed) return;
 
         registry.TryGetSteamID(playerID, out ulong steamID);
-        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamID);
+        int playerIndex = CurrentSession.Players.FindIndex(player => player.SteamID == steamID);
 
         if (playerIndex == -1) return;
 
-        var playerInfo = sessionData.Players[playerIndex];
+        var playerInfo = CurrentSession.Players[playerIndex];
         
         playerInfo.IsInElevator = isInside;
         playerInfo.IsReady = isInside;
 
-        sessionData.Players[playerIndex] = playerInfo;
+        CurrentSession.Players[playerIndex] = playerInfo;
         SendSessionUpdate();
     }
 
@@ -418,10 +400,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private void TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
-        if (sessionData == null)
-            return;
+        if (!sessionStore.HasSession) return;
 
-        if (sessionData.IsSessionFull)
+        if (CurrentSession.IsSessionFull)
         {
             SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full.");
             return;
@@ -447,13 +428,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        if (registry.ContainsSteamID(steamID) || sessionData.GetPlayer(steamID).HasValue)
+        if (registry.ContainsSteamID(steamID) || CurrentSession.GetPlayer(steamID).HasValue)
         {
             SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
             return;
         }
 
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open)
+        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
         {
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
             return;
@@ -517,7 +498,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
 
         registry.TryGetSteamID(sender, out ulong steamID);
-        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamID);
+        int playerIndex = CurrentSession.Players.FindIndex(player => player.SteamID == steamID);
 
         if (playerIndex == -1)
         {
@@ -525,10 +506,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        var playerInfo = sessionData.Players[playerIndex];
+        var playerInfo = CurrentSession.Players[playerIndex];
         
         // elevator check
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open)
+        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
         {
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
             return;
@@ -547,7 +528,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
         
         playerInfo.IsReady = true;
-        sessionData.Players[playerIndex] = playerInfo;
+        CurrentSession.Players[playerIndex] = playerInfo;
 
         SendSessionUpdate();
         Debug.Log($"[SessionManager] Ready set for PlayerIDD: {sender}");
@@ -555,10 +536,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     public bool TryStartMatchFromServer()
     {
-        if (!isServer || sessionData == null) return false;
+        if (!isServer || !sessionStore.HasSession) return false;
         if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (sessionData.ElevatorState != ElevatorLobbyState.DoorsClosed) return false;
-        if (!sessionData.AllPlayersReadyInElevator) return false;
+        if (CurrentSession.ElevatorState != ElevatorLobbyState.DoorsClosed) return false;
+        if (!CurrentSession.AllPlayersReadyInElevator) return false;
 
         GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
@@ -596,10 +577,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
             return;
         }
+        
+        if (!sessionStore.HasSession)
+        {
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
+            return;
+        }
 
         // Reset ready/elevator session data here before loading lobby.
-        sessionData.ResetReadyStates();
-        sessionData.ElevatorState = ElevatorLobbyState.Open;
+        CurrentSession.ResetReadyStates();
+        CurrentSession.ElevatorState = ElevatorLobbyState.Open;
         SendSessionUpdate();
 
         SessionModeManager.Instance.LoadLobbyScene();
@@ -633,8 +620,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
             return;
         }
+        
+        if (!sessionStore.HasSession)
+        {
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
+            return;
+        }
 
-        if (!sessionData.AllPlayersReady)
+        if (!CurrentSession.AllPlayersReady)
         {
             Debug.LogWarning($"[SessionManager] Start rejected: Not all players are ready.");
             SendErrorToClient(sender, SessionErrorCode.PlayersNotReady, "Not all players are ready.");
@@ -664,17 +657,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can update the game settings.");
             return;
         }
+        
+        if (!sessionStore.HasSession)
+        {
+            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
+            return;
+        }
 
         bool shouldResetReadyStates = false;
         
         switch (key)
         {
             case "MapName":
-                sessionData.MapName = value;
+                CurrentSession.MapName = value;
                 shouldResetReadyStates = true;
                 break;
             case "GameMode":
-                sessionData.GameMode = value;
+                CurrentSession.GameMode = value;
                 shouldResetReadyStates = true;
                 break;
             case "MaxPlayers":
@@ -689,12 +688,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                     return;
                 }
 
-                if (maxPlayers < sessionData.Players.Count)
+                if (maxPlayers < CurrentSession.Players.Count)
                 {
                     SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
                     return;
                 }
-                sessionData.MaxPlayers = maxPlayers;
+                CurrentSession.MaxPlayers = maxPlayers;
                 shouldResetReadyStates = true;
                 break;
             case "LobbyVisibility":
@@ -704,14 +703,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                     return;
                 }
 
-                sessionData.SetCustomProperty(key, value);
+                CurrentSession.SetCustomProperty(key, value);
                 break;
             default:
-                sessionData.SetCustomProperty(key, value);
+                CurrentSession.SetCustomProperty(key, value);
                 break;
         }
 
-        if(shouldResetReadyStates) sessionData.ResetReadyStates();
+        if(shouldResetReadyStates) CurrentSession.ResetReadyStates();
 
         SendSessionUpdate();
         Debug.Log("[SessionManager] Settings updated.");
@@ -733,7 +732,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        SendSessionSnapshot(sender, SessionSnapshotFactory.Build(sessionData));
+        SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
         Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
     }
     
