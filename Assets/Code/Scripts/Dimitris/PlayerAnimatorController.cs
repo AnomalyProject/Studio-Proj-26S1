@@ -16,6 +16,9 @@ public class PlayerAnimatorController : NetworkBehaviour
     private int moveYHash;
     private int crouchHash;
     private int sprintHash;
+    //Lerp variables
+    private float currentMoveX;
+    private float currentMoveY;
 
     private void Awake()
     {
@@ -47,7 +50,9 @@ public class PlayerAnimatorController : NetworkBehaviour
         
             
             Vector2 moveInput = fpsController.MoveInput;
-        UpdateAnimator(moveInput.x, moveInput.y , fpsController.IsCrouching , fpsController.IsSprinting);
+        currentMoveX = Mathf.Lerp(currentMoveX, moveInput.x, Time.deltaTime * 20f);
+        currentMoveY = Mathf.Lerp(currentMoveY, moveInput.y, Time.deltaTime * 20f);
+        UpdateAnimator(currentMoveX, currentMoveY, fpsController.IsCrouching , fpsController.IsSprinting);
 
         
         
