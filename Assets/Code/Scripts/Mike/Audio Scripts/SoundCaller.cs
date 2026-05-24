@@ -16,6 +16,10 @@ public abstract class SoundCaller : MonoBehaviour
     {
         if (AudioManager.Instance && clip) AudioManager.Instance.PlayMusic(clip);
     }
+    protected void StopMusic()
+    {
+        if (AudioManager.Instance) AudioManager.Instance.StopMusic();
+    }
 
     protected void CrossfadeMusic(AudioClip clip)
     {
@@ -24,6 +28,6 @@ public abstract class SoundCaller : MonoBehaviour
 
     protected void FadeOutMusic(AudioClip clip)
     {
-        if (AudioManager.Instance && clip) AudioManager.Instance.FadeOutMusic(clip);
+        if (AudioManager.Instance) AudioManager.Instance.FadeOutMusic(clip);
     }
 }
