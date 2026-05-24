@@ -145,7 +145,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private void SendSessionUpdate()
     {
-        OnSessionUpdated_Client(BuildClientSessionData());
+        OnSessionUpdated_Client( SessionSnapshotFactory.Build(sessionData));
         OnServerSessionChanged?.Invoke();
     }
 
@@ -289,7 +289,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             // snapshot for the joining player. This guarantees they receive the full state even if the 
             // ObserverRpc timing has issues.
-            SendSessionSnapshot(playerID, BuildClientSessionData());
+            SendSessionSnapshot(playerID,  SessionSnapshotFactory.Build(sessionData));
             
             // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
             SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
@@ -782,7 +782,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        SendSessionSnapshot(sender, BuildClientSessionData());
+        SendSessionSnapshot(sender, SessionSnapshotFactory.Build(sessionData));
         Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
     }
     
