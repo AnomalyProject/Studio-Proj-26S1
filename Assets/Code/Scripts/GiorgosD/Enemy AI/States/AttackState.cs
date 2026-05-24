@@ -41,7 +41,7 @@ public class AttackState : BaseState
 
         Debug.Log("Player Attacked");
         
-        body.InvokeAttacked(player.gameObject);
+        body.InvokeAttacked(player.GetComponent<PlayerBody>());
 
         brain.ChangeState(EnemyBrain.StateID.Idle);
 

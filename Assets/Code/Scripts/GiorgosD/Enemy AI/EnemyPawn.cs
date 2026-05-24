@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 public class EnemyPawn : NetworkBehaviour
 {
@@ -23,7 +24,7 @@ public class EnemyPawn : NetworkBehaviour
     private Collider[] playersInSight = new Collider[4]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
-    private Transform cachedPlayer;
+    private PlayerBody cachedPlayer;
     
     [Header("Lost Player Timer")]
     [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
@@ -45,10 +46,9 @@ public class EnemyPawn : NetworkBehaviour
 
     
     #region Events
-    public UnityEvent<GameObject> OnPlayerSpottedState;
-    public UnityEvent OnPlayerSpotted;
+    public UnityEvent<PlayerBody> OnPlayerSpotted;
     public UnityEvent OnLostPlayer;
-    public UnityEvent<GameObject> OnPlayerAttacked;
+    public UnityEvent<PlayerBody> OnPlayerAttacked;
     #endregion
 
     #region Body Set up
@@ -274,13 +274,13 @@ public class EnemyPawn : NetworkBehaviour
 
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
-        Transform closestDetectedPlayer = null;
+        PlayerBody closestDetectedPlayer = null;
         float minSqrDist = Mathf.Infinity;
 
         for (int i = 0; i < count; i++)
         {
-            Transform player = playersInSight[i].transform;
-            if (IsPlayerDetected(player, out Vector3 direction, out float distance) && IsOnNavMesh(player))
+            PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
+            if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance) && IsOnNavMesh(player.transform))
             {
                 float sqrDist = distance * distance;
                 if (sqrDist < minSqrDist)
@@ -299,7 +299,7 @@ public class EnemyPawn : NetworkBehaviour
             {
                 hasPlayer = true;
                 cachedPlayer = closestDetectedPlayer;
-                InvokeSpotted();
+                InvokeSpotted(cachedPlayer);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
             }
         }
@@ -405,19 +405,12 @@ public class EnemyPawn : NetworkBehaviour
     /// <summary>
     /// Invokes Spotted Helper
     /// </summary>
-    private void InvokeSpotted()
-    {
-        if (!isServer) return;
-        
-        OnPlayerSpottedState?.Invoke(cachedPlayer.gameObject);
-    }
     [ObserversRpc]
-    private void SendInvokeSpotted()
+    private void InvokeSpotted(PlayerBody player)
     {
-        OnPlayerSpotted?.Invoke();
+        OnPlayerSpotted?.Invoke(player);
     }
     
-
     /// <summary>
     /// Invokes OnLost Helper
     /// </summary>
@@ -431,9 +424,9 @@ public class EnemyPawn : NetworkBehaviour
     /// Invokes Attack Helper
     /// </summary>
     [ObserversRpc]
-    public void InvokeAttacked(GameObject playerObj)
+    public void InvokeAttacked(PlayerBody player)
     { 
-        OnPlayerAttacked?.Invoke(playerObj);
+        OnPlayerAttacked?.Invoke(player);
     }
     #endregion
 }
