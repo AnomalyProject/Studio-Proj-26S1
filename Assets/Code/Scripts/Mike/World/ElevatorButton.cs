@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ElevatorButton : ExitInteractable
 {
-    public enum ButtonState
+    private enum ButtonState
     {
         None,
         Unavailable,
@@ -27,7 +27,7 @@ public class ElevatorButton : ExitInteractable
     private Material materialInstance;
     private Coroutine currentRoutine;
     private ButtonState currentState = ButtonState.None;
-    private bool afterInteraction = false;
+    private bool isAfterInteraction = false;
 
     private void Awake()
     {
@@ -39,9 +39,9 @@ public class ElevatorButton : ExitInteractable
 
     private void ChangeStateVisuals(ButtonState state)
     {
-        if (afterInteraction)
+        if (isAfterInteraction)
         {
-            afterInteraction = false;
+            isAfterInteraction = false;
             return;
         }
 
@@ -71,7 +71,7 @@ public class ElevatorButton : ExitInteractable
     private void DoInteractVisuals()
     {
         ChangeStateVisuals(ButtonState.Interacted);
-        afterInteraction = true;
+        isAfterInteraction = true;
 
         if(buttonAnimation)
         buttonAnimation.Play();
