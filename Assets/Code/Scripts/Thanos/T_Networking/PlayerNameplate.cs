@@ -25,13 +25,10 @@ public class PlayerNameplate : NetworkBehaviour
     {
         if (nameplateVisuals == null || !nameplateVisuals.activeSelf) return;
         
-        // Camera.main returns the active camera to THIS machine
-        // so each client's active camera
-        Camera camera = Camera.main;
-        if (camera == null) return;
+        if (PlayerBody.localPlayerBody?.CameraController == null) return;
 
-        // rotate nameplate to face the camera
-        transform.forward = camera.transform.forward;
+        // rotate nameplate to face the local player's camera
+        transform.LookAt(PlayerBody.localPlayerBody.CameraController.transform);
     }
     
     protected override void OnSpawned() 
@@ -40,7 +37,7 @@ public class PlayerNameplate : NetworkBehaviour
         
         ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
         
-        SessionData currentSession = SessionManager.Instance.CurrentSession;
+        SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
         if (playerInfo.HasValue)

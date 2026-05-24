@@ -1,3 +1,4 @@
+using PurrNet;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ItemData", menuName = "Scriptable Objects/ItemData")]
@@ -12,6 +13,7 @@ public class ItemData : ScriptableObject
     [SerializeField, Min(0)] private int _vendorPrice = 1;
     [SerializeField] private PlayerItem _itemPrefab;
     [SerializeField] private ItemPickup _pickupPrefab;
+    [SerializeField, Tooltip("Optional Consumed Drop")] private NetworkRigidbody _consumedPrefab;
 
     public bool IsKeyItem => _isKeyItem;
     public string ItemName => _itemName;
@@ -22,4 +24,5 @@ public class ItemData : ScriptableObject
     public int PricePerUnit => _vendorPrice;
     public PlayerItem ItemPrefab => _itemPrefab;
     public ItemPickup PickupPrefab => _pickupPrefab;
+    public NetworkRigidbody ConsumedPrefab => _consumedPrefab;
 }
