@@ -20,6 +20,8 @@ public class PlayerAnimatorController : NetworkBehaviour
     private float currentMoveX;
     private float currentMoveY;
 
+    [SerializeField] private float lerpSpeed = 20f;
+
     private void Awake()
     {
         if (fpsController==null)
@@ -44,14 +46,14 @@ public class PlayerAnimatorController : NetworkBehaviour
     private void Update()
     {
         if (!isOwner) return;
-            if (fpsController == null || animator == null) return;
+        if (fpsController == null || animator == null) return;
         
         
         
-            
-            Vector2 moveInput = fpsController.MoveInput;
-        currentMoveX = Mathf.Lerp(currentMoveX, moveInput.x, Time.deltaTime * 20f);
-        currentMoveY = Mathf.Lerp(currentMoveY, moveInput.y, Time.deltaTime * 20f);
+        
+        Vector2 moveInput = fpsController.MoveInput;
+        currentMoveX = Mathf.Lerp(currentMoveX, moveInput.x, Time.deltaTime * lerpSpeed);
+        currentMoveY = Mathf.Lerp(currentMoveY, moveInput.y, Time.deltaTime * lerpSpeed);
         UpdateAnimator(currentMoveX, currentMoveY, fpsController.IsCrouching , fpsController.IsSprinting);
 
         
