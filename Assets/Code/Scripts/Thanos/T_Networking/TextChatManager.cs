@@ -137,15 +137,13 @@ public class TextChatManager : NetworkBehaviour
 
         string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", string.Empty).ToLower().Trim();
 
-        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
+        if (mutedPlayers.Contains(cleanName)) return;
 
         if (cleanName == "system")
         {
             if (ChatUI.Instance != null) ChatUI.Instance.ReceiveMessage(displayName, message);
             return;
         }
-
-        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
 
         if (ChatUI.Instance != null)
         {
@@ -172,8 +170,8 @@ public class TextChatManager : NetworkBehaviour
         }
         else
         {
-            if (muted) mutedPlayers.Add(playerName);
-            else mutedPlayers.Remove(playerName);
+            if (muted) mutedPlayers.Add(cleanName);
+            else mutedPlayers.Remove(cleanName);
         }
     }
 
