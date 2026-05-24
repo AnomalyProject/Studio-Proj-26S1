@@ -20,7 +20,7 @@ public class InvestigateState : BaseState
 
         body.MoveToTarget(lastKnownPos);
 
-        body.OnPlayerSpotted += PlayerFound;
+        body.OnPlayerSpotted.AddListener(PlayerFound);
     }
 
     public override void Update()
@@ -39,23 +39,20 @@ public class InvestigateState : BaseState
         if (body.agent.remainingDistance <= body.agent.stoppingDistance && body.agent.hasPath)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
-            return;
         }
         else if (!body.agent.hasPath)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
-            return;
         }
     }
 
-    private void PlayerFound(GameObject player)
+    private void PlayerFound(PlayerBody player)
     {
         brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
-        return;
     }
 
     public override void Exit()
     {
-        body.OnPlayerSpotted -= PlayerFound;
+        body.OnPlayerSpotted.RemoveListener(PlayerFound);
     }
 }

@@ -16,7 +16,7 @@ public class AlertState : BaseState
         
         // Play sound and/or animation to indicate the enemy is alert.
 
-        body.OnPlayerSpotted += PlayerFound;
+        body.OnPlayerSpotted.AddListener(PlayerFound);
     }
 
     public override void Update()
@@ -30,14 +30,13 @@ public class AlertState : BaseState
         }
     }
 
-    private void PlayerFound(GameObject player)
+    private void PlayerFound(PlayerBody player)
     {
        brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
-        return;
     }
 
     public override void Exit()
     {
-        body.OnPlayerSpotted -= PlayerFound;
+        body.OnPlayerSpotted.RemoveListener(PlayerFound);
     }
 }

@@ -16,7 +16,7 @@ public class PatrolState : BaseState
 
         body.SetMoveSpeed(false);
 
-        body.OnPlayerSpotted += HandlePlayerSpotted;
+        body.OnPlayerSpotted.AddListener(HandlePlayerSpotted);
 
         if (brain.poiIsEnabled)
         {
@@ -62,14 +62,13 @@ public class PatrolState : BaseState
         body.MoveToTarget(patrolPoints[pointIndex].position);
     }
 
-    private void HandlePlayerSpotted(GameObject player)
+    private void HandlePlayerSpotted(PlayerBody player)
     {
         brain.ChangeState(EnemyBrain.StateID.Alert, player.transform);
-        return;
     }
 
     public override void Exit()
     {
-        body.OnPlayerSpotted -= HandlePlayerSpotted;
+        body.OnPlayerSpotted.RemoveListener(HandlePlayerSpotted);
     }
 }
