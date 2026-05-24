@@ -182,14 +182,14 @@ public class PlayerInventory : NetworkBehaviour
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
-    [ServerRpc] private void DropItem_ServerRpc(int slotIndex, Vector3 throwForward)
+    [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
 
         int quantityRemoved = Inventory.Remove(slotIndex, stack.GetQuantity());
         if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;
 
-        Vector3 throwDirection = throwForward + Vector3.up;
+        Vector3 throwDirection = itemHolder.transform.forward + Vector3.up;
 
         ItemPickup droppedItem = Instantiate(
             stack.GetItemData().PickupPrefab, 
@@ -197,16 +197,42 @@ public class PlayerInventory : NetworkBehaviour
             Quaternion.identity);
 
         droppedItem.SetQuantity(quantityRemoved);
-        droppedItem.Rigidbody.AddForce(throwDirection.normalized * throwItemForce, ForceMode.Impulse);
-        droppedItem.Rigidbody.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
+        ApplyThrowForce_Server(droppedItem.Rigidbody, throwDirection);
 
+        if (!stack.GetItemData().IsKeyItem)
         Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
+    }
+    private void DropConsumed_Server(ItemData data)
+    {
+        if (!isServer || !data.ConsumedPrefab) return;
+
+        Vector3 throwDirection = itemHolder.transform.forward + itemHolder.right * 0.5f + Vector3.up;
+
+        NetworkRigidbody consumedDrop = Instantiate(data.ConsumedPrefab, 
+            playerBody.transform.position + throwDirection, 
+            Quaternion.identity);
+
+        ApplyThrowForce_Server(consumedDrop, throwDirection);
+        Destroy(consumedDrop, 5);
+    }
+
+    private void ApplyThrowForce_Server(NetworkRigidbody rb, Vector3 throwDirection)
+    {
+        if (!isServer) return;
+
+        rb.isKinematic = false;
+        rb.AddForce(throwDirection.normalized * throwItemForce, ForceMode.Impulse);
+        rb.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
     }
 
     [ServerRpc] private async Task RegisterUsage_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) await Task.CompletedTask;
-        if (stack.GetItemData().IsConsumable) Inventory.TryRemoveOne(slotIndex);
+
+        if (stack.GetItemData().IsConsumable && Inventory.TryRemoveOne(slotIndex))
+        {
+            DropConsumed_Server(stack.GetItemData());
+        }
     }
 
     #region Input Actions
@@ -223,7 +249,7 @@ public class PlayerInventory : NetworkBehaviour
         if (ctx.started)
         {
             if (IsUsingItem) return;
-            DropItem_ServerRpc(focusedSlot, itemHolder.transform.forward);
+            DropItem_ServerRpc(focusedSlot);
         }
     }
     public void NextItem(InputAction.CallbackContext ctx)

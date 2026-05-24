@@ -1,8 +1,6 @@
-using NUnit.Framework;
-using PurrNet;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using PurrNet;
 
 public class PickUpSpawner : NetworkBehaviour
 {
@@ -83,6 +81,7 @@ public class PickUpSpawner : NetworkBehaviour
             availablePoints.RemoveAt(randomPoint);                //Remove point so it cannot be used again
 
             GameObject newItem = Instantiate(itemsToSpawn[i], chosenPoint.position, chosenPoint.rotation, transform);
+            if(newItem.TryGetComponent(out Rigidbody rb)) rb.isKinematic = true;    //Make sure item doesn't fall through the floor when spawned
             spawnedItems.Add(newItem);                 //Cache spawned item for later cleanup
         }
     }

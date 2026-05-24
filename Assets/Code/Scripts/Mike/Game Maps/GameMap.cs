@@ -1,9 +1,11 @@
-using PurrNet;
 using UnityEngine;
+using PurrNet;
 
 public class GameMap : NetworkBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
+    [SerializeField] AudioClip mapMusicTheme;
+    public AudioClip MapMusicTheme => mapMusicTheme;
     public Transform EntryPointAnchor => entryPointAnchor;
     public Transform ExitPointAnchor => exitPointAnchor;
     bool HasAnchorPoints => exitPointAnchor != null && entryPointAnchor != null;

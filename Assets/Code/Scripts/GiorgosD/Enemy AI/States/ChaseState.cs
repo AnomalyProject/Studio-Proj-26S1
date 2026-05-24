@@ -16,7 +16,7 @@ public class ChaseState : BaseState
 
         body.SetMoveSpeed(true);
 
-        body.OnLostPlayer += LostPlayer;
+        body.OnLostPlayer.AddListener(LostPlayer);
     }
 
     /// <summary>
@@ -38,7 +38,6 @@ public class ChaseState : BaseState
         if (Vector3.Distance(body.transform.position, target.position) <= 2.0f)
         {
             brain.ChangeState(EnemyBrain.StateID.Attack, target);
-            return;
         }
     }
 
@@ -48,11 +47,10 @@ public class ChaseState : BaseState
     private void LostPlayer()
     {
         brain.ChangeState(EnemyBrain.StateID.Investigate, target);
-        return;
     }
 
     public override void Exit()
     {
-        body.OnLostPlayer -= LostPlayer;
+        body.OnLostPlayer.RemoveListener(LostPlayer);
     }
 }
