@@ -2,6 +2,7 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
@@ -9,13 +10,13 @@ public class ElevatorExit : LevelExitPoint
     [Serializable] struct InidicationMessage
     {
         public Color indicationColor;
-        public string indicationText;
+        public Sprite indicationSprite;
     }
 
     [SerializeField, Header("Animation Events")] UnityEvent OnFullyClosed;
     [SerializeField] UnityEvent OnFullyOpened, OnStartOpen;
     [SerializeField] Renderer[] anomalyColorIndicators;
-    [SerializeField] TextMeshPro anomalyText;
+    [SerializeField] Image anomalyImage;
     [SerializeField] InidicationMessage anomalyMessage, safeMessage;
 
     [SerializeField] bool openOnStart;
@@ -45,12 +46,17 @@ public class ElevatorExit : LevelExitPoint
 
     private void UpdateAnomalyIndicators(bool hasAnomaly)
     {
+        InidicationMessage indication = hasAnomaly? anomalyMessage : safeMessage;
         foreach (Renderer indicator in anomalyColorIndicators)
         {
-            indicator.material.color = hasAnomaly ? anomalyMessage.indicationColor : safeMessage.indicationColor;
+            indicator.material.color = indication.indicationColor;
         }
 
-        if (anomalyText) anomalyText.text = hasAnomaly? anomalyMessage.indicationText : safeMessage.indicationText;
+        if (anomalyImage)
+        {
+            anomalyImage.sprite = indication.indicationSprite;
+            anomalyImage.color = indication.indicationColor;
+        }
     }
 
     [ContextMenu("Open Doors")]
