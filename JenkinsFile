@@ -1,6 +1,7 @@
 def branchMap = [
     'develop': "internal_testing",
     'network': "network_testing",
+    'worknet': "worknet_testing",
     'main'   : "default"
 ]
 
@@ -64,6 +65,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'worknet'
                 }
             }
             steps {
@@ -78,6 +80,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'worknet'
                 }
             }
             steps {
@@ -96,6 +99,7 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'network'
+                    branch 'worknet'
                 }
             }
             steps {
