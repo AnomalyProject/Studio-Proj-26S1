@@ -1,11 +1,22 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
 {
+    [Serializable] struct InidicationMessage
+    {
+        public Color indicationColor;
+        public string indicationText;
+    }
+
     [SerializeField, Header("Animation Events")] UnityEvent OnFullyClosed;
     [SerializeField] UnityEvent OnFullyOpened, OnStartOpen;
+    [SerializeField] Renderer[] anomalyColorIndicators;
+    [SerializeField] TextMeshPro anomalyText;
+    [SerializeField] InidicationMessage anomalyMessage, safeMessage;
 
     [SerializeField] bool openOnStart;
     AudioSource audioSource;
@@ -14,6 +25,12 @@ public class ElevatorExit : LevelExitPoint
     [Header("Audio")]
     [SerializeField] AudioClip openClip;
     [SerializeField] AudioClip closeClip;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        bHasAnomaly.onChanged += UpdateAnomalyIndicators;
+    }
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
@@ -21,8 +38,19 @@ public class ElevatorExit : LevelExitPoint
 
         anim = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+        UpdateAnomalyIndicators(bHasAnomaly);
 
         if (openOnStart) OpenDoors();
+    }
+
+    private void UpdateAnomalyIndicators(bool hasAnomaly)
+    {
+        foreach (Renderer indicator in anomalyColorIndicators)
+        {
+            indicator.material.color = hasAnomaly ? anomalyMessage.indicationColor : safeMessage.indicationColor;
+        }
+
+        if (anomalyText) anomalyText.text = hasAnomaly? anomalyMessage.indicationText : safeMessage.indicationText;
     }
 
     [ContextMenu("Open Doors")]
