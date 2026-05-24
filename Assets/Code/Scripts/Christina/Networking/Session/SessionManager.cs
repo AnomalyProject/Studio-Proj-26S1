@@ -29,6 +29,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     // This is not like PlayerSessionInfo.IsHost -> that's for game logic. This one is for network authority.
     private PlayerID? hostPlayerID;
     private PlayerID? pendingHostConnection;
+
+    private SessionPlayerRegistry registry = new SessionPlayerRegistry();
     
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -88,12 +90,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
             
-            if (pendingHostConnection.HasValue && playerConnectionMap.Count == 0)
+            if (registry.PendingHostConnection.HasValue && registry.Count == 0)
             {
-                RegisterHostPlayer(pendingHostConnection.Value, "pending OnPlayerConnected");
-                pendingHostConnection = null;
+                RegisterHostPlayer(registry.PendingHostConnection.Value, "pending OnPlayerConnected");
+                registry.PendingHostConnection = null;
             }
-            else if (playerConnectionMap.Count == 0)
+            else if (registry.Count == 0)
             {
                 hostRegistrationCoroutine = StartCoroutine(WaitForLocalHostThenRegister());
             }
@@ -111,13 +113,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     protected override void OnDespawned()
     {
-        
         sessionData = null;
-        hostPlayerID = null;
-        pendingHostConnection = null;
         hostRegistrationCoroutine = null;
-        playerConnectionMap.Clear();
         latestClientSession = default;
+        registry.Clear();
 
         if (GameStateManager.Instance != null)
         {
@@ -127,7 +126,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private void RegisterHostPlayer(PlayerID playerID, string source)
     {
-        if (playerConnectionMap.Count != 0)
+        if (registry.Count != 0)
             return;
 
         if (playerID.isServer)
@@ -198,11 +197,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
-        if (playerConnectionMap.Count != 0) return;
+        if (registry.Count != 0) return;
         
         if (sessionData == null)
         {
-            pendingHostConnection = playerID;
+            registry.PendingHostConnection = playerID;
             Debug.Log("[SessionManager] Storing pending host connection until session exists.");
             return;
         }
@@ -230,13 +229,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
 
         // checking in case a client connected but never succesfully joined the session
-        if (!playerConnectionMap.ContainsKey(playerID))
+        if (!registry.IsRegistered(playerID))
         {
             Debug.LogWarning($"[SessionManager] Disconnected PlayerID {playerID} was not in the session.");
             return;
         }
 
-        ulong steamID = playerConnectionMap[playerID];
+        registry.TryGetSteamID(playerID, out ulong steamID);
         RemovePlayerFromSession(playerID, steamID, "Disconnected");
     }
 
@@ -278,7 +277,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         var playerInfo = new PlayerSessionInfo(steamID, displayName, isHost);
         sessionData.AddPlayer(playerInfo);
 
-        playerConnectionMap[playerID] = steamID;
+        registry.Register(playerID, steamID, isHost);
 
         OnPlayerJoined_Client(steamID, displayName);
         SendSessionUpdate();
@@ -307,7 +306,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         sessionData.RemovePlayer(steamID);
 
-        playerConnectionMap.Remove(playerID);
+        registry.Unregister(playerID);
         
         sessionData.ResetReadyStates();
 
@@ -323,55 +322,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// </summary>
     public PlayerID? GetPlayerIDForSteam(ulong steamID)
     {
-        foreach (var entry in playerConnectionMap)
-        {
-            if (entry.Value == steamID) return entry.Key;
-        }
-        return null;
-    }
-    
-    /// <summary>
-    /// Creates a client facing snapshot of the current session by coping only th e
-    /// public, serializable data the client needs from the authoritative session state.
-    /// </summary>
-    /// <returns></returns>
-    private ClientSessionData BuildClientSessionData()
-    {
-        var players = new List<ClientPlayerInfo>();
-
-        for (int i = 0; i < sessionData.Players.Count; i++)
-        {
-            var p = sessionData.Players[i];
-            players.Add(new ClientPlayerInfo
-            {
-                SteamID = p.SteamID,
-                DisplayName = p.DisplayName,
-                IsReady = p.IsReady,
-                IsHost = p.IsHost,
-                IsInElevator = p.IsInElevator
-            });
-        }
-        
-        var keys = new List<string>();
-        var values = new List<string>();
-        foreach (var kvp in sessionData.CustomProperties)
-        {
-            keys.Add(kvp.Key);
-            values.Add(kvp.Value);
-        }
-
-        return new ClientSessionData
-        {
-            HostSteamID = sessionData.HostSteamID,
-            MapName = sessionData.MapName,
-            GameMode = sessionData.GameMode,
-            MaxPlayers = sessionData.MaxPlayers,
-            PlayerCount = sessionData.Players.Count,
-            Players = players,
-            CustomPropertyKeys = keys,
-            CustomPropertyValues = values,
-            ElevatorState = sessionData.ElevatorState
-        };
+        return registry.FindPlayerIDForSteam(steamID);
     }
     
     /// <summary>
@@ -398,10 +349,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public void SetPlayerInElevator(PlayerID playerID, bool isInside)
     {
         if (!isServer || sessionData == null) return;
-        if (!playerConnectionMap.ContainsKey(playerID)) return;
+        if (!registry.IsRegistered(playerID)) return;
         if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosed) return;
 
-        ulong steamID = playerConnectionMap[playerID];
+        registry.TryGetSteamID(playerID, out ulong steamID);
         int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamID);
 
         if (playerIndex == -1) return;
@@ -490,13 +441,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             }
         }
 
-        if (playerConnectionMap.ContainsKey(sender))
+        if (registry.IsRegistered(sender))
         {
             SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are already in session.");
             return;
         }
 
-        if (playerConnectionMap.ContainsValue(steamID) || sessionData.GetPlayer(steamID).HasValue)
+        if (registry.ContainsSteamID(steamID) || sessionData.GetPlayer(steamID).HasValue)
         {
             SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
             return;
@@ -523,15 +474,15 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] PlayerID {sender} requested to leave the session.");
 
-        if (!playerConnectionMap.ContainsKey(sender))
+        if (!registry.IsRegistered(sender))
         {
             Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
         }
 
-        ulong steamId = playerConnectionMap[sender];
-        RemovePlayerFromSession(sender, steamId, "Player left voluntarily.");
+        registry.TryGetSteamID(sender, out ulong steamID);
+        RemovePlayerFromSession(sender, steamID, "Player left voluntarily.");
 
         Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
     }
@@ -549,7 +500,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Toggle ready request from PlayerID: {sender}");
 
-        if (!playerConnectionMap.ContainsKey(sender))
+        if (!registry.IsRegistered(sender))
         {
             Debug.Log($"[SessionManager] Rejected: PlayerID {sender} not found in session.");
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
@@ -565,8 +516,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
 
-        ulong steamId = playerConnectionMap[sender];
-        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamId);
+        registry.TryGetSteamID(sender, out ulong steamID);
+        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamID);
 
         if (playerIndex == -1)
         {
@@ -633,7 +584,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
+        if (!registry.IsHost(sender))
         {
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can return to lobby.");
             return;
@@ -669,7 +620,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Start match request from PlayerID: {sender}");
 
         // ONLY the host can start the game session
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
+        if (!registry.IsHost(sender))
         {
             Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is not the host.");
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can start the game.");
@@ -707,7 +658,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Update settings request from PlayerID: {sender}");
 
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
+        if (!registry.IsHost(sender))
         {
             Debug.LogWarning($"[SessionManager] Update settings rejected: PlayerID {sender} is not the host.");
             SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can update the game settings.");
@@ -776,7 +727,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (!playerConnectionMap.ContainsKey(sender))
+        if (!registry.IsRegistered(sender))
         {
             SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
             return;
@@ -837,9 +788,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         // note: the menu->lobby transition fires here before any clients are connected, so the loop body excecutes zero times.
         // This is expected. The host doesn't need to send itseld a state change and no clients exist yet during initial
         // host startup. Late-joining clients receive the current state vie SendStateChangeToClient in AddPlayerToSession.
-        foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
+        foreach (PlayerID id in registry.AllPlayerIDs())
         {
-            SendStateChangeToClient(playerID.Key, nextState);
+            SendStateChangeToClient(id, nextState);
         }
     }
 
