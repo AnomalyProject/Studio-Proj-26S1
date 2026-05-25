@@ -1,10 +1,7 @@
-using System.Collections.Generic;
 using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
-using PurrNet.Steam;
-using Steamworks;
 
 /// <summary>
 /// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
@@ -22,8 +19,8 @@ using Steamworks;
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     private SessionPlayerRegistry registry = new SessionPlayerRegistry();
-
     private SessionStateStore sessionStore = new SessionStateStore();
+    private SessionIdentityService identityService = new SessionIdentityService();
     
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -124,9 +121,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        var hostIdentity = LocalIdentity.ResolveHost();
+        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
 
-        AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
+        AddPlayerToSession(playerID, hostIdentity.SteamID, hostIdentity.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
@@ -237,9 +234,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         Debug.Log("[SessionManager] Creating new session...");
         
-        var hostIdentity = LocalIdentity.ResolveHost();
+        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
 
-        sessionStore.CreateSession(hostIdentity.steamID);
+        sessionStore.CreateSession(hostIdentity.SteamID);
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
@@ -349,36 +346,42 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     /// <summary>
-    /// Client-to-server RPC: requests to join the session. Validates in order:
-    /// 1. Session not full (SessionData.IsSessionFull)
-    /// 2. Game is still in Lobby state
-    /// 3. Player isn't already in session (playerConnectionMap check)
-    /// Order matters -> cheapest checks first to reject early. Uses a temporary Steam ID
-    /// derived from PlayerID hash until Steamworks integration is ready.
+    /// Client-to-server RPC: requests to join the active session.
+    /// The identity service resolves and validates the sender's Steam identity,
+    /// including Steam lobby membership and display-name sanitization.
+    /// SessionManager then validates session rules: session exists, not full,
+    /// join is allowed in the current game state, player is not already registered,
+    /// and the elevator has not started leaving.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
     public void RequestJoinSession(RPCInfo info = default)
     {
         PlayerID sender = info.sender;
 
-        if (!PurrSteamUtils.TryGetSteamID(sender, out ulong steamID))
+        if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
-            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Could not verify Steam identity."));
+            SendCommandErrorIfFailed(
+                sender,
+                SessionCommandResult.Failed(
+                    SessionErrorCode.InvalidState,
+                    "Could not verify Steam lobby identity."
+                )
+            );
             return;
         }
-
-        if (!SteamSessionBridge.Instance.IsLobbyMember(steamID))
-        {
-            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"You are not in this Steam lobby."));
-            return;
-        }
-
-        string displayName = SteamFriends.GetFriendPersonaName(new CSteamID(steamID));
-        SessionCommandResult result = TryAcceptJoin(sender, steamID, SanitizeDisplayName(displayName));
+        
+        SessionCommandResult result = TryAcceptJoin(sender, steamID, displayName);
         
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Client-to-server RPC: requests to join using a supplied dev identity.
+    /// Only allowed while SessionModeManager is in DevHost mode.
+    /// The fake SteamID is validated locally, the display name is sanitized by
+    /// the identity service, then SessionManager applies the normal join rules
+    /// through TryAcceptJoin.
+    /// </summary>
     [ServerRpc(requireOwnership: false)]
     public void RequestJoinDevSession(ulong fakeSteamID, string displayName, RPCInfo info = default)
     {
@@ -397,7 +400,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        SessionCommandResult result = TryAcceptJoin(sender, fakeSteamID, SanitizeDisplayName(displayName));
+        SessionCommandResult result = TryAcceptJoin(sender, fakeSteamID, identityService.Sanitize(displayName));
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
@@ -709,21 +712,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return SessionCommandResult.Succeeded();
     }
     
-    /// <summary>
-    /// Client-to-server RPC: this exists in case a client ever gets into a state where their local data feels wrong,
-    /// they can tell via RequestSessionSnapshot() to get a fresh copy.
-    /// </summary>
-    /// <param name="info"></param>
-    [ServerRpc(requireOwnership: false)]
-    public void RequestSessionSnapshot(RPCInfo info = default)
-    {
-        PlayerID sender = info.sender;
-
-        SessionCommandResult result = TrySendSessionSnapshot(sender);
-
-        if (SendCommandErrorIfFailed(sender, result)) return;
-    }
-    
     private SessionCommandResult TrySendSessionSnapshot(PlayerID sender)
     {
         if (!registry.IsRegistered(sender)) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
@@ -835,21 +823,4 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
     
-    /// <summary>
-    /// HELPERS
-    /// </summary>
-    /// <param name="displayName"></param>
-    /// <returns></returns>
-    private static string SanitizeDisplayName(string displayName)
-    {
-        if (string.IsNullOrWhiteSpace(displayName))
-            return "Player";
-
-        displayName = displayName.Trim();
-
-        if (displayName.Length > 32)
-            displayName = displayName.Substring(0, 32);
-
-        return displayName;
-    }
 }
