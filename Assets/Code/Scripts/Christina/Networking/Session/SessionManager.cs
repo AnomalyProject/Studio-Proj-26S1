@@ -503,7 +503,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
-    /// 1. Sender is the host (authority check via )
+    /// 1. Sender is the host (authority check via SessionPlayerRegistry)
     /// 2. Game is in Lobby state (can't  twice)
     /// 3. All players are ready (SessionData.AllPlayersReady)
     /// Only after all three pass does the state transition to Loading.
