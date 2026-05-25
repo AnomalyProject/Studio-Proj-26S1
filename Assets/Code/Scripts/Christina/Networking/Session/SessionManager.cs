@@ -20,6 +20,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionStateStore sessionStore = new SessionStateStore();
     private SessionIdentityService identityService = new SessionIdentityService();
     private SessionPlayerCoordinator playerCoordinator;
+    private SessionLobbyCoordinator lobbyCoordinator;
     
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -63,6 +64,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         DontDestroyOnLoad(gameObject);
         
         playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
+        lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
     }
 
     /// <summary>
@@ -252,38 +254,26 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// <returns></returns>
     public bool CanStartElevatorSequence()
     {
-        if (!sessionStore.HasSession) return false;
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open) return false;
-
-        return CurrentSession.AllPlayersReadyInElevator;
+        return lobbyCoordinator.CanStartElevatorSequence();
     }
     
     public void SetElevatorState(ElevatorLobbyState state)
     {
         if (!isServer || !sessionStore.HasSession) return;
 
-        CurrentSession.ElevatorState = state;
+        SessionCommandResult result = lobbyCoordinator.TrySetElevatorState(state);
+        if (!result.Success) return;
+
         SendSessionUpdate();
     }
     
     public void SetPlayerInElevator(PlayerID playerID, bool isInside)
     {
-        if (!isServer || !sessionStore.HasSession) return;
-        if (!registry.IsRegistered(playerID)) return;
-        if (CurrentSession.ElevatorState == ElevatorLobbyState.DoorsClosed) return;
+        if (!isServer) return;
 
-        registry.TryGetSteamID(playerID, out ulong steamID);
-        int playerIndex = CurrentSession.Players.FindIndex(player => player.SteamID == steamID);
+        SessionCommandResult result = lobbyCoordinator.TrySetPlayerInElevator(playerID, isInside);
+        if (!result.Success) return;
 
-        if (playerIndex == -1) return;
-
-        var playerInfo = CurrentSession.Players[playerIndex];
-        
-        playerInfo.IsInElevator = isInside;
-        playerInfo.IsReady = isInside;
-
-        CurrentSession.Players[playerIndex] = playerInfo;
         SendSessionUpdate();
     }
 
@@ -429,36 +419,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private SessionCommandResult TrySetPlayerReady(PlayerID sender)
     {
-        if (!registry.IsRegistered(sender))
-            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
-
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
-
-        registry.TryGetSteamID(sender, out ulong steamID);
-        int playerIndex = CurrentSession.Players.FindIndex(player => player.SteamID == steamID);
-
-        if (playerIndex == -1)
-            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player data not found in session.");
-
-        var playerInfo = CurrentSession.Players[playerIndex];
-
-        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is already leaving.");
-
-        if (!playerInfo.IsInElevator)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Enter the elevator before readying up.");
-
-        if (playerInfo.IsReady)
-            return SessionCommandResult.Succeeded();
-
-        playerInfo.IsReady = true;
-        CurrentSession.Players[playerIndex] = playerInfo;
+        SessionCommandResult result = lobbyCoordinator.TrySetPlayerReady(sender);
+        if (!result.Success) return result;
 
         SendSessionUpdate();
         Debug.Log($"[SessionManager] Ready set for PlayerID: {sender}");
 
-        return SessionCommandResult.Succeeded();
+        return result;
     }
 
     /// <summary>
