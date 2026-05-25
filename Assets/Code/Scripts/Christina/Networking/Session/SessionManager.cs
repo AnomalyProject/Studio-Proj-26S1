@@ -2,6 +2,8 @@ using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
+using PurrNet.Steam;
+using Steamworks;
 
 /// <summary>
 /// SessionData owns raw session data, SessionPlayerRegistry owns PlayerID-to-SteamID mapping,
@@ -21,7 +23,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionIdentityService identityService = new SessionIdentityService();
     private SessionPlayerCoordinator playerCoordinator;
     private SessionLobbyCoordinator lobbyCoordinator;
-    
+
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
 
@@ -30,23 +32,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     // Read-only access for UI and external systems. 
     public SessionData CurrentSession => sessionStore.Current;
-    
+
     private ClientSessionData latestClientSession;
     public ClientSessionData LatestClientSession => latestClientSession;
-    
+
     // server-side event fired when a player is added to the session.
     // carries the PlayerID directly so spawn systems don't need reverse-lookups.
     public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
     public static event Action<PlayerID, ulong, string> OnServerPlayerRemoved;
-    
+
     public static event Action OnServerSessionChanged;
-    
+
     public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
 
 
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
-    
+
 
     /// <summary>
     /// Singleton setup. If a duplicate SessionManager exists, destroy it.
@@ -62,7 +64,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        
+
         playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
         lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
     }
@@ -78,7 +80,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
-            
+
             if (registry.PendingHostConnection.HasValue && registry.Count == 0)
             {
                 RegisterHostPlayer(registry.PendingHostConnection.Value, "pending OnPlayerConnected");
@@ -112,11 +114,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
         }
     }
-    
+
     private void RegisterHostPlayer(PlayerID playerID, string source)
     {
         if (registry.Count != 0) return;
-        
+
         if (playerID.isServer)
         {
             Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
@@ -127,14 +129,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(playerID, host.SteamID, host.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
-    
+
     private void SendSessionUpdate()
     {
-        OnSessionUpdated_Client( SessionSnapshotFactory.Build(CurrentSession));
+        OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
         OnServerSessionChanged?.Invoke();
     }
 
-    
+
     /// <summary>
     /// Waits briefly for the local networking player to become available, then
     /// registers it as the host if no host-player mappins has already been created.
@@ -184,7 +186,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
         if (registry.Count != 0) return;
-        
+
         if (!sessionStore.HasSession)
         {
             registry.PendingHostConnection = playerID;
@@ -193,13 +195,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         RegisterHostPlayer(playerID, "OnPlayerConnected");
-        
+
         if (hostRegistrationCoroutine != null)
         {
             StopCoroutine(hostRegistrationCoroutine);
             hostRegistrationCoroutine = null;
         }
-        
+
     }
 
     /// <summary>
@@ -230,7 +232,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void CreateSession()
     {
         Debug.Log("[SessionManager] Creating new session...");
-        
+
         LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
 
         sessionStore.CreateSession(hostIdentity.SteamID);
@@ -239,7 +241,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log("[SessionManager] Session created.");
     }
-    
+
     /// <summary>
     /// Given a Steam ID, returns the PurrNet PlayerID.
     /// </summary>
@@ -247,7 +249,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         return registry.FindPlayerIDForSteam(steamID);
     }
-    
+
     /// <summary>
     /// ELEVATOR
     /// </summary>
@@ -256,7 +258,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         return lobbyCoordinator.CanStartElevatorSequence();
     }
-    
+
     public void SetElevatorState(ElevatorLobbyState state)
     {
         if (!isServer || !sessionStore.HasSession) return;
@@ -266,7 +268,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         SendSessionUpdate();
     }
-    
+
     public void SetPlayerInElevator(PlayerID playerID, bool isInside)
     {
         if (!isServer) return;
@@ -301,9 +303,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             );
             return;
         }
-        
+
         SessionCommandResult result = TryAcceptJoin(sender, steamID, displayName);
-        
+
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
@@ -321,13 +323,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SessionModeManager.Instance == null ||
             SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
         {
-            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Dev joins are only allowed in Dev Host mode."));
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev joins are only allowed in Dev Host mode."));
             return;
         }
 
         if (fakeSteamID == 0)
         {
-            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Dev SteamID was invalid."));
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev SteamID was invalid."));
             return;
         }
 
@@ -335,7 +337,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
         SessionCommandResult result = playerCoordinator.TryAcceptJoin(sender, steamID, displayName);
@@ -345,7 +347,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
         return result;
     }
-    
+
     private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
     {
         OnPlayerJoined_Client(steamID, displayName);
@@ -358,7 +360,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
         }
     }
-    
+
     private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
     {
         OnPlayerLeft_Client(steamID, reason);
@@ -383,13 +385,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
     }
-    
+
     private SessionCommandResult TryLeaveSession(PlayerID sender)
     {
         if (!registry.TryGetSteamID(sender, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
-            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound,"You are not in this session.");
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
         }
 
         SessionCommandResult result = playerCoordinator.TryLeaveSession(sender);
@@ -416,7 +418,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private SessionCommandResult TrySetPlayerReady(PlayerID sender)
     {
         SessionCommandResult result = lobbyCoordinator.TrySetPlayerReady(sender);
@@ -443,7 +445,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private SessionCommandResult TryReturnToLobby(PlayerID sender)
     {
         if (!registry.IsHost(sender))
@@ -461,7 +463,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendSessionUpdate();
 
         if (SessionModeManager.Instance == null)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState,"SessionModeManager missing. Cannot return to lobby.");
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot return to lobby.");
         SessionModeManager.Instance.LoadLobbyScene();
 
         return SessionCommandResult.Succeeded();
@@ -485,7 +487,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private SessionCommandResult TryStartMatchCommand(PlayerID sender)
     {
         if (!registry.IsHost(sender))
@@ -502,7 +504,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return TryStartMatchInternal();
     }
-    
+
     public bool TryStartMatchFromServer()
     {
         SessionCommandResult result = TryStartMatchInternal();
@@ -511,7 +513,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return result.Success;
     }
-    
+
     private SessionCommandResult TryStartMatchInternal()
     {
         if (!isServer || !sessionStore.HasSession)
@@ -553,7 +555,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private SessionCommandResult TryUpdateSettings(PlayerID sender, string key, string value)
     {
         if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can update the game settings.");
@@ -692,7 +694,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SessionEvents.InvokeSessionError(error);
         Debug.LogWarning($"[SessionManager] [Client] Error received: {code} - {message}");
     }
-    
+
     private bool SendCommandErrorIfFailed(PlayerID target, SessionCommandResult result)
     {
         if (result.Success) return false;
@@ -700,7 +702,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendErrorToClient(target, result.ErrorCode, result.Message);
         return true;
     }
-    
+
     [TargetRpc]
     private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
     {
@@ -708,5 +710,5 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SessionEvents.InvokeSessionDataChanged();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
-    
+
 }
