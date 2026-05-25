@@ -4,11 +4,9 @@ using UnityEngine;
 using PurrNet;
 
 /// <summary>
-/// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
-/// match settings, and game start. All validated server-side before broadcasting to clients.
-///
-/// Works between PurrNet's networking layer (PlayerID) and the game's identity layer (Steam ID).
-/// SessionData owns the data logic and this class owns the authority decisions and network flow.
+/// SessionData owns raw session data, SessionPlayerRegistry owns PlayerID-to-SteamID mapping,
+/// SessionPlayerCoordinator owns player membership mutations, and this class owns RPC flow,
+/// authority entry points, broadcasts, and client synchronization.
 ///
 /// Key rules:
 /// - All mutations go through ServerRpcs: clients request -> host decides
@@ -21,6 +19,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionPlayerRegistry registry = new SessionPlayerRegistry();
     private SessionStateStore sessionStore = new SessionStateStore();
     private SessionIdentityService identityService = new SessionIdentityService();
+    private SessionPlayerCoordinator playerCoordinator;
     
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -62,6 +61,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        
+        playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
     }
 
     /// <summary>
@@ -112,18 +113,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private void RegisterHostPlayer(PlayerID playerID, string source)
     {
-        if (registry.Count != 0)
-            return;
-
+        if (registry.Count != 0) return;
+        
         if (playerID.isServer)
         {
             Debug.LogError($"[SessionManager] Refusing to register host with invalid PlayerID {playerID} from {source}.");
             return;
         }
 
-        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
-
-        AddPlayerToSession(playerID, hostIdentity.SteamID, hostIdentity.DisplayName, isHost: true);
+        LocalHostIdentity host = playerCoordinator.RegisterHost(playerID);
+        BroadcastPlayerJoined(playerID, host.SteamID, host.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
     
@@ -174,7 +173,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// PurrNet IPlayerEvents callback. Fires automatically when any player connects.
     /// Only runs server-side (asServer check). Only auto-adds the FIRST player (the host)
     /// when the session exists but is empty. All other players must explicitly call RequestJoinSession.
-    /// This keeps host and client on the same AddPlayerToSession code path.
+    /// Host registration is delegated to SessionPlayerCoordinator, then SessionManager broadcasts the result.
     /// </summary>
     public void OnPlayerConnected(PlayerID playerID, bool isReconnect, bool asServer)
     {
@@ -203,32 +202,28 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     /// <summary>
     /// PurrNet IPlayerEvents callback. Fires automatically when any player disconnects.
-    /// Only runs server-side. Uses the same RemovePlayerFromSession path as voluntary leaves,
-    /// ensuring consistent cleanup (SessionData removal, ready state reset, client broadcast)
-    /// regardless of whether the player left intentionally or lost connection.
+    /// Only runs server-side. SessionPlayerCoordinator removes the player from session data,
+    /// then SessionManager broadcasts the leave event and refreshed session state.
     /// </summary>
     public void OnPlayerDisconnected(PlayerID playerID, bool asServer)
     {
         if (!asServer) return;
-
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
 
-        // checking in case a client connected but never succesfully joined the session
-        if (!registry.IsRegistered(playerID))
+        if (!playerCoordinator.TryHandleDisconnect(playerID, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Disconnected PlayerID {playerID} was not in the session.");
             return;
         }
 
-        registry.TryGetSteamID(playerID, out ulong steamID);
-        RemovePlayerFromSession(playerID, steamID, "Disconnected");
+        BroadcastPlayerLeft(playerID, steamID, "Disconnected");
     }
 
     /// <summary>
     /// Initializes a new SessionData with default settings and transitions to Lobby state.
     /// SessionData is created BEFORE the state transition to ensure it exists if anything
     /// during the transition tries to read it. The host is NOT added here. That happens
-    /// in OnPlayerConnected via the shared AddPlayerToSession path.
+    /// in OnPlayerConnected via SessionPlayerCoordinator.RegisterHost.
     /// </summary>
     private void CreateSession()
     {
@@ -241,59 +236,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
         Debug.Log("[SessionManager] Session created.");
-    }
-
-    /// <summary>
-    /// Shared entry point for adding ANY player (host or client) to the session.
-    /// Creates a PlayerSessionInfo, registers it in SessionData, maps the PurrNet PlayerID
-    /// to the Steam ID, and broadcasts the join to all clients. Using one path for both
-    /// host and clients prevents divergence bugs. Any fix here applies to everyone.
-    /// Non-host players also receive the current game state to sync them up on join.
-    /// </summary>
-    private void AddPlayerToSession(PlayerID playerID, ulong steamID, string displayName, bool isHost = false)
-    {
-
-        var playerInfo = new PlayerSessionInfo(steamID, displayName, isHost);
-        CurrentSession.AddPlayer(playerInfo);
-
-        registry.Register(playerID, steamID, isHost);
-
-        OnPlayerJoined_Client(steamID, displayName);
-        SendSessionUpdate();
-        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
-        
-        
-        if (!isHost)
-        {
-            // snapshot for the joining player. This guarantees they receive the full state even if the 
-            // ObserverRpc timing has issues.
-            SendSessionSnapshot(playerID,  SessionSnapshotFactory.Build(CurrentSession));
-            
-            // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
-            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
-        }
-
-    }
-
-    /// <summary>
-    /// Shared exit point for removing ANY player from the session, whether they left
-    /// voluntarily or disconnected. Removes from both SessionData and playerConnectionMap,
-    /// broadcasts the leave to all clients, then resets all ready states because the
-    /// group composition changed and remaining players should re-confirm readiness.
-    /// </summary>
-    private void RemovePlayerFromSession(PlayerID playerID, ulong steamID, string reason)
-    {
-        CurrentSession.RemovePlayer(steamID);
-
-        registry.Unregister(playerID);
-        
-        CurrentSession.ResetReadyStates();
-
-        OnPlayerLeft_Client(steamID, reason);
-        SendSessionUpdate();
-
-        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
-        Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
     }
     
     /// <summary>
@@ -349,7 +291,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// Client-to-server RPC: requests to join the active session.
     /// The identity service resolves and validates the sender's Steam identity,
     /// including Steam lobby membership and display-name sanitization.
-    /// SessionManager then validates session rules: session exists, not full,
+    /// SessionPlayerCoordinator then validates session rules: session exists, not full,
     /// join is allowed in the current game state, player is not already registered,
     /// and the elevator has not started leaving.
     /// </summary>
@@ -379,8 +321,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// Client-to-server RPC: requests to join using a supplied dev identity.
     /// Only allowed while SessionModeManager is in DevHost mode.
     /// The fake SteamID is validated locally, the display name is sanitized by
-    /// the identity service, then SessionManager applies the normal join rules
-    /// through TryAcceptJoin.
+    /// the identity service, then SessionPlayerCoordinator applies the normal join rules.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
     public void RequestJoinDevSession(ulong fakeSteamID, string displayName, RPCInfo info = default)
@@ -407,50 +348,38 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
-        if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no live Session.");
+        SessionCommandResult result = playerCoordinator.TryAcceptJoin(sender, steamID, displayName);
+        if (!result.Success) return result;
 
-        if (CurrentSession.IsSessionFull)
-        {
-            return SessionCommandResult.Failed(SessionErrorCode.SessionFull, "Session is full.");
-        }
-
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            bool devInGameJoin =
-                SessionModeManager.Instance != null &&
-                SessionModeManager.Instance.CurrentMode == SessionMode.DevHost &&
-                GameStateManager.Instance.CurrentState == GameState.InGame;
-
-            if (!devInGameJoin)
-            {
-                return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
-            }
-        }
-
-        if (registry.IsRegistered(sender))
-        {
-            return SessionCommandResult.Failed(SessionErrorCode.AlreadyInSession, "You are already in session.");
-        }
-
-        if (registry.ContainsSteamID(steamID) || CurrentSession.GetPlayer(steamID).HasValue)
-        {
-            return SessionCommandResult.Failed(SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
-        }
-
-        if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
-        {
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is already leaving.");
-        }
-
-        AddPlayerToSession(sender, steamID, displayName);
-        return SessionCommandResult.Succeeded();
+        // success path, so do the broadcasts
+        BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
+        return result;
     }
+    
+    private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
+    {
+        OnPlayerJoined_Client(steamID, displayName);
+        SendSessionUpdate();
+        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
 
+        if (!isHost)
+        {
+            SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(sessionStore.Current));
+            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
+        }
+    }
+    
+    private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
+    {
+        OnPlayerLeft_Client(steamID, reason);
+        SendSessionUpdate();
+        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
+    }
 
     /// <summary>
     /// Client-to-server RPC: requests to voluntarily leave the session.
-    /// Validates the player is actually in the session, then delegates to
-    /// RemovePlayerFromSession. Same path used by disconnection cleanup.
+    /// SessionPlayerCoordinator validates and removes the player from session data,
+    /// then SessionManager broadcasts the leave event and refreshed session state.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
     public void RequestLeaveSession(RPCInfo info = default)
@@ -467,16 +396,17 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private SessionCommandResult TryLeaveSession(PlayerID sender)
     {
-        if (!registry.IsRegistered(sender))
+        if (!registry.TryGetSteamID(sender, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound,"You are not in this session.");
         }
 
-        registry.TryGetSteamID(sender, out ulong steamID);
-        RemovePlayerFromSession(sender, steamID, "Player left voluntarily.");
+        SessionCommandResult result = playerCoordinator.TryLeaveSession(sender);
+        if (!result.Success) return result;
 
-        return SessionCommandResult.Succeeded();
+        BroadcastPlayerLeft(sender, steamID, "Player left voluntarily.");
+        return result;
     }
 
     /// <summary>
@@ -573,7 +503,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
-    /// 1. Sender is the host (authority check via hostPlayerID)
+    /// 1. Sender is the host (authority check via )
     /// 2. Game is in Lobby state (can't  twice)
     /// 3. All players are ready (SessionData.AllPlayersReady)
     /// Only after all three pass does the state transition to Loading.
@@ -761,7 +691,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         // note: the menu->lobby transition fires here before any clients are connected, so the loop body excecutes zero times.
         // This is expected. The host doesn't need to send itseld a state change and no clients exist yet during initial
-        // host startup. Late-joining clients receive the current state vie SendStateChangeToClient in AddPlayerToSession.
+        // host startup. Late-joining clients receive the current state via SendStateChangeToClient after a successful join.
         foreach (PlayerID id in registry.AllPlayerIDs())
         {
             SendStateChangeToClient(id, nextState);
