@@ -7,11 +7,12 @@ using UnityEngine;
 /// 
 /// Displays an interact prompt when the player focuses an interactable object.
 /// </summary>
-public class InteractPrompt : MonoBehaviour
+public class InteractUI : MonoBehaviour
 {
     private const float FADE_SPEED = 5f;
     private Image prompt;
     private IInteractable<PlayerBody> currentInteractable;
+    [SerializeField] private GameObject crosshair;
 
     private void Awake()
     {
@@ -29,11 +30,13 @@ public class InteractPrompt : MonoBehaviour
     }
     private void HandleLocalPlayerSpawned(PlayerBody player)
     {
+        crosshair.SetActive(true);
         player.Interaction.interactionSystem.OnFocusedInteractable += OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus += OnInteractableLostFocus;
     }
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
+        crosshair.SetActive(false);
         player.Interaction.interactionSystem.OnFocusedInteractable -= OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus -= OnInteractableLostFocus;
         if (currentInteractable != null) OnInteractableLostFocus(currentInteractable);
