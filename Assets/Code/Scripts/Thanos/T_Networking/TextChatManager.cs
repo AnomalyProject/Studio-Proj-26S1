@@ -160,6 +160,15 @@ public class TextChatManager : NetworkBehaviour
         RPCMessage(systemName, message);
     }
 
+    /// <summary>
+    /// Sets the mute status for a specific player or for all players.
+    /// </summary>
+    /// <remarks>If <paramref name="playerName"/> is "all", the mute status is applied globally to all
+    /// players. Otherwise, the mute status is set for the specified player only.</remarks>
+    /// <param name="playerName">The name of the player whose mute status is to be set. Specify "all" to set the mute status for all players. The
+    /// comparison is case-insensitive and ignores leading or trailing whitespace.</param>
+    /// <param name="muted">A value indicating whether the player or all players should be muted. Set to <see langword="true"/> to mute;
+    /// otherwise, <see langword="false"/>.</param>
     public void SetMute(string playerName, bool muted)
     {
         string cleanName = playerName.ToLower().Trim();
