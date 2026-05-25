@@ -10,13 +10,11 @@ using UnityEngine;
 public class InteractPrompt : MonoBehaviour
 {
     private const float FADE_SPEED = 5f;
-    private Transform crosshair;
     private Image prompt;
     private IInteractable<PlayerBody> currentInteractable;
 
     private void Awake()
     {
-        crosshair = transform.GetChild(0);
         prompt = transform.GetComponentInChildren<InputIcon>(true).GetComponent<Image>();
 
         if (PlayerBody.localPlayerBody != null) HandleLocalPlayerSpawned(PlayerBody.localPlayerBody);
@@ -59,11 +57,9 @@ public class InteractPrompt : MonoBehaviour
         {
             promptColor.a += (show ? 1 : -1) * FADE_SPEED * Time.unscaledDeltaTime;
             prompt.color = promptColor;
-            crosshair.localScale = Vector3.one * Mathf.Lerp(0, 1, promptColor.a);
             yield return null;
         }
         promptColor.a = show ? 1 : 0;
         prompt.color = promptColor;
-        crosshair.localScale = Vector3.one * promptColor.a;
     }
 }
