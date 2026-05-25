@@ -7,6 +7,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 {
     [SerializeField] private Canvas buttonCanvas;
     [SerializeField] private Image itemIcon;
+    [SerializeField] private Sprite lockedSlotSprite;
     [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText;
     private CompositeVendor vendorHost;
     public int SlotIndex;
@@ -50,8 +51,15 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
             itemPriceText.text = $"Cost x{vendorHost.GetStackPrice(slot).ToString()}";
             itemAmountText.text = $"x{stack.GetQuantity()}";
         }
+        else
+        {
+            itemIcon.sprite = lockedSlotSprite;
+            itemNameText.text = "Locked";
+            itemPriceText.text = "";
+            itemAmountText.text = "";
+        }
 
-        gameObject.SetActive(stack != null);
+        itemPriceText.gameObject.SetActive(stack != null);
     }
 
     public async Task<bool> TryInteract(PlayerBody interactor)

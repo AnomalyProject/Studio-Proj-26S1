@@ -17,12 +17,15 @@ public class VoidTimer : MonoBehaviour
         timerText = GetComponentInChildren<TextMeshProUGUI>(true);
         defaultColor = timerText.color;
         GameManager.OnInitialized += InitManager;
+        GameManager.OnDestroyed += HandleManagerDestruction;
     }
 
     private void OnDestroy()
     {
         GameManager.OnInitialized -= InitManager;
+        GameManager.OnDestroyed -= HandleManagerDestruction;
     }
+    private void HandleManagerDestruction(GameManager gameManager) => ShowTimer(false);
 
     private void InitManager(GameManager gameManager)
     {
