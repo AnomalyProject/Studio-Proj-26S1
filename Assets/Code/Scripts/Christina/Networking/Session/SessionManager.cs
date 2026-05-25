@@ -407,11 +407,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     
     private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
-        if (!sessionStore.HasSession) return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "There is no live Session.");
+        if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no live Session.");
 
         if (CurrentSession.IsSessionFull)
         {
-            return SessionCommandResult.Failed( SessionErrorCode.SessionFull, "Session is full.");
+            return SessionCommandResult.Failed(SessionErrorCode.SessionFull, "Session is full.");
         }
 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
@@ -423,23 +423,23 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
             if (!devInGameJoin)
             {
-                return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
+                return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
             }
         }
 
         if (registry.IsRegistered(sender))
         {
-            return SessionCommandResult.Failed( SessionErrorCode.AlreadyInSession, "You are already in session.");
+            return SessionCommandResult.Failed(SessionErrorCode.AlreadyInSession, "You are already in session.");
         }
 
         if (registry.ContainsSteamID(steamID) || CurrentSession.GetPlayer(steamID).HasValue)
         {
-            return SessionCommandResult.Failed( SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
+            return SessionCommandResult.Failed(SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
         }
 
         if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
         {
-            return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "The elevator is already leaving.");
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is already leaving.");
         }
 
         AddPlayerToSession(sender, steamID, displayName);
@@ -711,17 +711,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return SessionCommandResult.Succeeded();
     }
-    
-    private SessionCommandResult TrySendSessionSnapshot(PlayerID sender)
-    {
-        if (!registry.IsRegistered(sender)) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
-
-        SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
-        Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
-
-        return SessionCommandResult.Succeeded();
-    }
-    
 
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
