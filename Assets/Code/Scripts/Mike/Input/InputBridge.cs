@@ -28,6 +28,9 @@ public static class InputBridge
         
         [InputContextConfig(mapName: nameof(IA_Global.NoClip), cursorVisible: false)]
         noClip,
+        
+        [InputContextConfig(mapName: nameof(IA_Global.None), cursorVisible: true)]
+        None,
     }
     private struct MapCursorPair
     {
