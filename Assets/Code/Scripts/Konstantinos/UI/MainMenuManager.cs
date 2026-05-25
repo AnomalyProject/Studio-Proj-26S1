@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TMPro;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -14,7 +15,12 @@ public class MainMenuManager : MonoBehaviour
 
     [Header("References")]
     [SerializeField] GameObject mainMenuCanvas;
-    
+    [SerializeField] CinemachineCamera mainCamera;
+    [SerializeField] Animator mainCameraAnim;
+    [SerializeField] Animator ElevatorDoorAnim;
+    [SerializeField] float mainCameraAnimDuration = 8.0f;
+    [SerializeField] AudioClip mainMenuMusic;
+
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject firstSelectedButtonStart;
 
@@ -73,6 +79,8 @@ public class MainMenuManager : MonoBehaviour
             SetMenuActivity(true);
         }
 
+        AudioManager.Instance.CrossFadeMusic(mainMenuMusic);
+
         yield return null;
         SetPanel(0);
     }
@@ -84,6 +92,7 @@ public class MainMenuManager : MonoBehaviour
             case true:
                 // activate canvas and select first button
                 mainMenuCanvas?.SetActive(true);
+                mainCamera?.Prioritize();
                 EventSystem.current.SetSelectedGameObject(firstSelectedButtonStart);
                 break;
             case false:
@@ -137,11 +146,29 @@ public class MainMenuManager : MonoBehaviour
 
     public void StartGame()
     {
+        StartCoroutine(StartGameWithDelay());
+    }
+    IEnumerator StartGameWithDelay()
+    {
+        SetMenuActivity(false);
+        mainCameraAnim?.SetTrigger("Play");
+        yield return new WaitForSeconds(mainCameraAnimDuration/ 1.5f);
+        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
         SessionModeManager.Instance.StartSolo();
     }
 
     public void HostCoOp()
     {
+        StartCoroutine(HostCoOpWithDelay());
+    }
+    IEnumerator HostCoOpWithDelay()
+    {
+        SetMenuActivity(false);
+        mainCameraAnim.SetTrigger("Play");
+        yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
+        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
         SessionModeManager.Instance.StartHosting();
     }
 

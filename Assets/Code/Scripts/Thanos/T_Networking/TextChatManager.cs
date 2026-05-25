@@ -1,10 +1,17 @@
-using UnityEngine;
 using PurrNet;
-using UnityEngine.InputSystem;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class TextChatManager : NetworkBehaviour 
 {
     public static TextChatManager Instance { get; private set; }
+
+    public static Dictionary<ulong, string> PlayerNames = new Dictionary<ulong, string>();
+
+    private HashSet<string> mutedPlayers = new HashSet<string>();
+    private bool muteAll = false;
 
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
@@ -18,7 +25,78 @@ public class TextChatManager : NetworkBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
-    
+
+    private void OnEnable()
+    {
+        SessionEvents.OnPlayerJoined += HandlePlayerJoined;
+        SessionEvents.OnPlayerLeft += HandlePlayerLeft;
+    }
+
+    private void OnDisable()
+    {
+        SessionEvents.OnPlayerJoined -= HandlePlayerJoined;
+        SessionEvents.OnPlayerLeft -= HandlePlayerLeft;
+    }
+
+    /// <summary>
+    /// Handles the event when a player joins the session by broadcasting a system message to all connected users.
+    /// </summary>
+    /// <param name="steamID">The unique Steam identifier of the player who joined.</param>
+    /// <param name="displayName">The display name of the player who joined the session.</param>
+    private void HandlePlayerJoined(ulong steamID, string displayName)
+    {
+        if(!PlayerNames.ContainsKey(steamID))
+        {
+            PlayerNames.Add(steamID, displayName);
+        }
+        else
+        {
+            PlayerNames[steamID] = displayName;
+        }
+
+        if(!isServer) return;
+
+        BroadcastSystemMessage($"Player <b>{displayName}</b> has joined the session.");
+    }
+
+    /// <summary>
+    /// Handles the event when a player leaves the session and broadcasts a system message to all connected users.
+    /// </summary>
+    /// <remarks>This method should be called only on the server. If the player's display name cannot be
+    /// determined, a default name is used and a warning is logged.</remarks>
+    /// <param name="steamID">The unique Steam identifier of the player who has left the session.</param>
+    /// <param name="reason">The reason for the player's departure, as provided by the session or system.</param>
+    private void HandlePlayerLeft(ulong steamID, string reason)
+    {
+        if(!isServer) return;
+
+        string displayName = "John Anomaly";
+
+        if(PlayerNames.TryGetValue(steamID, out string name))
+        {
+            displayName = name;
+            PlayerNames.Remove(steamID);
+        }
+
+        SessionData currentSession = SessionManager.Instance.CurrentSession;
+
+        if (isServer)
+        {
+            BroadcastSystemMessage($"Player <b>{displayName}</b> has left the session.");
+        }
+    }
+
+    /// <summary>
+    /// Sends a chat message from the specified sender to all connected clients on the server.
+    /// </summary>
+    /// <remarks>If the sender's SteamID does not correspond to a known player in the current session, the
+    /// message is not sent and a warning is logged. This method can be called by any client, regardless of
+    /// ownership.</remarks>
+    /// <param name="message">The text of the chat message to send. Leading and trailing whitespace is ignored. If the message exceeds the
+    /// maximum allowed length, it is truncated.</param>
+    /// <param name="senderSteamID">The SteamID of the player sending the message. Used to identify the sender and display their name and color in
+    /// the chat.</param>
+
     [ServerRpc (requireOwnership: false)] 
     public void SendChatMessage(string message, ulong senderSteamID)
     {
@@ -30,7 +108,7 @@ public class TextChatManager : NetworkBehaviour
         }
 
         string displayName = "John Anomaly";
-        
+
         SessionData currentSession = SessionManager.Instance.CurrentSession; 
         
         if (currentSession != null)
@@ -38,9 +116,9 @@ public class TextChatManager : NetworkBehaviour
             PlayerSessionInfo? playerInfo = currentSession.GetPlayer(senderSteamID);
             if (playerInfo.HasValue)
             {
-                string name = playerInfo.Value.DisplayName;
+                displayName = playerInfo.Value.DisplayName;
                 string hexColor = PlayerColour.GetHex(playerInfo.Value.ColorIndex);
-                displayName = $"<color={hexColor}>{name}</color>";
+                displayName = $"<color={hexColor}>{displayName}</color>";
             }
             else
             {
@@ -49,22 +127,126 @@ public class TextChatManager : NetworkBehaviour
             }
         }
         
-        BroadcastMessage(displayName, message);
+        RPCMessage(displayName, message);
     }
     
-    [ObserversRpc(bufferLast: true)] //Save last RPC message to be broadcasted to the next player that joins the room 
-    private void BroadcastMessage(string displayName, string message)
+    [ObserversRpc(bufferLast: false)] //Save last RPC message to be broadcasted to the next player that joins the room //TODO: MAKE BUFFER TRUE FOR CLIENT SYSTEM NOTIFS
+    private void RPCMessage(string displayName, string message)
     {
+        if (muteAll) return;
+
+        string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", string.Empty).ToLower().Trim();
+
+        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
+
+        if (cleanName == "system")
+        {
+            if (ChatUI.Instance != null) ChatUI.Instance.ReceiveMessage(displayName, message);
+            return;
+        }
+
+        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
+
         if (ChatUI.Instance != null)
         {
             ChatUI.Instance.ReceiveMessage(displayName, message);
         }
     }
 
-    /* //Testing input handling with component
-    public void SetInputState(PlayerInput input)
+    private void BroadcastSystemMessage(string message)
     {
-        input = GetComponent<PlayerInput>();
+        if(!isServer) return; //Only the server can send system messages
+
+        string systemName = "<color=#FFD700>System</color>";
+
+        RPCMessage(systemName, message);
     }
-    */
+
+    public void SetMute(string playerName, bool muted)
+    {
+        string cleanName = playerName.ToLower().Trim();
+
+        if (cleanName == "all")
+        {
+            muteAll = muted;
+        }
+        else
+        {
+            if (muted) mutedPlayers.Add(playerName);
+            else mutedPlayers.Remove(playerName);
+        }
+    }
+
+    [ServerRpc(requireOwnership: false)]
+    public void SendWhisper(string targetName, string message, ulong senderSteamID, RPCInfo info = default)
+    {
+        ulong targetSteamID = 0;
+        string actualTargetName = targetName;
+        string senderName = "Unknown";
+
+        SessionData currsession = SessionManager.Instance.CurrentSession;
+
+        if(currsession != null)
+        {
+
+            var senderInfo = currsession.GetPlayer(senderSteamID);
+            if (senderInfo.HasValue) senderName = senderInfo.Value.DisplayName;
+
+
+            foreach (var player in currsession.Players)
+            {
+                if (player.DisplayName.Contains(targetName, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetSteamID = player.SteamID;
+                    actualTargetName = player.DisplayName;
+                    break;
+                }
+            }
+        }
+
+        if(targetSteamID == 0)
+        {
+            SendWhisperError(info.sender, $"Player '{targetName}' not found.");
+            return;
+        }
+
+        PlayerID? targetNetworkID = SessionManager.Instance.GetPlayerIDForSteam(targetSteamID);
+
+        if(targetNetworkID.HasValue)
+        {
+            SendWhisperToClient(targetNetworkID.Value, senderName, message);
+            SendWhisperConfirmation(info.sender, actualTargetName, message);
+        }
+        else
+        {
+            SendWhisperError(info.sender, $"Player '{targetName}' not found.");
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperToClient(PlayerID target, string senderName, string message)
+    {
+        if (ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper from {senderName}]</color>", message);
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperConfirmation(PlayerID target, string targetName, string message)
+    {
+        if (ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);
+        }
+    }
+
+    [TargetRpc]
+    private void SendWhisperError(PlayerID target, string errorMessage)
+    {
+        if(ChatUI.Instance != null)
+        {
+            ChatUI.Instance.ReceiveMessage($"<color=red>[System]</color>", errorMessage);
+        }
+    }
 }

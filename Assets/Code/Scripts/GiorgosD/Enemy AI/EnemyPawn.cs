@@ -2,6 +2,8 @@ using PurrNet;
 using System;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 public class EnemyPawn : NetworkBehaviour
 {
@@ -10,25 +12,30 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
     public NavMeshAgent agent { get; private set; }
+    public NavMeshPath path { get; private set; }
 
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
     [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
-    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player")] private float sightAngleSearch;
-    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when its doing anything other than searching for the player, this should match the sightAngle value")] private float sightAngleNormal;
-    //[SerializeField, Tooltip("How often it should check for what it sees")] private float checkFrequency;
-    private Collider[] playersInSight = new Collider[4]; //new Collider[SessionManager.Instance.CurrentSession.Players.Count]; 
+    [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
+    private float sightAngleNormal;
+    [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
+    private Collider[] playersInSight = new Collider[4]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
-    private Transform cachedPlayer;
+    private PlayerBody cachedPlayer;
+    
+    [Header("Lost Player Timer")]
+    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
+    private bool hasPlayer = false;
+    private float timer;
 
     // Aggression will be revised later.
     [Header("Aggression Settings")]
     [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the auto Detection")] private float autoDetectMultiplier;
     [SerializeField, Tooltip("Controls how much each aggression level increases the Sight Range")] private float sightRangeMultiplier;
-    //[SerializeField, Tooltip("Controls how much each aggression level decreases the check Frequency of sight")] private float checkFrequencyReduction;
     [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
@@ -37,27 +44,30 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
     #endregion
 
+    
     #region Events
-    public event Action<GameObject> OnPlayerSpotted;
-    public event Action OnLostPlayer;
+    public UnityEvent<PlayerBody> OnPlayerSpotted;
+    public UnityEvent OnLostPlayer;
+    public UnityEvent<PlayerBody> OnPlayerAttacked;
     #endregion
 
     #region Body Set up
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        path = new();
+        sightAngleNormal = sightAngle;
     }
-
-    private float sightTimer;
+    
     private void Update()
     {
         if (!isServer) return;
 
-        sightTimer += Time.deltaTime;
-        if (sightTimer >= 0)
+        Sight();
+
+        if (!hasPlayer)
         {
-            sightTimer = 0f;
-            Sight();
+            LostTimer();
         }
     }
     #endregion
@@ -203,6 +213,57 @@ public class EnemyPawn : NetworkBehaviour
     }
     #endregion
 
+    #region NavMesh Check
+    /// <summary>
+    /// Checks if player is in NavMesh
+    /// </summary>
+    /// <param name="player"></param>
+    /// <returns></returns>
+    private bool IsOnNavMesh(Transform player)
+    {
+        if (player == null)
+            return false;
+
+        if (!agent.isOnNavMesh)
+            return false;
+        
+        if (!NavMesh.SamplePosition(player.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+            return false;
+        
+        bool foundPath = NavMesh.CalculatePath(
+            transform.position,
+            hit.position,
+            NavMesh.AllAreas,
+            path
+        );
+
+        if (!foundPath)
+            return false;
+        
+        return path.status == NavMeshPathStatus.PathComplete;
+    }
+    #endregion
+    
+    #region Sight Lost Timer
+    /// <summary>
+    /// A timer that checkes when the ai actually should lose the player and stop following his live pos
+    /// </summary>
+    private void LostTimer()
+    {
+        if (!isServer) return;
+        
+        if (timer >= timeToLost)
+        {
+            InvokeOnLost();
+            timer = 0;
+        }
+        else
+        {
+            timer += 1 * Time.deltaTime;
+        }
+    }
+    #endregion
+    
     #region Sight
     /// <summary>
     /// Checks for players in sight and if it finds any.
@@ -213,13 +274,13 @@ public class EnemyPawn : NetworkBehaviour
 
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
 
-        Transform closestDetectedPlayer = null;
+        PlayerBody closestDetectedPlayer = null;
         float minSqrDist = Mathf.Infinity;
 
         for (int i = 0; i < count; i++)
         {
-            Transform player = playersInSight[i].transform;
-            if (IsPlayerDetected(player, out Vector3 direction, out float distance))
+            PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
+            if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance) && IsOnNavMesh(player.transform))
             {
                 float sqrDist = distance * distance;
                 if (sqrDist < minSqrDist)
@@ -230,23 +291,27 @@ public class EnemyPawn : NetworkBehaviour
             }
         }
 
+        for (int i = 0; i < count; i++) playersInSight[i] = null;
+        
         if (closestDetectedPlayer != null)
         {
-            if (cachedPlayer != closestDetectedPlayer || cachedPlayer != null)
+            if (cachedPlayer != closestDetectedPlayer)
             {
+                hasPlayer = true;
                 cachedPlayer = closestDetectedPlayer;
-                OnPlayerSpotted?.Invoke(cachedPlayer.gameObject);
+                InvokeSpotted(cachedPlayer);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
             }
         }
         else if (cachedPlayer != null)
         {
             cachedPlayer = null;
-            OnLostPlayer?.Invoke();
+            hasPlayer = false;
             Debug.Log("Target Lost.");
         }
     }
 
+    
     /// <summary>
     /// Checks if the enemy can actually see the player.
     /// </summary>
@@ -256,18 +321,24 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     private bool IsPlayerDetected(Transform player, out Vector3 direction, out float distance)
     {
-        Vector3 offset = player.position - transform.position;
-        distance = offset.magnitude;
+        Vector3 offset = (player.position + Vector3.up * eyePos) - (transform.position + Vector3.up * eyePos);
+        float sqrDistance = offset.sqrMagnitude;
+        distance = Mathf.Sqrt(sqrDistance);
         direction = offset / distance;
-
+        Vector3 flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        Vector3 flatDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
+        
         bool inAutoRange = distance <= autoDetectRange;
 
         float thresholdAngle = Mathf.Cos(sightAngle * 0.5f * Mathf.Deg2Rad);
-        bool inSightAngle = Vector3.Dot(transform.forward, direction) > thresholdAngle;
+        bool inSightAngle = Vector3.Dot(flatForward, flatDirection) > thresholdAngle;
 
         if (inAutoRange || inSightAngle)
         {
-            return !Physics.Raycast(transform.position, direction, distance, obstacleLayer);
+            float rayLength = Mathf.Max(distance - 0.1f, 0f);
+            if (rayLength <= 0) return true;
+            Debug.DrawRay(transform.position + Vector3.up * eyePos, direction * distance, Color.darkGreen);
+            return !Physics.Raycast(transform.position + Vector3.up * eyePos, direction, rayLength, obstacleLayer);
         }
 
         return false;
@@ -299,7 +370,7 @@ public class EnemyPawn : NetworkBehaviour
         if (!isServer) return;
 
         StopAllCoroutines();
-        agent.ResetPath();
+        if (agent.hasPath) agent.ResetPath();
     }
     #endregion
 
@@ -327,6 +398,35 @@ public class EnemyPawn : NetworkBehaviour
         Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
         Gizmos.matrix = Matrix4x4.TRS(hitboxCenter, transform.rotation, Vector3.one);
         Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
+    }
+    #endregion
+    
+    #region Event Helpers
+    /// <summary>
+    /// Invokes Spotted Helper
+    /// </summary>
+    [ObserversRpc]
+    private void InvokeSpotted(PlayerBody player)
+    {
+        OnPlayerSpotted?.Invoke(player);
+    }
+    
+    /// <summary>
+    /// Invokes OnLost Helper
+    /// </summary>
+    [ObserversRpc]
+    private void InvokeOnLost()
+    {
+        OnLostPlayer?.Invoke();
+    }
+
+    /// <summary>
+    /// Invokes Attack Helper
+    /// </summary>
+    [ObserversRpc]
+    public void InvokeAttacked(PlayerBody player)
+    { 
+        OnPlayerAttacked?.Invoke(player);
     }
     #endregion
 }
