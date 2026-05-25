@@ -363,18 +363,20 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (!PurrSteamUtils.TryGetSteamID(sender, out ulong steamID))
         {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Could not verify Steam identity.");
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Could not verify Steam identity."));
             return;
         }
 
         if (!SteamSessionBridge.Instance.IsLobbyMember(steamID))
         {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "You are not in this Steam lobby.");
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"You are not in this Steam lobby."));
             return;
         }
 
         string displayName = SteamFriends.GetFriendPersonaName(new CSteamID(steamID));
-        TryAcceptJoin(sender, steamID, SanitizeDisplayName(displayName));
+        SessionCommandResult result = TryAcceptJoin(sender, steamID, SanitizeDisplayName(displayName));
+        
+        if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
     [ServerRpc(requireOwnership: false)]
@@ -385,27 +387,28 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SessionModeManager.Instance == null ||
             SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
         {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Dev joins are only allowed in Dev Host mode.");
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Dev joins are only allowed in Dev Host mode."));
             return;
         }
 
         if (fakeSteamID == 0)
         {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Dev SteamID was invalid.");
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState,"Dev SteamID was invalid."));
             return;
         }
 
-        TryAcceptJoin(sender, fakeSteamID, SanitizeDisplayName(displayName));
+        SessionCommandResult result = TryAcceptJoin(sender, fakeSteamID, SanitizeDisplayName(displayName));
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
     }
     
-    private void TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
+    private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
-        if (!sessionStore.HasSession) return;
+        if (!sessionStore.HasSession) return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "There is no live Session.");
 
         if (CurrentSession.IsSessionFull)
         {
-            SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full.");
-            return;
+            return SessionCommandResult.Failed( SessionErrorCode.SessionFull, "Session is full.");
         }
 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
@@ -417,30 +420,27 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
             if (!devInGameJoin)
             {
-                SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
-                return;
+                return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
             }
         }
 
         if (registry.IsRegistered(sender))
         {
-            SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are already in session.");
-            return;
+            return SessionCommandResult.Failed( SessionErrorCode.AlreadyInSession, "You are already in session.");
         }
 
         if (registry.ContainsSteamID(steamID) || CurrentSession.GetPlayer(steamID).HasValue)
         {
-            SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
-            return;
+            return SessionCommandResult.Failed( SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
         }
 
         if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
         {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
-            return;
+            return SessionCommandResult.Failed( SessionErrorCode.InvalidState, "The elevator is already leaving.");
         }
 
         AddPlayerToSession(sender, steamID, displayName);
+        return SessionCommandResult.Succeeded();
     }
 
 
@@ -455,17 +455,25 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] PlayerID {sender} requested to leave the session.");
 
+        SessionCommandResult result = TryLeaveSession(sender);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+
+        Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
+    }
+    
+    private SessionCommandResult TryLeaveSession(PlayerID sender)
+    {
         if (!registry.IsRegistered(sender))
         {
             Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound,"You are not in this session.");
         }
 
         registry.TryGetSteamID(sender, out ulong steamID);
         RemovePlayerFromSession(sender, steamID, "Player left voluntarily.");
 
-        Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
+        return SessionCommandResult.Succeeded();
     }
 
     /// <summary>
@@ -481,77 +489,43 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Toggle ready request from PlayerID: {sender}");
 
+        SessionCommandResult result = TrySetPlayerReady(sender);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private SessionCommandResult TrySetPlayerReady(PlayerID sender)
+    {
         if (!registry.IsRegistered(sender))
-        {
-            Debug.Log($"[SessionManager] Rejected: PlayerID {sender} not found in session.");
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            // should reject the request
-            Debug.Log($"[SessionManager] Toggle ready request rejected: PlayerID {sender} is in the wrong game state.");
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
-            return;
-        }
-
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
 
         registry.TryGetSteamID(sender, out ulong steamID);
         int playerIndex = CurrentSession.Players.FindIndex(player => player.SteamID == steamID);
 
         if (playerIndex == -1)
-        {
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "Player data not found in session.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player data not found in session.");
 
         var playerInfo = CurrentSession.Players[playerIndex];
-        
-        // elevator check
+
         if (CurrentSession.ElevatorState != ElevatorLobbyState.Open)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is already leaving.");
 
         if (!playerInfo.IsInElevator)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Enter the elevator before readying up.");
-            return;
-        }
-        
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Enter the elevator before readying up.");
+
         if (playerInfo.IsReady)
-        {
-            Debug.Log($"[SessionManager] Ready request ignored: PlayerID {sender} is already ready.");
-            return;
-        }
-        
+            return SessionCommandResult.Succeeded();
+
         playerInfo.IsReady = true;
         CurrentSession.Players[playerIndex] = playerInfo;
 
         SendSessionUpdate();
-        Debug.Log($"[SessionManager] Ready set for PlayerIDD: {sender}");
-    }
-    
-    public bool TryStartMatchFromServer()
-    {
-        if (!isServer || !sessionStore.HasSession) return false;
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (CurrentSession.ElevatorState != ElevatorLobbyState.DoorsClosed) return false;
-        if (!CurrentSession.AllPlayersReadyInElevator) return false;
+        Debug.Log($"[SessionManager] Ready set for PlayerID: {sender}");
 
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
-
-        if (SessionModeManager.Instance == null)
-        {
-            Debug.LogError("[SessionManager] SessionModeManager missing. Cannot load gameplay scene.");
-            return false;
-        }
-
-        SessionModeManager.Instance.LoadGameplayScene();
-        Debug.Log("[SessionManager] Elevator locked. Game starting...");
-        return true;
+        return SessionCommandResult.Succeeded();
     }
 
     /// <summary>
@@ -565,31 +539,32 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
+        SessionCommandResult result = TryReturnToLobby(sender);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private SessionCommandResult TryReturnToLobby(PlayerID sender)
+    {
         if (!registry.IsHost(sender))
-        {
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can return to lobby.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can return to lobby.");
 
         if (GameStateManager.Instance.CurrentState != GameState.InGame &&
             GameStateManager.Instance.CurrentState != GameState.PostGame)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
-            return;
-        }
-        
-        if (!sessionStore.HasSession)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
 
-        // Reset ready/elevator session data here before loading lobby.
+        if (!sessionStore.HasSession)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+
         CurrentSession.ResetReadyStates();
         CurrentSession.ElevatorState = ElevatorLobbyState.Open;
         SendSessionUpdate();
 
+        if (SessionModeManager.Instance == null)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState,"SessionModeManager missing. Cannot return to lobby.");
         SessionModeManager.Instance.LoadLobbyScene();
+
+        return SessionCommandResult.Succeeded();
     }
 
 
@@ -606,36 +581,59 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Start match request from PlayerID: {sender}");
 
-        // ONLY the host can start the game session
+        SessionCommandResult result = TryStartMatchCommand(sender);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private SessionCommandResult TryStartMatchCommand(PlayerID sender)
+    {
         if (!registry.IsHost(sender))
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is not the host.");
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can start the game.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can start the game.");
 
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is in the wrong game state.");
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
-            return;
-        }
-        
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
+
         if (!sessionStore.HasSession)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
 
         if (!CurrentSession.AllPlayersReady)
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: Not all players are ready.");
-            SendErrorToClient(sender, SessionErrorCode.PlayersNotReady, "Not all players are ready.");
-            return;
-        }
+            return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
 
-        TryStartMatchFromServer();
-        
+        return TryStartMatchInternal();
+    }
+    
+    public bool TryStartMatchFromServer()
+    {
+        SessionCommandResult result = TryStartMatchInternal();
+
+        if (!result.Success) Debug.LogWarning($"[SessionManager] Start match failed: {result.ErrorCode} - {result.Message}");
+
+        return result.Success;
+    }
+    
+    private SessionCommandResult TryStartMatchInternal()
+    {
+        if (!isServer || !sessionStore.HasSession)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+
+        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
+
+        if (CurrentSession.ElevatorState != ElevatorLobbyState.DoorsClosed)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is not ready.");
+
+        if (!CurrentSession.AllPlayersReadyInElevator)
+            return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
+
+        if (SessionModeManager.Instance == null)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot load gameplay scene.");
+
+        GameStateManager.Instance.RequestStateChange(GameState.Loading);
+        SessionModeManager.Instance.LoadGameplayScene();
+
+        Debug.Log("[SessionManager] Elevator locked. Game starting...");
+        return SessionCommandResult.Succeeded();
     }
 
     /// <summary>
@@ -651,69 +649,64 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Update settings request from PlayerID: {sender}");
 
-        if (!registry.IsHost(sender))
-        {
-            Debug.LogWarning($"[SessionManager] Update settings rejected: PlayerID {sender} is not the host.");
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can update the game settings.");
-            return;
-        }
-        
-        if (!sessionStore.HasSession)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "No active session.");
-            return;
-        }
+        SessionCommandResult result = TryUpdateSettings(sender, key, value);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private SessionCommandResult TryUpdateSettings(PlayerID sender, string key, string value)
+    {
+        if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can update the game settings.");
+
+        if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
 
         bool shouldResetReadyStates = false;
-        
+
         switch (key)
         {
             case "MapName":
                 CurrentSession.MapName = value;
                 shouldResetReadyStates = true;
                 break;
+
             case "GameMode":
                 CurrentSession.GameMode = value;
                 shouldResetReadyStates = true;
                 break;
+
             case "MaxPlayers":
                 if (!int.TryParse(value, out int maxPlayers))
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players value was invalid.");
-                    return;
-                }
+                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players value was invalid.");
+
                 if (maxPlayers < 2 || maxPlayers > 4)
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players must be between 2 and 4.");
-                    return;
-                }
+                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players must be between 2 and 4.");
 
                 if (maxPlayers < CurrentSession.Players.Count)
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
-                    return;
-                }
+                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
+
                 CurrentSession.MaxPlayers = maxPlayers;
                 shouldResetReadyStates = true;
                 break;
+
             case "LobbyVisibility":
                 if (value != "Friends Only" && value != "Public")
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
-                    return;
-                }
+                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
 
                 CurrentSession.SetCustomProperty(key, value);
                 break;
+
             default:
                 CurrentSession.SetCustomProperty(key, value);
                 break;
         }
 
-        if(shouldResetReadyStates) CurrentSession.ResetReadyStates();
+        if (shouldResetReadyStates)
+            CurrentSession.ResetReadyStates();
 
         SendSessionUpdate();
         Debug.Log("[SessionManager] Settings updated.");
+
+        return SessionCommandResult.Succeeded();
     }
     
     /// <summary>
@@ -726,14 +719,19 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (!registry.IsRegistered(sender))
-        {
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
-        }
+        SessionCommandResult result = TrySendSessionSnapshot(sender);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private SessionCommandResult TrySendSessionSnapshot(PlayerID sender)
+    {
+        if (!registry.IsRegistered(sender)) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
 
         SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
         Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
+
+        return SessionCommandResult.Succeeded();
     }
     
 
@@ -819,6 +817,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         var error = new SessionErrorResponse(code, message);
         SessionEvents.InvokeSessionError(error);
         Debug.LogWarning($"[SessionManager] [Client] Error received: {code} - {message}");
+    }
+    
+    private bool SendCommandErrorIfFailed(PlayerID target, SessionCommandResult result)
+    {
+        if (result.Success) return false;
+
+        SendErrorToClient(target, result.ErrorCode, result.Message);
+        return true;
     }
     
     [TargetRpc]
