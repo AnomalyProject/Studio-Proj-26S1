@@ -24,6 +24,7 @@ public class SceneLoaderRF : SceneLoader
     {
         base.OnSpawned();
         networkManager.sceneModule.onPostSceneLoaded += OnSceneLoaded;
+        OnLoadStarted += OnStartLoadRpc;
     }
 
     protected override void OnDestroy()
@@ -66,8 +67,6 @@ public class SceneLoaderRF : SceneLoader
     public async void LoadSceneServer(string name)
     {
         if (!isServer) return;
-        SceneLoadingRPC(name);
-
         PurrSceneSettings settings = new()
         {
             isPublic = true,
@@ -76,5 +75,5 @@ public class SceneLoaderRF : SceneLoader
         PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(name, settings));
     }
     private void OnSceneLoaded(SceneID scene, bool asServer) => HideUI();
-    [ObserversRpc] private void SceneLoadingRPC(string sceneName) => ShowUI();
+    [ObserversRpc(excludeSender: true, requireServer: true)] private void OnStartLoadRpc() => ShowUI();
 }
