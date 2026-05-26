@@ -6,7 +6,7 @@ public class PlayerLeanAnimation : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform affectedBone;// Bone to rotate
-    private CameraLean cameraLean;
+    [SerializeField] private CameraLean cameraLean;
 
     [Header("Settings")]
     [SerializeField] private float maxAngle = 15f;
@@ -14,7 +14,7 @@ public class PlayerLeanAnimation : NetworkBehaviour
 
     private float currentLean;
     private Quaternion initialRotation;
-    private SyncVar<float> effectedLean = new SyncVar<float>(ownerAuth:true);
+    private SyncVar<int> effectedLean = new SyncVar<int>(0 , ownerAuth: true) ;
     // Save default rotation
     private void Awake()
     {
@@ -26,23 +26,18 @@ public class PlayerLeanAnimation : NetworkBehaviour
     private void LateUpdate()
     { // LateUpdate so not be confused with animator
 
-        if (isOwner)
-        {
-            if (cameraLean == null)
-            {
-                
-                
-                    cameraLean = GetComponentInChildren<CameraLean>();
-                
-            }
 
+
+        if(isOwner)
+            {
             if (cameraLean != null)
             {
-                effectedLean.value = Mathf.Clamp(cameraLean.LeanAmount, -1f, 1f);
+                effectedLean.value = (int)Mathf.Clamp(cameraLean.LeanAmount, -1f, 1f);
+                Debug.Log($"lean" + effectedLean);
             }
-
         }
-        forceLean(effectedLean.value);
+            forceLean(effectedLean.value);
+        
     }
 
    private void forceLean (float targetLean)

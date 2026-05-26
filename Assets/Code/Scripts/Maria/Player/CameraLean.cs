@@ -35,7 +35,7 @@ public class CameraLean : MonoBehaviour
     private Vector3 neutralLocalPosition;
     
     public bool IsLocalPlayer { get; set; }
-    public float LeanAmount => Mathf.Clamp(leanInput, -1f, 1f);
+    public int LeanAmount => -(int)Mathf.Clamp(leanInput, -1f, 1f);
 
     #endregion
 
