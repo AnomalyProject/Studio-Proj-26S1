@@ -1,7 +1,8 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using PurrNet;
 using PurrNet.Modules;
+using Unity.VectorGraphics;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SceneLoaderRF : SceneLoader
 {
@@ -54,19 +55,22 @@ public class SceneLoaderRF : SceneLoader
     public void LoadSceneServer(string name)
     {
         if (!isServer) return;
-
         SceneLoadingRPC(name);
-    }
 
-
-    [ObserversRpc] private void SceneLoadingRPC(string sceneName)
-    {
         PurrSceneSettings settings = new()
         {
             isPublic = false,
             mode = LoadSceneMode.Single,
         };
+        PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(name, settings));
+    }
 
-        PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(sceneName, settings));
+
+    [ObserversRpc] private void SceneLoadingRPC(string sceneName) => ShowUI();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void HandleSceneLoad()
+    {
+        if(Instance != null) Instance.HideUI();
     }
 }
