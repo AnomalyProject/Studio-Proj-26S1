@@ -5,7 +5,6 @@ using UnityEngine;
 public class AttackState : BaseState
 {
     private Transform target;
-    public event Action<GameObject> OnPlayerAttacked;
 
     public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
@@ -17,8 +16,7 @@ public class AttackState : BaseState
         base.Enter();
 
         Debug.Log("Attacking");
-        //OnPlayerAttacked?.Invoke(player.gameObject); //this if we want the attack event to happen even if not hit.
-
+        
         target = brain.TargetPos;
 
         bool isHit = body.IsHitSuccess(target) ? DoAttack(target) : ChangeToChaseState();
@@ -30,7 +28,7 @@ public class AttackState : BaseState
     }
 
     /// <summary>
-    /// Picks random rspawn and does attack andsends you to it.
+    /// Picks random respawn and does attack and sends you to it.
     /// </summary>
     private bool DoAttack(Transform player)
     {
@@ -42,8 +40,8 @@ public class AttackState : BaseState
         body.TeleportToSpawn(targetPoint.position, playerID);
 
         Debug.Log("Player Attacked");
-
-        OnPlayerAttacked?.Invoke(player.gameObject);   //this if we want event to happen only if hit is successful.
+        
+        body.InvokeAttacked(player.GetComponent<PlayerBody>());
 
         brain.ChangeState(EnemyBrain.StateID.Idle);
 

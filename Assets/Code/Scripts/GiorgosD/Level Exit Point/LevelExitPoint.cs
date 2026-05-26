@@ -11,19 +11,20 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     [Header("Settings")] Collider col;
 
     // Checks
-    [SerializeField] private SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
-    private SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
+    [SerializeField] protected SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
+    protected SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
     private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
-    public UnityEvent<bool> OnActivateExit, OnPlayersChanged;
+    public UnityEvent<bool> OnActivateExit, OnPlayersChanged, OnAvailabilityChanged;
 
     /// <summary>
     /// Fires when an exit point is interacted with and the corresponding decision (Has Anomaly or not).
     /// </summary>
     public Action<LevelExitPoint, bool> OnExitActivated;
+    public bool IsReadyToInteract => HasEnoughPlayers() && bIsAvailable.value;
 
-    void Awake()
+    protected virtual void Awake()
     {
         if(!GetComponentInChildren<ExitInteractable>())
         {
@@ -33,10 +34,11 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
         col = GetComponent<Collider>();
         col.isTrigger = true;
         playersInArea.onChanged += HandlePlayersChanged;
+        bIsAvailable.onChanged += OnAvailabilityChanged.Invoke;
     }
 
-    private void HandlePlayersChanged(SyncHashSetChange<NetworkID> change) => OnPlayersChanged.Invoke(HasEnoughPlayers() && bIsAvailable.value);
-    public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(HasEnoughPlayers() && bIsAvailable.value);
+    private void HandlePlayersChanged(SyncHashSetChange<NetworkID> change) => OnPlayersChanged.Invoke(IsReadyToInteract);
+    public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(IsReadyToInteract);
     public Task<bool> TryInteract(PlayerBody interactor)
     {
         Debug.Log("Interacted with exit");

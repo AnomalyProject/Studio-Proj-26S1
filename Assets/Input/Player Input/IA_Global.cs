@@ -948,6 +948,24 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Ping Location"",
+                    ""type"": ""Button"",
+                    ""id"": ""8958db33-97e7-4bed-823b-99b53212b5eb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Shove"",
+                    ""type"": ""Button"",
+                    ""id"": ""9d9806c2-1dbf-43ff-93b5-6caa18760adb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1269,6 +1287,50 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Drop Item"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8f496f0b-7d76-49f5-b27e-2ac84f9bb2d2"",
+                    ""path"": ""<Mouse>/middleButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Ping Location"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8eff10c0-6762-450f-8034-1198b529e631"",
+                    ""path"": ""<Gamepad>/leftStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Ping Location"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7c613889-4468-49fc-a0af-09b766703a9d"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""87f6f74d-d3e4-4b7d-a6f1-5bb4c9b16bc5"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -1306,6 +1368,151 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""NoClip"",
+            ""id"": ""de40d797-00c4-4705-8c05-0660bfcfa5af"",
+            ""actions"": [
+                {
+                    ""name"": ""Move"",
+                    ""type"": ""Value"",
+                    ""id"": ""aaf312dc-1b78-433a-9ff5-91d1b7ae7389"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Sprint"",
+                    ""type"": ""Button"",
+                    ""id"": ""2efa3786-8a04-4234-8f59-fed7a04f834f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Look"",
+                    ""type"": ""Value"",
+                    ""id"": ""db3e4371-9f82-4924-9b0a-a25f1d028610"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""6d1e49f2-5057-4c43-ade5-8e00d97b48e2"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""2b1f000a-895b-4c10-b2fe-ae147f9c2547"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""f15ca049-04ca-412d-9044-ba3b08db6b78"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""de1f972b-068a-4b0d-8466-a8ccd8082ca2"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""83d4ea47-da8f-4775-9100-ad36e6558936"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b0a6b1fc-4964-4fb9-a946-aa21f6494617"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""30dc9fee-2262-4906-8855-e690e7aeba30"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": ""Hold"",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""402a7ad3-6157-4bbc-b27f-b365a71938e7"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": ""Hold"",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""067abc04-b78c-4528-b436-89173200fbd3"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Look"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c5e476d0-3944-4c7b-9202-d8f3876fb86f"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": ""ScaleVector2(x=25,y=25)"",
+                    ""groups"": "";Gameplay"",
+                    ""action"": ""Look"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1351,9 +1558,16 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_ScrollInventory = m_Player.FindAction("Scroll Inventory", throwIfNotFound: true);
         m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
+        m_Player_PingLocation = m_Player.FindAction("Ping Location", throwIfNotFound: true);
+        m_Player_Shove = m_Player.FindAction("Shove", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
+        // NoClip
+        m_NoClip = asset.FindActionMap("NoClip", throwIfNotFound: true);
+        m_NoClip_Move = m_NoClip.FindAction("Move", throwIfNotFound: true);
+        m_NoClip_Sprint = m_NoClip.FindAction("Sprint", throwIfNotFound: true);
+        m_NoClip_Look = m_NoClip.FindAction("Look", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1363,6 +1577,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_DevConsole.enabled, "This will cause a leak and performance issues, IA_Global.DevConsole.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Chat.enabled, "This will cause a leak and performance issues, IA_Global.Chat.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_NoClip.enabled, "This will cause a leak and performance issues, IA_Global.NoClip.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1882,6 +2097,8 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Zoom;
     private readonly InputAction m_Player_ScrollInventory;
     private readonly InputAction m_Player_DropItem;
+    private readonly InputAction m_Player_PingLocation;
+    private readonly InputAction m_Player_Shove;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1945,6 +2162,14 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/DropItem".
         /// </summary>
         public InputAction @DropItem => m_Wrapper.m_Player_DropItem;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/PingLocation".
+        /// </summary>
+        public InputAction @PingLocation => m_Wrapper.m_Player_PingLocation;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Shove".
+        /// </summary>
+        public InputAction @Shove => m_Wrapper.m_Player_Shove;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -2010,6 +2235,12 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @DropItem.started += instance.OnDropItem;
             @DropItem.performed += instance.OnDropItem;
             @DropItem.canceled += instance.OnDropItem;
+            @PingLocation.started += instance.OnPingLocation;
+            @PingLocation.performed += instance.OnPingLocation;
+            @PingLocation.canceled += instance.OnPingLocation;
+            @Shove.started += instance.OnShove;
+            @Shove.performed += instance.OnShove;
+            @Shove.canceled += instance.OnShove;
         }
 
         /// <summary>
@@ -2060,6 +2291,12 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @DropItem.started -= instance.OnDropItem;
             @DropItem.performed -= instance.OnDropItem;
             @DropItem.canceled -= instance.OnDropItem;
+            @PingLocation.started -= instance.OnPingLocation;
+            @PingLocation.performed -= instance.OnPingLocation;
+            @PingLocation.canceled -= instance.OnPingLocation;
+            @Shove.started -= instance.OnShove;
+            @Shove.performed -= instance.OnShove;
+            @Shove.canceled -= instance.OnShove;
         }
 
         /// <summary>
@@ -2189,6 +2426,124 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="ChatActions" /> instance referencing this action map.
     /// </summary>
     public ChatActions @Chat => new ChatActions(this);
+
+    // NoClip
+    private readonly InputActionMap m_NoClip;
+    private List<INoClipActions> m_NoClipActionsCallbackInterfaces = new List<INoClipActions>();
+    private readonly InputAction m_NoClip_Move;
+    private readonly InputAction m_NoClip_Sprint;
+    private readonly InputAction m_NoClip_Look;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "NoClip".
+    /// </summary>
+    public struct NoClipActions
+    {
+        private @IA_Global m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public NoClipActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "NoClip/Move".
+        /// </summary>
+        public InputAction @Move => m_Wrapper.m_NoClip_Move;
+        /// <summary>
+        /// Provides access to the underlying input action "NoClip/Sprint".
+        /// </summary>
+        public InputAction @Sprint => m_Wrapper.m_NoClip_Sprint;
+        /// <summary>
+        /// Provides access to the underlying input action "NoClip/Look".
+        /// </summary>
+        public InputAction @Look => m_Wrapper.m_NoClip_Look;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_NoClip; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="NoClipActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(NoClipActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="NoClipActions" />
+        public void AddCallbacks(INoClipActions instance)
+        {
+            if (instance == null || m_Wrapper.m_NoClipActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_NoClipActionsCallbackInterfaces.Add(instance);
+            @Move.started += instance.OnMove;
+            @Move.performed += instance.OnMove;
+            @Move.canceled += instance.OnMove;
+            @Sprint.started += instance.OnSprint;
+            @Sprint.performed += instance.OnSprint;
+            @Sprint.canceled += instance.OnSprint;
+            @Look.started += instance.OnLook;
+            @Look.performed += instance.OnLook;
+            @Look.canceled += instance.OnLook;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="NoClipActions" />
+        private void UnregisterCallbacks(INoClipActions instance)
+        {
+            @Move.started -= instance.OnMove;
+            @Move.performed -= instance.OnMove;
+            @Move.canceled -= instance.OnMove;
+            @Sprint.started -= instance.OnSprint;
+            @Sprint.performed -= instance.OnSprint;
+            @Sprint.canceled -= instance.OnSprint;
+            @Look.started -= instance.OnLook;
+            @Look.performed -= instance.OnLook;
+            @Look.canceled -= instance.OnLook;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="NoClipActions.UnregisterCallbacks(INoClipActions)" />.
+        /// </summary>
+        /// <seealso cref="NoClipActions.UnregisterCallbacks(INoClipActions)" />
+        public void RemoveCallbacks(INoClipActions instance)
+        {
+            if (m_Wrapper.m_NoClipActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="NoClipActions.AddCallbacks(INoClipActions)" />
+        /// <seealso cref="NoClipActions.RemoveCallbacks(INoClipActions)" />
+        /// <seealso cref="NoClipActions.UnregisterCallbacks(INoClipActions)" />
+        public void SetCallbacks(INoClipActions instance)
+        {
+            foreach (var item in m_Wrapper.m_NoClipActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_NoClipActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="NoClipActions" /> instance referencing this action map.
+    /// </summary>
+    public NoClipActions @NoClip => new NoClipActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2423,6 +2778,20 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDropItem(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Ping Location" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPingLocation(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Shove" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnShove(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
@@ -2438,5 +2807,34 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSubmit(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "NoClip" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="NoClipActions.AddCallbacks(INoClipActions)" />
+    /// <seealso cref="NoClipActions.RemoveCallbacks(INoClipActions)" />
+    public interface INoClipActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Sprint" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSprint(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLook(InputAction.CallbackContext context);
     }
 }

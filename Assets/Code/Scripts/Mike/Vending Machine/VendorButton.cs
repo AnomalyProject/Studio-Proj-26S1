@@ -1,14 +1,16 @@
-using PurrNet;
-using System;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 {
-    [SerializeField, Min(0)] private int _slotIndex;
+    [SerializeField] private Canvas buttonCanvas;
+    [SerializeField] private Image itemIcon;
+    [SerializeField] private Sprite lockedSlotSprite;
+    [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText;
     private CompositeVendor vendorHost;
-    public int SlotIndex => _slotIndex;
+    public int SlotIndex;
 
     void Awake()
     {
@@ -38,8 +40,26 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
     {
         Debug.Log("Update Content called");
         if (vendorHost == null || slot != SlotIndex) return;
-        ItemData data = vendorHost.GetDataFromSlot(slot);
-        Debug.Log($"Slot {slot} contains: {data?.ItemName ?? "Empty"}");
+
+        IReadOnlyItemStack stack = vendorHost.GetStackFromSlot(slot);
+
+        if(stack != null)
+        {
+            ItemData data = stack.GetItemData();
+            itemIcon.sprite = data.ItemIcon;
+            itemNameText.text = data.ItemName;
+            itemPriceText.text = $"Cost x{vendorHost.GetStackPrice(slot).ToString()}";
+            itemAmountText.text = $"x{stack.GetQuantity()}";
+        }
+        else
+        {
+            itemIcon.sprite = lockedSlotSprite;
+            itemNameText.text = "Locked";
+            itemPriceText.text = "";
+            itemAmountText.text = "";
+        }
+
+        itemPriceText.gameObject.SetActive(stack != null);
     }
 
     public async Task<bool> TryInteract(PlayerBody interactor)
