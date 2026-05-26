@@ -183,19 +183,19 @@ public class SceneLoader : NetworkBehaviour
     }
 
     #region Helpers
-    public void ShowUI()
+    [ObserversRpc] public void ShowUI()
     {
         if (loadingScreen != null)
             loadingScreen.SetActive(true);
     }
 
-    public void HideUI()
+    [ObserversRpc] public void HideUI()
     {
         if (loadingScreen != null)
             loadingScreen.SetActive(false);
     }
 
-    public void SetProgress(float value)
+    [ObserversRpc] public void SetProgress(float value)
     {
         if (progressBar != null)
             progressBar.value = value;
