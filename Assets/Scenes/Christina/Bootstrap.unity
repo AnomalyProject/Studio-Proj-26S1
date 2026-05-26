@@ -721,7 +721,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: fakeLoadTime
@@ -797,77 +797,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6433058435838388297, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8864446842684823174, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: m_SortingOrder
       value: 100
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1115065490054501729, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1091350252}
     - targetCorrespondingSourceObject: {fileID: 1937607851709536876, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1091350253}
   m_SourcePrefab: {fileID: 100100000, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
---- !u!1 &1091350249 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1115065490054501729, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
-  m_PrefabInstance: {fileID: 1091350248}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1091350250 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3691054118621929863, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
-  m_PrefabInstance: {fileID: 1091350248}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
 --- !u!1 &1091350251 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1937607851709536876, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
   m_PrefabInstance: {fileID: 1091350248}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1091350252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1091350249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba46601fd01b73949bbeaf167ef73fe0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneLoaderRF
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  loadingScreen: {fileID: 1113962963}
-  progressBar: {fileID: 1091350250}
-  useRealLoading: 1
-  fakeLoadSpeed: 1
-  fakeLoadTime: 3.5
-  showRealProgressOnAction: 1
-  debugLoadOnStart: 0
-  debugSceneToLoadOnStart: 
-  debugUseAsync: 0
-  sessionData:
-    ElevatorState: 0
 --- !u!225 &1091350253
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -880,11 +828,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
---- !u!1 &1113962963 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5824465469042521464, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
-  m_PrefabInstance: {fileID: 1091350248}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1344741923
 GameObject:
   m_ObjectHideFlags: 0

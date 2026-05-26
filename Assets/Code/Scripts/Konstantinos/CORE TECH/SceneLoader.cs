@@ -183,23 +183,34 @@ public class SceneLoader : NetworkBehaviour
     }
 
     #region Helpers
-    [ObserversRpc] public void ShowUI()
+    public void ShowUI()
     {
-        if (loadingScreen != null)
-            loadingScreen.SetActive(true);
+        if (loadingScreen != null) loadingScreen.SetActive(true);
+        if(isSpawned) ShowUI_Observers(true);
     }
 
-    [ObserversRpc] public void HideUI()
+    public void HideUI()
     {
-        if (loadingScreen != null)
-            loadingScreen.SetActive(false);
+        if (loadingScreen != null)  loadingScreen.SetActive(false);
+        if (isSpawned) ShowUI_Observers(false);
     }
 
-    [ObserversRpc] public void SetProgress(float value)
+    public void SetProgress(float value)
     {
-        if (progressBar != null)
-            progressBar.value = value;
+        if (progressBar != null) progressBar.value = value;
+        if(isSpawned) SetProgress_Observers(value);
     }
+
+    [ObserversRpc(excludeSender: true)] private void ShowUI_Observers(bool show)
+    {
+        if (loadingScreen != null)
+            loadingScreen.SetActive(show);
+    }
+    [ObserversRpc(excludeSender: true)] public void SetProgress_Observers(float value)
+    {
+        if (progressBar != null) progressBar.value = value;
+    }
+
     #endregion
 
 
