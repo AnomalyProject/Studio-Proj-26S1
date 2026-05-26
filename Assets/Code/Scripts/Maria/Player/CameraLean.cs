@@ -35,7 +35,8 @@ public class CameraLean : MonoBehaviour
     private Vector3 neutralLocalPosition;
     
     public bool IsLocalPlayer { get; set; }
-    
+    public int LeanAmount => -(int)Mathf.Clamp(leanInput, -1f, 1f);
+
     #endregion
 
     #region Unity Lifecycle
