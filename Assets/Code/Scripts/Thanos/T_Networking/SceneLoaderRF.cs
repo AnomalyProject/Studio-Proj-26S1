@@ -59,7 +59,7 @@ public class SceneLoaderRF : SceneLoader
 
         PurrSceneSettings settings = new()
         {
-            isPublic = false,
+            isPublic = true,
             mode = LoadSceneMode.Single,
         };
         PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(name, settings));
