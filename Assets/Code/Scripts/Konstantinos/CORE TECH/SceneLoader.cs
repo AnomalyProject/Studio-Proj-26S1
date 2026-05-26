@@ -203,8 +203,7 @@ public class SceneLoader : NetworkBehaviour
 
     [ObserversRpc(excludeSender: true)] private void ShowUI_Observers(bool show)
     {
-        if (loadingScreen != null)
-            loadingScreen.SetActive(show);
+        if (loadingScreen != null) loadingScreen.SetActive(show);
     }
     [ObserversRpc(excludeSender: true)] public void SetProgress_Observers(float value)
     {
