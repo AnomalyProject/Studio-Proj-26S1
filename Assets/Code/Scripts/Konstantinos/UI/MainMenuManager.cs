@@ -19,7 +19,8 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] Animator mainCameraAnim;
     [SerializeField] Animator ElevatorDoorAnim;
     [SerializeField] float mainCameraAnimDuration = 8.0f;
-    
+    [SerializeField] AudioClip mainMenuMusic;
+
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject firstSelectedButtonStart;
 
@@ -77,6 +78,8 @@ public class MainMenuManager : MonoBehaviour
         {
             SetMenuActivity(true);
         }
+
+        AudioManager.Instance.CrossFadeMusic(mainMenuMusic);
 
         yield return null;
         SetPanel(0);

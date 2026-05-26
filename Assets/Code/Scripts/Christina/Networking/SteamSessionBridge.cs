@@ -293,6 +293,19 @@ public class SteamSessionBridge : MonoBehaviour
             Debug.Log("[SteamBridge] Left Steam lobby and cleared Rich Presence");
         }
     }
+    
+    public bool IsLobbyMember(ulong steamID)
+    {
+        if (!isSteamAvailable || !isInLobby || !currentLobbyID.IsValid()) return false;
+        
+        int count = SteamMatchmaking.GetNumLobbyMembers(currentLobbyID);
+        for (int i = 0; i < count; i++)
+        {
+            if (SteamMatchmaking.GetLobbyMemberByIndex(currentLobbyID, i).m_SteamID == steamID) return true;
+        }
+        return false;
+    }
+    
 
     private void OnDestroy()
     {
@@ -793,7 +806,7 @@ public class SteamSessionBridge : MonoBehaviour
         }
         
         joinApprovalResult = JoinApprovalResult.Pending;
-        SessionManager.Instance.RequestJoinSession(steamID, displayName);
+        SessionManager.Instance.RequestJoinSession();
         Debug.Log("[SteamBridge] PurrNet connected, session join requested");
 
         // waiting for the host to approve or reject, with a timeout
