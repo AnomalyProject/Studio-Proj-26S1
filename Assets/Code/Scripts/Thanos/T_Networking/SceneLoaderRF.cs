@@ -1,6 +1,5 @@
 using PurrNet;
 using PurrNet.Modules;
-using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -52,7 +51,7 @@ public class SceneLoaderRF : SceneLoader
     /// <summary>
     /// Handles the timing so the RPC reaches clients before the scene change destroys/pauses everything.
     /// </summary>
-    public void LoadSceneServer(string name)
+    public async void LoadSceneServer(string name)
     {
         if (!isServer) return;
         SceneLoadingRPC(name);
@@ -63,14 +62,10 @@ public class SceneLoaderRF : SceneLoader
             mode = LoadSceneMode.Single,
         };
         PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(name, settings));
+        networkManager.sceneModule.onPostSceneLoaded += OnSceneLoaded;
     }
 
+    private void OnSceneLoaded(SceneID scene, bool asServer) => HideUI();
 
     [ObserversRpc] private void SceneLoadingRPC(string sceneName) => ShowUI();
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void HandleSceneLoad()
-    {
-        if(Instance != null) Instance.HideUI();
-    }
 }
