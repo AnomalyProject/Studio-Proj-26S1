@@ -747,6 +747,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1937607851709536876, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3179599246358729264, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -799,7 +803,8 @@ PrefabInstance:
       propertyPath: m_SortingOrder
       value: 100
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 966628398594698873, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -840,9 +845,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1091350249}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f86703471d4afb47a78d7a69e1ab25d, type: 3}
+  m_Script: {fileID: 11500000, guid: ba46601fd01b73949bbeaf167ef73fe0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneTransitionHandler
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoaderRF
   _isSetup: 0
   _prefabId: -2147483648
   _componentIndex: -2147483648
@@ -852,9 +857,17 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
-  loadingOverlay: {fileID: 1091350253}
+  loadingScreen: {fileID: 1113962963}
   progressBar: {fileID: 1091350250}
-  fadeDuration: 0.5
+  useRealLoading: 1
+  fakeLoadSpeed: 1
+  fakeLoadTime: 3.5
+  showRealProgressOnAction: 1
+  debugLoadOnStart: 0
+  debugSceneToLoadOnStart: 
+  debugUseAsync: 0
+  sessionData:
+    ElevatorState: 0
 --- !u!225 &1091350253
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -867,6 +880,11 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!1 &1113962963 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5824465469042521464, guid: b15037b00bc621c4e93f9d520f750ac2, type: 3}
+  m_PrefabInstance: {fileID: 1091350248}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1344741923
 GameObject:
   m_ObjectHideFlags: 0
