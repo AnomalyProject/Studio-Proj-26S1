@@ -20,6 +20,18 @@ public class SceneLoaderRF : SceneLoader
         Debug.Log("Registered command");
     }
 
+    protected override void OnSpawned()
+    {
+        base.OnSpawned();
+        networkManager.sceneModule.onPostSceneLoaded += OnSceneLoaded;
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        networkManager.sceneModule.onPostSceneLoaded -= OnSceneLoaded;
+    }
+
     private void LoadSceneCheat(string[] sceneArg)
     {
         LoadSceneServer(sceneArg[0]);
@@ -62,10 +74,7 @@ public class SceneLoaderRF : SceneLoader
             mode = LoadSceneMode.Single,
         };
         PerformAsyncOperation(networkManager.sceneModule.LoadSceneAsync(name, settings));
-        networkManager.sceneModule.onPostSceneLoaded += OnSceneLoaded;
     }
-
     private void OnSceneLoaded(SceneID scene, bool asServer) => HideUI();
-
     [ObserversRpc] private void SceneLoadingRPC(string sceneName) => ShowUI();
 }
