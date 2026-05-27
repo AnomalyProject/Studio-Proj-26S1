@@ -25,6 +25,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         vendorHost.OnSlotChanged += UpdateContent;
         vendorHost.OnRestock.AddListener(UpdateContent);
         vendorHost.OnSpawnedEvent += UpdateContent;
+        vendorHost.QueueOnSpawned(UpdateContent);
     }
 
     public Task<bool> CanInteract(PlayerBody interactor)
