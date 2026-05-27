@@ -7,16 +7,15 @@ using UnityEngine;
 /// 
 /// Displays an interact prompt when the player focuses an interactable object.
 /// </summary>
-public class InteractPrompt : MonoBehaviour
+public class InteractUI : MonoBehaviour
 {
     private const float FADE_SPEED = 5f;
-    private Transform crosshair;
     private Image prompt;
     private IInteractable<PlayerBody> currentInteractable;
+    [SerializeField] private GameObject crosshair;
 
     private void Awake()
     {
-        crosshair = transform.GetChild(0);
         prompt = transform.GetComponentInChildren<InputIcon>(true).GetComponent<Image>();
 
         if (PlayerBody.localPlayerBody != null) HandleLocalPlayerSpawned(PlayerBody.localPlayerBody);
@@ -31,11 +30,13 @@ public class InteractPrompt : MonoBehaviour
     }
     private void HandleLocalPlayerSpawned(PlayerBody player)
     {
+        crosshair.SetActive(true);
         player.Interaction.interactionSystem.OnFocusedInteractable += OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus += OnInteractableLostFocus;
     }
     private void HandleLocalPlayerDespawned(PlayerBody player)
     {
+        crosshair.SetActive(false);
         player.Interaction.interactionSystem.OnFocusedInteractable -= OnFocusedInteractable;
         player.Interaction.interactionSystem.OnInteractableLostFocus -= OnInteractableLostFocus;
         if (currentInteractable != null) OnInteractableLostFocus(currentInteractable);
@@ -59,11 +60,9 @@ public class InteractPrompt : MonoBehaviour
         {
             promptColor.a += (show ? 1 : -1) * FADE_SPEED * Time.unscaledDeltaTime;
             prompt.color = promptColor;
-            crosshair.localScale = Vector3.one * Mathf.Lerp(0, 1, promptColor.a);
             yield return null;
         }
         promptColor.a = show ? 1 : 0;
         prompt.color = promptColor;
-        crosshair.localScale = Vector3.one * promptColor.a;
     }
 }

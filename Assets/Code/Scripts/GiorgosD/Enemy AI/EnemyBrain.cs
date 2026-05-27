@@ -76,6 +76,9 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
         if (!isServer) return;
 
+        // Warp enemy to a random patrol point on spawn, if there are any
+        if (patrolPoints.Count > 0) body.agent.Warp(patrolPoints[UnityEngine.Random.Range(0, patrolPoints.Count)].position);
+
         ChangeState(StateID.Idle);
     }
 
