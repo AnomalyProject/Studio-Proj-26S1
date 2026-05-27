@@ -457,13 +457,15 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (!sessionStore.HasSession)
             return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+        
+        if (SessionModeManager.Instance == null)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot return to lobby.");
 
         CurrentSession.ResetReadyStates();
         CurrentSession.ElevatorState = ElevatorLobbyState.Open;
         SendSessionUpdate();
 
-        if (SessionModeManager.Instance == null)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot return to lobby.");
+
         SessionModeManager.Instance.LoadLobbyScene();
 
         return SessionCommandResult.Succeeded();
