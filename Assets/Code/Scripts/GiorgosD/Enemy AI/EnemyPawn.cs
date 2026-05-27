@@ -370,7 +370,7 @@ public class EnemyPawn : NetworkBehaviour
         if (!isServer) return;
 
         StopAllCoroutines();
-        agent.ResetPath();
+        if (agent.hasPath) agent.ResetPath();
     }
     #endregion
 
