@@ -2,19 +2,23 @@ using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
-using PurrNet.Steam;
-using Steamworks;
 
 /// <summary>
-/// SessionData owns raw session data, SessionPlayerRegistry owns PlayerID-to-SteamID mapping,
-/// SessionPlayerCoordinator owns player membership mutations, and this class owns RPC flow,
-/// authority entry points, broadcasts, and client synchronization.
+/// Handles the network-facing side of sessions: RPCs, authority checks, broadcasts,
+/// and syncing clients.
+/// Session data and gameplay logic are delegated to smaller services, like:
+/// - SessionStateStore manages SessionData.
+/// - SessionPlayerRegistry maps PlayerIDs to SteamIDs.
+/// - SessionIdentityService resolves player identities and cleans display names.
+/// - SessionPlayerCoordinator handles join, leave, disconnect, and host registration.
+/// - SessionLobbyCoordinator handles ready state and elevator enter/exit.
+/// - SessionFlowCoordinator handles match start and return-to-lobby flow.
 ///
-/// Key rules:
-/// - All mutations go through ServerRpcs: clients request -> host decides
-/// - Host and clients share the same join path (AddPlayerToSession) to prevent divergence bugs. One place the logic -> one place the bugs
-/// - playerConnectionMap bridges PurrNet PlayerIDs to Steam IDs. SessionData only knows Steam IDs
-/// - GameStateManager remains the single authority on game state (SessionData.CurrentState is not used)
+/// Rules:
+/// - Clients request changes through ServerRpcs and then the host validates and applies them.
+/// - RPC-dependent authority checks stay here.
+/// - Coordinators return SessionCommandResult. This class broadcasts results or errors.
+/// - GameStateManager is still the authority for game state.
 /// </summary>
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
@@ -100,9 +104,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     /// <summary>
-    /// Cleanup when the NetworkBehaviour is despawned. Nulls sessionData so that
-    /// sessionData != null checks correctly report "no session exists" if respawned.
-    /// Unsubscribes from GameStateManager to prevent stale event handlers.
+    /// Cleanup when the NetworkBehaviour is despawned. Clears the session store and
+    /// registry so HasSession reports false after respawn. Unsubscribes from
+    /// GameStateManager to prevent stale event handlers.
     /// </summary>
     protected override void OnDespawned()
     {
@@ -253,9 +257,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     /// <summary>
-    /// ELEVATOR
+    /// Returns true when the elevator is allowed to start its closing sequence:
+    /// session is live, game is in Lobby, elevator is Open, and every player
+    /// inside the elevator is ready.
     /// </summary>
-    /// <returns></returns>
     public bool CanStartElevatorSequence()
     {
         return lobbyCoordinator.CanStartElevatorSequence();
@@ -450,30 +455,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private SessionCommandResult TryReturnToLobby(PlayerID sender)
     {
-        if (!registry.IsHost(sender))
-            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can return to lobby.");
+        if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can return to lobby.");
 
-        if (GameStateManager.Instance.CurrentState != GameState.InGame &&
-            GameStateManager.Instance.CurrentState != GameState.PostGame)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
-
-        if (!sessionStore.HasSession)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
-        
-        if (SessionModeManager.Instance == null)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot return to lobby.");
-
-        CurrentSession.ResetReadyStates();
-        CurrentSession.ElevatorState = ElevatorLobbyState.Open;
-        SendSessionUpdate();
-
-
-        SessionModeManager.Instance.LoadLobbyScene();
-
-        return SessionCommandResult.Succeeded();
+        SessionCommandResult result = flowCoordinator.TryReturnToLobby();
+        if (result.Success) SendSessionUpdate();
+        return result;
     }
-
-
+    
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via SessionPlayerRegistry)
@@ -497,13 +485,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!registry.IsHost(sender))
             return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can start the game.");
 
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
-
         if (!sessionStore.HasSession)
             return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
 
-        if (!CurrentSession.AllPlayersReady)
+        if (!sessionStore.Current.AllPlayersReady)
             return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
 
         return flowCoordinator.TryStartMatch();
@@ -690,5 +675,4 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SessionEvents.InvokeSessionDataChanged();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
-
 }
