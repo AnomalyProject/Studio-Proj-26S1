@@ -23,6 +23,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionIdentityService identityService = new SessionIdentityService();
     private SessionPlayerCoordinator playerCoordinator;
     private SessionLobbyCoordinator lobbyCoordinator;
+    private SessionFlowCoordinator flowCoordinator;
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -67,6 +68,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
         lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
+        flowCoordinator = new SessionFlowCoordinator(sessionStore);
     }
 
     /// <summary>
@@ -504,40 +506,17 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!CurrentSession.AllPlayersReady)
             return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
 
-        return TryStartMatchInternal();
+        return flowCoordinator.TryStartMatch();
     }
 
     public bool TryStartMatchFromServer()
     {
-        SessionCommandResult result = TryStartMatchInternal();
-
+        if (!isServer) return false;
+        
+        SessionCommandResult result = flowCoordinator.TryStartMatch();
         if (!result.Success) Debug.LogWarning($"[SessionManager] Start match failed: {result.ErrorCode} - {result.Message}");
 
         return result.Success;
-    }
-
-    private SessionCommandResult TryStartMatchInternal()
-    {
-        if (!isServer || !sessionStore.HasSession)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
-
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Game already in progress.");
-
-        if (CurrentSession.ElevatorState != ElevatorLobbyState.DoorsClosed)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The elevator is not ready.");
-
-        if (!CurrentSession.AllPlayersReadyInElevator)
-            return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
-
-        if (SessionModeManager.Instance == null)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot load gameplay scene.");
-
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
-        SessionModeManager.Instance.LoadGameplayScene();
-
-        Debug.Log("[SessionManager] Elevator locked. Game starting...");
-        return SessionCommandResult.Succeeded();
     }
 
     /// <summary>
@@ -668,7 +647,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             SendStateChangeToClient(id, nextState);
         }
     }
-
 
     /// <summary>
     /// Server-to-one-client RPC: tells a specific client to transition to a new game state.
