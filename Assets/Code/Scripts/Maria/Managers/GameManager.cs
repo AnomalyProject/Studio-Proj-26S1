@@ -176,7 +176,6 @@ public class GameManager : NetworkBehaviour
 
             case AnomalyManager.RoomState.PunishmentRoom:
                 HandlePunishmentRoomEntry();
-                SetElevatorChoice(entryHasAnomaly: true, exitHasAnomaly: false);
                 break;
 
             case AnomalyManager.RoomState.WinRoom:

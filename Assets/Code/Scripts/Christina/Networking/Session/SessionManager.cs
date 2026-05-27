@@ -3,8 +3,6 @@ using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
-using PurrNet.Steam;
-using Steamworks;
 
 /// <summary>
 /// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
@@ -424,91 +422,57 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// derived from PlayerID hash until Steamworks integration is ready.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(RPCInfo info = default)
+    public void RequestJoinSession(ulong steamID, string displayName, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
-
-        if (!PurrSteamUtils.TryGetSteamID(sender, out ulong steamID))
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Could not verify Steam identity.");
-            return;
-        }
-
-        if (!SteamSessionBridge.Instance.IsLobbyMember(steamID))
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "You are not in this Steam lobby.");
-            return;
-        }
-
-        string displayName = SteamFriends.GetFriendPersonaName(new CSteamID(steamID));
-        TryAcceptJoin(sender, steamID, SanitizeDisplayName(displayName));
-    }
-
-    [ServerRpc(requireOwnership: false)]
-    public void RequestJoinDevSession(ulong fakeSteamID, string displayName, RPCInfo info = default)
-    {
-        PlayerID sender = info.sender;
-
-        if (SessionModeManager.Instance == null ||
-            SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Dev joins are only allowed in Dev Host mode.");
-            return;
-        }
-
-        if (fakeSteamID == 0)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Dev SteamID was invalid.");
-            return;
-        }
-
-        TryAcceptJoin(sender, fakeSteamID, SanitizeDisplayName(displayName));
-    }
-    
-    private void TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
-    {
-        if (sessionData == null)
-            return;
 
         if (sessionData.IsSessionFull)
         {
-            SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full.");
+            Debug.Log($"[SessionManager] Join rejected: Session is full!");
+            SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full..");
             return;
         }
 
+        Debug.Log($"[SessionManager] Join request received from PlayerID: {sender}");
+
         if (GameStateManager.Instance.CurrentState != GameState.Lobby)
         {
+            // dev tool exception: a dev bootstrapped host boots straight to InGame, so allow joins into
+            // an in progress DEV session only. 
             bool devInGameJoin =
                 SessionModeManager.Instance != null &&
                 SessionModeManager.Instance.CurrentMode == SessionMode.DevHost &&
                 GameStateManager.Instance.CurrentState == GameState.InGame;
-
+            
             if (!devInGameJoin)
             {
+                Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is in the wrong game state.");
                 SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
                 return;
             }
+
+            Debug.Log($"[SessionManager] Dev join: allowing PlayerID {sender} into in-progress dev session.");
         }
 
+        // check if player is already in session
         if (playerConnectionMap.ContainsKey(sender))
         {
+            Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is already in session.");
             SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are already in session.");
             return;
         }
-
-        if (playerConnectionMap.ContainsValue(steamID) || sessionData.GetPlayer(steamID).HasValue)
-        {
-            SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "This Steam account is already in session.");
-            return;
-        }
-
+        
+        // to reject late joins if the elevator is leaving
         if (sessionData.ElevatorState != ElevatorLobbyState.Open)
         {
             SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
             return;
         }
 
+        
         AddPlayerToSession(sender, steamID, displayName);
+
+        Debug.Log($"[SessionManager] Join approved for PlayerID: {sender}");
     }
 
 
@@ -877,23 +841,5 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         latestClientSession = clientData;
         SessionEvents.InvokeSessionDataChanged();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
-    }
-    
-    /// <summary>
-    /// HELPERS
-    /// </summary>
-    /// <param name="displayName"></param>
-    /// <returns></returns>
-    private static string SanitizeDisplayName(string displayName)
-    {
-        if (string.IsNullOrWhiteSpace(displayName))
-            return "Player";
-
-        displayName = displayName.Trim();
-
-        if (displayName.Length > 32)
-            displayName = displayName.Substring(0, 32);
-
-        return displayName;
     }
 }

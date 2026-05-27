@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class NoClip : MonoBehaviour
 {
     #region NoClip
-    #region Variables
+    #region Veriables
     private static GameObject freeCam;
     private static GameObject localPlayer;
     private static Camera camCache;
@@ -93,14 +93,13 @@ public class NoClip : MonoBehaviour
     /// </summary>
     private static void CreateFreeCamObj()
     {
-        camCache = localPlayer.GetComponentInChildren<Camera>();
-        
         freeCam = new GameObject("FreeCam");
-        
-        freeCam.transform.SetPositionAndRotation(camCache.transform.position, camCache.transform.rotation);
         
         freeCam.AddComponent<Camera>();
         freeCam.AddComponent<NoClip>();
+        freeCam.transform.position = GameObject.Find("Main Camera").transform.position;
+        freeCam.transform.rotation = GameObject.Find("Main Camera").transform.rotation;
+        
     }
     #endregion
 
@@ -123,7 +122,7 @@ public class NoClip : MonoBehaviour
     #endregion
     
     #region NoClip Controller
-    #region Controller Variables
+    #region Variables
     // Move Stuff
     [SerializeField] private float runSpeed = 30.0f;
     [SerializeField] private float moveSpeed = 10.0f;
@@ -135,7 +134,6 @@ public class NoClip : MonoBehaviour
     private Vector2 lookInput;
     
     // Look stuff
-    private float lookSens = 8.0f;
     private float rotX;
     private float rotY;
     #endregion
@@ -143,13 +141,6 @@ public class NoClip : MonoBehaviour
     #region Subscribe/Unsubscribe To Input Events
     private void Awake()
     {
-        // Set up correct angles
-        Vector3 angles = transform.eulerAngles;
-
-        rotX = angles.x;
-        rotY = angles.y;
-        // end
-        
         InputBridge.OnContextChanged += HandleContext;
         
         InputBridge.Actions.NoClip.Move.performed += MoveValue;
@@ -180,7 +171,7 @@ public class NoClip : MonoBehaviour
     #endregion
 
     #region Unity Lifecycle
-    private void Update()
+    private void FixedUpdate()
     {
         Move();
         Look();
@@ -226,8 +217,8 @@ public class NoClip : MonoBehaviour
     /// </summary>
     private void Look()
     {
-        rotY += lookInput.x * lookSens * Time.deltaTime;
-        rotX -= lookInput.y * lookSens * Time.deltaTime;
+        rotY += lookInput.x;
+        rotX -= lookInput.y;
         
         rotX = Mathf.Clamp(rotX, -90f, 90f);
         

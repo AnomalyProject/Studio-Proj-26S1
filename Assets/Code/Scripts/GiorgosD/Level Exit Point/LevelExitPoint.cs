@@ -11,8 +11,8 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     [Header("Settings")] Collider col;
 
     // Checks
-    [SerializeField] protected SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
-    protected SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
+    [SerializeField] private SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
+    private SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
     private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
@@ -24,7 +24,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     public Action<LevelExitPoint, bool> OnExitActivated;
     public bool IsReadyToInteract => HasEnoughPlayers() && bIsAvailable.value;
 
-    protected virtual void Awake()
+    void Awake()
     {
         if(!GetComponentInChildren<ExitInteractable>())
         {

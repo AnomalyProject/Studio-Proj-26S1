@@ -649,7 +649,7 @@ public class SessionModeManager : MonoBehaviour
 
           // requesting to join with our deterministic dev identity
           Debug.Log($"[SessionModeManager] Dev client connected. Joining as '{request.displayName}' (id {request.fakeSteamId}).");
-          SessionManager.Instance.RequestJoinDevSession(request.fakeSteamId, request.displayName);
+          SessionManager.Instance.RequestJoinSession(request.fakeSteamId, request.displayName);
       }
     
     /// <summary>

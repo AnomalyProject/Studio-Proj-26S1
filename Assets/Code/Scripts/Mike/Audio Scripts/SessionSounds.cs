@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 
 public class SessionSounds : SoundCaller
 {
-    [SerializeField] private AudioClip playerJoinedClip, playerLeftClip;
+    [SerializeField] AudioClip playerJoinedClip, playerLeftClip;
 
     private void Awake()
     {

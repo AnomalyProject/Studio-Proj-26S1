@@ -15,11 +15,13 @@ public class CompositeVendor : VendorBase
         base.Awake();
         itemStash.OnStackRemoved += (_, _) => UpdateStockText();
         OnRestock.AddListener(UpdateStockText);
-        for (int i = 0; i < vendorButtons.Length; i++) vendorButtons[i].SlotIndex = i;
     }
     protected override void OnSpawned()
     {
         base.OnSpawned();
+
+        for (int i = 0; i < vendorButtons.Length; i++) vendorButtons[i].SlotIndex = i;
+
         UpdateStockText();
     }
     private void UpdateStockText()

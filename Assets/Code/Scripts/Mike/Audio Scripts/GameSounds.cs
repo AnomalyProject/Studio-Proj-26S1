@@ -12,7 +12,7 @@ public class GameSounds : SoundCaller
     {
         anomalyManager.OnMapChanged += UpdateMusicTrack;
         MapOrientor.OnElevatorInteracted += HandleElevatorInteraction;
-        FadeOutMusic(null);
+        StopMusic();
     }
 
     private void OnDestroy()
