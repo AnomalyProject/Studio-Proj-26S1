@@ -209,6 +209,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &723186710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 723186711}
+  - component: {fileID: 723186712}
+  m_Layer: 5
+  m_Name: Network Debug Display
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &723186711
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723186710}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6061849457669654521}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &723186712
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723186710}
+  m_CullTransparentMesh: 1
 --- !u!1001 &822192051
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -264,8 +308,50 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 822192054}
+    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 822192053}
   m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+--- !u!1 &822192052 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
+  m_PrefabInstance: {fileID: 822192051}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &822192053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822192052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 895c7dee86be8004e8a4231d404c756f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkDebugDisplay
+  statsManager: {fileID: 822192054}
+--- !u!114 &822192054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822192052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef882a0e84c58df4885b0e1e59320b49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.StatisticsManager
+  checkInterval: 0.33
+  placement: 2
+  _displayType: -1
+  _displayTarget: 6
+  fontSize: 13
+  textColor: {r: 0, g: 1, b: 0.013910294, a: 1}
 --- !u!1001 &946757509
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1732,7 +1818,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8295314741552497948, guid: edd6748d5e5e7a9429ace318ae0691a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 723186711}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: edd6748d5e5e7a9429ace318ae0691a0, type: 3}
 --- !u!224 &6061849457669654521 stripped
