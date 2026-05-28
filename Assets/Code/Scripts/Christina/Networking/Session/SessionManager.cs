@@ -22,6 +22,9 @@ using PurrNet;
 /// </summary>
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
+    #region Fields, Properties, and Events
+    
+    // --- FIELDS
     private SessionPlayerRegistry registry;
     private SessionStateStore sessionStore;
     private SessionIdentityService identityService;
@@ -33,6 +36,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
 
+    // --- PROPERTIES
     // Convenience check for whether this machine isn the host.
     public bool IsHost => NetworkManager.main != null && NetworkManager.main.isHost;
 
@@ -42,6 +46,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private ClientSessionData latestClientSession;
     public ClientSessionData LatestClientSession => latestClientSession;
 
+
+    // --- EVENTS
     // server-side event fired when a player is added to the session.
     // carries the PlayerID directly so spawn systems don't need reverse-lookups.
     public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
@@ -50,12 +56,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public static event Action OnServerSessionChanged;
 
     public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
-
-
+    
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
 
-
+    #endregion
+    
+    #region Lifecycle
     /// <summary>
     /// Singleton setup. If a duplicate SessionManager exists, destroy it.
     /// </summary>
@@ -125,7 +132,29 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
         }
     }
+    
+    /// <summary>
+    /// Initializes a new SessionData with default settings and transitions to Lobby state.
+    /// SessionData is created BEFORE the state transition to ensure it exists if anything
+    /// during the transition tries to read it. The host is NOT added here. That happens
+    /// in OnPlayerConnected via SessionPlayerCoordinator.RegisterHost.
+    /// </summary>
+    private void CreateSession()
+    {
+        Debug.Log("[SessionManager] Creating new session...");
 
+        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
+
+        sessionStore.CreateSession(hostIdentity.SteamID);
+
+        GameStateManager.Instance.OnStateChanged += HandleStateChanged;
+
+        Debug.Log("[SessionManager] Session created.");
+    }
+
+    #endregion
+    
+    #region Host and Player Connection Handling
     /// <summary>
     ///  Registers the first connected player as the host and broadcasts them to the session.
     /// </summary>
@@ -145,16 +174,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(playerID, host.SteamID, host.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
-
-    /// <summary>
-    /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
-    /// </summary>
-    private void SendSessionUpdate()
-    {
-        OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
-        OnServerSessionChanged?.Invoke();
-    }
-
 
     /// <summary>
     /// Waits briefly for the local networking player to become available, then
@@ -242,24 +261,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerLeft(playerID, steamID, "Disconnected");
     }
 
-    /// <summary>
-    /// Initializes a new SessionData with default settings and transitions to Lobby state.
-    /// SessionData is created BEFORE the state transition to ensure it exists if anything
-    /// during the transition tries to read it. The host is NOT added here. That happens
-    /// in OnPlayerConnected via SessionPlayerCoordinator.RegisterHost.
-    /// </summary>
-    private void CreateSession()
-    {
-        Debug.Log("[SessionManager] Creating new session...");
+    #endregion
+    
+    #region Session Management and Lobby State
 
-        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
-
-        sessionStore.CreateSession(hostIdentity.SteamID);
-
-        GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-
-        Debug.Log("[SessionManager] Session created.");
-    }
 
     /// <summary>
     /// Given a Steam ID, returns the PurrNet PlayerID.
@@ -308,6 +313,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendSessionUpdate();
     }
 
+    #endregion
+    
+    #region Join, Leave, Ready Requests
     /// <summary>
     /// Client-to-server RPC: requests to join the active session.
     /// The identity service resolves and validates the sender's Steam identity,
@@ -383,39 +391,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
         return result;
     }
-
-    /// <summary>
-    ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
-    /// </summary>
-    /// <param name="playerID"></param>
-    /// <param name="steamID"></param>
-    /// <param name="displayName"></param>
-    /// <param name="isHost"></param>
-    private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
-    {
-        OnPlayerJoined_Client(steamID, displayName);
-        SendSessionUpdate();
-        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
-
-        if (!isHost)
-        {
-            SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(sessionStore.Current));
-            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
-        }
-    }
-
-    /// <summary>
-    /// Notifies clients and server systems that a player left, then broadcasts the updated session state.
-    /// </summary>
-    /// <param name="playerID"></param>
-    /// <param name="steamID"></param>
-    /// <param name="reason"></param>
-    private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
-    {
-        OnPlayerLeft_Client(steamID, reason);
-        SendSessionUpdate();
-        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
-    }
+    
 
     /// <summary>
     /// Client-to-server RPC: requests to voluntarily leave the session.
@@ -488,7 +464,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return result;
     }
+    
+    #endregion
 
+    #region Match Flow
     /// <summary>
     /// Client-to-server request for returning from gameplay to the lobby.
     /// Validates that the requester is allowed to trigger the transition, resets lobby data
@@ -569,7 +548,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return result.Success;
     }
-
+    #endregion
+    
+    #region Settings
     /// <summary>
     /// Client-to-server RPC: host requests to change session settings. Host-only.
     /// First-class fields (MapName, GameMode, MaxPlayers) are set directly on SessionData.
@@ -671,6 +652,52 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
 
+    #endregion
+    
+    #region Broadcasts and Client Sync
+    
+    /// <summary>
+    /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
+    /// </summary>
+    private void SendSessionUpdate()
+    {
+        OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
+        OnServerSessionChanged?.Invoke();
+    }
+    
+    /// <summary>
+    ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="displayName"></param>
+    /// <param name="isHost"></param>
+    private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
+    {
+        OnPlayerJoined_Client(steamID, displayName);
+        SendSessionUpdate();
+        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
+
+        if (!isHost)
+        {
+            SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(sessionStore.Current));
+            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
+        }
+    }
+
+    /// <summary>
+    /// Notifies clients and server systems that a player left, then broadcasts the updated session state.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="reason"></param>
+    private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
+    {
+        OnPlayerLeft_Client(steamID, reason);
+        SendSessionUpdate();
+        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
+    }
+    
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
     /// This is the ONLY path that fires the PlayerJoined event. The server doesnt
@@ -739,7 +766,24 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
+    
+    /// <summary>
+    /// Sends the current session snapshot to one client and notifies local UI listeners.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="clientData"></param>
+    [TargetRpc]
+    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
+    {
+        latestClientSession = clientData;
+        SessionEvents.InvokeSessionDataChanged();
+        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
+    }
+    
 
+    #endregion
+    
+    #region Error Handling
     /// <summary>
     /// Server-to-one-client RPC: sends a structured error to a specific client.
     /// Wraps the error code and message in a SessionErrorResponse, then fires it
@@ -762,16 +806,5 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return true;
     }
 
-    /// <summary>
-    /// Sends the current session snapshot to one client and notifies local UI listeners.
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="clientData"></param>
-    [TargetRpc]
-    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
-    {
-        latestClientSession = clientData;
-        SessionEvents.InvokeSessionDataChanged();
-        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
-    }
+    #endregion
 }
