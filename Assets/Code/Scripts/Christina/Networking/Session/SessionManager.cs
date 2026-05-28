@@ -22,12 +22,13 @@ using PurrNet;
 /// </summary>
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
-    private SessionPlayerRegistry registry = new SessionPlayerRegistry();
-    private SessionStateStore sessionStore = new SessionStateStore();
-    private SessionIdentityService identityService = new SessionIdentityService();
+    private SessionPlayerRegistry registry;
+    private SessionStateStore sessionStore;
+    private SessionIdentityService identityService;
     private SessionPlayerCoordinator playerCoordinator;
     private SessionLobbyCoordinator lobbyCoordinator;
     private SessionFlowCoordinator flowCoordinator;
+    private SessionSettingsService settingsService;
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -69,10 +70,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
+        
+        registry = new SessionPlayerRegistry();
+        sessionStore = new SessionStateStore();
+        identityService = new SessionIdentityService();
         playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
         lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
         flowCoordinator = new SessionFlowCoordinator(sessionStore);
+        settingsService = new SessionSettingsService(sessionStore);
     }
 
     /// <summary>
@@ -121,6 +126,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
 
+    /// <summary>
+    ///  Registers the first connected player as the host and broadcasts them to the session.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="source"></param>
     private void RegisterHostPlayer(PlayerID playerID, string source)
     {
         if (registry.Count != 0) return;
@@ -136,6 +146,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
 
+    /// <summary>
+    /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
+    /// </summary>
     private void SendSessionUpdate()
     {
         OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
@@ -266,6 +279,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return lobbyCoordinator.CanStartElevatorSequence();
     }
 
+    /// <summary>
+    ///  Updates the elevator lobby state on the server and broadcasts the refreshed session data.
+    /// </summary>
+    /// <param name="state"></param>
     public void SetElevatorState(ElevatorLobbyState state)
     {
         if (!isServer || !sessionStore.HasSession) return;
@@ -276,6 +293,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendSessionUpdate();
     }
 
+    /// <summary>
+    ///  Updates whether a player is inside the elevator and broadcasts the refreshed session data.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="isInside"></param>
     public void SetPlayerInElevator(PlayerID playerID, bool isInside)
     {
         if (!isServer) return;
@@ -345,6 +367,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Applies the validated join request and broadcasts the new player if the join succeeds.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="steamID"></param>
+    /// <param name="displayName"></param>
+    /// <returns></returns>
     private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
     {
         SessionCommandResult result = playerCoordinator.TryAcceptJoin(sender, steamID, displayName);
@@ -355,6 +384,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return result;
     }
 
+    /// <summary>
+    ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="displayName"></param>
+    /// <param name="isHost"></param>
     private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
     {
         OnPlayerJoined_Client(steamID, displayName);
@@ -368,6 +404,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
 
+    /// <summary>
+    /// Notifies clients and server systems that a player left, then broadcasts the updated session state.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="reason"></param>
     private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
     {
         OnPlayerLeft_Client(steamID, reason);
@@ -393,6 +435,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
     }
 
+    /// <summary>
+    ///  Removes a player from the session if they are registered and broadcasts the leave result.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     private SessionCommandResult TryLeaveSession(PlayerID sender)
     {
         if (!registry.TryGetSteamID(sender, out ulong steamID))
@@ -426,6 +473,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Toggles the player's ready state through the lobby coordinator and broadcasts the updated session.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     private SessionCommandResult TrySetPlayerReady(PlayerID sender)
     {
         SessionCommandResult result = lobbyCoordinator.TrySetPlayerReady(sender);
@@ -453,6 +505,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Validates that the sender is the host, then returns the session to the lobby state.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     private SessionCommandResult TryReturnToLobby(PlayerID sender)
     {
         if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can return to lobby.");
@@ -480,6 +537,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Validates host authority, session state, and player readiness before starting the match.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     private SessionCommandResult TryStartMatchCommand(PlayerID sender)
     {
         if (!registry.IsHost(sender))
@@ -494,6 +556,10 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return flowCoordinator.TryStartMatch();
     }
 
+    /// <summary>
+    /// Starts the match directly from server-side code and returns whether the transition succeeded.
+    /// </summary>
+    /// <returns></returns>
     public bool TryStartMatchFromServer()
     {
         if (!isServer) return false;
@@ -522,59 +588,87 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Validates host authority, parses the requested setting, applies it, and broadcasts the update.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
     private SessionCommandResult TryUpdateSettings(PlayerID sender, string key, string value)
     {
-        if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can update the game settings.");
+        if (!registry.IsHost(sender))
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can update the game settings.");
 
-        if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+        SessionSettingsUpdate update;
+        SessionCommandResult parseError;
+        if (!TryParseSettingsUpdate(key, value, out update, out parseError))
+            return parseError;
 
-        bool shouldResetReadyStates = false;
+        SessionSettingsResult result = settingsService.TryApply(update);
+        if (!result.Success)
+            return SessionCommandResult.Failed(result.ErrorCode, result.Message);
+
+        if (result.ShouldResetReadyStates)
+            sessionStore.Current.ResetReadyStates();
+
+        SendSessionUpdate();
+        Debug.Log("[SessionManager] Settings updated.");
+        return SessionCommandResult.Succeeded();
+    }
+    
+    /// <summary>
+    /// Converts a string key and value into a typed session settings update.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <param name="update"></param>
+    /// <param name="error"></param>
+    /// <returns></returns>
+    private bool TryParseSettingsUpdate(string key, string value, out SessionSettingsUpdate update, out SessionCommandResult error)
+    {
+        update = new SessionSettingsUpdate();
+        error = SessionCommandResult.Succeeded();
 
         switch (key)
         {
             case "MapName":
-                CurrentSession.MapName = value;
-                shouldResetReadyStates = true;
-                break;
+                update.Field = SessionSettingsField.MapName;
+                update.MapName = value;
+                return true;
 
             case "GameMode":
-                CurrentSession.GameMode = value;
-                shouldResetReadyStates = true;
-                break;
+                update.Field = SessionSettingsField.GameMode;
+                update.GameMode = value;
+                return true;
 
             case "MaxPlayers":
-                if (!int.TryParse(value, out int maxPlayers))
-                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players value was invalid.");
-
-                if (maxPlayers < 2 || maxPlayers > 4)
-                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players must be between 2 and 4.");
-
-                if (maxPlayers < CurrentSession.Players.Count)
-                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
-
-                CurrentSession.MaxPlayers = maxPlayers;
-                shouldResetReadyStates = true;
-                break;
+                int parsed;
+                if (!int.TryParse(value, out parsed))
+                {
+                    error = SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players value was invalid.");
+                    return false;
+                }
+                update.Field = SessionSettingsField.MaxPlayers;
+                update.MaxPlayers = parsed;
+                return true;
 
             case "LobbyVisibility":
                 if (value != "Friends Only" && value != "Public")
-                    return SessionCommandResult.Failed(SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
-
-                CurrentSession.SetCustomProperty(key, value);
-                break;
+                {
+                    error = SessionCommandResult.Failed(SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
+                    return false;
+                }
+                update.Field = SessionSettingsField.LobbyVisibility;
+                update.Visibility = value == "Public" ? LobbyVisibility.Public : LobbyVisibility.FriendsOnly;
+                return true;
 
             default:
-                CurrentSession.SetCustomProperty(key, value);
-                break;
+                update.Field = SessionSettingsField.Custom;
+                update.CustomKey = key;
+                update.CustomValue = value;
+                return true;
         }
-
-        if (shouldResetReadyStates)
-            CurrentSession.ResetReadyStates();
-
-        SendSessionUpdate();
-        Debug.Log("[SessionManager] Settings updated.");
-
-        return SessionCommandResult.Succeeded();
     }
 
     /// <summary>
@@ -668,6 +762,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         return true;
     }
 
+    /// <summary>
+    /// Sends the current session snapshot to one client and notifies local UI listeners.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="clientData"></param>
     [TargetRpc]
     private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
     {
