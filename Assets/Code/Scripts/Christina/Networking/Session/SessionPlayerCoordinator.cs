@@ -62,18 +62,48 @@ public class SessionPlayerCoordinator
         return SessionCommandResult.Succeeded();
     }
     
-    /// <summary>
-    /// Called when PurrNet reports a disconnect for a player that was in session.
-    /// Same data path as a voluntary leave.
-    /// </summary>
-    public bool TryHandleDisconnect(PlayerID playerID, out ulong steamID)
+    public bool TryMarkDisconnected(PlayerID playerID, float reconnectDeadline, out ulong steamID)
     {
+        // required because steamID must always get a value
         steamID = 0;
+        
+        if (!sessionStore.HasSession) return false;
+
         if (!registry.IsRegistered(playerID)) return false;
 
-        registry.TryGetSteamID(playerID, out steamID);
-        RemovePlayerInternal(playerID, steamID);
+        if (!registry.TryGetSteamID(playerID, out steamID)) return false;
+
+        if (!sessionStore.Current.SetPlayerConnected(steamID, false, reconnectDeadline)) return false;
+
+        registry.Unregister(playerID);
+        sessionStore.Current.ResetReadyStates();
+
         return true;
+    }
+    
+    public SessionCommandResult TryReconnect(PlayerID playerID, ulong steamID)
+    {
+        if (!sessionStore.HasSession)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no live Session.");
+        }
+
+        if (!sessionStore.Current.IsPlayerWaitingToReconnect(steamID))
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player is not waiting to reconnect.");
+        }
+
+        PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
+
+        if (!playerInfo.HasValue)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
+        }
+
+        sessionStore.Current.SetPlayerConnected(steamID, true, 0f);
+        registry.Register(playerID, steamID, playerInfo.Value.IsHost);
+
+        return SessionCommandResult.Succeeded();
     }
     
     /// <summary>
@@ -114,6 +144,25 @@ public class SessionPlayerCoordinator
             current == GameState.InGame;
 
         return devInGameJoin;
+    }
+    
+    public SessionCommandResult TryRemoveDisconnectedPlayer(ulong steamID, PlayerID oldPlayerID)
+    {
+        if (!sessionStore.HasSession)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no live Session.");
+        }
+
+        if (!sessionStore.Current.IsPlayerWaitingToReconnect(steamID))
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Player is not waiting to reconnect.");
+        }
+
+        sessionStore.Current.RemovePlayer(steamID);
+        registry.Unregister(oldPlayerID);
+        sessionStore.Current.ResetReadyStates();
+
+        return SessionCommandResult.Succeeded();
     }
 
     #endregion

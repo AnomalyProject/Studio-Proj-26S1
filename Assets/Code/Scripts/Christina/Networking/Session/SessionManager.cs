@@ -1,5 +1,6 @@
 using System.Collections;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using PurrNet;
 
@@ -24,6 +25,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
     
+    [SerializeField] private float reconnectTimeoutSeconds = 30f;
+    
     // --- FIELDS
     private SessionPlayerRegistry registry;
     private SessionStateStore sessionStore;
@@ -35,6 +38,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
+    
+    private readonly Dictionary<ulong, Coroutine> reconnectRoutines = new Dictionary<ulong, Coroutine>();
 
     // --- PROPERTIES
     // Convenience check for whether this machine isn the host.
@@ -223,6 +228,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
+        if (TryHandleReconnect(playerID, isReconnect)) return;
+
         if (registry.Count != 0) return;
 
         if (!sessionStore.HasSession)
@@ -241,6 +248,36 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
     }
+    
+    private bool TryHandleReconnect(PlayerID playerID, bool isReconnect)
+    {
+        if (!sessionStore.HasSession) return false;
+        if (!identityService.TryResolveJoiner(playerID, out ulong steamID, out string displayName))return false;
+
+        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID))return false;
+        
+        SessionCommandResult result = playerCoordinator.TryReconnect(playerID, steamID);
+
+        if (!result.Success)
+        {
+            Debug.LogWarning($"[SessionManager] Reconnect failed for {steamID}: {result.Message}");
+            return false;
+        }
+
+        if (reconnectRoutines.ContainsKey(steamID))
+        {
+            StopCoroutine(reconnectRoutines[steamID]);
+            reconnectRoutines.Remove(steamID);
+        }
+
+        SendSessionUpdate();
+        SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(CurrentSession));
+        SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
+
+        Debug.Log($"[SessionManager] Player reconnected: {displayName} ({steamID}) Reconnect flag: {isReconnect}");
+
+        return true;
+    }
 
     /// <summary>
     /// PurrNet IPlayerEvents callback. Fires automatically when any player disconnects.
@@ -251,14 +288,45 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         if (!asServer) return;
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
+        
+        float reconnectDeadline = Time.realtimeSinceStartup + reconnectTimeoutSeconds;
 
-        if (!playerCoordinator.TryHandleDisconnect(playerID, out ulong steamID))
+        if (!playerCoordinator.TryMarkDisconnected(playerID, reconnectDeadline, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Disconnected PlayerID {playerID} was not in the session.");
             return;
         }
 
-        BroadcastPlayerLeft(playerID, steamID, "Disconnected");
+        SendSessionUpdate();
+
+        if (reconnectRoutines.ContainsKey(steamID))
+        {
+            StopCoroutine(reconnectRoutines[steamID]);
+            reconnectRoutines.Remove(steamID);
+        }
+
+        reconnectRoutines[steamID] = StartCoroutine(ReconnectTimeoutRoutine(playerID, steamID, reconnectDeadline));
+    }
+    
+    private IEnumerator ReconnectTimeoutRoutine(PlayerID oldPlayerID, ulong steamID, float reconnectDeadline)
+    {
+        while (Time.realtimeSinceStartup < reconnectDeadline) yield return null;
+
+        reconnectRoutines.Remove(steamID);
+
+        if (CurrentSession == null) yield break;
+
+        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) yield break;
+
+        SessionCommandResult result = playerCoordinator.TryRemoveDisconnectedPlayer(steamID, oldPlayerID);
+
+        if (!result.Success)
+        {
+            Debug.LogWarning($"[SessionManager] Failed to remove disconnected player {steamID}: {result.Message}");
+            yield break;
+        }
+
+        BroadcastPlayerLeft(oldPlayerID, steamID, "Reconnect timeout expired.");
     }
 
     #endregion

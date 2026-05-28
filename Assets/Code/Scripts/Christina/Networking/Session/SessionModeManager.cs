@@ -711,10 +711,9 @@ public class SessionModeManager : MonoBehaviour
         if (state != ConnectionState.Disconnected) return;
         if (currentMode != SessionMode.CoOpClient) return;
         if (isLocallyInitiatedTeardown) return;
-        if (hostLeftRoutine != null) return;
-        
-        Debug.LogWarning("[SessionModeManager] Client disconnected unexpectedly — host likely left. Returning to menu.");
-        hostLeftRoutine = StartCoroutine(HandleHostLeftRoutine());
+
+        Debug.LogWarning("[SessionModeManager] Client disconnected. Waiting for reconnect service to handle timeout.");
+       // SessionEvents.InvokeHostMigrationStarted("Host left the lobby.");
     }
     
     private IEnumerator HandleHostLeftRoutine()
