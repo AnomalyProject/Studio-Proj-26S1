@@ -33,7 +33,6 @@ public class PlayerLeanAnimation : NetworkBehaviour
             if (cameraLean != null)
             {
                 effectedLean.value = (int)Mathf.Clamp(cameraLean.LeanAmount, -1f, 1f);
-                Debug.Log($"lean" + effectedLean);
             }
         }
             forceLean(effectedLean.value);
