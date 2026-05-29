@@ -252,7 +252,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private bool TryHandleReconnect(PlayerID playerID, bool isReconnect)
     {
         if (!sessionStore.HasSession) return false;
-        if (!identityService.TryResolveJoiner(playerID, out ulong steamID, out string displayName))return false;
+        if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName))return false;
 
         if (!CurrentSession.IsPlayerWaitingToReconnect(steamID))return false;
         
