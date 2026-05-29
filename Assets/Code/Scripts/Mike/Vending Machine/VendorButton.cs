@@ -50,7 +50,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
             itemIcon.sprite = data.ItemIcon;
             itemNameText.text = data.ItemName;
             itemPriceText.text = $"x{vendorHost.GetStackPrice(slot).ToString()}";
-            itemAmountText.text = $"x{stack.GetQuantity()}";
+            itemAmountText.text = $"Stock: x{stack.GetQuantity()}";
         }
         else
         {
