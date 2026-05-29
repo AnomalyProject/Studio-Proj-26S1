@@ -31,6 +31,7 @@ public class PlayerLeanVerticalAnimation : NetworkBehaviour
         {
             float normalizedPitch = Mathf.Clamp(cameraController.CurrentPitch / maxVerticalAngle, -1f, 1f);
             syncedPitch.value = normalizedPitch;
+            return;
         }
         ApplyPitch(syncedPitch.value);
     }

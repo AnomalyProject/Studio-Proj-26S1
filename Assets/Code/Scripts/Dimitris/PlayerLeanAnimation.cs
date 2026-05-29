@@ -34,6 +34,7 @@ public class PlayerLeanAnimation : NetworkBehaviour
             {
                 effectedLean.value = (int)Mathf.Clamp(cameraLean.LeanAmount, -1f, 1f);
             }
+            return;
         }
             forceLean(effectedLean.value);
         
