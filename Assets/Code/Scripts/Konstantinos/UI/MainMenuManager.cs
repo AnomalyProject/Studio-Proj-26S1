@@ -19,7 +19,8 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] Animator mainCameraAnim;
     [SerializeField] Animator ElevatorDoorAnim;
     [SerializeField] float mainCameraAnimDuration = 8.0f;
-    
+    [SerializeField] AudioClip mainMenuMusic;
+
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject firstSelectedButtonStart;
 
@@ -74,13 +75,13 @@ public class MainMenuManager : MonoBehaviour
     private IEnumerator Start()
     {
         yield return null;
-        if (enableOnStart)
-        {
-            SetMenuActivity(true);
-            SetPanel(0);
-            SettingsManager.Instance?.CaptureWorldTransform();
-            SettingsManager.Instance?.SwitchCanvasMode(RenderMode.WorldSpace); // makes Settings world space
-        }
+        if (!enableOnStart) yield break;
+
+        SetMenuActivity(true);
+        SetPanel(0);
+        SettingsManager.Instance?.CaptureWorldTransform();
+        SettingsManager.Instance?.SwitchCanvasMode(RenderMode.WorldSpace); // makes Settings world space
+        if (mainMenuMusic != null) AudioManager.Instance?.PlayMusic(mainMenuMusic);
     }
 
     public void SetMenuActivity(bool active)
@@ -181,7 +182,9 @@ public class MainMenuManager : MonoBehaviour
     public void QuitGame()
     {
         Application.Quit();
-        Debug.Log("Player has quit the game!");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.ExitPlaymode();
+#endif
     }
     #endregion
 

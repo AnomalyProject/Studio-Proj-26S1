@@ -1,7 +1,7 @@
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
-public class PlayerZooming : MonoBehaviour
+public class FOVController : MonoBehaviour
 {
     #region Inspector Configuration
     [Header("Zoom Settings")]
@@ -9,6 +9,8 @@ public class PlayerZooming : MonoBehaviour
 
     [Header("FOV Configuration")]
     [SerializeField] private float defaultFOV = 60f;
+    [SerializeField] private float speedBoostFOV = 90f;
+    private float baseFOV;
 
     [Range(0.1f, 1.0f)]
     [SerializeField] private float zoomScale = 0.5f;
@@ -29,11 +31,12 @@ public class PlayerZooming : MonoBehaviour
             affectedCameras = GetComponentsInChildren<Camera>();
         }
 
-        targetFOV = defaultFOV;
+        baseFOV = defaultFOV;
+        targetFOV = baseFOV;
 
         foreach (var camera in affectedCameras)
         {
-            camera.fieldOfView = defaultFOV;
+            camera.fieldOfView = baseFOV;
         }
     }
 
@@ -62,7 +65,7 @@ public class PlayerZooming : MonoBehaviour
     #region Zoom Logic
     private void CalculateTargetFOV()
     {
-        targetFOV = isZooming ? (defaultFOV * zoomScale) : defaultFOV;
+        targetFOV = isZooming ? (baseFOV * zoomScale) : baseFOV;
     }
 
     private void ApplySmoothZoom()
@@ -73,5 +76,7 @@ public class PlayerZooming : MonoBehaviour
             camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, targetFOV, zoomTransitionSpeed * Time.deltaTime);
         }
     }
+
+    public void SetSpeedBoost(bool isActive) => baseFOV = isActive ? speedBoostFOV : defaultFOV;
     #endregion
 }

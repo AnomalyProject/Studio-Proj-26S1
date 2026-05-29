@@ -29,5 +29,4 @@ public class PauseMenu : MonoBehaviour
     public void Resume() => InputBridge.SetContext(InputBridge.InputContext.Player);
     public void OpenSettings() => SettingsManager.Open();
     public void BackToMenu() => SessionModeManager.Instance.ReturnToMenu();
-    public void QuitGame() => DevConsole.commands["exit"].Execute(null);
 }
