@@ -71,14 +71,15 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
             return;
         }
 
-        if (state != ConnectionState.Disconnected) return;
-        if (!wasConnected) return;
+        if (state != ConnectionState.Disconnecting && state != ConnectionState.Disconnected) return;
+        
         if (SessionModeManager.Instance == null) return;
+        
+        if (SessionModeManager.Instance.CurrentMode != SessionMode.CoOpClient && SessionModeManager.Instance.CurrentMode != SessionMode.DevClient) return;
 
-
-        if (SessionModeManager.Instance.CurrentMode != SessionMode.CoOpClient &&
-            SessionModeManager.Instance.CurrentMode != SessionMode.DevClient) return;
-
+        wasConnected = true;
+        
+        if (isWaitingToReconnect) return;
         isWaitingToReconnect = true;
         OnConnectionLost?.Invoke();
         
@@ -113,7 +114,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
         subscribedNetworkManager = NetworkManager.main;
         subscribedNetworkManager.onClientConnectionState += HandleClientConnectionState;
-        wasConnected = subscribedNetworkManager.isClient;
+        wasConnected = subscribedNetworkManager.clientState == ConnectionState.Connected;
     }
     
     private IEnumerator ReconnectRoutine()
