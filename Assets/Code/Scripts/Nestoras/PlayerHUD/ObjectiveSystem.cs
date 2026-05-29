@@ -41,6 +41,7 @@ public class ObjectiveSystem : MonoBehaviour
     private void HandleManagerDestruction(GameManager gameManager)
     {
         gameManager.AnomalyManager.OnStateChanged -= HandleStateChanged;
+        objective.enabled = false;
     }
 
     private void ExplainVoid()
