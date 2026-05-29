@@ -1,4 +1,3 @@
-using PurrNet;
 using UnityEngine;
 
 /// <summary>
@@ -26,7 +25,24 @@ public class LureItem : NoiseEmitter
     [Tooltip("Seconds the lure stays active before destroying itself.")]
     [SerializeField] float lureDuration = 10f;
 
+    [Header("Visuals")]
+    [Tooltip("LED object to pulse in sync with noise emission.")]
+    [SerializeField] private GameObject blinkingSphere;
+    [SerializeField] private Light blinkingLight;
+    [SerializeField] private float lightDimSpeed = 5f;
+    private Material blinkingMat;
+    private int EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor");
     #endregion
+
+    private void Start() => blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+
+    // Gradually dim the blinking light's emission color back to black over time
+    private void Update()
+    {
+        Color currentLightColor = blinkingMat.GetColor(EMISSION_COLOR_ID);
+        blinkingMat.SetColor(EMISSION_COLOR_ID, currentLightColor * Mathf.Exp(-lightDimSpeed * Time.deltaTime));
+        blinkingLight.color = currentLightColor;
+    }
 
     #region Network Lifecycle
 
@@ -38,7 +54,7 @@ public class LureItem : NoiseEmitter
     {
         base.OnSpawned(asServer);
 
-        if(asServer) Activate();
+        if (asServer) Activate();
     }
     #endregion
 
@@ -62,7 +78,11 @@ public class LureItem : NoiseEmitter
     /// always broadcasts at its full Inspector-configured radius.
     /// Audio is replicated to all observers automatically by <see cref="NoiseEmitter.Emit_Server"/>.
     /// </summary>
-    private void Pulse() => Emit_Server(noiseRadius);
+    private void Pulse()
+    {
+        blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
+        Emit_Server(noiseRadius);
+    }
 
     /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
     private void StopLure()
