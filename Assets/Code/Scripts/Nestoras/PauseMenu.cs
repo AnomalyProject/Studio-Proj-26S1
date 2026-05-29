@@ -13,10 +13,20 @@ public class PauseMenu : MonoBehaviour
     private void OnDisable() => InputBridge.OnContextChanged -= TogglePauseMenu;
     public void TogglePauseMenu(InputBridge.InputContext context)
     {
-        if (MainMenuManager.instance == null) root.gameObject.SetActive(context == InputBridge.InputContext.UI);
-        else root.gameObject.SetActive(false);
+        // Disable when in Main Menu
+        if (MainMenuManager.instance != null)
+        {
+            root.gameObject.SetActive(false);
+            return;
+        }
+
+        // Toggle
+        root.gameObject.SetActive(context == InputBridge.InputContext.UI);
+
+        // Make sure the settings page is disabled if Pause Menu is closed
+        if (SettingsManager.IsOpen) SettingsManager.Close();
     }
     public void Resume() => InputBridge.SetContext(InputBridge.InputContext.Player);
+    public void OpenSettings() => SettingsManager.Open();
     public void BackToMenu() => SessionModeManager.Instance.ReturnToMenu();
-    public void QuitGame() => DevConsole.commands["exit"].Execute(null);
 }
