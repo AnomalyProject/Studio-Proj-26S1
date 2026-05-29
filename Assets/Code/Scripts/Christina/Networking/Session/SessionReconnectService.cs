@@ -54,6 +54,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     
     private void HandleClientConnectionState(ConnectionState state)
     {
+        Debug.Log($"[SessionReconnectService] Client state changed: {state}");
         if (SceneManager.GetActiveScene().name == "MainMenu") return;
 
         if (state == ConnectionState.Connected)
