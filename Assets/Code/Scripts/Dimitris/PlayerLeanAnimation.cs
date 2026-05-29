@@ -13,15 +13,7 @@ public class PlayerLeanAnimation : NetworkBehaviour
     [SerializeField] private float lerpSpeed = 8f;
 
     private float currentLean;
-    private Quaternion initialRotation;
     private SyncVar<int> effectedLean = new SyncVar<int>(0 , ownerAuth: true) ;
-    // Save default rotation
-    private void Awake()
-    {
-        if (affectedBone != null)
-            initialRotation = affectedBone.localRotation;
-        
-    }
 
     private void LateUpdate()
     { // LateUpdate so not be confused with animator

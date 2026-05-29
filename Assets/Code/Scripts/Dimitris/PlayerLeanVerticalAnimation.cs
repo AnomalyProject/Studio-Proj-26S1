@@ -10,16 +10,8 @@ public class PlayerLeanVerticalAnimation : NetworkBehaviour
     [SerializeField] private float maxVerticalAngle = 35f;
     [SerializeField] private float lerVerticalSpeed = 8f;
 
-    private Quaternion initialRotationVertical;
     private float currentPitchVisual;
-
     private SyncVar<float> syncedPitch = new SyncVar<float>(0f , ownerAuth:true);
-    // Save default rotation
-    private void Awake()
-    {
-        if (affectedBoneVertical != null)
-            initialRotationVertical = affectedBoneVertical.localRotation;
-    }
 
     private void LateUpdate()
     {
