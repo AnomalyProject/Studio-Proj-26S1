@@ -1,3 +1,5 @@
+using PurrNet;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -16,14 +18,14 @@ public class LureItem : NoiseEmitter
     #region Inspector
     [Header("Noise")]
     [Tooltip("World-space radius in which IAlertable entities will be alerted.")]
-    [SerializeField] float noiseRadius = 8f;
+    [SerializeField] private float noiseRadius = 8f;
 
     [Header("Timing")]
     [Tooltip("Seconds between each noise pulse")]
-    [SerializeField] float pulseInterval = 1.5f;
+    [SerializeField] private float pulseInterval = 1.5f;
 
     [Tooltip("Seconds the lure stays active before destroying itself.")]
-    [SerializeField] float lureDuration = 10f;
+    [SerializeField] private float lureDuration = 10f;
 
     [Header("Visuals")]
     [Tooltip("LED object to pulse in sync with noise emission.")]
@@ -70,7 +72,7 @@ public class LureItem : NoiseEmitter
 
         CancelInvoke();
         InvokeRepeating(nameof(Pulse), 0f, pulseInterval);
-        Invoke(nameof(StopLure), lureDuration);
+        StartCoroutine(StopLure());
     }
 
     /// <summary>
@@ -81,19 +83,23 @@ public class LureItem : NoiseEmitter
     private void Pulse()
     {
         blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
-        Emit_Server(noiseRadius);
+        Emit_Server(noiseRadius, atIndex: 0);
     }
 
     /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
-    private void StopLure()
+    private IEnumerator StopLure()
     {
-        if (!isServer) return;
-
+        if (!isServer) yield break;
+        yield return new WaitForSeconds(lureDuration);
         CancelInvoke();
+
+        // Shutdown sound
+        Emit_Server(noiseRadius, atIndex: 1);
+        yield return new WaitForSeconds(audioClips[1].length);
+
         Destroy(gameObject);
     }
 
     private void OnDrawGizmos() => Gizmos.DrawWireSphere(transform.position, noiseRadius);
-
     #endregion
 }
