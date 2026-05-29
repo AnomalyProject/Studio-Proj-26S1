@@ -44,7 +44,8 @@ public class PlayerLeanAnimation : NetworkBehaviour
        // Debug.Log($"Target Lean: {targetLean} | Current Lean: {currentLean}");
         currentLean = Mathf.Lerp(currentLean, targetLean, Time.deltaTime * lerpSpeed);
         float angle = currentLean * maxAngle;
+        Vector3 currentEuler = affectedBone.localEulerAngles;
         //Rotation to Z
-        affectedBone.localRotation = initialRotation * Quaternion.Euler (0f,0f, angle);
+        affectedBone.localRotation = Quaternion.Euler(currentEuler.x, currentEuler.y, angle);
     }
 }
