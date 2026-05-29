@@ -59,7 +59,7 @@ public class SceneLoader : NetworkBehaviour
 
 
 
-    private void Awake()
+    protected virtual void Awake()
     {
         // singleton pattern
         if (Instance != null & Instance != this)
