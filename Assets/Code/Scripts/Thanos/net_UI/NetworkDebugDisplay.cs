@@ -25,13 +25,17 @@ public class NetworkDebugDisplay : MonoBehaviour
 
     private void DrawSteamDiagnostic()
     {
+       // #if UNITY_EDITOR 
+       // return;
+       // #endif
+
         SteamRelayNetworkStatus_t status = new SteamRelayNetworkStatus_t();
         SteamNetworkingUtils.GetRelayNetworkStatus(out status);
 
-        string statusText = $"Steam Relay: {status.m_eAvail}";
+        string statusText = $"Steam Network Status: {status.m_eAvail}";
 
         string color = (status.m_eAvail == ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Current)? "green" : "red";
 
-        GUI.Label(new Rect(10, Screen.height - 50, 300, 20), $"<color={color}>{statusText}</color>");
+        GUI.Label(new Rect(Screen.width - 310, 220, 300, 20), $"<color={color}>{statusText}</color>");
     }
 }
