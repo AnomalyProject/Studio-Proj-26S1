@@ -87,10 +87,10 @@ public class RaycastSpawner : PlayerItem, IInteractable<PlayerBody>
         Vector3 boundsCenter = landingPoint + boundsOffset;
 
         bool hasCeiling = Physics.Raycast(landingPoint, Vector3.up, out RaycastHit ceilingHit, Mathf.Infinity);
-        bool enoughHeight = hasCeiling && ceilingHit.distance >= boundsSize.y;
+        bool enoughHeight = !hasCeiling || ceilingHit.distance >= boundsSize.y;
         bool areaClear = IsAreaClear(boundsCenter, groundHit.collider);
 
-        isValid = hasCeiling && enoughHeight && areaClear;
+        isValid = enoughHeight && areaClear;
 
         return landingPoint;
     }

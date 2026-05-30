@@ -24,8 +24,11 @@ public class SettingsManager : MonoBehaviour
     private float[] categoryYPositions;
 
     [Header("World References")]
-    [SerializeField] GameObject settingsCanvas;
+    [SerializeField] Canvas settingsCanvas;
     [SerializeField] GameObject firstSelectedElement;
+    private Vector3 WorldPosition, WorldEulerAngles, WorldScale;
+    public Vector2 WorldAnchorMin, WorldAnchorMax, WorldAnchoredPosition, WorldSizeDelta, WorldPivot;
+    private bool capturedTransform;
 
     [Header("Settings Controls References")]
     // Audio
@@ -186,7 +189,7 @@ public class SettingsManager : MonoBehaviour
     // Static method, opens canvas, SettingsManager.Open()
     public static void Open()
     {
-        Instance?.settingsCanvas.SetActive(true);
+        Instance?.settingsCanvas.gameObject.SetActive(true);
         IsOpen = true;
         EventSystem.current.SetSelectedGameObject(Instance.firstSelectedElement);
         OnSettingsOpened?.Invoke();
@@ -204,7 +207,7 @@ public class SettingsManager : MonoBehaviour
     // Static method, closes canvas, SettingsManager.Close()
     public static void Close()
     {
-        Instance?.settingsCanvas.SetActive(false);
+        Instance?.settingsCanvas.gameObject.SetActive(false);
         IsOpen = false;
         EventSystem.current.SetSelectedGameObject(null);
         OnSettingsClosed?.Invoke();
@@ -216,6 +219,46 @@ public class SettingsManager : MonoBehaviour
     }
 
     public static bool IsOpen { get; private set; }
+
+    public void SwitchCanvasMode(RenderMode renderMode)
+    {
+        settingsCanvas.renderMode = renderMode;
+
+        if (renderMode == RenderMode.WorldSpace)
+        {
+            // restore settings canvas world transform
+            RectTransform worldTransform = settingsCanvas.GetComponent<RectTransform>();
+
+            worldTransform.anchorMin = WorldAnchorMin;
+            worldTransform.anchorMax = WorldAnchorMax;
+            worldTransform.anchoredPosition = WorldAnchoredPosition;
+            worldTransform.sizeDelta = WorldSizeDelta;
+            worldTransform.pivot = WorldPivot;
+
+            worldTransform.position = WorldPosition;
+            worldTransform.eulerAngles = WorldEulerAngles;
+            worldTransform.localScale = WorldScale;
+        }
+    }
+
+    public void CaptureWorldTransform()
+    {
+        if (capturedTransform) return;
+        
+        capturedTransform = true;
+
+        RectTransform worldTransform = settingsCanvas.GetComponent<RectTransform>();
+
+        WorldAnchorMin = worldTransform.anchorMin;
+        WorldAnchorMax = worldTransform.anchorMax;
+        WorldAnchoredPosition = worldTransform.anchoredPosition;
+        WorldSizeDelta = worldTransform.sizeDelta;
+        WorldPivot = worldTransform.pivot;
+
+        WorldPosition = worldTransform.position;
+        WorldEulerAngles = worldTransform.eulerAngles;
+        WorldScale = worldTransform.localScale;
+    }
 
     // filters and shows a specific category
     public void SelectCategory(int index)
