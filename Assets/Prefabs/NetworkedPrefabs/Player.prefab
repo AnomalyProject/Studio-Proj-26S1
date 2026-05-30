@@ -722,6 +722,7 @@ MonoBehaviour:
   - {fileID: 4543138664715801701}
   - {fileID: 8202237469530362366}
   defaultFOV: 60
+  speedBoostFOV: 90
   zoomScale: 0.5
   zoomTransitionSpeed: 12
 --- !u!1 &4227618509524077635
@@ -1679,10 +1680,13 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
-  affectedBone: {fileID: 6166308721123772597}
+  affectedBone: {fileID: 6780590493857833423}
   cameraLean: {fileID: 5223983998993346721}
+  cameraController: {fileID: 8945130606974342615}
   maxAngle: 15
   lerpSpeed: 8
+  maxVerticalAngle: 35
+  lerpVerticalSpeed: 8
 --- !u!1 &5348312652502001726
 GameObject:
   m_ObjectHideFlags: 0
@@ -1964,9 +1968,9 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0309233d3f13d3745ad74c4ebd4fa78a, type: 3}
   m_PrefabInstance: {fileID: 1152733124731409575}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &6166308721123772597 stripped
+--- !u!4 &6780590493857833423 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 6515712193588681746, guid: 0309233d3f13d3745ad74c4ebd4fa78a, type: 3}
+  m_CorrespondingSourceObject: {fileID: -3321919801592875672, guid: 0309233d3f13d3745ad74c4ebd4fa78a, type: 3}
   m_PrefabInstance: {fileID: 1152733124731409575}
   m_PrefabAsset: {fileID: 0}
 --- !u!95 &6815565828108429622 stripped
