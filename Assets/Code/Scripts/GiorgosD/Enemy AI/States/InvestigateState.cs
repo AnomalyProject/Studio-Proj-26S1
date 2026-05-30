@@ -17,7 +17,9 @@ public class InvestigateState : BaseState
         body.SetMoveSpeed(true);
 
         lastKnownPos = brain.TargetPos.position;
-
+        
+        body.anim.SetBool("isRun", true);
+        
         body.MoveToTarget(lastKnownPos);
 
         body.OnPlayerSpotted.AddListener(PlayerFound);
@@ -53,6 +55,7 @@ public class InvestigateState : BaseState
 
     public override void Exit()
     {
+        body.anim.SetBool("isRun", false);
         body.OnPlayerSpotted.RemoveListener(PlayerFound);
     }
 }

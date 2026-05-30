@@ -13,6 +13,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private float runSpeed;
     public NavMeshAgent agent { get; private set; }
     public NavMeshPath path { get; private set; }
+    public Animator anim { get; private set; }
 
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
@@ -43,7 +44,6 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
     #endregion
-
     
     #region Events
     public UnityEvent<PlayerBody> OnPlayerSpotted;
@@ -54,6 +54,7 @@ public class EnemyPawn : NetworkBehaviour
     #region Body Set up
     private void Awake()
     {
+        anim = GetComponentInChildren<Animator>();
         agent = GetComponent<NavMeshAgent>();
         path = new();
         sightAngleNormal = sightAngle;

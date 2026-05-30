@@ -20,6 +20,8 @@ public class AttackState : BaseState
         target = brain.TargetPos;
 
         bool isHit = body.IsHitSuccess(target) ? DoAttack(target) : ChangeToChaseState();
+        
+        body.anim.SetBool("isAttack", true);
     }
 
     public override void Update()
@@ -57,6 +59,6 @@ public class AttackState : BaseState
 
     public override void Exit()
     {
-
+        body.anim.SetBool("isAttack", false);
     }
 }

@@ -20,10 +20,12 @@ public class PatrolState : BaseState
 
         if (brain.poiIsEnabled)
         {
+            body.anim.SetBool("isWalking", true);
             MoveToPoint(brain.PatrolPriorities);
         }
         else
         {
+            body.anim.SetBool("isWalking", true);
             MoveToPoint(brain.PatrolPoints);
         }
     }
@@ -69,6 +71,7 @@ public class PatrolState : BaseState
 
     public override void Exit()
     {
+        body.anim.SetBool("isWalking", false);
         body.OnPlayerSpotted.RemoveListener(HandlePlayerSpotted);
     }
 }
