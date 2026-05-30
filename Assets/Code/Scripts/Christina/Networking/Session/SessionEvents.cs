@@ -8,6 +8,8 @@ public static class SessionEvents
     public static event Action OnSessionDataChanged;
     public static event Action<SessionErrorResponse> OnSessionError;
     public static event Action<string> OnHostMigrationStarted;
+    public static event Action OnReconnectApproved;
+    
 
 
     public static void InvokePlayerJoined(ulong steamID, string displayName)
@@ -34,6 +36,11 @@ public static class SessionEvents
     {
         OnHostMigrationStarted?.Invoke(newHostName);
     }
+    
+    public static void InvokeReconnectApproved()
+    {
+        OnReconnectApproved?.Invoke();
+    }
 
     public static void Reset()
     {
@@ -42,5 +49,6 @@ public static class SessionEvents
         OnSessionDataChanged = null;
         OnSessionError = null;
         OnHostMigrationStarted = null;
+        OnReconnectApproved = null;
     }
 }

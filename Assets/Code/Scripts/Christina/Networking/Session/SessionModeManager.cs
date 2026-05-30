@@ -14,7 +14,9 @@ public class SessionModeManager : MonoBehaviour
     public SessionMode CurrentMode => currentMode;
 
     private bool isLocallyInitiatedTeardown = false;
-    
+    public bool IsLocallyInitiatedTeardown => isLocallyInitiatedTeardown;
+    public event Action OnLocalTeardownStarted;
+
     [SerializeField] private string gameplaySceneName = "MainGameplayScene";
     [SerializeField] private string lobbySceneName = "Lobby";
 
@@ -117,7 +119,9 @@ public class SessionModeManager : MonoBehaviour
     public void ReturnToMenu()
     {
         if (isLocallyInitiatedTeardown) return;
+        
         isLocallyInitiatedTeardown = true;
+        OnLocalTeardownStarted?.Invoke();
 
         StartCoroutine(ReturnToMenuRoutine());
     }

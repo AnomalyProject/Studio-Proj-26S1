@@ -35,6 +35,12 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         TrySubscribeToNetworkManager();
 
         SessionEvents.OnHostMigrationStarted += HandleHostMigrationStarted;
+        SessionEvents.OnReconnectApproved += HandleReconnectApproved;
+        
+        if (SessionModeManager.Instance != null)
+        {
+            SessionModeManager.Instance.OnLocalTeardownStarted += ResetReconnectState;
+        }
     }
     
     private void Update()
@@ -50,6 +56,18 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         }
 
         SessionEvents.OnHostMigrationStarted -= HandleHostMigrationStarted;
+        SessionEvents.OnReconnectApproved -= HandleReconnectApproved;
+        
+        if (SessionModeManager.Instance != null)
+        {
+            SessionModeManager.Instance.OnLocalTeardownStarted -= ResetReconnectState;
+        }
+    }
+    
+    private bool IsLocalTeardownInProgress()
+    {
+        return SessionModeManager.Instance != null &&
+               SessionModeManager.Instance.IsLocallyInitiatedTeardown;
     }
     
     private void HandleClientConnectionState(ConnectionState state)
@@ -60,31 +78,63 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         if (state == ConnectionState.Connected)
         {
             wasConnected = true;
-
-            if (isWaitingToReconnect)
-            {
-                isWaitingToReconnect = false;
-                StopReconnectRoutine();
-                OnReconnected?.Invoke();
-            }
-
             return;
         }
 
         if (state != ConnectionState.Disconnecting && state != ConnectionState.Disconnected) return;
         
+        if (IsLocalTeardownInProgress())
+        {
+            ResetReconnectState();
+            return;
+        }
+        
         if (SessionModeManager.Instance == null) return;
         
         if (SessionModeManager.Instance.CurrentMode != SessionMode.CoOpClient && SessionModeManager.Instance.CurrentMode != SessionMode.DevClient) return;
-
-        wasConnected = true;
+        
+        if (!wasConnected)
+        {
+            Debug.Log("[SessionReconnectService] Ignoring disconnect before first successful connection.");
+            return;
+        }
         
         if (isWaitingToReconnect) return;
+        
         isWaitingToReconnect = true;
         OnConnectionLost?.Invoke();
-        
+
         if (reconnectRoutine == null) reconnectRoutine = StartCoroutine(ReconnectRoutine());
         
+    }
+    
+    private void HandleReconnectApproved()
+    {
+        if (!isWaitingToReconnect) return;
+
+        isWaitingToReconnect = false;
+        wasConnected = true;
+        StopReconnectRoutine();
+
+        OnReconnected?.Invoke();
+    }
+    
+    public float ReconnectTimeoutSeconds
+    {
+        get
+        {
+            if (SessionManager.Instance != null) return SessionManager.Instance.ReconnectTimeoutSeconds;
+
+            return 30f;
+        }
+    }
+    
+    
+    private void ResetReconnectState()
+    {
+        isWaitingToReconnect = false;
+        wasConnected = false;
+        StopReconnectRoutine();
     }
     
     private void HandleHostMigrationStarted(string message)

@@ -26,6 +26,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     #region Fields, Properties, and Events
     
     [SerializeField] private float reconnectTimeoutSeconds = 30f;
+    public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
     
     // --- FIELDS
     private SessionPlayerRegistry registry;
@@ -270,6 +271,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             reconnectRoutines.Remove(steamID);
         }
 
+        SendReconnectApproved(playerID);
         SendSessionUpdate();
         SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(CurrentSession));
         SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
@@ -848,6 +850,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
     
+    [TargetRpc]
+    private void SendReconnectApproved(PlayerID target)
+    {
+        SessionEvents.InvokeReconnectApproved();
+        Debug.Log("[SessionManager] [Client] Reconnect approved.");
+    }
 
     #endregion
     
