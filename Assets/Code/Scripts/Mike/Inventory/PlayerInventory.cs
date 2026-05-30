@@ -1,10 +1,10 @@
-using UnityEngine.InputSystem;
-using UnityEngine.Events;
-using UnityEngine;
+using PurrNet;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System;
-using PurrNet;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(PlayerBody))]
@@ -45,6 +45,7 @@ public class PlayerInventory : NetworkBehaviour
         if (!isOwner) return;
         Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
+        Inventory.OnStackChanged += HandleStackChanged;
         Inventory.OnStackRemoved += HandleStackRemoval;
 
         Inventory.OnItemAdded += OnItemAdded.Invoke;
@@ -91,9 +92,14 @@ public class PlayerInventory : NetworkBehaviour
 
         PlayerItem itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
         itemInstances.Add(stack.GetID(), itemObject);
+        itemObject.BindTo(this, stack, slotIndex);
 
         if (activeInstance == null) ChangeFocused(slotIndex);
         else itemObject.gameObject.SetActive(false);
+    }
+    private void HandleStackChanged(IReadOnlyItemStack stack, int slotIndex)
+    {
+        if (itemInstances.TryGetValue(stack.GetID(), out PlayerItem item)) item.BindTo(this, stack, slotIndex);
     }
     private void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
@@ -154,7 +160,7 @@ public class PlayerInventory : NetworkBehaviour
             itemObject.gameObject?.SetActive(true);
         }
 
-        activeInstance = itemObject.gameObject;
+        activeInstance = itemObject?.gameObject;
         OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
@@ -195,7 +201,7 @@ public class PlayerInventory : NetworkBehaviour
             playerBody.transform.position + throwDirection, 
             Quaternion.identity);
 
-        droppedItem.SetQuantity(quantityRemoved);
+        droppedItem.SetStack(stack.CloneWithQuantity(quantityRemoved));
         ApplyThrowForce_Server(droppedItem.Rigidbody, throwDirection);
 
         if (!stack.GetItemData().IsKeyItem)
