@@ -14,7 +14,7 @@ public class PauseMenu : MonoBehaviour
     public void TogglePauseMenu(InputBridge.InputContext context)
     {
         // Disable when in Main Menu
-        if (MainMenuManager.instance != null)
+        if (MainMenuManager.Instance != null)
         {
             root.gameObject.SetActive(false);
             return;
