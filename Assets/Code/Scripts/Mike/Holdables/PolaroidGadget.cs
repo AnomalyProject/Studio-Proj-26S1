@@ -19,9 +19,10 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     [SerializeField] private ItemData pictureItemData;
     [SerializeField] private Vector2Int textureSize = new(256, 256);
     [SerializeField] private RawImage previewDisplay;
-    [SerializeField] Camera previewCamera;
-    [SerializeField] Light flash;
-    [SerializeField] UnityEvent OnPictureTaken;
+    [SerializeField] private Camera previewCamera;
+    [SerializeField] private Light flash;
+    [SerializeField, Min(.1f)] private float flashLifetime = .2f;
+    [SerializeField] private UnityEvent OnPictureTaken;
     #endregion
 
     SyncVar<int> remainingCharges = new SyncVar<int>(-1, ownerAuth: false);
@@ -135,8 +136,10 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     }
     public void DoFlash()
     {
+        if (!flash) return;
+
         flash.enabled = true;
-        Invoke(nameof(CloseFlash), .2f);
+        Invoke(nameof(CloseFlash), flashLifetime);
     }
     private void CloseFlash() => flash.enabled = false;
     #endregion
