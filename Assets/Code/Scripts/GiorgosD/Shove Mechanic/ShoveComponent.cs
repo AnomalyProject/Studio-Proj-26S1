@@ -67,7 +67,8 @@ public class ShoveComponent : NetworkBehaviour
     private void StartShove()
     {
         if (isInCooldown) return;
-        
+        GetComponent<PlayerAnimatorController>()
+         ?.PlayPushAnimation();
         PlayerShoved?.Invoke();
         
         Ray shoveRay = new Ray(transform.position + Vector3.up, transform.forward);
@@ -87,9 +88,9 @@ public class ShoveComponent : NetworkBehaviour
                 pushDir.Normalize();
                 
                 PushPlayer(target, pushDir * shoveForce);
-                
+
                 StartCoroutine(CooldownShove());
-                
+
             }
         }
     }
@@ -133,6 +134,25 @@ public class ShoveComponent : NetworkBehaviour
     {
         force.y = 0;
         shoveVelocity += force;
+
+
+        FPSController fps = GetComponent<FPSController>();
+
+        if (fps != null)
+        {
+            fps.IsStunned = true;
+        }
+
+        PlayerAnimatorController anim =
+        GetComponent<PlayerAnimatorController>();
+
+        if (anim != null)
+        {
+            anim.ApplyShove(force);
+            anim.SetStunned(true);
+        }
+
+        StartCoroutine(RecoverRoutine());
     }
     #endregion
 
@@ -148,4 +168,29 @@ public class ShoveComponent : NetworkBehaviour
         isInCooldown = false;
     }
     #endregion
+    private IEnumerator RecoverRoutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+        FPSController fps = GetComponent<FPSController>();
+
+        if (fps != null)
+        {
+            fps.IsStunned = false;
+        }
+
+        PlayerAnimatorController anim =
+            GetComponent<PlayerAnimatorController>();
+
+        if (anim != null)
+        {
+            anim.GetUp();
+        }
+
+        yield return new WaitForSeconds(1.0f);
+
+        if (anim != null)
+        {
+            anim.SetStunned(false);
+        }
+    }
 }

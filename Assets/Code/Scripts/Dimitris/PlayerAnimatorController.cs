@@ -1,6 +1,7 @@
 using PurrNet;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
+using System.Collections;
 
 public class PlayerAnimatorController : NetworkBehaviour
 {
@@ -16,6 +17,13 @@ public class PlayerAnimatorController : NetworkBehaviour
     private int moveYHash;
     private int crouchHash;
     private int sprintHash;
+    //shove hashes
+    private int shoveXHash;
+    private int shoveYHash;
+    private int shovedHash;
+    private int getUpHash;
+    private int isStunnedHash;
+    private int pushHash;
     //Lerp variables
     private float currentMoveX;
     private float currentMoveY;
@@ -40,6 +48,13 @@ public class PlayerAnimatorController : NetworkBehaviour
         moveYHash = Animator.StringToHash("MoveY");
         crouchHash = Animator.StringToHash("isCrouching");
         sprintHash = Animator.StringToHash("isSprinting");
+        //parameters of shove added here
+        shoveXHash = Animator.StringToHash("ShoveX");
+        shoveYHash = Animator.StringToHash("ShoveY");
+        shovedHash = Animator.StringToHash("Shoved");
+        getUpHash = Animator.StringToHash("GetUp");
+        isStunnedHash = Animator.StringToHash("IsStunned");
+        pushHash = Animator.StringToHash("Push");
     }
 
     // Update is called once per frame
@@ -70,13 +85,42 @@ public class PlayerAnimatorController : NetworkBehaviour
         animator.SetBool(sprintHash , isSprinting);
        
     }
-  /*  // Since moveInput is private in FPSController
-    // Converts world velocity to local space and clamps it for Animator parameters
-    private Vector2 GetMoveInput()
+    public void ApplyShove(Vector3 force)
     {
-        Vector3 localVelocity = transform.InverseTransformDirection(characterController.velocity);
-        float moveX = Mathf.Clamp(localVelocity.x , -1f ,  1f);
-        float moveY = Mathf.Clamp(localVelocity.z, -1f, 1f);
-        return new Vector2(moveX, moveY);
-    } */
+        Vector3 localDir = transform.InverseTransformDirection(force.normalized);
+
+        animator.SetFloat(shoveXHash, localDir.x);
+        animator.SetFloat(shoveYHash, localDir.z);
+
+        animator.SetTrigger(shovedHash);
+    }
+    public void SetStunned(bool state)
+    {
+        animator.SetBool(isStunnedHash, state);
+    }
+    public void GetUp()
+    {
+        animator.SetTrigger(getUpHash);
+    }
+    public void PlayPushAnimation()
+    {
+        animator.SetLayerWeight(1, 1f);//for override base layer
+        animator.SetTrigger(pushHash);
+        StartCoroutine(DisablePushLayer());
+    }
+    private IEnumerator DisablePushLayer()
+    {
+        yield return new WaitForSeconds(1f); // duration of push
+
+        animator.SetLayerWeight(1, 0f); //resets weight
+    }
+    /*  // Since moveInput is private in FPSController
+      // Converts world velocity to local space and clamps it for Animator parameters
+      private Vector2 GetMoveInput()
+      {
+          Vector3 localVelocity = transform.InverseTransformDirection(characterController.velocity);
+          float moveX = Mathf.Clamp(localVelocity.x , -1f ,  1f);
+          float moveY = Mathf.Clamp(localVelocity.z, -1f, 1f);
+          return new Vector2(moveX, moveY);
+      } */
 }
