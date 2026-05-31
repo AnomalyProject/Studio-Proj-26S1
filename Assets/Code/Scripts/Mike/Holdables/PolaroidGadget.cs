@@ -41,6 +41,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     }
     private void OnDisable()
     {
+        previewCamera.targetTexture = null;
         _renderTexture.Release();
         Destroy(_renderTexture);
         CancelInvoke(nameof(CloseFlash));
