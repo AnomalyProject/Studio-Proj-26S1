@@ -1,6 +1,7 @@
 using PurrNet;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
@@ -19,6 +20,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     [SerializeField] private ItemData pictureItemData;
     [SerializeField] private Vector2Int textureSize = new(256, 256);
     [SerializeField] private RawImage previewDisplay;
+    [SerializeField] private TextMeshProUGUI chargeDisplay;
     [SerializeField] private Camera previewCamera;
     [SerializeField] private Light flash;
     [SerializeField, Min(.1f)] private float flashLifetime = .2f;
@@ -37,7 +39,6 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         previewCamera.enabled = true;
         previewDisplay.texture = _renderTexture;
         flash.enabled = false;
-        CheckScreenDisable();
     }
     private void OnDisable()
     {
@@ -57,7 +58,8 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
 
         if(!asServer && isOwner)
         {
-            remainingCharges.onChanged += (_) => CheckScreenDisable();
+            remainingCharges.onChanged += HandleChargesChangedVisuals;
+            HandleChargesChangedVisuals(remainingCharges.value);
         }
 
         if (!asServer) return;
@@ -109,11 +111,14 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     #endregion
 
     #region Helpers
-    private void CheckScreenDisable()
+    private void HandleChargesChangedVisuals(int value)
     {
-        bool hasRemainingCharges = remainingCharges.value > 0;
-        previewDisplay.enabled = hasRemainingCharges;
-        previewCamera.enabled = hasRemainingCharges;
+        chargeDisplay.text = value.ToString();
+
+        bool enoughCharges = value > 0;
+        previewDisplay.enabled = enoughCharges;
+        previewCamera.enabled = enoughCharges;
+        chargeDisplay.enabled = enoughCharges;
     }
     private async Task<Texture2D> ReadSnapshotAsync()
     {
