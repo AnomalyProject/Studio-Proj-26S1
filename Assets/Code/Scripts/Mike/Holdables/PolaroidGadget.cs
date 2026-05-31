@@ -15,15 +15,18 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
 
     #region Serialized Fields
     [SerializeField] private int totalCharges = 4;
+    [SerializeField, Min(.1f)] private float cooldownSeconds = 1;
     [SerializeField] private ItemData pictureItemData;
     [SerializeField] private Vector2Int textureSize = new(256, 256);
     [SerializeField] private RawImage previewDisplay;
     [SerializeField] Camera previewCamera;
+    [SerializeField] Light flash;
     [SerializeField] UnityEvent OnPictureTaken;
     #endregion
 
-    SyncVar<int> remainingCharges = new SyncVar<int>(0, ownerAuth: false);
+    SyncVar<int> remainingCharges = new SyncVar<int>(-1, ownerAuth: false);
     private RenderTexture _renderTexture;
+    private float currentCooldown;
 
     #region Unity Lifecycle
     private void OnEnable()
@@ -32,15 +35,28 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         previewCamera.targetTexture = _renderTexture;
         previewCamera.enabled = true;
         previewDisplay.texture = _renderTexture;
+        flash.enabled = false;
+        CheckScreenDisable();
     }
     private void OnDisable()
     {
         _renderTexture.Release();
         Destroy(_renderTexture);
+        CancelInvoke(nameof(CloseFlash));
+    }
+    private void Update()
+    {
+        if (currentCooldown <= 0) return;
+        currentCooldown -= Time.deltaTime;
     }
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
+
+        if(!asServer && isOwner)
+        {
+            remainingCharges.onChanged += (_) => CheckScreenDisable();
+        }
 
         if (!asServer) return;
 
@@ -55,12 +71,15 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     #region Interaction
     public Task<bool> CanInteract(PlayerBody interactor)
     {
-        bool success = !interactor.Inventory.IsInventoryFull() && remainingCharges.value > 0;
-        return Task.FromResult(success);
+        bool requirementsMet = interactor.Inventory.EmptySlots > 0 && remainingCharges.value > 0 && currentCooldown <= 0;
+        return Task.FromResult(requirementsMet);
     }
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
-        // Reuse the viewfinder RT that's already being rendered every frame
+        bool canInteract = await CanInteract(interactor);
+        if (!canInteract) return false;
+
+        currentCooldown = cooldownSeconds;
         Texture2D snapshot = await ReadSnapshotAsync();
         if (snapshot == null) return false;
         return await RegisterPicture_ServerRpc(interactor, snapshot.EncodeToPNG());
@@ -88,6 +107,12 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     #endregion
 
     #region Helpers
+    private void CheckScreenDisable()
+    {
+        bool hasRemainingCharges = remainingCharges.value > 0;
+        previewDisplay.enabled = hasRemainingCharges;
+        previewCamera.enabled = hasRemainingCharges;
+    }
     private async Task<Texture2D> ReadSnapshotAsync()
     {
         var tcs = new TaskCompletionSource<Texture2D>();
@@ -108,5 +133,11 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
 
         return await tcs.Task;
     }
+    public void DoFlash()
+    {
+        flash.enabled = true;
+        Invoke(nameof(CloseFlash), .2f);
+    }
+    private void CloseFlash() => flash.enabled = false;
     #endregion
 }
