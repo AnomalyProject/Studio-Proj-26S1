@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: Moving Items Anomaly
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects: []
+  removedGameObjects: []
+  gameObjectModifications:
+  - guid: 2749d5c0-646c-4ff1-a3b7-f9a9eba22399
+    oldParentGuid: 6632ac16-55d8-4b7d-8b3c-a9e0c4d0b045
+    newParentGuid: 6632ac16-55d8-4b7d-8b3c-a9e0c4d0b045
+    oldIsStatic: 1
+    newIsStatic: 0
+    oldName: SM_CCTVCameras_UP_LOD0 (4)
+    newName: SM_CCTVCameras_UP_LOD0 (4)
+    oldActive: 1
+    newActive: 1
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents:
+    - type: SecurityCameraMovement, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: angleLimit
+        type: 2
+        valueJson: '{"value":30}'
+      - path: movementSpeed
+        type: 4
+        valueJson: '{"value":1.5}'
+    removedComponents: []
+    componentModifications: []
