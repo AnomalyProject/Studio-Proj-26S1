@@ -7,6 +7,8 @@ using UnityEngine;
 public class PasscodeSpreader : NetworkBehaviour
 {
     [SerializeField] private TextMeshPro[] texts;
+    [SerializeField] private bool applySymbols = true;
+    [SerializeField] private string[] symbols;
 
     private void Awake()
     {
@@ -73,7 +75,8 @@ public class PasscodeSpreader : NetworkBehaviour
             {
                 textTarget.text = input[i].ToString();
             }
-            
+
+            if (applySymbols && i < symbols.Length) textTarget.text += symbols[i];
             textTarget.gameObject.SetActive(true);
         }
     }
