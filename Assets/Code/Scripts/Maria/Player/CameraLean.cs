@@ -35,7 +35,8 @@ public class CameraLean : MonoBehaviour
     private Vector3 neutralLocalPosition;
     
     public bool IsLocalPlayer { get; set; }
-    
+    public int LeanAmount => -(int)Mathf.Clamp(leanInput, -1f, 1f);
+
     #endregion
 
     #region Unity Lifecycle
@@ -56,22 +57,22 @@ public class CameraLean : MonoBehaviour
     #region Lean
     public void HandleLeanLeft(InputAction.CallbackContext ctx)
     {
-        if(ctx.performed) leanInput -= 1f;
-        else if(ctx.canceled) leanInput += 1f;
+        if (ctx.started) leanInput -= 1f;
+        else if (ctx.canceled) leanInput += 1f;
     }
 
     public void HandleLeanRight(InputAction.CallbackContext ctx)
     {
-        if(ctx.performed) leanInput += 1f;
-        else if(ctx.canceled) leanInput -= 1f;
+        if (ctx.started) leanInput += 1f;
+        else if (ctx.canceled) leanInput -= 1f;
     }
     void CalculateTargets()
     {
         // LeanInput: -1 = left, 0 = neutral, 1 = right (clamped in case both held)
-        float lean = Mathf.Clamp(leanInput, -1f, 1f);
+        leanInput = Mathf.Clamp(leanInput, -1f, 1f);
 
-        targetAngle = lean * -leanAngle; // negative = roll left, positive = roll right
-        targetOffsetX = lean * leanDistance;
+        targetAngle = leanInput * -leanAngle; // negative = roll left, positive = roll right
+        targetOffsetX = leanInput * leanDistance;
     }
 
     void ApplyLean()

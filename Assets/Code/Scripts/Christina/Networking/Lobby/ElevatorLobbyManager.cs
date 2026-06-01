@@ -64,6 +64,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     public void OnDoorsFullyClosed()
     {
+        BlackFadeManager.Instance?.FadeIn();
         if (!isServer) return;
         if (SessionManager.Instance.CurrentElevatorState != ElevatorLobbyState.DoorsClosing) return;
 

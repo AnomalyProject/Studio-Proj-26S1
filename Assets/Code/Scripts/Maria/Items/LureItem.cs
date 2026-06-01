@@ -1,4 +1,5 @@
 using PurrNet;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -17,16 +18,33 @@ public class LureItem : NoiseEmitter
     #region Inspector
     [Header("Noise")]
     [Tooltip("World-space radius in which IAlertable entities will be alerted.")]
-    [SerializeField] float noiseRadius = 8f;
+    [SerializeField] private float noiseRadius = 8f;
 
     [Header("Timing")]
     [Tooltip("Seconds between each noise pulse")]
-    [SerializeField] float pulseInterval = 1.5f;
+    [SerializeField] private float pulseInterval = 1.5f;
 
     [Tooltip("Seconds the lure stays active before destroying itself.")]
-    [SerializeField] float lureDuration = 10f;
+    [SerializeField] private float lureDuration = 10f;
 
+    [Header("Visuals")]
+    [Tooltip("LED object to pulse in sync with noise emission.")]
+    [SerializeField] private GameObject blinkingSphere;
+    [SerializeField] private Light blinkingLight;
+    [SerializeField] private float lightDimSpeed = 5f;
+    private Material blinkingMat;
+    private int EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor");
     #endregion
+
+    private void Start() => blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+
+    // Gradually dim the blinking light's emission color back to black over time
+    private void Update()
+    {
+        Color currentLightColor = blinkingMat.GetColor(EMISSION_COLOR_ID);
+        blinkingMat.SetColor(EMISSION_COLOR_ID, currentLightColor * Mathf.Exp(-lightDimSpeed * Time.deltaTime));
+        blinkingLight.color = currentLightColor;
+    }
 
     #region Network Lifecycle
 
@@ -38,7 +56,7 @@ public class LureItem : NoiseEmitter
     {
         base.OnSpawned(asServer);
 
-        if(asServer) Activate();
+        if (asServer) Activate();
     }
     #endregion
 
@@ -54,7 +72,7 @@ public class LureItem : NoiseEmitter
 
         CancelInvoke();
         InvokeRepeating(nameof(Pulse), 0f, pulseInterval);
-        Invoke(nameof(StopLure), lureDuration);
+        StartCoroutine(StopLure());
     }
 
     /// <summary>
@@ -62,18 +80,27 @@ public class LureItem : NoiseEmitter
     /// always broadcasts at its full Inspector-configured radius.
     /// Audio is replicated to all observers automatically by <see cref="NoiseEmitter.Emit_Server"/>.
     /// </summary>
-    private void Pulse() => Emit_Server(noiseRadius);
+    private void Pulse()
+    {
+        Emit_Server(noiseRadius, atIndex: 0);
+    }
+
+    public void OpenBlinker() => blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
 
     /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
-    private void StopLure()
+    private IEnumerator StopLure()
     {
-        if (!isServer) return;
-
+        if (!isServer) yield break;
+        yield return new WaitForSeconds(lureDuration);
         CancelInvoke();
+
+        // Shutdown sound
+        Emit_Server(noiseRadius, atIndex: 1);
+        yield return new WaitForSeconds(audioClips[1].length);
+
         Destroy(gameObject);
     }
 
     private void OnDrawGizmos() => Gizmos.DrawWireSphere(transform.position, noiseRadius);
-
     #endregion
 }

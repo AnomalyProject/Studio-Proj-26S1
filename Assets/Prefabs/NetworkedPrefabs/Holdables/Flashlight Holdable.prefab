@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 2052334265579669461}
   - component: {fileID: 3952242809129204366}
   - component: {fileID: 3374081651377321764}
-  - component: {fileID: -5502224554731424553}
   m_Layer: 3
   m_Name: Flashlight Holdable
   m_TagString: Untagged
@@ -57,6 +56,9 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
+  renderers:
+  - {fileID: 1786246034863117498}
+  canvases: []
   flashlightLight: {fileID: 2128018387592418699}
   maxDurabilitySeconds: 30
   drainSpeedMultiplier: 1
@@ -192,30 +194,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &-5502224554731424553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4170464921663025152}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1faa4bbea4ab47940ae959b995d9dbb3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerItem
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  renderers:
-  - {fileID: 1786246034863117498}
-  canvases: []
 --- !u!1 &7410716989099837303
 GameObject:
   m_ObjectHideFlags: 0

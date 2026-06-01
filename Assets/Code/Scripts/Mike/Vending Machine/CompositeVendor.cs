@@ -1,39 +1,23 @@
-using PurrNet;
-using System;
 using System.Threading.Tasks;
-using TMPro;
+using System;
 using UnityEngine;
+using PurrNet;
 
 public class CompositeVendor : VendorBase
 {
     public event Action<int> OnSlotChanged;
-    [SerializeField] private TextMeshPro stockText;
     [SerializeField] private VendorButton[] vendorButtons;
 
     protected override void Awake()
     {
         base.Awake();
-        itemStash.OnStackRemoved += (_, _) => UpdateStockText();
-        OnRestock.AddListener(UpdateStockText);
-    }
-    protected override void OnSpawned()
-    {
-        base.OnSpawned();
-
         for (int i = 0; i < vendorButtons.Length; i++) vendorButtons[i].SlotIndex = i;
-
-        UpdateStockText();
-    }
-    private void UpdateStockText()
-    {
-        int usedSlots = itemStash.UsedSlots;
-        stockText.text = usedSlots > 0? $"Stock x{usedSlots}" : "Out of Stock";
     }
 
     public bool CanBuyerAfford(int itemIndex, Inventory buyerInventory)
     {
         if(!itemStash.TryGet(itemIndex, out IReadOnlyItemStack stack)) return false;
-       return CanBuyerAfford(stack, buyerInventory, out _);
+        return CanBuyerAfford(stack, buyerInventory, out _);
     }
 
     private bool CanBuyerAfford(IReadOnlyItemStack stack, Inventory buyerInventory, out int stackPrice)

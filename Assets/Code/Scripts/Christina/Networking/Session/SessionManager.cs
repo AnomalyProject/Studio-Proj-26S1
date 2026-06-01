@@ -1,63 +1,68 @@
-using System.Collections.Generic;
 using System.Collections;
 using System;
 using UnityEngine;
 using PurrNet;
 
 /// <summary>
-/// Host(server)-authoritative session lifecycle manager. Handles player join/leave, ready states,
-/// match settings, and game start. All validated server-side before broadcasting to clients.
+/// Handles the network-facing side of sessions: RPCs, authority checks, broadcasts,
+/// and syncing clients.
+/// Session data and gameplay logic are delegated to smaller services, like:
+/// - SessionStateStore manages SessionData.
+/// - SessionPlayerRegistry maps PlayerIDs to SteamIDs.
+/// - SessionIdentityService resolves player identities and cleans display names.
+/// - SessionPlayerCoordinator handles join, leave, disconnect, and host registration.
+/// - SessionLobbyCoordinator handles ready state and elevator enter/exit.
+/// - SessionFlowCoordinator handles match start and return-to-lobby flow.
 ///
-/// Works between PurrNet's networking layer (PlayerID) and the game's identity layer (Steam ID).
-/// SessionData owns the data logic and this class owns the authority decisions and network flow.
-///
-/// Key rules:
-/// - All mutations go through ServerRpcs: clients request -> host decides
-/// - Host and clients share the same join path (AddPlayerToSession) to prevent divergence bugs. One place the logic -> one place the bugs
-/// - playerConnectionMap bridges PurrNet PlayerIDs to Steam IDs. SessionData only knows Steam IDs
-/// - GameStateManager remains the single authority on game state (SessionData.CurrentState is not used)
+/// Rules:
+/// - Clients request changes through ServerRpcs and then the host validates and applies them.
+/// - RPC-dependent authority checks stay here.
+/// - Coordinators return SessionCommandResult. This class broadcasts results or errors.
+/// - GameStateManager is still the authority for game state.
 /// </summary>
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
-
-    // the authoritative session container. Null means no session exists.
-    // SessionManager decides WHEN to modify it. SessionData handles the HOW.
-    private SessionData sessionData;
-    // PurrNet ConnectionID for the Host. Used for authority checks in RPCs.
-    // This is not like PlayerSessionInfo.IsHost -> that's for game logic. This one is for network authority.
-    private PlayerID? hostPlayerID;
-    private PlayerID? pendingHostConnection;
+    #region Fields, Properties, and Events
     
+    // --- FIELDS
+    private SessionPlayerRegistry registry;
+    private SessionStateStore sessionStore;
+    private SessionIdentityService identityService;
+    private SessionPlayerCoordinator playerCoordinator;
+    private SessionLobbyCoordinator lobbyCoordinator;
+    private SessionFlowCoordinator flowCoordinator;
+    private SessionSettingsService settingsService;
+
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
 
-    // this Dictionary maps PurrNet's PlayerID to Steam ulong IDs. This is nessecary because SessionData
-    // only know SteamIDs, but RPCs only know PlayerIDs. Every RPC must look up Stem ID here first.
-    private readonly Dictionary<PlayerID, ulong> playerConnectionMap = new();
-
+    // --- PROPERTIES
     // Convenience check for whether this machine isn the host.
     public bool IsHost => NetworkManager.main != null && NetworkManager.main.isHost;
 
     // Read-only access for UI and external systems. 
-    public SessionData CurrentSession => sessionData;
-    
+    public SessionData CurrentSession => sessionStore.Current;
+
     private ClientSessionData latestClientSession;
     public ClientSessionData LatestClientSession => latestClientSession;
-    
+
+
+    // --- EVENTS
     // server-side event fired when a player is added to the session.
     // carries the PlayerID directly so spawn systems don't need reverse-lookups.
     public static event Action<PlayerID, ulong, string> OnServerPlayerAdded;
     public static event Action<PlayerID, ulong, string> OnServerPlayerRemoved;
-    
+
     public static event Action OnServerSessionChanged;
+
+    public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
     
-    public ElevatorLobbyState CurrentElevatorState => sessionData != null ? sessionData.ElevatorState : ElevatorLobbyState.Open;
-
-
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
-    
 
+    #endregion
+    
+    #region Lifecycle
     /// <summary>
     /// Singleton setup. If a duplicate SessionManager exists, destroy it.
     /// </summary>
@@ -72,6 +77,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        
+        registry = new SessionPlayerRegistry();
+        sessionStore = new SessionStateStore();
+        identityService = new SessionIdentityService();
+        playerCoordinator = new SessionPlayerCoordinator(sessionStore, registry, identityService);
+        lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
+        flowCoordinator = new SessionFlowCoordinator(sessionStore);
+        settingsService = new SessionSettingsService(sessionStore);
     }
 
     /// <summary>
@@ -85,13 +98,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             Debug.Log("[SessionManager] Server started, I am the host.");
             CreateSession();
-            
-            if (pendingHostConnection.HasValue && playerConnectionMap.Count == 0)
+
+            if (registry.PendingHostConnection.HasValue && registry.Count == 0)
             {
-                RegisterHostPlayer(pendingHostConnection.Value, "pending OnPlayerConnected");
-                pendingHostConnection = null;
+                RegisterHostPlayer(registry.PendingHostConnection.Value, "pending OnPlayerConnected");
+                registry.PendingHostConnection = null;
             }
-            else if (playerConnectionMap.Count == 0)
+            else if (registry.Count == 0)
             {
                 hostRegistrationCoroutine = StartCoroutine(WaitForLocalHostThenRegister());
             }
@@ -103,19 +116,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     /// <summary>
-    /// Cleanup when the NetworkBehaviour is despawned. Nulls sessionData so that
-    /// sessionData != null checks correctly report "no session exists" if respawned.
-    /// Unsubscribes from GameStateManager to prevent stale event handlers.
+    /// Cleanup when the NetworkBehaviour is despawned. Clears the session store and
+    /// registry so HasSession reports false after respawn. Unsubscribes from
+    /// GameStateManager to prevent stale event handlers.
     /// </summary>
     protected override void OnDespawned()
     {
-        
-        sessionData = null;
-        hostPlayerID = null;
-        pendingHostConnection = null;
+        sessionStore.Clear();
         hostRegistrationCoroutine = null;
-        playerConnectionMap.Clear();
         latestClientSession = default;
+        registry.Clear();
 
         if (GameStateManager.Instance != null)
         {
@@ -123,10 +133,36 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
     }
     
+    /// <summary>
+    /// Initializes a new SessionData with default settings and transitions to Lobby state.
+    /// SessionData is created BEFORE the state transition to ensure it exists if anything
+    /// during the transition tries to read it. The host is NOT added here. That happens
+    /// in OnPlayerConnected via SessionPlayerCoordinator.RegisterHost.
+    /// </summary>
+    private void CreateSession()
+    {
+        Debug.Log("[SessionManager] Creating new session...");
+
+        LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
+
+        sessionStore.CreateSession(hostIdentity.SteamID);
+
+        GameStateManager.Instance.OnStateChanged += HandleStateChanged;
+
+        Debug.Log("[SessionManager] Session created.");
+    }
+
+    #endregion
+    
+    #region Host and Player Connection Handling
+    /// <summary>
+    ///  Registers the first connected player as the host and broadcasts them to the session.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="source"></param>
     private void RegisterHostPlayer(PlayerID playerID, string source)
     {
-        if (playerConnectionMap.Count != 0)
-            return;
+        if (registry.Count != 0) return;
 
         if (playerID.isServer)
         {
@@ -134,20 +170,11 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             return;
         }
 
-        hostPlayerID = playerID;
-        var hostIdentity = LocalIdentity.ResolveHost();
-
-        AddPlayerToSession(playerID, hostIdentity.steamID, hostIdentity.displayName, isHost: true);
+        LocalHostIdentity host = playerCoordinator.RegisterHost(playerID);
+        BroadcastPlayerJoined(playerID, host.SteamID, host.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
-    
-    private void SendSessionUpdate()
-    {
-        OnSessionUpdated_Client(BuildClientSessionData());
-        OnServerSessionChanged?.Invoke();
-    }
 
-    
     /// <summary>
     /// Waits briefly for the local networking player to become available, then
     /// registers it as the host if no host-player mappins has already been created.
@@ -159,7 +186,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         while (Time.realtimeSinceStartup < deadline)
         {
-            if (playerConnectionMap.Count != 0)
+            if (registry.Count != 0)
             {
                 hostRegistrationCoroutine = null;
                 yield break;
@@ -188,7 +215,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// PurrNet IPlayerEvents callback. Fires automatically when any player connects.
     /// Only runs server-side (asServer check). Only auto-adds the FIRST player (the host)
     /// when the session exists but is empty. All other players must explicitly call RequestJoinSession.
-    /// This keeps host and client on the same AddPlayerToSession code path.
+    /// Host registration is delegated to SessionPlayerCoordinator, then SessionManager broadcasts the result.
     /// </summary>
     public void OnPlayerConnected(PlayerID playerID, bool isReconnect, bool asServer)
     {
@@ -196,290 +223,180 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
-        if (playerConnectionMap.Count != 0) return;
-        
-        if (sessionData == null)
+        if (registry.Count != 0) return;
+
+        if (!sessionStore.HasSession)
         {
-            pendingHostConnection = playerID;
+            registry.PendingHostConnection = playerID;
             Debug.Log("[SessionManager] Storing pending host connection until session exists.");
             return;
         }
 
         RegisterHostPlayer(playerID, "OnPlayerConnected");
-        
+
         if (hostRegistrationCoroutine != null)
         {
             StopCoroutine(hostRegistrationCoroutine);
             hostRegistrationCoroutine = null;
         }
-        
+
     }
 
     /// <summary>
     /// PurrNet IPlayerEvents callback. Fires automatically when any player disconnects.
-    /// Only runs server-side. Uses the same RemovePlayerFromSession path as voluntary leaves,
-    /// ensuring consistent cleanup (SessionData removal, ready state reset, client broadcast)
-    /// regardless of whether the player left intentionally or lost connection.
+    /// Only runs server-side. SessionPlayerCoordinator removes the player from session data,
+    /// then SessionManager broadcasts the leave event and refreshed session state.
     /// </summary>
     public void OnPlayerDisconnected(PlayerID playerID, bool asServer)
     {
         if (!asServer) return;
-
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
 
-        // checking in case a client connected but never succesfully joined the session
-        if (!playerConnectionMap.ContainsKey(playerID))
+        if (!playerCoordinator.TryHandleDisconnect(playerID, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Disconnected PlayerID {playerID} was not in the session.");
             return;
         }
 
-        ulong steamID = playerConnectionMap[playerID];
-        RemovePlayerFromSession(playerID, steamID, "Disconnected");
+        BroadcastPlayerLeft(playerID, steamID, "Disconnected");
     }
 
-    /// <summary>
-    /// Initializes a new SessionData with default settings and transitions to Lobby state.
-    /// SessionData is created BEFORE the state transition to ensure it exists if anything
-    /// during the transition tries to read it. The host is NOT added here. That happens
-    /// in OnPlayerConnected via the shared AddPlayerToSession path.
-    /// </summary>
-    private void CreateSession()
-    {
-        Debug.Log("[SessionManager] Creating new session...");
-
-        var hostIdentity = LocalIdentity.ResolveHost();
-        
-        sessionData = new SessionData
-        {
-            HostSteamID =  hostIdentity.steamID,
-            MapName = "Default",
-            GameMode = "Default",
-            MaxPlayers = 2
-        };
-
-        GameStateManager.Instance.OnStateChanged += HandleStateChanged;
-
-        Debug.Log("[SessionManager] Session created.");
-    }
-
-    /// <summary>
-    /// Shared entry point for adding ANY player (host or client) to the session.
-    /// Creates a PlayerSessionInfo, registers it in SessionData, maps the PurrNet PlayerID
-    /// to the Steam ID, and broadcasts the join to all clients. Using one path for both
-    /// host and clients prevents divergence bugs. Any fix here applies to everyone.
-    /// Non-host players also receive the current game state to sync them up on join.
-    /// </summary>
-    private void AddPlayerToSession(PlayerID playerID, ulong steamID, string displayName, bool isHost = false)
-    {
-
-        var playerInfo = new PlayerSessionInfo(steamID, displayName, isHost);
-        sessionData.AddPlayer(playerInfo);
-
-        playerConnectionMap[playerID] = steamID;
-
-        OnPlayerJoined_Client(steamID, displayName);
-        SendSessionUpdate();
-        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
-        
-        
-        if (!isHost)
-        {
-            // snapshot for the joining player. This guarantees they receive the full state even if the 
-            // ObserverRpc timing has issues.
-            SendSessionSnapshot(playerID, BuildClientSessionData());
-            
-            // adding CurrentState here and not hard coded GameState.Lobby in case we need support for midgame re-connection later
-            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
-        }
-
-    }
-
-    /// <summary>
-    /// Shared exit point for removing ANY player from the session, whether they left
-    /// voluntarily or disconnected. Removes from both SessionData and playerConnectionMap,
-    /// broadcasts the leave to all clients, then resets all ready states because the
-    /// group composition changed and remaining players should re-confirm readiness.
-    /// </summary>
-    private void RemovePlayerFromSession(PlayerID playerID, ulong steamID, string reason)
-    {
-        sessionData.RemovePlayer(steamID);
-
-        playerConnectionMap.Remove(playerID);
-        
-        sessionData.ResetReadyStates();
-
-        OnPlayerLeft_Client(steamID, reason);
-        SendSessionUpdate();
-
-        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
-        Debug.Log($"[SessionManager] Player removed: SteamID {steamID} (Reason: {reason})");
-    }
+    #endregion
     
+    #region Session Management and Lobby State
+
+
     /// <summary>
     /// Given a Steam ID, returns the PurrNet PlayerID.
     /// </summary>
     public PlayerID? GetPlayerIDForSteam(ulong steamID)
     {
-        foreach (var entry in playerConnectionMap)
-        {
-            if (entry.Value == steamID) return entry.Key;
-        }
-        return null;
+        return registry.FindPlayerIDForSteam(steamID);
     }
-    
-    /// <summary>
-    /// Creates a client facing snapshot of the current session by coping only th e
-    /// public, serializable data the client needs from the authoritative session state.
-    /// </summary>
-    /// <returns></returns>
-    private ClientSessionData BuildClientSessionData()
-    {
-        var players = new List<ClientPlayerInfo>();
 
-        for (int i = 0; i < sessionData.Players.Count; i++)
-        {
-            var p = sessionData.Players[i];
-            players.Add(new ClientPlayerInfo
-            {
-                SteamID = p.SteamID,
-                DisplayName = p.DisplayName,
-                IsReady = p.IsReady,
-                IsHost = p.IsHost,
-                IsInElevator = p.IsInElevator
-            });
-        }
-        
-        var keys = new List<string>();
-        var values = new List<string>();
-        foreach (var kvp in sessionData.CustomProperties)
-        {
-            keys.Add(kvp.Key);
-            values.Add(kvp.Value);
-        }
-
-        return new ClientSessionData
-        {
-            HostSteamID = sessionData.HostSteamID,
-            MapName = sessionData.MapName,
-            GameMode = sessionData.GameMode,
-            MaxPlayers = sessionData.MaxPlayers,
-            PlayerCount = sessionData.Players.Count,
-            Players = players,
-            CustomPropertyKeys = keys,
-            CustomPropertyValues = values,
-            ElevatorState = sessionData.ElevatorState
-        };
-    }
-    
     /// <summary>
-    /// ELEVATOR
+    /// Returns true when the elevator is allowed to start its closing sequence:
+    /// session is live, game is in Lobby, elevator is Open, and every player
+    /// inside the elevator is ready.
     /// </summary>
-    /// <returns></returns>
     public bool CanStartElevatorSequence()
     {
-        if (sessionData == null) return false;
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open) return false;
-
-        return sessionData.AllPlayersReadyInElevator;
+        return lobbyCoordinator.CanStartElevatorSequence();
     }
-    
+
+    /// <summary>
+    ///  Updates the elevator lobby state on the server and broadcasts the refreshed session data.
+    /// </summary>
+    /// <param name="state"></param>
     public void SetElevatorState(ElevatorLobbyState state)
     {
-        if (!isServer || sessionData == null) return;
+        if (!isServer || !sessionStore.HasSession) return;
 
-        sessionData.ElevatorState = state;
-        SendSessionUpdate();
-    }
-    
-    public void SetPlayerInElevator(PlayerID playerID, bool isInside)
-    {
-        if (!isServer || sessionData == null) return;
-        if (!playerConnectionMap.ContainsKey(playerID)) return;
-        if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosed) return;
+        SessionCommandResult result = lobbyCoordinator.TrySetElevatorState(state);
+        if (!result.Success) return;
 
-        ulong steamID = playerConnectionMap[playerID];
-        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamID);
-
-        if (playerIndex == -1) return;
-
-        var playerInfo = sessionData.Players[playerIndex];
-        
-        playerInfo.IsInElevator = isInside;
-        playerInfo.IsReady = isInside;
-
-        sessionData.Players[playerIndex] = playerInfo;
         SendSessionUpdate();
     }
 
     /// <summary>
-    /// Client-to-server RPC: requests to join the session. Validates in order:
-    /// 1. Session not full (SessionData.IsSessionFull)
-    /// 2. Game is still in Lobby state
-    /// 3. Player isn't already in session (playerConnectionMap check)
-    /// Order matters -> cheapest checks first to reject early. Uses a temporary Steam ID
-    /// derived from PlayerID hash until Steamworks integration is ready.
+    ///  Updates whether a player is inside the elevator and broadcasts the refreshed session data.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="isInside"></param>
+    public void SetPlayerInElevator(PlayerID playerID, bool isInside)
+    {
+        if (!isServer) return;
+
+        SessionCommandResult result = lobbyCoordinator.TrySetPlayerInElevator(playerID, isInside);
+        if (!result.Success) return;
+
+        SendSessionUpdate();
+    }
+
+    #endregion
+    
+    #region Join, Leave, Ready Requests
+    /// <summary>
+    /// Client-to-server RPC: requests to join the active session.
+    /// The identity service resolves and validates the sender's Steam identity,
+    /// including Steam lobby membership and display-name sanitization.
+    /// SessionPlayerCoordinator then validates session rules: session exists, not full,
+    /// join is allowed in the current game state, player is not already registered,
+    /// and the elevator has not started leaving.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(ulong steamID, string displayName, RPCInfo info = default)
+    public void RequestJoinSession(RPCInfo info = default)
     {
         PlayerID sender = info.sender;
 
-        if (sessionData.IsSessionFull)
+        if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
-            Debug.Log($"[SessionManager] Join rejected: Session is full!");
-            SendErrorToClient(sender, SessionErrorCode.SessionFull, "Session is full..");
+            SendCommandErrorIfFailed(
+                sender,
+                SessionCommandResult.Failed(
+                    SessionErrorCode.InvalidState,
+                    "Could not verify Steam lobby identity."
+                )
+            );
             return;
         }
 
-        Debug.Log($"[SessionManager] Join request received from PlayerID: {sender}");
+        SessionCommandResult result = TryAcceptJoin(sender, steamID, displayName);
 
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            // dev tool exception: a dev bootstrapped host boots straight to InGame, so allow joins into
-            // an in progress DEV session only. 
-            bool devInGameJoin =
-                SessionModeManager.Instance != null &&
-                SessionModeManager.Instance.CurrentMode == SessionMode.DevHost &&
-                GameStateManager.Instance.CurrentState == GameState.InGame;
-            
-            if (!devInGameJoin)
-            {
-                Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is in the wrong game state.");
-                SendErrorToClient(sender, SessionErrorCode.InvalidState, "Cannot join, game already in progress.");
-                return;
-            }
-
-            Debug.Log($"[SessionManager] Dev join: allowing PlayerID {sender} into in-progress dev session.");
-        }
-
-        // check if player is already in session
-        if (playerConnectionMap.ContainsKey(sender))
-        {
-            Debug.Log($"[SessionManager] Join rejected: PlayerID {sender} is already in session.");
-            SendErrorToClient(sender, SessionErrorCode.AlreadyInSession, "You are already in session.");
-            return;
-        }
-        
-        // to reject late joins if the elevator is leaving
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
-            return;
-        }
-
-        
-        AddPlayerToSession(sender, steamID, displayName);
-
-        Debug.Log($"[SessionManager] Join approved for PlayerID: {sender}");
+        if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Client-to-server RPC: requests to join using a supplied dev identity.
+    /// Only allowed while SessionModeManager is in DevHost mode.
+    /// The fake SteamID is validated locally, the display name is sanitized by
+    /// the identity service, then SessionPlayerCoordinator applies the normal join rules.
+    /// </summary>
+    [ServerRpc(requireOwnership: false)]
+    public void RequestJoinDevSession(ulong fakeSteamID, string displayName, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        if (SessionModeManager.Instance == null ||
+            SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
+        {
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev joins are only allowed in Dev Host mode."));
+            return;
+        }
+
+        if (fakeSteamID == 0)
+        {
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev SteamID was invalid."));
+            return;
+        }
+
+        SessionCommandResult result = TryAcceptJoin(sender, fakeSteamID, identityService.Sanitize(displayName));
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+
+    /// <summary>
+    /// Applies the validated join request and broadcasts the new player if the join succeeds.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="steamID"></param>
+    /// <param name="displayName"></param>
+    /// <returns></returns>
+    private SessionCommandResult TryAcceptJoin(PlayerID sender, ulong steamID, string displayName)
+    {
+        SessionCommandResult result = playerCoordinator.TryAcceptJoin(sender, steamID, displayName);
+        if (!result.Success) return result;
+
+        // success path, so do the broadcasts
+        BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
+        return result;
+    }
+    
 
     /// <summary>
     /// Client-to-server RPC: requests to voluntarily leave the session.
-    /// Validates the player is actually in the session, then delegates to
-    /// RemovePlayerFromSession. Same path used by disconnection cleanup.
+    /// SessionPlayerCoordinator validates and removes the player from session data,
+    /// then SessionManager broadcasts the leave event and refreshed session state.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
     public void RequestLeaveSession(RPCInfo info = default)
@@ -487,17 +404,31 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] PlayerID {sender} requested to leave the session.");
 
-        if (!playerConnectionMap.ContainsKey(sender))
-        {
-            Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
-        }
+        SessionCommandResult result = TryLeaveSession(sender);
 
-        ulong steamId = playerConnectionMap[sender];
-        RemovePlayerFromSession(sender, steamId, "Player left voluntarily.");
+        if (SendCommandErrorIfFailed(sender, result)) return;
 
         Debug.Log($"[SessionManager] Leave approved for PlayerID: {sender}");
+    }
+
+    /// <summary>
+    ///  Removes a player from the session if they are registered and broadcasts the leave result.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    private SessionCommandResult TryLeaveSession(PlayerID sender)
+    {
+        if (!registry.TryGetSteamID(sender, out ulong steamID))
+        {
+            Debug.LogWarning($"[SessionManager] Request leave rejected: PlayerID {sender} not found in session.");
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
+        }
+
+        SessionCommandResult result = playerCoordinator.TryLeaveSession(sender);
+        if (!result.Success) return result;
+
+        BroadcastPlayerLeft(sender, steamID, "Player left voluntarily.");
+        return result;
     }
 
     /// <summary>
@@ -513,79 +444,30 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Toggle ready request from PlayerID: {sender}");
 
-        if (!playerConnectionMap.ContainsKey(sender))
-        {
-            Debug.Log($"[SessionManager] Rejected: PlayerID {sender} not found in session.");
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
-        }
+        SessionCommandResult result = TrySetPlayerReady(sender);
 
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            // should reject the request
-            Debug.Log($"[SessionManager] Toggle ready request rejected: PlayerID {sender} is in the wrong game state.");
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
-            return;
-        }
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
 
-
-        ulong steamId = playerConnectionMap[sender];
-        int playerIndex = sessionData.Players.FindIndex(player => player.SteamID == steamId);
-
-        if (playerIndex == -1)
-        {
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "Player data not found in session.");
-            return;
-        }
-
-        var playerInfo = sessionData.Players[playerIndex];
-        
-        // elevator check
-        if (sessionData.ElevatorState != ElevatorLobbyState.Open)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "The elevator is already leaving.");
-            return;
-        }
-
-        if (!playerInfo.IsInElevator)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Enter the elevator before readying up.");
-            return;
-        }
-        
-        if (playerInfo.IsReady)
-        {
-            Debug.Log($"[SessionManager] Ready request ignored: PlayerID {sender} is already ready.");
-            return;
-        }
-        
-        playerInfo.IsReady = true;
-        sessionData.Players[playerIndex] = playerInfo;
+    /// <summary>
+    /// Toggles the player's ready state through the lobby coordinator and broadcasts the updated session.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    private SessionCommandResult TrySetPlayerReady(PlayerID sender)
+    {
+        SessionCommandResult result = lobbyCoordinator.TrySetPlayerReady(sender);
+        if (!result.Success) return result;
 
         SendSessionUpdate();
-        Debug.Log($"[SessionManager] Ready set for PlayerIDD: {sender}");
+        Debug.Log($"[SessionManager] Ready set for PlayerID: {sender}");
+
+        return result;
     }
     
-    public bool TryStartMatchFromServer()
-    {
-        if (!isServer || sessionData == null) return false;
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby) return false;
-        if (sessionData.ElevatorState != ElevatorLobbyState.DoorsClosed) return false;
-        if (!sessionData.AllPlayersReadyInElevator) return false;
+    #endregion
 
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
-
-        if (SessionModeManager.Instance == null)
-        {
-            Debug.LogError("[SessionManager] SessionModeManager missing. Cannot load gameplay scene.");
-            return false;
-        }
-
-        SessionModeManager.Instance.LoadGameplayScene();
-        Debug.Log("[SessionManager] Elevator locked. Game starting...");
-        return true;
-    }
-
+    #region Match Flow
     /// <summary>
     /// Client-to-server request for returning from gameplay to the lobby.
     /// Validates that the requester is allowed to trigger the transition, resets lobby data
@@ -597,31 +479,28 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
-        {
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can return to lobby.");
-            return;
-        }
+        SessionCommandResult result = TryReturnToLobby(sender);
 
-        if (GameStateManager.Instance.CurrentState != GameState.InGame &&
-            GameStateManager.Instance.CurrentState != GameState.PostGame)
-        {
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Can only return to lobby from gameplay.");
-            return;
-        }
-
-        // Reset ready/elevator session data here before loading lobby.
-        sessionData.ResetReadyStates();
-        sessionData.ElevatorState = ElevatorLobbyState.Open;
-        SendSessionUpdate();
-
-        SessionModeManager.Instance.LoadLobbyScene();
+        if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Validates that the sender is the host, then returns the session to the lobby state.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    private SessionCommandResult TryReturnToLobby(PlayerID sender)
+    {
+        if (!registry.IsHost(sender)) return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can return to lobby.");
 
+        SessionCommandResult result = flowCoordinator.TryReturnToLobby();
+        if (result.Success) SendSessionUpdate();
+        return result;
+    }
+    
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
-    /// 1. Sender is the host (authority check via hostPlayerID)
+    /// 1. Sender is the host (authority check via SessionPlayerRegistry)
     /// 2. Game is in Lobby state (can't  twice)
     /// 3. All players are ready (SessionData.AllPlayersReady)
     /// Only after all three pass does the state transition to Loading.
@@ -632,32 +511,46 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Start match request from PlayerID: {sender}");
 
-        // ONLY the host can start the game session
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is not the host.");
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can start the game.");
-            return;
-        }
+        SessionCommandResult result = TryStartMatchCommand(sender);
 
-        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: PlayerID {sender} is in the wrong game state.");
-            SendErrorToClient(sender, SessionErrorCode.InvalidState, "Game already in progress.");
-            return;
-        }
-
-        if (!sessionData.AllPlayersReady)
-        {
-            Debug.LogWarning($"[SessionManager] Start rejected: Not all players are ready.");
-            SendErrorToClient(sender, SessionErrorCode.PlayersNotReady, "Not all players are ready.");
-            return;
-        }
-
-        TryStartMatchFromServer();
-        
+        if (SendCommandErrorIfFailed(sender, result)) return;
     }
 
+    /// <summary>
+    /// Validates host authority, session state, and player readiness before starting the match.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    private SessionCommandResult TryStartMatchCommand(PlayerID sender)
+    {
+        if (!registry.IsHost(sender))
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can start the game.");
+
+        if (!sessionStore.HasSession)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+
+        if (!sessionStore.Current.AllPlayersReady)
+            return SessionCommandResult.Failed(SessionErrorCode.PlayersNotReady, "Not all players are ready.");
+
+        return flowCoordinator.TryStartMatch();
+    }
+
+    /// <summary>
+    /// Starts the match directly from server-side code and returns whether the transition succeeded.
+    /// </summary>
+    /// <returns></returns>
+    public bool TryStartMatchFromServer()
+    {
+        if (!isServer) return false;
+        
+        SessionCommandResult result = flowCoordinator.TryStartMatch();
+        if (!result.Success) Debug.LogWarning($"[SessionManager] Start match failed: {result.ErrorCode} - {result.Message}");
+
+        return result.Success;
+    }
+    #endregion
+    
+    #region Settings
     /// <summary>
     /// Client-to-server RPC: host requests to change session settings. Host-only.
     /// First-class fields (MapName, GameMode, MaxPlayers) are set directly on SessionData.
@@ -671,86 +564,140 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
         Debug.Log($"[SessionManager] Update settings request from PlayerID: {sender}");
 
-        if (!hostPlayerID.HasValue || sender != hostPlayerID.Value)
-        {
-            Debug.LogWarning($"[SessionManager] Update settings rejected: PlayerID {sender} is not the host.");
-            SendErrorToClient(sender, SessionErrorCode.NotHost, "Only the host can update the game settings.");
-            return;
-        }
+        SessionCommandResult result = TryUpdateSettings(sender, key, value);
 
-        bool shouldResetReadyStates = false;
-        
-        switch (key)
-        {
-            case "MapName":
-                sessionData.MapName = value;
-                shouldResetReadyStates = true;
-                break;
-            case "GameMode":
-                sessionData.GameMode = value;
-                shouldResetReadyStates = true;
-                break;
-            case "MaxPlayers":
-                if (!int.TryParse(value, out int maxPlayers))
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players value was invalid.");
-                    return;
-                }
-                if (maxPlayers < 2 || maxPlayers > 4)
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players must be between 2 and 4.");
-                    return;
-                }
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
 
-                if (maxPlayers < sessionData.Players.Count)
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Max players cannot be lower than the current player count.");
-                    return;
-                }
-                sessionData.MaxPlayers = maxPlayers;
-                shouldResetReadyStates = true;
-                break;
-            case "LobbyVisibility":
-                if (value != "Friends Only" && value != "Public")
-                {
-                    SendErrorToClient(sender, SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
-                    return;
-                }
+    /// <summary>
+    /// Validates host authority, parses the requested setting, applies it, and broadcasts the update.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    private SessionCommandResult TryUpdateSettings(PlayerID sender, string key, string value)
+    {
+        if (!registry.IsHost(sender))
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can update the game settings.");
 
-                sessionData.SetCustomProperty(key, value);
-                break;
-            default:
-                sessionData.SetCustomProperty(key, value);
-                break;
-        }
+        SessionSettingsUpdate update;
+        SessionCommandResult parseError;
+        if (!TryParseSettingsUpdate(key, value, out update, out parseError))
+            return parseError;
 
-        if(shouldResetReadyStates) sessionData.ResetReadyStates();
+        SessionSettingsResult result = settingsService.TryApply(update);
+        if (!result.Success)
+            return SessionCommandResult.Failed(result.ErrorCode, result.Message);
+
+        if (result.ShouldResetReadyStates)
+            sessionStore.Current.ResetReadyStates();
 
         SendSessionUpdate();
         Debug.Log("[SessionManager] Settings updated.");
+        return SessionCommandResult.Succeeded();
     }
     
     /// <summary>
-    /// Client-to-server RPC: this exists in case a client ever gets into a state where their local data feels wrong,
-    /// they can tell via RequestSessionSnapshot() to get a fresh copy.
+    /// Converts a string key and value into a typed session settings update.
     /// </summary>
-    /// <param name="info"></param>
-    [ServerRpc(requireOwnership: false)]
-    public void RequestSessionSnapshot(RPCInfo info = default)
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <param name="update"></param>
+    /// <param name="error"></param>
+    /// <returns></returns>
+    private bool TryParseSettingsUpdate(string key, string value, out SessionSettingsUpdate update, out SessionCommandResult error)
     {
-        PlayerID sender = info.sender;
+        update = new SessionSettingsUpdate();
+        error = SessionCommandResult.Succeeded();
 
-        if (!playerConnectionMap.ContainsKey(sender))
+        switch (key)
         {
-            SendErrorToClient(sender, SessionErrorCode.PlayerNotFound, "You are not in this session.");
-            return;
-        }
+            case "MapName":
+                update.Field = SessionSettingsField.MapName;
+                update.MapName = value;
+                return true;
 
-        SendSessionSnapshot(sender, BuildClientSessionData());
-        Debug.Log($"[SessionManager] Session snapshot sent to PlayerID: {sender}");
+            case "GameMode":
+                update.Field = SessionSettingsField.GameMode;
+                update.GameMode = value;
+                return true;
+
+            case "MaxPlayers":
+                int parsed;
+                if (!int.TryParse(value, out parsed))
+                {
+                    error = SessionCommandResult.Failed(SessionErrorCode.Unknown, "Max players value was invalid.");
+                    return false;
+                }
+                update.Field = SessionSettingsField.MaxPlayers;
+                update.MaxPlayers = parsed;
+                return true;
+
+            case "LobbyVisibility":
+                if (value != "Friends Only" && value != "Public")
+                {
+                    error = SessionCommandResult.Failed(SessionErrorCode.Unknown, "Lobby visibility value was invalid.");
+                    return false;
+                }
+                update.Field = SessionSettingsField.LobbyVisibility;
+                update.Visibility = value == "Public" ? LobbyVisibility.Public : LobbyVisibility.FriendsOnly;
+                return true;
+
+            default:
+                update.Field = SessionSettingsField.Custom;
+                update.CustomKey = key;
+                update.CustomValue = value;
+                return true;
+        }
+    }
+
+    #endregion
+    
+    #region Broadcasts and Client Sync
+    
+    /// <summary>
+    /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
+    /// </summary>
+    private void SendSessionUpdate()
+    {
+        OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
+        OnServerSessionChanged?.Invoke();
     }
     
+    /// <summary>
+    ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="displayName"></param>
+    /// <param name="isHost"></param>
+    private void BroadcastPlayerJoined(PlayerID playerID, ulong steamID, string displayName, bool isHost)
+    {
+        OnPlayerJoined_Client(steamID, displayName);
+        SendSessionUpdate();
+        OnServerPlayerAdded?.Invoke(playerID, steamID, displayName);
 
+        if (!isHost)
+        {
+            SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(sessionStore.Current));
+            SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
+        }
+    }
+
+    /// <summary>
+    /// Notifies clients and server systems that a player left, then broadcasts the updated session state.
+    /// </summary>
+    /// <param name="playerID"></param>
+    /// <param name="steamID"></param>
+    /// <param name="reason"></param>
+    private void BroadcastPlayerLeft(PlayerID playerID, ulong steamID, string reason)
+    {
+        OnPlayerLeft_Client(steamID, reason);
+        SendSessionUpdate();
+        OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
+    }
+    
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
     /// This is the ONLY path that fires the PlayerJoined event. The server doesnt
@@ -800,13 +747,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         // note: the menu->lobby transition fires here before any clients are connected, so the loop body excecutes zero times.
         // This is expected. The host doesn't need to send itseld a state change and no clients exist yet during initial
-        // host startup. Late-joining clients receive the current state vie SendStateChangeToClient in AddPlayerToSession.
-        foreach (KeyValuePair<PlayerID, ulong> playerID in playerConnectionMap)
+        // host startup. Late-joining clients receive the current state via SendStateChangeToClient after a successful join.
+        foreach (PlayerID id in registry.AllPlayerIDs())
         {
-            SendStateChangeToClient(playerID.Key, nextState);
+            SendStateChangeToClient(id, nextState);
         }
     }
-
 
     /// <summary>
     /// Server-to-one-client RPC: tells a specific client to transition to a new game state.
@@ -820,7 +766,24 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
+    
+    /// <summary>
+    /// Sends the current session snapshot to one client and notifies local UI listeners.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="clientData"></param>
+    [TargetRpc]
+    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
+    {
+        latestClientSession = clientData;
+        SessionEvents.InvokeSessionDataChanged();
+        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
+    }
+    
 
+    #endregion
+    
+    #region Error Handling
     /// <summary>
     /// Server-to-one-client RPC: sends a structured error to a specific client.
     /// Wraps the error code and message in a SessionErrorResponse, then fires it
@@ -834,12 +797,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SessionEvents.InvokeSessionError(error);
         Debug.LogWarning($"[SessionManager] [Client] Error received: {code} - {message}");
     }
-    
-    [TargetRpc]
-    private void SendSessionSnapshot(PlayerID target, ClientSessionData clientData)
+
+    private bool SendCommandErrorIfFailed(PlayerID target, SessionCommandResult result)
     {
-        latestClientSession = clientData;
-        SessionEvents.InvokeSessionDataChanged();
-        Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
+        if (result.Success) return false;
+
+        SendErrorToClient(target, result.ErrorCode, result.Message);
+        return true;
     }
+
+    #endregion
 }

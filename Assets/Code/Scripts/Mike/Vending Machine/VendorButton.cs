@@ -7,9 +7,12 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 {
     [SerializeField] private Canvas buttonCanvas;
     [SerializeField] private Image itemIcon;
+    [SerializeField] private Sprite lockedSlotSprite;
     [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText;
     private CompositeVendor vendorHost;
     public int SlotIndex;
+
+    private Vector2 itemNameTextRectSize;
 
     void Awake()
     {
@@ -24,6 +27,9 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         vendorHost.OnSlotChanged += UpdateContent;
         vendorHost.OnRestock.AddListener(UpdateContent);
         vendorHost.OnSpawnedEvent += UpdateContent;
+        vendorHost.QueueOnSpawned(UpdateContent);
+
+        itemNameTextRectSize = itemNameText.rectTransform.sizeDelta;
     }
 
     public Task<bool> CanInteract(PlayerBody interactor)
@@ -42,16 +48,25 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 
         IReadOnlyItemStack stack = vendorHost.GetStackFromSlot(slot);
 
-        if(stack != null)
+        if (stack != null)
         {
             ItemData data = stack.GetItemData();
             itemIcon.sprite = data.ItemIcon;
             itemNameText.text = data.ItemName;
-            itemPriceText.text = $"Cost x{vendorHost.GetStackPrice(slot).ToString()}";
-            itemAmountText.text = $"x{stack.GetQuantity()}";
+            itemNameText.rectTransform.sizeDelta = itemNameTextRectSize;
+            itemPriceText.text = $"x{vendorHost.GetStackPrice(slot).ToString()}";
+            itemAmountText.text = $"Stock: x{stack.GetQuantity()}";
+        }
+        else
+        {
+            itemNameText.rectTransform.sizeDelta = new Vector2(itemNameTextRectSize.x, itemNameTextRectSize.y * 2);
+            itemIcon.sprite = lockedSlotSprite;
+            itemNameText.text = "Locked";
+            itemPriceText.text = "";
+            itemAmountText.text = "";
         }
 
-        gameObject.SetActive(stack != null);
+        itemPriceText.gameObject.SetActive(stack != null);
     }
 
     public async Task<bool> TryInteract(PlayerBody interactor)

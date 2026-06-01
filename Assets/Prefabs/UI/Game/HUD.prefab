@@ -382,7 +382,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -428,7 +428,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7645825651015318170
 RectTransform:
   m_ObjectHideFlags: 0
@@ -438,8 +438,8 @@ RectTransform:
   m_GameObject: {fileID: 4749835561879370326}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5766271805161745493}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -470,7 +470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -760,7 +760,7 @@ GameObject:
   - component: {fileID: 5766271805161745493}
   - component: {fileID: 608026121720428228}
   m_Layer: 5
-  m_Name: InteractPrompt
+  m_Name: Interact
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -778,8 +778,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7645825651015318170}
   - {fileID: 8142971550469097033}
+  - {fileID: 7645825651015318170}
   m_Father: {fileID: 8295314741552497948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -799,3 +799,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59ce2326a889ffc4f99b9c1041b03806, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractPrompt
+  crosshair: {fileID: 4749835561879370326}
