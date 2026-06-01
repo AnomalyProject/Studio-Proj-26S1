@@ -64,6 +64,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     public void OnDoorsFullyClosed()
     {
+        BlackFadeManager.Instance?.FadeIn();
         if (!isServer) return;
         if (SessionManager.Instance.CurrentElevatorState != ElevatorLobbyState.DoorsClosing) return;
 
@@ -73,7 +74,6 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     private IEnumerator LoadAfterDelay()
     {
-        BlackFadeManager.Instance?.FadeIn();
         yield return new WaitForSeconds(loadDelay);
         SessionManager.Instance.TryStartMatchFromServer();
     }
