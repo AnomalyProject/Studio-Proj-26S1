@@ -73,6 +73,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     private IEnumerator LoadAfterDelay()
     {
+        BlackFadeManager.Instance?.FadeIn();
         yield return new WaitForSeconds(loadDelay);
         SessionManager.Instance.TryStartMatchFromServer();
     }

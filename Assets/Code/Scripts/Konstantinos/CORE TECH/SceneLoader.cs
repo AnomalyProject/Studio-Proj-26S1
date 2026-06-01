@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine;
 using System.Collections;
 using System;
 using PurrNet;
@@ -70,6 +70,11 @@ public class SceneLoader : NetworkBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         HideUI();
+
+        SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            Debug.LogError(scene.name);
+        };
     }
 
     private IEnumerator Start()

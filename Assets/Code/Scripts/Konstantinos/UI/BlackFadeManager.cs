@@ -21,8 +21,9 @@ public class BlackFadeManager : MonoBehaviour
         Instance = this;
 
         DontDestroyOnLoad(gameObject);
-    }
 
+        PlayerBody.OnLocalPlayerSpawned += playerBody => FadeOut();
+    }
 
     public void FadeIn()
     {
