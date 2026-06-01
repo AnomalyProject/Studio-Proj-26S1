@@ -36,7 +36,11 @@ public class LureItem : NoiseEmitter
     private int EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor");
     #endregion
 
-    private void Start() => blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+    protected override void Awake()
+    {
+        base.Awake();
+        blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+    }
 
     // Gradually dim the blinking light's emission color back to black over time
     private void Update()
