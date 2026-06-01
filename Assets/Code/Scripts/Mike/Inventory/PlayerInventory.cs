@@ -2,7 +2,6 @@ using PurrNet;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -30,7 +29,7 @@ public class PlayerInventory : NetworkBehaviour
 
     public int focusedSlot { get; private set; } = 0;
     private GameObject activeInstance;
-    private Dictionary<string, GameObject> itemInstances = new();
+    private Dictionary<string, PlayerItem> itemInstances = new();
     private PlayerBody playerBody;
     private Task<bool> currentUseTask;
     public bool IsUsingItem => currentUseTask != null && !currentUseTask.IsCompleted;
@@ -46,6 +45,7 @@ public class PlayerInventory : NetworkBehaviour
         if (!isOwner) return;
         Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
+        Inventory.OnStackChanged += HandleStackChanged;
         Inventory.OnStackRemoved += HandleStackRemoval;
 
         Inventory.OnItemAdded += OnItemAdded.Invoke;
@@ -76,12 +76,12 @@ public class PlayerInventory : NetworkBehaviour
 
         if (Inventory.TryGet(focusedSlot, out var stack))
         {
-            GameObject itemInstance = itemInstances[stack.GetID()];
+            PlayerItem itemInstance = itemInstances[stack.GetID()];
 
             if (itemInstance != activeInstance)
             {
                 if (activeInstance != null) activeInstance.SetActive(false);
-                activeInstance = itemInstance;
+                activeInstance = itemInstance.gameObject;
                 if (activeInstance != null) activeInstance.SetActive(true);
             }
         }
@@ -90,15 +90,20 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (stack.GetItemData().ItemPrefab == null) return;
 
-        GameObject itemObject = Instantiate(stack.GetItemData().ItemPrefab.gameObject, parent: itemHolder);
+        PlayerItem itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
         itemInstances.Add(stack.GetID(), itemObject);
+        itemObject.BindTo(this, stack, slotIndex);
 
         if (activeInstance == null) ChangeFocused(slotIndex);
-        else itemObject.SetActive(false);
+        else itemObject.gameObject.SetActive(false);
+    }
+    private void HandleStackChanged(IReadOnlyItemStack stack, int slotIndex)
+    {
+        if (itemInstances.TryGetValue(stack.GetID(), out PlayerItem item)) item.BindTo(this, stack, slotIndex);
     }
     private void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
-        if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return;
+        if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return;
 
         if (activeInstance == itemInstance)
         {
@@ -107,7 +112,7 @@ public class PlayerInventory : NetworkBehaviour
             if (Inventory.UsedSlots > 0) NextItem();
         }
 
-        Destroy(itemInstance);
+        Destroy(itemInstance.gameObject);
         itemInstances.Remove(stack.GetID());
     }
     #endregion
@@ -140,11 +145,11 @@ public class PlayerInventory : NetworkBehaviour
         if (focusAtIndex >= Inventory.TotalSlots || focusAtIndex < 0) return;
 
         IReadOnlyItemStack stack;
-        GameObject itemObject = null;
+        PlayerItem itemObject = null;
 
         if (differentIndex && Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
-            itemObject?.SetActive(false);
+            itemObject.gameObject?.SetActive(false);
         }
 
         int previous = focusedSlot;
@@ -152,10 +157,10 @@ public class PlayerInventory : NetworkBehaviour
 
         if (Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
         {
-            itemObject?.SetActive(true);
+            itemObject.gameObject?.SetActive(true);
         }
 
-        activeInstance = itemObject;
+        activeInstance = itemObject?.gameObject;
         OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
 
         if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
@@ -163,9 +168,9 @@ public class PlayerInventory : NetworkBehaviour
     private async Task<bool> TryUseFocused()
     {
         if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        if(!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
+        if(!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return false; // Try get item's world instance
 
-        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance.gameObject, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         bool success = await interactable.TryInteract(playerBody); // Try interact with instance.
 
         if(success)
@@ -178,8 +183,8 @@ public class PlayerInventory : NetworkBehaviour
     public bool CanUseFocused()
     {
         if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        if (!itemInstances.TryGetValue(stack.GetID(), out GameObject itemInstance)) return false; // Try get item's world instance
-        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
+        if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return false; // Try get item's world instance
+        if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance.gameObject, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
     [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
@@ -196,7 +201,7 @@ public class PlayerInventory : NetworkBehaviour
             playerBody.transform.position + throwDirection, 
             Quaternion.identity);
 
-        droppedItem.SetQuantity(quantityRemoved);
+        droppedItem.SetStack(stack.CloneWithQuantity(quantityRemoved));
         ApplyThrowForce_Server(droppedItem.Rigidbody, throwDirection);
 
         if (!stack.GetItemData().IsKeyItem)

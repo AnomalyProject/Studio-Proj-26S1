@@ -49588,6 +49588,7 @@ Transform:
   - {fileID: 1421151264155073796}
   - {fileID: 3137823964793802503}
   - {fileID: 6696990758516477844}
+  - {fileID: 3853479630011311033}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8064673867262377988
@@ -85472,6 +85473,67 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: 2723af58-9892-4d0f-ba0e-c1a77d200f95
+--- !u!1 &5139613085471581713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3853479630011311033}
+  - component: {fileID: 1713480696557532127}
+  m_Layer: 0
+  m_Name: Polaroid Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3853479630011311033
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5139613085471581713}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9200895, z: -0, w: 0.39170828}
+  m_LocalPosition: {x: -3.92845, y: 1.26678, z: 6.329}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1273663082431600051}
+  m_LocalEulerAnglesHint: {x: 0, y: 133.878, z: 0}
+--- !u!114 &1713480696557532127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5139613085471581713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0072f8b2fdc1014bb775d889bc604a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickUpSpawner
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  Items:
+  - {fileID: 4864577436276923018, guid: 23bcf2b026c3d6942a0ab79d648c4140, type: 3}
+  spawnPoints:
+  - {fileID: 3853479630011311033}
+  onEnable: 1
+  spawnMode: 0
+  spawnProbability: 1
+  randomSpawnAmount: 0
 --- !u!1 &5141349867627874654
 GameObject:
   m_ObjectHideFlags: 0
