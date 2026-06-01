@@ -3,8 +3,11 @@ using UnityEngine;
 
 public class BlackFadeManager : MonoBehaviour
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    public static void ResetAnimatorReference() => anim = null;
+
     public static BlackFadeManager Instance;
-    private Animator anim;
+    static private Animator anim;
 
     [SerializeField] private float transitionTime = 1.0f;
     public float TransitionTime => transitionTime;
