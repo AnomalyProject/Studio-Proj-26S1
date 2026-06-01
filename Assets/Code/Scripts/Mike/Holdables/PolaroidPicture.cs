@@ -6,13 +6,13 @@ public class PolaroidPicture : PlayerItem
 {
     [SerializeField] private RawImage imageUI;
 
-    protected override async void OnSpawned()
+    protected override void OnSpawned()
     {
         base.OnSpawned();
-        if (TryGetMeta<byte[]>(PolaroidGadget.PICTURE_META_KEY, out byte[] pngBytes)) await PrintPicture(pngBytes);
+        if (TryGetMeta<byte[]>(PolaroidGadget.PICTURE_META_KEY, out byte[] pngBytes)) PrintPicture(pngBytes);
     }
 
-    private async Task PrintPicture(byte[] pngBytes)
+    private void PrintPicture(byte[] pngBytes)
     {
         Texture2D imageTexture = new Texture2D(2, 2, TextureFormat.RGB24, false);
         imageTexture.LoadImage(pngBytes);

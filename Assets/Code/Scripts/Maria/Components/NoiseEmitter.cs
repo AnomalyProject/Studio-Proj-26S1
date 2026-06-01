@@ -1,5 +1,6 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// Abstract base class for all noise-emitting entities in the game.
@@ -18,6 +19,7 @@ public abstract class NoiseEmitter : NetworkBehaviour
              "Add new reactive layers here without touching code!")]
     [SerializeField] private LayerMask hearableLayers;
     [SerializeField] private AudioClip[] emissionNoises;
+    [SerializeField] private UnityEvent OnEmit;
     #endregion
 
     #region Protected Fields
@@ -84,7 +86,11 @@ public abstract class NoiseEmitter : NetworkBehaviour
     /// Used by subclasses for sounds that should not be replicated (e.g. local footsteps).
     /// </summary>
     /// <param name="volume">Playback volume.</param>
-    [ObserversRpc] private void EmitAudio_ObserversRpc(int atIndex, float volume = 1)  => audioSource.PlayOneShot(emissionNoises[atIndex], volume);
+    [ObserversRpc] private void EmitAudio_ObserversRpc(int atIndex, float volume = 1)
+    {
+        audioSource.PlayOneShot(emissionNoises[atIndex], volume);
+        OnEmit?.Invoke();
+    }
     #endregion
 
     #region Protected Logic

@@ -82,9 +82,10 @@ public class LureItem : NoiseEmitter
     /// </summary>
     private void Pulse()
     {
-        blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
         Emit_Server(noiseRadius, atIndex: 0);
     }
+
+    public void OpenBlinker() => blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
 
     /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
     private IEnumerator StopLure()
