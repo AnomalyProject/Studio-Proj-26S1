@@ -4,8 +4,7 @@ using UnityEngine;
 public class BlackFadeManager : MonoBehaviour
 {
     public static BlackFadeManager Instance;
-
-    public Animator anim;
+    private Animator anim;
 
     [SerializeField] private float transitionTime = 1.0f;
     public float TransitionTime => transitionTime;
@@ -19,6 +18,7 @@ public class BlackFadeManager : MonoBehaviour
         }
 
         Instance = this;
+        anim = GetComponentInChildren<Animator>();
 
         DontDestroyOnLoad(gameObject);
 
