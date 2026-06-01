@@ -90,7 +90,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         
         byte[] compressed = snapshot.EncodeToJPG(textureQuality);
         Destroy(snapshot);
-
+        OnPictureTaken?.Invoke(); // Invoke seperate to make visuals responsive
         return await RegisterPicture_ServerRpc(interactor, compressed);
     }
     #endregion
@@ -112,7 +112,11 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         }
         return Task.FromResult(success);
     }
-    [ObserversRpc] private void InvokeOnPictureTaken() => OnPictureTaken.Invoke();
+    [ObserversRpc] private void InvokeOnPictureTaken()
+    {
+        if (isOwner) return; // Anyone but the owner, owner invokes locally
+        OnPictureTaken.Invoke();
+    }
     #endregion
 
     #region Helpers
