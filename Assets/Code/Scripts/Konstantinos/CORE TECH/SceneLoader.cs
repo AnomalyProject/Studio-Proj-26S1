@@ -215,10 +215,10 @@ public class SceneLoader : NetworkBehaviour
     #endregion
 
 
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
-    IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
+    private IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
     {
         // Show loading UI if loading screen exists AND showLoadingScreen is checked
         if (showLoadUI) ShowUI();

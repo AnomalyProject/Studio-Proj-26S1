@@ -7,8 +7,8 @@ public class BlackFadeManager : MonoBehaviour
 
     public Animator anim;
 
-    [SerializeField] float transitionTime = 1.0f;
-
+    [SerializeField] private float transitionTime = 1.0f;
+    public float TransitionTime => transitionTime;
 
     private void Awake()
     {
@@ -39,7 +39,7 @@ public class BlackFadeManager : MonoBehaviour
         StartCoroutine(FadeInAndOut());
     }
 
-    IEnumerator FadeInAndOut()
+    private IEnumerator FadeInAndOut()
     {
         anim.SetTrigger("Fade In");
         yield return new WaitForSeconds(transitionTime);
