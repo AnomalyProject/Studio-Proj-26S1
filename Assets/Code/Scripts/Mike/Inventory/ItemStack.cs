@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ItemStack : IReadOnlyItemStack
@@ -7,19 +8,22 @@ public class ItemStack : IReadOnlyItemStack
     public ItemData ItemData { get; }
     public int Quantity  { get; private set; }
     public string Id { get; } = Guid.NewGuid().ToString();
+    private Dictionary<string, object> metadata;
 
     #endregion
 
     #region Constructors
-    public ItemStack(ItemData itemData, int quantity)
+    public ItemStack(ItemData itemData, int quantity, Dictionary<string, object> metadata = null)
     {
         this.ItemData = itemData ?? throw new ArgumentNullException(nameof(itemData));
         this.Quantity = Math.Clamp(quantity, 0, itemData.MaxStackSize);
+        this.metadata = metadata;
     }
-    public ItemStack(ItemData itemData)
+    public ItemStack(ItemData itemData, Dictionary<string, object> metadata = null)
     {
         this.ItemData = itemData ?? throw new ArgumentNullException(nameof(itemData));
         Quantity = 1;
+        this.metadata = metadata;
     }
     #endregion
 
@@ -44,8 +48,6 @@ public class ItemStack : IReadOnlyItemStack
 
         return added;
     }
-
-    public ItemStack Clone() => new ItemStack(ItemData, Quantity);
 
     /// <summary>
     /// Attempts to add 1 to the stack.
@@ -84,6 +86,37 @@ public class ItemStack : IReadOnlyItemStack
     public int GetRemainingCapacity() => ItemData.MaxStackSize - Quantity;
     public int GetMaxCapacity() => ItemData.MaxStackSize;
     public string GetID() => Id;
+    public ItemStack Clone()
+    {
+        var clone = new ItemStack(ItemData, Quantity);
+        if (metadata != null) clone.metadata = new Dictionary<string, object>(metadata);
+        return clone;
+    }
+    public ItemStack CloneWithQuantity(int quantity)
+    {
+        var clone = new ItemStack(ItemData, quantity);
+        if (metadata != null) clone.metadata = new Dictionary<string, object>(metadata);
+        return clone;
+    }
+
+    #region Metadata
+    public bool TryGetMeta<T>(string key, out T value)
+    {
+        value = default;
+        if (metadata == null || !metadata.TryGetValue(key, out object raw) || raw is not T typed) return false;
+        value = typed;
+        return true;
+    }
+    public T GetMeta<T>(string key, T fallback = default) => TryGetMeta(key, out T value)? value : fallback;
+    public void SetMeta(string key, object value)
+    {
+        metadata ??= new Dictionary<string, object>();
+        metadata[key] = value;
+    }
+    public bool HasMetadata() => metadata != null && metadata.Count > 0;
+    public IReadOnlyDictionary<string, object> GetMetadata() => metadata;
+    #endregion
+
     #endregion
 }
 [Serializable] public class InspectorItemStack
@@ -111,11 +144,11 @@ public class ItemStack : IReadOnlyItemStack
         return newStack;
     }
 
-    public void ChangeQuantity(int newQuantity)
+    public void SetStack(ItemStack stack)
     {
-        if (quantity == newQuantity) return;
-        quantity = newQuantity;
-        Validate();
+        itemData = stack.ItemData;
+        quantity = stack.Quantity;
+        _cachedStack = stack;
     }
 
     /// <summary>
@@ -151,4 +184,13 @@ public interface IReadOnlyItemStack
     bool CanFit(int amount);
     int GetRemainingCapacity();
     int GetMaxCapacity();
+    bool TryGetMeta<T>(string key, out T value);
+    T GetMeta<T>(string key, T fallback = default);
+    ItemStack Clone();
+    /// <summary>
+    /// Clones the stack with a new quantity but also passes metadata.
+    /// </summary>
+    /// <param name="quantity"></param>
+    /// <returns></returns>
+    ItemStack CloneWithQuantity(int quantity);
 }
