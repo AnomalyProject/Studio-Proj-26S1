@@ -70,11 +70,6 @@ public class SceneLoader : NetworkBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         HideUI();
-
-        SceneManager.sceneLoaded += (scene, mode) =>
-        {
-            Debug.LogError(scene.name);
-        };
     }
 
     private IEnumerator Start()
@@ -83,14 +78,8 @@ public class SceneLoader : NetworkBehaviour
         // debug Mode
         if (debugLoadOnStart)
         {
-            if (!debugUseAsync)
-            {
-                LoadScene(debugSceneToLoadOnStart);
-            }
-            else
-            {
-                LoadSceneWithAsync(debugSceneToLoadOnStart, true);
-            }
+            if (!debugUseAsync) LoadScene(debugSceneToLoadOnStart);
+            else LoadSceneWithAsync(debugSceneToLoadOnStart, true);
         }
     }
 
