@@ -6,6 +6,10 @@ public class NetworkDebugDisplay : MonoBehaviour
     [SerializeField] private PurrNet.StatisticsManager statsManager;
 
     private bool _showOverlay = true;
+    //[Range(0, 1000)]
+    //public int Xpos = 310;
+    //[Range(0, 1000)]
+    //public int Ypos = 300;
 
     private void Update()
     {
@@ -25,9 +29,9 @@ public class NetworkDebugDisplay : MonoBehaviour
 
     private void DrawSteamDiagnostic()
     {
-       // #if UNITY_EDITOR 
-       // return;
-       // #endif
+        // #if UNITY_EDITOR 
+        // return;
+        // #endif
 
         SteamRelayNetworkStatus_t status = new SteamRelayNetworkStatus_t();
         SteamNetworkingUtils.GetRelayNetworkStatus(out status);
@@ -36,6 +40,6 @@ public class NetworkDebugDisplay : MonoBehaviour
 
         string color = (status.m_eAvail == ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Current)? "green" : "red";
 
-        GUI.Label(new Rect(Screen.width - 310, 220, 300, 20), $"<color={color}>{statusText}</color>");
+        GUI.Label(new Rect(Screen.width - 382, 170, 400, 20), $"<color={color}>{statusText}</color>");
     }
 }
