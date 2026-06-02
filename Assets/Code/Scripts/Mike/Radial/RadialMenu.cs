@@ -19,8 +19,6 @@ public class RadialMenu : MonoBehaviour
     [Header("Menu UI")]
     [SerializeField] private RadialElement elementPrefab;
     [SerializeField] private float orbitRadius = 120f;
-    [SerializeField] private Color normalColor = Color.gray2;
-    [SerializeField] private Color highlightColor = Color.yellow;
     [SerializeField] private float deadZone = 0.3f;
 
     private List<RadialElement> segments = new();
@@ -123,7 +121,6 @@ public class RadialMenu : MonoBehaviour
             rt.anchoredPosition = new Vector2(Mathf.Cos(angle) * orbitRadius, Mathf.Sin(angle) * orbitRadius);
 
             element.SetData(options[i].icon, options[i].label);
-            element.SetBGColor(normalColor);
             segments.Add(element);
         }
     }
@@ -136,8 +133,7 @@ public class RadialMenu : MonoBehaviour
 
         for (int i = 0; i < segments.Count; i++)
         {
-            Color segmentColor = i == index? highlightColor : normalColor;
-            segments[i].SetBGColor(segmentColor);
+            segments[i].SetFocus(i == index);
         }
     }
 }
