@@ -36,7 +36,11 @@ public class LureItem : NoiseEmitter
     private int EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor");
     #endregion
 
-    private void Start() => blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+    protected override void Awake()
+    {
+        base.Awake();
+        blinkingMat = blinkingSphere.GetComponent<MeshRenderer>().material;
+    }
 
     // Gradually dim the blinking light's emission color back to black over time
     private void Update()
@@ -82,9 +86,10 @@ public class LureItem : NoiseEmitter
     /// </summary>
     private void Pulse()
     {
-        blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
         Emit_Server(noiseRadius, atIndex: 0);
     }
+
+    public void OpenBlinker() => blinkingMat.SetColor(EMISSION_COLOR_ID, Color.red);
 
     /// <summary>Cancels all invocations and destroys this networked GameObject.</summary>
     private IEnumerator StopLure()
