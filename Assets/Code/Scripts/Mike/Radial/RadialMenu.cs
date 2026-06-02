@@ -130,6 +130,8 @@ public class RadialMenu : MonoBehaviour
 
     void SetHighlight(int index)
     {
+        if (currentSelection == index) return;
+
         currentSelection = index;
 
         for (int i = 0; i < segments.Count; i++)
