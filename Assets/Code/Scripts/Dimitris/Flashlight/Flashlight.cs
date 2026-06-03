@@ -9,7 +9,7 @@ using PurrNet;
 /// There is a capacity of energy that keeps on the light and when its durability fails turns off 
 /// and cannot open untill energy comes back 
 /// </summary>
-public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
+public class Flashlight : PlayerItem, IInteractable<MonoBehaviour>
 {
     [SerializeField] Light flashlightLight;
     [SerializeField, Range(30, 600)] private float maxDurabilitySeconds = 10f;
@@ -23,6 +23,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
     public UnityEvent OnToggleOn, OnToggleOff, OnDrained;
     public float NormalizedDurability => durability / maxDurabilitySeconds;
 
+    private const string DURABILITY_META_KEY = "Durability";
     private Coroutine drainRoutine;
     // Initializes flashlight state when the network object spawns
 
@@ -35,7 +36,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
     {
         base.OnSpawned(asServer);
 
-        if (asServer) durability.value = maxDurabilitySeconds;
+        if (asServer) durability.value = GetMeta<float>(DURABILITY_META_KEY, fallback: maxDurabilitySeconds);
 
         flashlightLight.enabled = flashlightOn.value;
     }
@@ -133,6 +134,7 @@ public class Flashlight : NetworkBehaviour, IInteractable<MonoBehaviour>
                 drainRoutine = null;
                 yield break;
             }
+            SetMeta_Server(DURABILITY_META_KEY, durability.value);
         }
         drainRoutine = null;
     }
