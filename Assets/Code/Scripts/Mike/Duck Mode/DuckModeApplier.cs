@@ -1,5 +1,6 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class DuckModeApplier : NetworkBehaviour
@@ -7,6 +8,7 @@ public class DuckModeApplier : NetworkBehaviour
     [SerializeField] private GameObject[] duckHeads;
     private SyncVar<int> activeHeadIndex = new(0, ownerAuth: false);
     private GameObject activeHead;
+    [SerializeField] private UnityEvent OnActivated, OnDeactivated;
 
     private void Awake()
     {
@@ -32,14 +34,16 @@ public class DuckModeApplier : NetworkBehaviour
 
     private void OnModeToggled(bool modeActive)
     {
+        if (activeHead) activeHead.SetActive(false);
+
         if (modeActive)
         {
             if (isServer) activeHeadIndex.value = Random.Range(0, duckHeads.Length);
             activeHead = duckHeads[activeHeadIndex.value];
+            activeHead.SetActive(true);
+            OnActivated?.Invoke();
         }
-        if (activeHead) activeHead.SetActive(modeActive);
-
-        Debug.Log("Duck Mode active: " + modeActive);
+        else OnDeactivated?.Invoke();
     }
 
     public void ToggleDuckMode(InputAction.CallbackContext ctx)
