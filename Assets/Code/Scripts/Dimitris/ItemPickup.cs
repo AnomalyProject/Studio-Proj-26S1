@@ -41,8 +41,7 @@ public class ItemPickup : NetworkBehaviour, IInteractable<PlayerBody>
     {
         return HandlePickup_Server(player);
     }
-
-    public void SetQuantity(int amount) => itemStack.ChangeQuantity(amount);
+    public void SetStack(ItemStack stack) => itemStack.SetStack(stack);
 
     private Task<bool> HandlePickup_Server(PlayerBody player)
     {

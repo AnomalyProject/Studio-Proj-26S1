@@ -39,12 +39,6 @@ public class CollisionEvent : NetworkBehaviour
         coolDownRemaining = cooldown;
     }
 
-    protected override void OnDespawned(bool asServer)
-    {
-        base.OnDespawned(asServer);
-
-        if (asServer) return;
-    }
     private void Update()
     {
         if (coolDownRemaining > 0f) coolDownRemaining -= Time.deltaTime;
