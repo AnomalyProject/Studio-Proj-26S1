@@ -17,6 +17,7 @@ public class PlayerNameplate : NetworkBehaviour
     public void SetName(string displayName, int colourIndex)
     {
         nameText.text = displayName;
+        nameText.color = PlayerColour.GetColor(colourIndex);
     }
     
     
@@ -31,11 +32,14 @@ public class PlayerNameplate : NetworkBehaviour
         transform.LookAt(PlayerBody.localPlayerBody.CameraController.transform);
     }
     
-    protected override void OnSpawned() 
+    protected override void OnSpawned(bool asServer) 
     {
+        base.OnSpawned(asServer);
+
         if (!SteamManager.Initialized) return;
-        
-        ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
+        if (!owner.HasValue) return;
+
+        ulong ownerSteamID = (ulong)owner.Value.id;
         
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
@@ -43,7 +47,7 @@ public class PlayerNameplate : NetworkBehaviour
         if (playerInfo.HasValue)
         {
             nameText.text = playerInfo.Value.DisplayName;
-            nameText.color = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
+            nameText.color = playerInfo.Value.GetPlayerColor();
         }
     }
 }

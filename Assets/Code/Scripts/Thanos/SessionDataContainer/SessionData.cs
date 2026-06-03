@@ -24,14 +24,15 @@ public struct PlayerSessionInfo
         IsHost = isHost;
         TeamID = teamID;
         IsReady = false;
-        JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
+        JoinedAt = DateTime.UtcNow;
         IsInElevator = isInElevator;
         ColorIndex = 0;
     }
 
+    public Color GetPlayerColor() => PlayerColour.GetColor(ColorIndex);
+
 }
 
-//That comment right here is a test for sonarQube setup + 3
 
 [Serializable]
 public struct ClientPlayerInfo
@@ -41,6 +42,7 @@ public struct ClientPlayerInfo
     public bool IsReady;
     public bool IsHost;
     public bool IsInElevator;
+    public int ColorIndex;
 }
     
 [Serializable]
@@ -88,19 +90,23 @@ public class SessionData
     {
         if (Players.Any(pp => pp.SteamID == newPlayer.SteamID))
         {
-            List<int> usedColors = Players.Select(p => p.ColorIndex).ToList();
-            List<int> availableColors = new List<int> { 0, 1, 2, 3 };
-            availableColors.RemoveAll(c => usedColors.Contains(c));
-            
-            if (availableColors.Count > 0)
-            {
-                int randomIndex = UnityEngine.Random.Range(0, availableColors.Count);
-                newPlayer.ColorIndex = availableColors[randomIndex];
-            }
-            
-            Debug.Log($"[SessionDataManager] Player {newPlayer.SteamID} already exists. Skipping to next player.");
+            Debug.LogWarning($"[SessionDataManager] Player {newPlayer.SteamID} already exists.");
             return;
         }
+
+        List<int> usedColors = Players.Select(p => p.ColorIndex).ToList();
+        int assignedColor = 0;
+
+        for (int i = 0; i < PlayerColour.Colors.Length; i++)
+        {
+            if (!usedColors.Contains(i))
+            {
+                assignedColor = i;
+                break;
+            }
+        }
+
+        newPlayer.ColorIndex = assignedColor;
         Players.Add(newPlayer);
     }
 
