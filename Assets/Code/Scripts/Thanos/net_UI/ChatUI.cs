@@ -224,7 +224,25 @@ public class ChatUI : MonoBehaviour
                 if (parts.Length > 1) UnmutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
             case "/whisper":
-                if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
+                if (parts.Length > 2)
+                {
+                    string targetName = parts[1];
+                    string message = string.Join(" ", parts, 2, parts.Length - 2);
+
+                    var playerNames = GetActivePlayerNames();
+
+                    if (parts.Length > 3 && !playerNames.Any(n => n.Contains(targetName, System.StringComparison.OrdinalIgnoreCase)))
+                    {
+                        string twoWordName = $"{parts[1]} {parts[2]}";
+                        if (playerNames.Any(n => n.Contains(twoWordName, System.StringComparison.OrdinalIgnoreCase)))
+                        {
+                            targetName = twoWordName;
+                            message = string.Join(" ", parts, 3, parts.Length - 3);
+                        }
+                    }
+
+                    WhisperToPlayer(targetName, message);
+                }
                 break;
             case "/help":
                 ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
@@ -359,5 +377,21 @@ public class ChatUI : MonoBehaviour
         TextChatManager.Instance.SendWhisper(targetName, message, localSteamID);
 
         //ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);   <-- Debug
+    }
+
+    private List<string> GetActivePlayerNames()
+    {
+        SessionData serverSession = SessionManager.Instance.CurrentSession;
+        ClientSessionData clientSession = SessionManager.Instance.LatestClientSession;
+
+        if (serverSession != null && serverSession.Players != null)
+        {
+            return serverSession.Players.Select(p => p.DisplayName).ToList();
+        }
+        if (clientSession.Players != null)
+        {
+            return clientSession.Players.Select(p => p.DisplayName).ToList();
+        }
+        return new List<string>();
     }
 }
