@@ -1,22 +1,20 @@
 using PurrNet;
-using UnityEngine;
+using System;
 
-public class DuckMode : NetworkBehaviour
+public static class DuckMode
 {
-    public static DuckMode Instance;
-    [HideInInspector] public SyncVar<bool> modeActive = new(false, ownerAuth: false);
+    public static bool modeActive { get; private set; } = false;
+    public static event Action<bool> OnModeToggled;
 
-    private void Awake()
+    [ServerRpc] public static void ToggleMode_ServerRpc()
     {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        bool active = !modeActive;
+        InvokeOnModeToggled_Observers(active);
     }
 
-    [ServerRpc] public void ToggleMode_ServerRpc() => modeActive.value = !modeActive.value;
+    [ObserversRpc] private static void InvokeOnModeToggled_Observers(bool active)
+    {
+        modeActive = active;
+        OnModeToggled?.Invoke(active);
+    }
 }

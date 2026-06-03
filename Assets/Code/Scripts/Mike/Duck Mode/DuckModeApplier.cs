@@ -16,22 +16,22 @@ public class DuckModeApplier : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
-        if (DuckMode.Instance)
-        {
-            DuckMode.Instance.modeActive.onChanged += OnModeToggled;
-            OnModeToggled(DuckMode.Instance.modeActive.value);
-        }
+        DuckMode.OnModeToggled += OnModeToggled;
+
+        if (!asServer) RequestSync_ServerRpc();
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        if(DuckMode.Instance) DuckMode.Instance.modeActive.onChanged -= OnModeToggled;
+        DuckMode.OnModeToggled -= OnModeToggled;
     }
+
+    [ServerRpc(requireOwnership: false)] private void RequestSync_ServerRpc(RPCInfo info = default) => SyncState_TargetRpc(info.sender, DuckMode.modeActive);
+    [TargetRpc] private void SyncState_TargetRpc(PlayerID player, bool active) => OnModeToggled(active);
 
     private void OnModeToggled(bool modeActive)
     {
-
         if (modeActive)
         {
             if (isServer) activeHeadIndex.value = Random.Range(0, duckHeads.Length);
@@ -44,6 +44,6 @@ public class DuckModeApplier : NetworkBehaviour
 
     public void ToggleDuckMode(InputAction.CallbackContext ctx)
     {
-        if (ctx.started && DuckMode.Instance) DuckMode.Instance.ToggleMode_ServerRpc();
+        if (ctx.started) DuckMode.ToggleMode_ServerRpc();
     }
 }
