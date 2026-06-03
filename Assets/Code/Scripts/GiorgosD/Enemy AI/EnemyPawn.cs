@@ -222,7 +222,7 @@ public class EnemyPawn : NetworkBehaviour
         return dotProduct >= 0.95f;
     }
     #endregion
-
+    
     #region NavMesh Check
     /// <summary>
     /// Checks if player is in NavMesh
@@ -262,14 +262,16 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
         
+        if (cachedPlayer == null) return;
+
+        timer += Time.deltaTime;
+
         if (timer >= timeToLost)
         {
+            hasPlayer = false;
+            cachedPlayer = null;
+            timer = 0f;
             InvokeOnLost();
-            timer = 0;
-        }
-        else
-        {
-            timer += 1 * Time.deltaTime;
         }
     }
     #endregion
@@ -281,15 +283,18 @@ public class EnemyPawn : NetworkBehaviour
     private void Sight()
     {
         if (!isServer) return;
-
+        
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
-
+        
         PlayerBody closestDetectedPlayer = null;
         float minSqrDist = Mathf.Infinity;
 
         for (int i = 0; i < count; i++)
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
+            
+            if (player == null) continue;
+            
             if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance) && IsOnNavMesh(player.transform))
             {
                 float sqrDist = distance * distance;
@@ -301,13 +306,15 @@ public class EnemyPawn : NetworkBehaviour
             }
         }
 
-        for (int i = 0; i < count; i++) playersInSight[i] = null;
+        Array.Clear(playersInSight, 0, playersInSight.Length);
         
         if (closestDetectedPlayer != null)
         {
+            hasPlayer = true;
+            timer = 0f;
+
             if (cachedPlayer != closestDetectedPlayer)
             {
-                hasPlayer = true;
                 cachedPlayer = closestDetectedPlayer;
                 InvokeSpotted(cachedPlayer);
                 Debug.Log($"Target Locked: {cachedPlayer.name}");
@@ -315,9 +322,9 @@ public class EnemyPawn : NetworkBehaviour
         }
         else if (cachedPlayer != null)
         {
-            cachedPlayer = null;
             hasPlayer = false;
-            Debug.Log("Target Lost.");
+            cachedPlayer = null;
+            timer = 0f;
         }
     }
 
@@ -333,8 +340,17 @@ public class EnemyPawn : NetworkBehaviour
     {
         Vector3 offset = (player.position + Vector3.up * eyePos) - (transform.position + Vector3.up * eyePos);
         float sqrDistance = offset.sqrMagnitude;
+        
         distance = Mathf.Sqrt(sqrDistance);
+
+        if (distance < 0.001f)
+        {
+            direction = Vector3.zero;
+            return true;
+        }
+
         direction = offset / distance;
+        
         Vector3 flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
         Vector3 flatDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
         
