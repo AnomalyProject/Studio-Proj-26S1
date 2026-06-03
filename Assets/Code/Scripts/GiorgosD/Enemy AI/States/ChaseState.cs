@@ -16,8 +16,6 @@ public class ChaseState : BaseState
 
         body.SetMoveSpeed(true);
         
-        body.anim.SetBool("isRun", true);
-
         body.OnLostPlayer.AddListener(LostPlayer);
     }
 
@@ -53,7 +51,6 @@ public class ChaseState : BaseState
 
     public override void Exit()
     {
-        body.anim.SetBool("isRun", false);
         body.OnLostPlayer.RemoveListener(LostPlayer);
     }
 }
