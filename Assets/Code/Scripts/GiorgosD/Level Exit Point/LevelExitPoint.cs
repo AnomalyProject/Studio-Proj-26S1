@@ -1,8 +1,8 @@
-using PurrNet;
 using System.Threading.Tasks;
-using System;
 using UnityEngine.Events;
 using UnityEngine;
+using PurrNet;
+using System;
 
 [RequireComponent(typeof(Collider))]
 public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>

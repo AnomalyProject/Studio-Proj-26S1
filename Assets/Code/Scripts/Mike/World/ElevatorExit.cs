@@ -1,9 +1,8 @@
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine;
-using System;
 using PurrNet;
-using System.Collections.Generic;
+using System;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
@@ -21,7 +20,6 @@ public class ElevatorExit : LevelExitPoint
     [SerializeField] private InidicationMessage anomalyMessage, safeMessage;
 
     [SerializeField] private Renderer[] avatars;
-    private List<Renderer> activeAvatars = new List<Renderer>();
     [SerializeField] private Material avatarGreenMat, avatarRedMat;
 
     [SerializeField] private bool openOnStart;
@@ -37,28 +35,12 @@ public class ElevatorExit : LevelExitPoint
         base.Awake();
         bHasAnomaly.onChanged += UpdateAnomalyIndicators;
 
-        // Set up avatar indicators for current players in the elevator
-        OnPlayersChanged.AddListener(UpdateAvatars);
-        for (int i = 0; i < NetworkManager.main.playerCount; i++)
-        {
-            Renderer updatingAvatar = avatars[i];
-            updatingAvatar.gameObject.SetActive(true);
-            activeAvatars.Add(updatingAvatar);
-        }
-        NetworkManager.main.onPlayerJoined += (player, isReconnect, asServer) =>
-        {
-            Debug.LogError($"Player Joined. Current Player Count: {NetworkManager.main.playerCount}");
-            Renderer updatingAvatar = avatars[NetworkManager.main.playerCount - 1];
-            updatingAvatar.gameObject.SetActive(true);
-            activeAvatars.Add(updatingAvatar);
-        };
-        NetworkManager.main.onPlayerLeft += (player, asServer) =>
-        {
-            Debug.LogError($"Player Left. Current Player Count: {NetworkManager.main.playerCount}");
-            Renderer updatingAvatar = avatars[NetworkManager.main.playerCount];
-            updatingAvatar.gameObject.SetActive(false);
-            activeAvatars.Remove(updatingAvatar);
-        };
+        foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
+        for (int i = 0; i < NetworkManager.main.playerCount; i++) avatars[i].gameObject.SetActive(true);
+        OnPlayersChanged.AddListener(UpdateAvatarColors);
+
+        SessionEvents.OnPlayerJoined += UpdateAvatarCount;
+        SessionEvents.OnPlayerLeft += UpdateAvatarCount;
     }
 
     protected override void OnSpawned(bool asServer)
@@ -71,6 +53,19 @@ public class ElevatorExit : LevelExitPoint
         UpdateAnomalyIndicators(bHasAnomaly);
 
         if (openOnStart) OpenDoors();
+    }
+    private void UpdateAvatarColors(bool isReady)
+    {
+        for (int i = 0; i < avatars.Length; i++)
+        {
+            if (i < playersInArea.Count) avatars[i].material = avatarGreenMat;
+            else avatars[i].material = avatarRedMat;
+        }
+    }
+    private void UpdateAvatarCount(ulong steamID, string displayName)
+    {
+        foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
+        for (int i = 0; i < NetworkManager.main.playerCount; i++) avatars[i].gameObject.SetActive(true);
     }
 
     private void UpdateAnomalyIndicators(bool hasAnomaly)
@@ -85,14 +80,6 @@ public class ElevatorExit : LevelExitPoint
         {
             anomalyImage.sprite = indication.indicationSprite;
             anomalyImage.color = indication.indicationColor;
-        }
-    }
-    private void UpdateAvatars(bool isReady)
-    {
-        for (int i = 0; i < activeAvatars.Count; i++)
-        {
-            if (i < playersInArea.Count) activeAvatars[i].material = avatarGreenMat;
-            else activeAvatars[i].material = avatarRedMat;
         }
     }
 
