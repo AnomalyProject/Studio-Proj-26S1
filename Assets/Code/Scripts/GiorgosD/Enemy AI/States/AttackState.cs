@@ -18,45 +18,53 @@ public class AttackState : BaseState
         Debug.Log("Attacking");
         
         target = brain.TargetPos;
+        body.OnStartAttack.AddListener(DoAttack);
 
-        bool isHit = body.IsHitSuccess(target) ? DoAttack(target) : ChangeToChaseState();
+        body.anim.SetTrigger("Attack");
     }
 
     public override void Update()
     {
-
+        if (target == null) return;
+        
+        body.RotateTowards(target.position);
     }
-
+    
     /// <summary>
     /// Picks random respawn and does attack and sends you to it.
     /// </summary>
-    private bool DoAttack(Transform player)
+    private void DoAttack()
     {
-        int randomIndex = UnityEngine.Random.Range(0, brain.RespawnPoints.Count);
-        Transform targetPoint = brain.RespawnPoints[randomIndex];
-
-        var playerID = player.GetComponent<NetworkIdentity>();
-
-        body.TeleportToSpawn(targetPoint.position, playerID);
-
-        Debug.Log("Player Attacked");
+        if (target == null) return;
         
-        body.InvokeAttacked(player.GetComponent<PlayerBody>());
+        if (body.IsHitSuccess(target))
+        {
+            int randomIndex = UnityEngine.Random.Range(0, brain.RespawnPoints.Count);
+            Transform targetPoint = brain.RespawnPoints[randomIndex];
 
-        brain.ChangeState(EnemyBrain.StateID.Idle);
+            var playerID = target.GetComponent<NetworkIdentity>();
 
-        return true;
+            body.TeleportToSpawn(targetPoint.position, playerID);
+
+            Debug.Log("Player Attacked");
+        
+            body.InvokeAttacked(target.GetComponent<PlayerBody>());
+
+            brain.ChangeState(EnemyBrain.StateID.Idle);
+        }
+        else
+        {
+            ChangeToChaseState();
+        }
     }
 
-    private bool ChangeToChaseState()
+    private void ChangeToChaseState()
     {
         brain.ChangeState(EnemyBrain.StateID.Chase, target);
-
-        return true;
     }
 
     public override void Exit()
     {
-
+        body.OnStartAttack.RemoveListener(DoAttack);
     }
 }

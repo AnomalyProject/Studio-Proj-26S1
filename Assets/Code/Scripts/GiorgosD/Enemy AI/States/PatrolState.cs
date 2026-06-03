@@ -15,6 +15,7 @@ public class PatrolState : BaseState
         base.Enter();
 
         body.SetMoveSpeed(false);
+        body.anim.SetBool("IsWalk", true);
 
         body.OnPlayerSpotted.AddListener(HandlePlayerSpotted);
 
@@ -69,6 +70,7 @@ public class PatrolState : BaseState
 
     public override void Exit()
     {
+        body.anim.SetBool("IsWalk", false);
         body.OnPlayerSpotted.RemoveListener(HandlePlayerSpotted);
     }
 }
