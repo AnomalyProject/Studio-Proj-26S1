@@ -1375,7 +1375,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""One Modifier"",
                     ""id"": ""76905aad-7318-47e2-b6be-ef992db81c81"",
-                    ""path"": ""OneModifier"",
+                    ""path"": ""OneModifier(modifiersOrder=1)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1386,7 +1386,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""modifier"",
                     ""id"": ""fc49d5cb-002f-44a4-ab03-73dfadb2fb46"",
-                    ""path"": ""<Keyboard>/m"",
+                    ""path"": ""<Keyboard>/j"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1397,7 +1397,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""binding"",
                     ""id"": ""797792f8-193c-4121-984e-1b1504357226"",
-                    ""path"": ""<Keyboard>/d"",
+                    ""path"": ""<Keyboard>/k"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
