@@ -37,7 +37,6 @@ public class PatrolState : BaseState
         if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
-            return;
         }
     }
 
