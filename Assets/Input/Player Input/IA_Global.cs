@@ -997,6 +997,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Duck Mode"",
+                    ""type"": ""Button"",
+                    ""id"": ""e205a174-6e68-4c59-8f66-a1ec4e0556e6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1362,6 +1371,39 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Shove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""76905aad-7318-47e2-b6be-ef992db81c81"",
+                    ""path"": ""OneModifier"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""fc49d5cb-002f-44a4-ab03-73dfadb2fb46"",
+                    ""path"": ""<Keyboard>/m"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""797792f8-193c-4121-984e-1b1504357226"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -1935,6 +1977,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
         m_Player_PingLocation = m_Player.FindAction("Ping Location", throwIfNotFound: true);
         m_Player_Shove = m_Player.FindAction("Shove", throwIfNotFound: true);
+        m_Player_ToggleDuckMode = m_Player.FindAction("Toggle Duck Mode", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
@@ -2491,6 +2534,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_DropItem;
     private readonly InputAction m_Player_PingLocation;
     private readonly InputAction m_Player_Shove;
+    private readonly InputAction m_Player_ToggleDuckMode;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -2563,6 +2607,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Shove => m_Wrapper.m_Player_Shove;
         /// <summary>
+        /// Provides access to the underlying input action "Player/ToggleDuckMode".
+        /// </summary>
+        public InputAction @ToggleDuckMode => m_Wrapper.m_Player_ToggleDuckMode;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -2633,6 +2681,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started += instance.OnShove;
             @Shove.performed += instance.OnShove;
             @Shove.canceled += instance.OnShove;
+            @ToggleDuckMode.started += instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed += instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled += instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -2689,6 +2740,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started -= instance.OnShove;
             @Shove.performed -= instance.OnShove;
             @Shove.canceled -= instance.OnShove;
+            @ToggleDuckMode.started -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled -= instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -3309,6 +3363,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnShove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Duck Mode" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleDuckMode(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
