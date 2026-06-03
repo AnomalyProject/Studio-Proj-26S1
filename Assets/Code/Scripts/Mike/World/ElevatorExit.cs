@@ -56,11 +56,7 @@ public class ElevatorExit : LevelExitPoint
     }
     private void UpdateAvatarColors(bool isReady)
     {
-        for (int i = 0; i < avatars.Length; i++)
-        {
-            if (i < playersInArea.Count) avatars[i].material = avatarGreenMat;
-            else avatars[i].material = avatarRedMat;
-        }
+        for (int i = 0; i < NetworkManager.main.playerCount; i++) avatars[i].material = i < playersInArea.Count ? avatarGreenMat : avatarRedMat;
     }
     private void UpdateAvatarCount(ulong steamID, string displayName)
     {
