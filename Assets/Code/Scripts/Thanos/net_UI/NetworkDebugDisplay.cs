@@ -6,10 +6,6 @@ public class NetworkDebugDisplay : MonoBehaviour
     [SerializeField] private PurrNet.StatisticsManager statsManager;
 
     private bool _showOverlay = true;
-    //[Range(0, 1000)]
-    //public int Xpos = 310;
-    //[Range(0, 1000)]
-    //public int Ypos = 300;
 
     private void Update()
     {
@@ -33,13 +29,39 @@ public class NetworkDebugDisplay : MonoBehaviour
         // return;
         // #endif
 
+        int Xpos = 209;
+        int Ypos = 173;
+
         SteamRelayNetworkStatus_t status = new SteamRelayNetworkStatus_t();
         SteamNetworkingUtils.GetRelayNetworkStatus(out status);
 
-        string statusText = $"Steam Network Status: {status.m_eAvail}";
+        string convertStatus = GetName(status.m_eAvail);
+
+        string statusText = $"Steam Network Status: {convertStatus}";
 
         string color = (status.m_eAvail == ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Current)? "green" : "red";
 
-        GUI.Label(new Rect(Screen.width - 382, 170, 400, 20), $"<color={color}>{statusText}</color>");
+        GUI.Label(new Rect(Screen.width - Xpos, Ypos, 400, 20), $"<color={color}>{statusText}</color>");
+    }
+
+    private string GetName(ESteamNetworkingAvailability status)
+    {
+        switch (status)
+        {
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Current:
+                return "Connected";
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Attempting:
+                return "Connecting...";
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Retrying:
+                return "Retrying Connection...";
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_NeverTried:
+                return "Not Initialized";
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Failed:
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_CannotTry:
+                return "Disconnected";
+            case ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Unknown:
+            default:
+                return "Unknown Status";
+        }
     }
 }
