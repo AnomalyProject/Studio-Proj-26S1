@@ -1,8 +1,9 @@
+using PurrNet;
+using Steamworks;
+using System;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine;
-using PurrNet;
-using System;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
@@ -20,6 +21,7 @@ public class ElevatorExit : LevelExitPoint
     [SerializeField] private InidicationMessage anomalyMessage, safeMessage;
 
     [SerializeField] private Renderer[] avatars;
+    [SerializeField] private GameObject ornament;
     [SerializeField] private Material avatarGreenMat, avatarRedMat;
 
     [SerializeField] private bool openOnStart;
@@ -35,12 +37,18 @@ public class ElevatorExit : LevelExitPoint
         base.Awake();
         bHasAnomaly.onChanged += UpdateAnomalyIndicators;
 
-        foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
-        for (int i = 0; i < NetworkManager.main.playerCount; i++) avatars[i].gameObject.SetActive(true);
-        OnPlayersChanged.AddListener(UpdateAvatarColors);
-
+        UpdateAvatarCount(0, null);
         SessionEvents.OnPlayerJoined += UpdateAvatarCount;
         SessionEvents.OnPlayerLeft += UpdateAvatarCount;
+        OnPlayersChanged.AddListener(UpdateAvatarColors);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        SessionEvents.OnPlayerJoined -= UpdateAvatarCount;
+        SessionEvents.OnPlayerLeft -= UpdateAvatarCount;
+        OnPlayersChanged.RemoveListener(UpdateAvatarColors);
     }
 
     protected override void OnSpawned(bool asServer)
@@ -60,8 +68,14 @@ public class ElevatorExit : LevelExitPoint
     }
     private void UpdateAvatarCount(ulong steamID, string displayName)
     {
+        ornament.SetActive(true);
         foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
-        for (int i = 0; i < NetworkManager.main.playerCount; i++) avatars[i].gameObject.SetActive(true);
+        if (NetworkManager.main.playerCount <= 1) return;
+        for (int i = 0; i < NetworkManager.main.playerCount; i++)
+        {
+            avatars[i].gameObject.SetActive(true);
+            ornament.SetActive(false);
+        }
     }
 
     private void UpdateAnomalyIndicators(bool hasAnomaly)
