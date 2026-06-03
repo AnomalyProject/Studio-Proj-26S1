@@ -217,6 +217,12 @@ public class TextChatManager : NetworkBehaviour
             return;
         }
 
+        if (targetSteamID == senderSteamID)
+        {
+            SendWhisperError(info.sender, "You cannot whisper yourself. Try socializing with others, i think its time.");
+            return;
+        }
+
         PlayerID? targetNetworkID = SessionManager.Instance.GetPlayerIDForSteam(targetSteamID);
 
         if(targetNetworkID.HasValue)
