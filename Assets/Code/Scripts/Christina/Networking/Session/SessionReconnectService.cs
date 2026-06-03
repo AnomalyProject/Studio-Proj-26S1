@@ -36,6 +36,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
         SessionEvents.OnHostMigrationStarted += HandleHostMigrationStarted;
         SessionEvents.OnReconnectApproved += HandleReconnectApproved;
+        SessionEvents.OnLocalSessionReady += HandleLocalSessionReady;
         
         if (SessionModeManager.Instance != null)
         {
@@ -57,6 +58,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
         SessionEvents.OnHostMigrationStarted -= HandleHostMigrationStarted;
         SessionEvents.OnReconnectApproved -= HandleReconnectApproved;
+        SessionEvents.OnLocalSessionReady -= HandleLocalSessionReady;
         
         if (SessionModeManager.Instance != null)
         {
@@ -117,6 +119,12 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         StopReconnectRoutine();
 
         OnReconnected?.Invoke();
+    }
+    
+    private void HandleLocalSessionReady()
+    {
+        wasConnected = true;
+        Debug.Log("[SessionReconnectService] Local session ready; reconnect tracking armed.");
     }
     
     public float ReconnectTimeoutSeconds

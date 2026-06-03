@@ -9,6 +9,7 @@ public static class SessionEvents
     public static event Action<SessionErrorResponse> OnSessionError;
     public static event Action<string> OnHostMigrationStarted;
     public static event Action OnReconnectApproved;
+    public static event Action OnLocalSessionReady;
     
 
 
@@ -41,6 +42,11 @@ public static class SessionEvents
     {
         OnReconnectApproved?.Invoke();
     }
+    
+    public static void InvokeLocalSessionReady()
+    {
+        OnLocalSessionReady?.Invoke();
+    }
 
     public static void Reset()
     {
@@ -50,5 +56,6 @@ public static class SessionEvents
         OnSessionError = null;
         OnHostMigrationStarted = null;
         OnReconnectApproved = null;
+        OnLocalSessionReady = null;
     }
 }

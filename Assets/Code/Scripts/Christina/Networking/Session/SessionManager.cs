@@ -847,6 +847,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         latestClientSession = clientData;
         SessionEvents.InvokeSessionDataChanged();
+        SessionEvents.InvokeLocalSessionReady();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
     
