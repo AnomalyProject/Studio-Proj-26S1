@@ -18,7 +18,6 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text toastText;
 
     [Header("Settings")]
-    //[SerializeField] private float timeoutDuration = 30f;
     [SerializeField] private float sliderSpeed = 2f;
 
     private IReconnect _networkService;

@@ -812,7 +812,7 @@ public class SteamSessionBridge : MonoBehaviour
                 "Transport connected. Requesting session approval from host.");
         }
         
-        if (!joinStartupInProgress ||joinApprovalResult == JoinApprovalResult.Approved ||joinApprovalResult == JoinApprovalResult.Reconnected)
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved || joinApprovalResult == JoinApprovalResult.Reconnected)
         {
             joinCoroutine = null;
             yield break;
