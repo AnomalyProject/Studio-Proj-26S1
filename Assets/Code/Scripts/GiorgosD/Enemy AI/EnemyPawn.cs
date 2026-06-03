@@ -223,37 +223,6 @@ public class EnemyPawn : NetworkBehaviour
     }
     #endregion
     
-    #region NavMesh Check
-    /// <summary>
-    /// Checks if player is in NavMesh
-    /// </summary>
-    /// <param name="player"></param>
-    /// <returns></returns>
-    private bool IsOnNavMesh(Transform player)
-    {
-        if (player == null)
-            return false;
-
-        if (!agent.isOnNavMesh)
-            return false;
-        
-        if (!NavMesh.SamplePosition(player.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
-            return false;
-        
-        bool foundPath = NavMesh.CalculatePath(
-            transform.position,
-            hit.position,
-            NavMesh.AllAreas,
-            path
-        );
-
-        if (!foundPath)
-            return false;
-        
-        return path.status == NavMeshPathStatus.PathComplete;
-    }
-    #endregion
-    
     #region Sight Lost Timer
     /// <summary>
     /// A timer that checkes when the ai actually should lose the player and stop following his live pos
@@ -295,7 +264,7 @@ public class EnemyPawn : NetworkBehaviour
             
             if (player == null) continue;
             
-            if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance) && IsOnNavMesh(player.transform))
+            if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance))
             {
                 float sqrDist = distance * distance;
                 if (sqrDist < minSqrDist)
