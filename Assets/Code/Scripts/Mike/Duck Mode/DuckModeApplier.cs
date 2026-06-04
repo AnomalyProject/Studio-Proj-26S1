@@ -40,6 +40,8 @@ public class DuckModeApplier : NetworkBehaviour
         {
             if (isServer) activeHeadIndex.value = Random.Range(0, duckHeads.Length);
             activeHead = duckHeads[activeHeadIndex.value];
+
+            if (!activeHead) return;
             activeHead.SetActive(true);
             OnActivated?.Invoke();
         }
