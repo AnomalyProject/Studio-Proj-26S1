@@ -79,7 +79,7 @@ public class NarrationEntryEditor : Editor
 
         // Active subtitle cue
         SubtitleEntry? active = null;
-        foreach (var cue in entry.Subtitles)
+        foreach (SubtitleEntry cue in entry.Subtitles)
         {
             if (cue.TimeStamp <= t) active = cue;
         }
