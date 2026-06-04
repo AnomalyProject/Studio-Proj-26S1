@@ -21,6 +21,7 @@ public class PlayerBody : NetworkBehaviour
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
+    public Camera PlayerCamera => playerCamera;
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
 
