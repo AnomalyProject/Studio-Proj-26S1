@@ -25,7 +25,7 @@ public class MainMenuExitDoor : MonoBehaviour, IMenuSelectable
             if (exitTimer <= 0)
             {
                 Opened = false;
-                MainMenuManager.instance.QuitGame();
+                MainMenuManager.Instance.QuitGame();
             }
         }
     }
@@ -55,17 +55,18 @@ public class MainMenuExitDoor : MonoBehaviour, IMenuSelectable
 
     public void Select()
     {
-        Debug.Log("Door Selected");
-        isSelected = true;
+        if (enabled)
+        {
+            isSelected = true;
 
-        // Highlight door
-        DoorAnimator.SetBool("hover", true);
-        WarningIndicator.SetActive(true);
+            // Highlight door
+            DoorAnimator.SetBool("hover", true);
+            WarningIndicator.SetActive(true);
+        }
     }
 
     public void Deselect()
     {
-        Debug.Log("Door Deselected");
         isSelected = false;
 
         // Remove highlight
@@ -75,11 +76,10 @@ public class MainMenuExitDoor : MonoBehaviour, IMenuSelectable
 
     public void Submit()
     {
-        Debug.Log("Door Activated");
-
         // Open door
         if (!Opened && enabled)
         {
+            Debug.Log("Door Activated");
             exitTimer = TimeToExit;
             Opened = true;
             DoorAnimator.SetTrigger("Open");

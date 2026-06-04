@@ -17,7 +17,7 @@ using System.Collections;
 /// coordination are required.</remarks>
 public class MultiplayerSceneLoader : NetworkBehaviour
 {
-    [HideInInspector] public MultiplayerSceneLoader Instance {get; private set;}
+    [HideInInspector] public static MultiplayerSceneLoader Instance {get; private set;}
 
     [Header("UI References")]
     [SerializeField] private CanvasGroup loadingOverlay;
@@ -42,7 +42,7 @@ public class MultiplayerSceneLoader : NetworkBehaviour
 
     private void Awake()
     {
-        if (Instance != null & Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
@@ -140,6 +140,8 @@ public class MultiplayerSceneLoader : NetworkBehaviour
     [ObserversRpc]
     private void RpcShowLoadingScreen()
     {
+        if(isServer) return;
+
         StopAllCoroutines();
         progressBar.value = 0f;
         StartCoroutine(Fade(1));
@@ -218,6 +220,8 @@ public class MultiplayerSceneLoader : NetworkBehaviour
     [ObserversRpc]
     private void RpcDropLoadingScreen(GameState targetState)
     {
+        if(isServer) return;
+
         StartCoroutine(Fade(0));
 
         if(!NetworkManager.isServerStatic)

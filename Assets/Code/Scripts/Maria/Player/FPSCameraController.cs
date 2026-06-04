@@ -27,6 +27,7 @@ public class FPSCameraController : MonoBehaviour
     #region Private Fields
     private float currentPitch = 0f;   // accumulated vertical rotation
     #endregion
+    public float CurrentPitch => currentPitch;
 
     #region Unity Lifecycle
     private void Awake()

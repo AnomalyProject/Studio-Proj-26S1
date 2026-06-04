@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine;
 using System.Collections;
 using System;
 using PurrNet;
@@ -59,7 +59,7 @@ public class SceneLoader : NetworkBehaviour
 
 
 
-    private void Awake()
+    protected virtual void Awake()
     {
         // singleton pattern
         if (Instance != null & Instance != this)
@@ -78,14 +78,8 @@ public class SceneLoader : NetworkBehaviour
         // debug Mode
         if (debugLoadOnStart)
         {
-            if (!debugUseAsync)
-            {
-                LoadScene(debugSceneToLoadOnStart);
-            }
-            else
-            {
-                LoadSceneWithAsync(debugSceneToLoadOnStart, true);
-            }
+            if (!debugUseAsync) LoadScene(debugSceneToLoadOnStart);
+            else LoadSceneWithAsync(debugSceneToLoadOnStart, true);
         }
     }
 
@@ -215,10 +209,10 @@ public class SceneLoader : NetworkBehaviour
     #endregion
 
 
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
-    IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
+    private IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
     {
         // Show loading UI if loading screen exists AND showLoadingScreen is checked
         if (showLoadUI) ShowUI();

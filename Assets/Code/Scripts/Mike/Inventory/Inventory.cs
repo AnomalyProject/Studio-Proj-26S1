@@ -69,11 +69,15 @@ public class Inventory : NetworkModule
     /// <param name="stack">The item stack to add to the inventory. The stack's quantity must be greater than zero.</param>
     public int Add(ItemStack stack, bool modifyInputStack = true)
     {
-        if (stack == null || stack.Quantity <= 0) return 0;
-        int totalAdded = Add(stack.ItemData, stack.Quantity);
+        if (stack == null || stack.IsEmpty()) return 0;
+
+        Dictionary<string, object> meta = stack.HasMetadata()? new(stack.GetMetadata()) : null;
+
+        int totalAdded = Add(stack.ItemData, stack.Quantity, meta);
         if (modifyInputStack) stack.RemoveFromStack(totalAdded);
         return totalAdded;
     }
+
     /// <summary>
     /// Attempts to add the specified quantity of the given item to the inventory.
     /// </summary>
@@ -83,7 +87,7 @@ public class Inventory : NetworkModule
     /// <param name="quantity">The number of items to add. Must be greater than zero.</param>
     /// <returns>The total number of items actually added to the inventory. Returns 0 if the inventory is full, the quantity is
     /// zero, or the item is null.</returns>
-    public int Add(ItemData itemData, int quantity)
+    public int Add(ItemData itemData, int quantity, Dictionary<string, object> metadata = null)
     {
         if (IsInventoryFull() || quantity == 0 || itemData == null) return 0;
 
@@ -98,7 +102,12 @@ public class Inventory : NetworkModule
 
             int added = slots[index].AddToStack(quantity);
 
-            if(added > 0) InvokeStackChanged(slots[index], index);
+            if(metadata != null) foreach (var pair in metadata)
+            {
+                slots[index].SetMeta(pair.Key, pair.Value);
+            }             
+
+            if (added > 0) InvokeStackChanged(slots[index], index);
             totalAmountAdded += added;
             quantity -= added;
         }
@@ -106,7 +115,7 @@ public class Inventory : NetworkModule
         while (quantity > 0 && TryFindEmptySlot(out int emptySlotIndex))
         {
             int possibleToAdd = Mathf.Min(quantity, itemData.MaxStackSize);
-            slots[emptySlotIndex] = new ItemStack(itemData, possibleToAdd);
+            slots[emptySlotIndex] = new ItemStack(itemData, possibleToAdd, metadata);
             InvokeStackAdded(slots[emptySlotIndex], emptySlotIndex);
             totalAmountAdded += possibleToAdd;
             quantity -= possibleToAdd;
@@ -123,8 +132,7 @@ public class Inventory : NetworkModule
     /// </summary>
     /// <param name="itemData">The item to add to the collection. Cannot be null.</param>
     /// <returns>true if successful.</returns>
-    public bool TryAddOne(ItemData itemData) => Add(itemData, 1) > 0;
-
+    public bool TryAddOne(ItemData itemData, Dictionary<string, object> metadata = null) => Add(itemData, 1, metadata) > 0;
     /// <summary>
     /// Attempts to add the specified quantity of the given item to the inventory only if the entire quantity can be
     /// added without exceeding stack or slot limits.
@@ -134,11 +142,11 @@ public class Inventory : NetworkModule
     /// <param name="itemData">The item to add to the inventory. Cannot be null.</param>
     /// <param name="quantity">The exact number of items to add. Must be greater than zero.</param>
     /// <returns>true if the entire quantity was added to the inventory. Otherwise, false.</returns>
-    public bool TryAddExact(ItemData itemData, int quantity)
+    public bool TryAddExact(ItemData itemData, int quantity, Dictionary<string, object> metadata = null)
     {
         if (!CanFit(itemData, quantity)) return false;
 
-        Add(itemData, quantity);
+        Add(itemData, quantity, metadata);
         return true;
     }
     #endregion
@@ -461,6 +469,14 @@ public class Inventory : NetworkModule
         for (int i = 0; i < slots.Length; i++) ClearSlot(i);
     }
     #endregion
+
+    public bool SetMetadata(int slotIndex, string key, object value)
+    {
+        if (slotIndex < 0 || slotIndex >= slots.Length || slots[slotIndex] == null) return false;
+        slots[slotIndex].SetMeta(key, value);
+        InvokeStackChanged(slots[slotIndex], slotIndex); // already wired to SetDirty
+        return true;
+    }
 
     #endregion
 
