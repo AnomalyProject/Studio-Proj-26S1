@@ -1,8 +1,8 @@
-using PurrNet;
-using Steamworks;
-using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
+using Steamworks;
+using PurrNet;
 
 public class PingLocation : NetworkBehaviour
 {

@@ -47,7 +47,7 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
         if(!await CanInteract(interactor)) return false;
         interactor.Movement.ApplySpeedBoost(multiplierAdditive, duration);
         if (consumeSound != null) consumeSound.Play();
-        interactor.DoBurp(afterSeconds: duration);
+        interactor.DoBurp(afterSeconds: interactor.Movement.SpeedBoostTimeRemaining);
         await Task.Delay((int)(consumeSound.clip.length * 1000));
         return true;
     }

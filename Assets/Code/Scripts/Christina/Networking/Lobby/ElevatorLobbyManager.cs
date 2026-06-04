@@ -102,6 +102,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
         if (!SessionManager.Instance.CanStartElevatorSequence())
             return;
 
+        elevatorExit.SetInteraction(active: false);
         StartDeparture();
     }
 
