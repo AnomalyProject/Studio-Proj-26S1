@@ -19,6 +19,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     [SerializeField, Min(.1f)] private float cooldownSeconds = 1;
     [SerializeField] private ItemData pictureItemData;
     [SerializeField] private Vector2Int textureSize = new(256, 256);
+    [SerializeField, Range(0, 100)] private int textureQuality = 50;
     [SerializeField] private RawImage previewDisplay;
     [SerializeField] private TextMeshProUGUI chargeDisplay;
     [SerializeField] private Camera previewCamera;
@@ -34,7 +35,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     #region Unity Lifecycle
     private void OnEnable()
     {
-        _renderTexture = new RenderTexture(textureSize.x, textureSize.y, 24);
+        _renderTexture = new RenderTexture(textureSize.x, textureSize.y, 8);
         previewCamera.targetTexture = _renderTexture;
         previewCamera.enabled = true;
         previewDisplay.texture = _renderTexture;
@@ -86,14 +87,18 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         currentCooldown = cooldownSeconds;
         Texture2D snapshot = await ReadSnapshotAsync();
         if (snapshot == null) return false;
-        return await RegisterPicture_ServerRpc(interactor, snapshot.EncodeToPNG());
+        
+        byte[] compressed = snapshot.EncodeToJPG(textureQuality);
+        Destroy(snapshot);
+        OnPictureTaken?.Invoke(); // Invoke seperate to make visuals responsive
+        return await RegisterPicture_ServerRpc(interactor, compressed);
     }
     #endregion
 
     #region Syncing
     [ServerRpc] private Task<bool> RegisterPicture_ServerRpc(PlayerBody interactor, byte[] snapshot)
     {
-        Dictionary<string, object> metadata = new() 
+        Dictionary<string, object> metadata = new()
         { 
             [PICTURE_META_KEY] = snapshot 
         };
@@ -107,7 +112,11 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
         }
         return Task.FromResult(success);
     }
-    [ObserversRpc] private void InvokeOnPictureTaken() => OnPictureTaken.Invoke();
+    [ObserversRpc] private void InvokeOnPictureTaken()
+    {
+        if (isOwner) return; // Anyone but the owner, owner invokes locally
+        OnPictureTaken.Invoke();
+    }
     #endregion
 
     #region Helpers
@@ -124,7 +133,7 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
     {
         var tcs = new TaskCompletionSource<Texture2D>();
 
-        AsyncGPUReadback.Request(_renderTexture, 0, TextureFormat.RGBA32, request =>
+        AsyncGPUReadback.Request(_renderTexture, 0, TextureFormat.RGB24, request =>
         {
             if (request.hasError)
             {
@@ -132,9 +141,9 @@ public class PolaroidGadget : PlayerItem, IInteractable<PlayerBody>
                 return;
             }
 
-            Texture2D snapshot = new Texture2D(textureSize.x, textureSize.y, TextureFormat.RGBA32, false);
+            Texture2D snapshot = new Texture2D(textureSize.x, textureSize.y, TextureFormat.RGB24, false);
             snapshot.SetPixelData(request.GetData<byte>(), 0);
-            snapshot.Apply();
+            snapshot.Apply(false, false);
             tcs.SetResult(snapshot);
         });
 

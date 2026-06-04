@@ -154,9 +154,9 @@ public class MainMenuManager : MonoBehaviour
         SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim?.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration/ 1.5f);
-        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
         yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
-        if (BlackFadeManager.Instance != null) { BlackFadeManager.Instance?.FullFade(); }
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
         SessionModeManager.Instance.StartSolo();
     }
 
@@ -170,9 +170,9 @@ public class MainMenuManager : MonoBehaviour
         SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
-        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
         yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
-        if (BlackFadeManager.Instance != null) { BlackFadeManager.Instance?.FullFade(); }
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
         SessionModeManager.Instance.StartHosting();
     }
 
@@ -187,9 +187,9 @@ public class MainMenuManager : MonoBehaviour
         SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
-        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
         yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
-        if (BlackFadeManager.Instance != null) { BlackFadeManager.Instance?.FullFade(); }
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
         SteamSessionBridge.Instance.RequestJoinLobbyById(lobbyId);
     }
 

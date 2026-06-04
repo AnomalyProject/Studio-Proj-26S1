@@ -64,6 +64,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
     
     public void OnDoorsFullyClosed()
     {
+        BlackFadeManager.Instance?.FadeIn();
         if (!isServer) return;
         if (SessionManager.Instance.CurrentElevatorState != ElevatorLobbyState.DoorsClosing) return;
 
@@ -101,6 +102,7 @@ public class ElevatorLobbyManager : NetworkBehaviour
         if (!SessionManager.Instance.CanStartElevatorSequence())
             return;
 
+        elevatorExit.SetInteraction(active: false);
         StartDeparture();
     }
 
