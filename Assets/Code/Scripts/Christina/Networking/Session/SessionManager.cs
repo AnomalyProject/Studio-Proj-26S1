@@ -24,10 +24,10 @@ using PurrNet;
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
-    
+
     [SerializeField] private float reconnectTimeoutSeconds = 30f;
     public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
-    
+
     // --- FIELDS
     private SessionPlayerRegistry registry;
     private SessionStateStore sessionStore;
@@ -39,7 +39,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
-    
+
     private readonly Dictionary<ulong, Coroutine> reconnectRoutines = new Dictionary<ulong, Coroutine>();
 
     // --- PROPERTIES
@@ -62,12 +62,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public static event Action OnServerSessionChanged;
 
     public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
-    
+
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
 
     #endregion
-    
+
     #region Lifecycle
     /// <summary>
     /// Singleton setup. If a duplicate SessionManager exists, destroy it.
@@ -83,7 +83,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        
+
         registry = new SessionPlayerRegistry();
         sessionStore = new SessionStateStore();
         identityService = new SessionIdentityService();
@@ -138,7 +138,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
         }
     }
-    
+
     /// <summary>
     /// Initializes a new SessionData with default settings and transitions to Lobby state.
     /// SessionData is created BEFORE the state transition to ensure it exists if anything
@@ -159,7 +159,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Host and Player Connection Handling
     /// <summary>
     ///  Registers the first connected player as the host and broadcasts them to the session.
@@ -249,14 +249,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
     }
-    
+
     private bool TryHandleReconnect(PlayerID playerID, bool isReconnect)
     {
         if (!sessionStore.HasSession) return false;
-        if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName))return false;
+        if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName)) return false;
 
-        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID))return false;
-        
+        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) return false;
+
         SessionCommandResult result = playerCoordinator.TryReconnect(playerID, steamID);
 
         if (!result.Success)
@@ -290,7 +290,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         if (!asServer) return;
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
-        
+
         float reconnectDeadline = Time.realtimeSinceStartup + reconnectTimeoutSeconds;
 
         if (!playerCoordinator.TryMarkDisconnected(playerID, reconnectDeadline, out ulong steamID))
@@ -309,7 +309,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         reconnectRoutines[steamID] = StartCoroutine(ReconnectTimeoutRoutine(playerID, steamID, reconnectDeadline));
     }
-    
+
     private IEnumerator ReconnectTimeoutRoutine(PlayerID oldPlayerID, ulong steamID, float reconnectDeadline)
     {
         while (Time.realtimeSinceStartup < reconnectDeadline) yield return null;
@@ -332,7 +332,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Session Management and Lobby State
 
 
@@ -384,7 +384,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Join, Leave, Ready Requests
     /// <summary>
     /// Client-to-server RPC: requests to join the active session.
@@ -461,7 +461,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
         return result;
     }
-    
+
 
     /// <summary>
     /// Client-to-server RPC: requests to voluntarily leave the session.
@@ -534,7 +534,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return result;
     }
-    
+
     #endregion
 
     #region Match Flow
@@ -567,7 +567,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (result.Success) SendSessionUpdate();
         return result;
     }
-    
+
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via SessionPlayerRegistry)
@@ -612,14 +612,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public bool TryStartMatchFromServer()
     {
         if (!isServer) return false;
-        
+
         SessionCommandResult result = flowCoordinator.TryStartMatch();
         if (!result.Success) Debug.LogWarning($"[SessionManager] Start match failed: {result.ErrorCode} - {result.Message}");
 
         return result.Success;
     }
     #endregion
-    
+
     #region Settings
     /// <summary>
     /// Client-to-server RPC: host requests to change session settings. Host-only.
@@ -667,7 +667,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log("[SessionManager] Settings updated.");
         return SessionCommandResult.Succeeded();
     }
-    
+
     /// <summary>
     /// Converts a string key and value into a typed session settings update.
     /// </summary>
@@ -723,9 +723,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Broadcasts and Client Sync
-    
+
     /// <summary>
     /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
     /// </summary>
@@ -734,7 +734,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
         OnServerSessionChanged?.Invoke();
     }
-    
+
     /// <summary>
     ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
     /// </summary>
@@ -767,7 +767,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendSessionUpdate();
         OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
     }
-    
+
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
     /// This is the ONLY path that fires the PlayerJoined event. The server doesnt
@@ -836,7 +836,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
-    
+
     /// <summary>
     /// Sends the current session snapshot to one client and notifies local UI listeners.
     /// </summary>
@@ -850,7 +850,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SessionEvents.InvokeLocalSessionReady();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
-    
+
     [TargetRpc]
     private void SendReconnectApproved(PlayerID target)
     {
@@ -859,7 +859,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Error Handling
     /// <summary>
     /// Server-to-one-client RPC: sends a structured error to a specific client.
