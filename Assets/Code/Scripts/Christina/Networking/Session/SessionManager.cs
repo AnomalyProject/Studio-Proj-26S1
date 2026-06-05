@@ -325,9 +325,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// and the elevator has not started leaving.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(RPCInfo info = default)
+    public void RequestJoinSession(string passwordAttempt, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
+
+        string expected = SessionModeManager.Instance?.PendingLobbyPassword ?? "";
+        if (!string.IsNullOrEmpty(expected) && passwordAttempt != expected)
+        {
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(
+                SessionErrorCode.InvalidState,
+                "Incorrect lobby password."));
+            return;
+        }
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {

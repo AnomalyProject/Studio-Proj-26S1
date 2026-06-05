@@ -13,7 +13,10 @@ public class SteamSessionBridge : MonoBehaviour
     private bool isInLobby = false;
     private bool isCreatingLobby = false;
     private bool isSteamAvailable = false;
-    
+
+    //public getter for other classes to know which lobby we're in, if any. useful for things like the invite system.
+    public CSteamID CurrentLobbyID => currentLobbyID;
+
     [SerializeField] private ELobbyType lobbyType = ELobbyType.k_ELobbyTypeFriendsOnly;
     
     // Host
@@ -22,7 +25,8 @@ public class SteamSessionBridge : MonoBehaviour
     private Coroutine hostStartupCoroutine;
     private Coroutine joinCoroutine; 
     private const float clientConnectionTimeoutSeconds = 15f;
-    
+
+    private string pendingJoinPassword = "";
     public HostStartupStatus CurrentHostStartupStatus => currentHostStartupStatus;
     public event System.Action<HostStartupStatus> OnHostStartupStatusChanged;
     
@@ -58,6 +62,8 @@ public class SteamSessionBridge : MonoBehaviour
 
     // steam callresults (one-shot for specific API calls)
     private CallResult<LobbyCreated_t> lobbyCreatedCallResult;
+
+    public void SetPendingJoinPassword(string password) => pendingJoinPassword = password;
 
     private void Awake()
     {
@@ -806,8 +812,9 @@ public class SteamSessionBridge : MonoBehaviour
         }
         
         joinApprovalResult = JoinApprovalResult.Pending;
-        SessionManager.Instance.RequestJoinSession();
-        Debug.Log("[SteamBridge] PurrNet connected, session join requested");
+
+        SessionManager.Instance.RequestJoinSession(pendingJoinPassword);
+        pendingJoinPassword = "";
 
         // waiting for the host to approve or reject, with a timeout
         float approvalDeadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;

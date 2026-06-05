@@ -25,7 +25,8 @@ public class SessionModeManager : MonoBehaviour
     private const float devClientStartupDelaySeconds = 1f; 
     
     public string LastJoinFailureMessage { get; private set; }
-    
+
+    public string PendingLobbyPassword { get; set; }
     private Coroutine hostLeftRoutine;
 
     public event Action<SessionMode, SessionMode> OnModeChanged;
@@ -181,7 +182,8 @@ public class SessionModeManager : MonoBehaviour
                 Debug.LogWarning("[SessionModeManager] PurrNet didn't restore MainMenu.. Manually loading.");
                 SceneLoader.Instance.LoadScene("MainMenu");
             }
-            
+
+            PendingLobbyPassword = string.Empty;
             SetMode(SessionMode.None);
         }
         finally

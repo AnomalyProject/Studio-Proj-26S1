@@ -101,7 +101,7 @@ public class SteamFriendsLobbyBrowser : MonoBehaviour
             return;
         }
 
-        MainMenuManager.Instance?.JoinCoOp(lobbyId);
+        PasswordProtectedLobby.Instance?.TryJoinLobby(lobbyId);
     }
 
     private bool TryParseLobbyId(string connectString, out ulong lobbyId)
