@@ -405,6 +405,21 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
+        if (identityService.TryResolveReconnectJoiner(sender, out ulong reconnectSteamID, out string reconnectDisplayName) && sessionStore.HasSession && CurrentSession.IsPlayerWaitingToReconnect(reconnectSteamID))
+        {
+            SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, reconnectSteamID);
+
+            if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
+
+            SendReconnectApproved(sender);
+            SendSessionUpdate();
+            SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
+            SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
+
+            Debug.Log($"[SessionManager] Reconnect approved from session request for {reconnectDisplayName} ({reconnectSteamID})");
+            return;
+        }
+
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
             SendCommandErrorIfFailed(
@@ -414,21 +429,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                     "Could not verify Steam lobby identity."
                 )
             );
-            return;
-        }
-        
-        if (sessionStore.HasSession && CurrentSession.IsPlayerWaitingToReconnect(steamID))
-        {
-            SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, steamID);
-
-            if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
-
-            SendReconnectApproved(sender);
-            SendSessionUpdate();
-            SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
-            SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
-
-            Debug.Log($"[SessionManager] Reconnect approved from session request for {displayName} ({steamID})");
             return;
         }
 
