@@ -23,7 +23,7 @@ public class PlayerInputLink : MonoBehaviour, IA_Global.IPlayerActions
         else playerBody.QueueOnSpawned(SubscribeInput);
     }
 
-    public void SubscribeInput()
+    private void SubscribeInput()
     {
         if (playerBody.isOwner)
         {
