@@ -231,12 +231,78 @@ public class SessionModeManager : MonoBehaviour
             Debug.LogWarning($"[SessionModeManager] Cannot start Solo, already in {currentMode} mode.");
             return;
         }
-        
+
+        StartCoroutine(BeginSoloLobbyFlow());
+    }
+    
+    private IEnumerator BeginSoloLobbyFlow()
+    {
+        NetworkManager netManager = NetworkManager.main;
+
+        if (netManager == null)
+        {
+            Debug.LogError("[SessionModeManager] NetworkManager.main not found. Cannot start solo lobby.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        LocalTransport localTransport = netManager.GetComponent<LocalTransport>();
+        SteamTransport steamTransport = netManager.GetComponent<SteamTransport>();
+
+        if (localTransport == null)
+        {
+            Debug.LogError("[SessionModeManager] LocalTransport component missing on NetworkManager.");
+            ReturnToMenu();
+            yield break;
+        }
+
         SetMode(SessionMode.Solo);
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
-        GameStateManager.Instance.RequestStateChange(GameState.Loading);
 
-        StartCoroutine(BeginSoloFlowForScene(gameplaySceneName));
+        localTransport.enabled = true;
+        if (steamTransport != null) steamTransport.enabled = false;
+
+        netManager.transport = localTransport;
+        netManager.StartHost();
+
+        float hostDeadline = Time.realtimeSinceStartup + hostReadyTimeoutSeconds;
+        while (!netManager.isHost && Time.realtimeSinceStartup < hostDeadline)
+            yield return null;
+
+        if (!netManager.isHost)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for solo host.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        float sessionDeadline = Time.realtimeSinceStartup + sessionReadyTimeoutSeconds;
+        while ((SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) &&
+               Time.realtimeSinceStartup < sessionDeadline)
+        {
+            yield return null;
+        }
+
+        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null)
+        {
+            Debug.LogError("[SessionModeManager] Timed out waiting for solo session.");
+            ReturnToMenu();
+            yield break;
+        }
+
+        var settings = new PurrSceneSettings
+        {
+            isPublic = true,
+            mode = LoadSceneMode.Single
+        };
+
+        var op = netManager.sceneModule.LoadSceneAsync(lobbySceneName, settings);
+        SceneLoader.Instance.PerformAsyncOperation(op);
+
+        while (op != null && !op.isDone)
+            yield return null;
+
+        Debug.Log("[SessionModeManager] Solo lobby loaded.");
     }
 
     public void StartSoloInScene(string sceneName)
