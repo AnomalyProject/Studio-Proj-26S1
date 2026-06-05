@@ -405,8 +405,13 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (identityService.TryResolveReconnectJoiner(sender, out ulong reconnectSteamID, out string reconnectDisplayName) && sessionStore.HasSession && CurrentSession.IsPlayerWaitingToReconnect(reconnectSteamID))
+        if (sessionStore.HasSession &&
+            registry.TryGetSteamID(sender, out ulong reconnectSteamID) &&
+            CurrentSession.IsPlayerWaitingToReconnect(reconnectSteamID))
         {
+            PlayerSessionInfo? reconnectInfo = CurrentSession.GetPlayer(reconnectSteamID);
+            string reconnectDisplayName = reconnectInfo.HasValue ? reconnectInfo.Value.DisplayName : "Reconnecting Player";
+
             SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, reconnectSteamID);
 
             if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
