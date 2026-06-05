@@ -256,6 +256,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName)) return false;
 
         if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) return false;
+        
+        if (!isReconnect)
+        {
+            Debug.LogWarning($"[SessionManager] SteamID {steamID} tried to reconnect with a new PurrNet PlayerID {playerID}. Rejecting reconnect.");
+            return false;
+        }
 
         SessionCommandResult result = playerCoordinator.TryReconnect(playerID, steamID);
 

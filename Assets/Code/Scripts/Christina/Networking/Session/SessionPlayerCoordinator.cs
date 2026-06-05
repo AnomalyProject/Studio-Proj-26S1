@@ -75,7 +75,6 @@ public class SessionPlayerCoordinator
 
         if (!sessionStore.Current.SetPlayerConnected(steamID, false, reconnectDeadline)) return false;
 
-        registry.Unregister(playerID);
         sessionStore.Current.ResetReadyStates();
 
         return true;
@@ -93,8 +92,20 @@ public class SessionPlayerCoordinator
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player is not waiting to reconnect.");
         }
 
-        PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
+        PlayerID? waitingPlayerID = registry.FindPlayerIDForSteam(steamID);
 
+        if (!waitingPlayerID.HasValue)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
+        }
+        
+        if (waitingPlayerID.Value != playerID)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Reconnect PlayerID did not match the disconnected player.");
+        }
+        
+        PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
+        
         if (!playerInfo.HasValue)
         {
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
