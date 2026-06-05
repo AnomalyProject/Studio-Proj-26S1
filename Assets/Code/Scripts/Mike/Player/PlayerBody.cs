@@ -17,6 +17,7 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener playerAudioListener;
     [SerializeField] private CameraLean playerCameraLean;
+    [SerializeField] private PlayerInputLink playerInputLink;
     [SerializeField] private GameObject nameplateVisuals;
 
     [Header("Misc")]
@@ -104,6 +105,13 @@ public class PlayerBody : NetworkBehaviour
             localPlayerBody = null;
             OnLocalPlayerDespawned?.Invoke(this);
             isLocalPlayerRegistered = false;
+        }
+
+        if (local)
+        {
+            if (playerInputLink == null) playerInputLink = GetComponentInChildren<PlayerInputLink>(true);
+
+            if (playerInputLink != null) playerInputLink.SubscribeInput();
         }
 
         if (local && !isLocalPlayerRegistered)
