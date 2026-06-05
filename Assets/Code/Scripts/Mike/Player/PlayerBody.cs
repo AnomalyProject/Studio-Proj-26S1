@@ -57,15 +57,15 @@ public class PlayerBody : NetworkBehaviour
         isLocalPlayerRegistered = false;
     }
 
-    //protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
-    //{
-    //    base.OnOwnerChanged(oldOwner, newOwner, asServer);
-    //
-    //    if (asServer) return;
-    //
-    //    bool local = newOwner.HasValue && newOwner == localPlayer;
-    //    if (!TryApplyOwnership(local)) return;
-    //}
+    protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
+    {
+        base.OnOwnerChanged(oldOwner, newOwner, asServer);
+
+        if (asServer) return;
+
+        bool local = newOwner.HasValue && newOwner.Value == localPlayer;
+        TryApplyOwnership(local);
+    }
 
     [ObserversRpc(requireServer: false)] public void DoBurp(float afterSeconds)
     {
@@ -97,6 +97,14 @@ public class PlayerBody : NetworkBehaviour
         interaction.enabled = local;
         
         if(nameplateVisuals) nameplateVisuals.SetActive(!local);
+        
+        // adding this for the reconnection
+        if (!local && isLocalPlayerRegistered)
+        {
+            localPlayerBody = null;
+            OnLocalPlayerDespawned?.Invoke(this);
+            isLocalPlayerRegistered = false;
+        }
 
         if (local && !isLocalPlayerRegistered)
         {
