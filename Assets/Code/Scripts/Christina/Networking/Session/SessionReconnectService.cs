@@ -16,6 +16,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     
     [SerializeField] private float reconnectAttemptDelay = 2f;
     private NetworkManager subscribedNetworkManager;
+    private Coroutine reconnectApprovalRoutine;
     private Coroutine reconnectRoutine;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -80,9 +81,10 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         if (state == ConnectionState.Connected)
         {
             wasConnected = true;
-            if (isWaitingToReconnect)
+            if (isWaitingToReconnect && reconnectApprovalRoutine == null)
             {
                 Debug.Log("[SessionReconnectService] Transport connected: waiting for session reconnect approval.");
+                reconnectApprovalRoutine = StartCoroutine(RequestReconnectApprovalRoutine());
             }
             return;
         }
@@ -112,6 +114,31 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
         if (reconnectRoutine == null) reconnectRoutine = StartCoroutine(ReconnectRoutine());
         
+    }
+    
+    private IEnumerator RequestReconnectApprovalRoutine()
+    {
+        float deadline = Time.realtimeSinceStartup + 5f;
+
+        while (Time.realtimeSinceStartup < deadline)
+        {
+            if (SessionManager.Instance != null)
+            {
+                NetworkIdentity identity = SessionManager.Instance.GetComponent<NetworkIdentity>();
+
+                if (identity != null && identity.isSpawned)
+                {
+                    SessionManager.Instance.RequestJoinSession();
+                    reconnectApprovalRoutine = null;
+                    yield break;
+                }
+            }
+
+            yield return null;
+        }
+
+        Debug.LogWarning("[SessionReconnectService] Could not request reconnect approval because SessionManager was not ready.");
+        reconnectApprovalRoutine = null;
     }
     
     private void HandleReconnectApproved()
@@ -216,6 +243,12 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         {
             StopCoroutine(reconnectRoutine);
             reconnectRoutine = null;
+        }
+        
+        if (reconnectApprovalRoutine != null)
+        {
+            StopCoroutine(reconnectApprovalRoutine);
+            reconnectApprovalRoutine = null;
         }
     }
 }

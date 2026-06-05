@@ -416,6 +416,21 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             );
             return;
         }
+        
+        if (sessionStore.HasSession && CurrentSession.IsPlayerWaitingToReconnect(steamID))
+        {
+            SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, steamID);
+
+            if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
+
+            SendReconnectApproved(sender);
+            SendSessionUpdate();
+            SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
+            SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
+
+            Debug.Log($"[SessionManager] Reconnect approved from session request for {displayName} ({steamID})");
+            return;
+        }
 
         SessionCommandResult result = TryAcceptJoin(sender, steamID, displayName);
 
