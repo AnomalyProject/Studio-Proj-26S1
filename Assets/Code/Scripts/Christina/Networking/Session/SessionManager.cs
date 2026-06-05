@@ -406,23 +406,39 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         PlayerID sender = info.sender;
 
         if (sessionStore.HasSession &&
-            registry.TryGetSteamID(sender, out ulong reconnectSteamID) &&
-            CurrentSession.IsPlayerWaitingToReconnect(reconnectSteamID))
+            registry.TryGetSteamID(sender, out ulong registeredSteamID))
         {
-            PlayerSessionInfo? reconnectInfo = CurrentSession.GetPlayer(reconnectSteamID);
-            string reconnectDisplayName = reconnectInfo.HasValue ? reconnectInfo.Value.DisplayName : "Reconnecting Player";
+            PlayerSessionInfo? registeredInfo = CurrentSession.GetPlayer(registeredSteamID);
 
-            SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, reconnectSteamID);
+            if (registeredInfo.HasValue)
+            {
+                bool wasWaitingToReconnect = CurrentSession.IsPlayerWaitingToReconnect(registeredSteamID);
 
-            if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
+                if (wasWaitingToReconnect)
+                {
+                    SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, registeredSteamID);
 
-            SendReconnectApproved(sender);
-            SendSessionUpdate();
-            SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
-            SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
+                    if (SendCommandErrorIfFailed(sender, reconnectResult)) return;
+                }
+                else
+                {
+                    CurrentSession.SetPlayerConnected(registeredSteamID, true, 0f);
+                }
 
-            Debug.Log($"[SessionManager] Reconnect approved from session request for {reconnectDisplayName} ({reconnectSteamID})");
-            return;
+                if (reconnectRoutines.ContainsKey(registeredSteamID))
+                {
+                    StopCoroutine(reconnectRoutines[registeredSteamID]);
+                    reconnectRoutines.Remove(registeredSteamID);
+                }
+
+                SendReconnectApproved(sender);
+                SendSessionUpdate();
+                SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
+                SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
+
+                Debug.Log($"[SessionManager] Session restored for {registeredInfo.Value.DisplayName} ({registeredSteamID}). Was waiting: {wasWaitingToReconnect}");
+                return;
+            }
         }
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
