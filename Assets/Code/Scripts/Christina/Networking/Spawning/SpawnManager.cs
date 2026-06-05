@@ -16,11 +16,10 @@ public class SpawnManager : MonoBehaviour
     private SpawnPoint[] spawnPoints;
     private int byTurnIndex = 0;
     
-    private readonly Dictionary<ulong, NetworkIdentity> spawnedPlayers = new();
-    private readonly Dictionary<ulong, PlayerID> currentPlayerIds = new();
+    private readonly Dictionary<PlayerID, NetworkIdentity> spawnedPlayers = new();
 
     //See what spawn point is assigned to what player
-    private readonly Dictionary<ulong, SpawnPoint> playerSpawnPoints = new();
+    private readonly Dictionary<PlayerID, SpawnPoint> playerSpawnPoints = new();
     private readonly HashSet<SpawnPoint> occupiedPoints = new();
 
     private void Awake()
@@ -39,7 +38,6 @@ public class SpawnManager : MonoBehaviour
     {
         SessionManager.OnServerPlayerAdded += HandlePlayerAdded;
         SessionManager.OnServerPlayerRemoved += HandlePlayerRemoved;
-        SessionManager.OnServerSessionChanged += RestoreConnectedPlayerBodies;
         Debug.Log($"[SpawnManager] Spawn OnEnable run");
     }
 
@@ -47,90 +45,67 @@ public class SpawnManager : MonoBehaviour
     {
         SessionManager.OnServerPlayerAdded -= HandlePlayerAdded;
         SessionManager.OnServerPlayerRemoved -= HandlePlayerRemoved;
-        SessionManager.OnServerSessionChanged -= RestoreConnectedPlayerBodies;
     }
 
     private void HandlePlayerAdded(PlayerID playerID, ulong steamID, string displayName)
     {
-        RestoreOrSpawnPlayer(playerID, steamID, displayName);
-    }
-    
-    private void RestoreConnectedPlayerBodies()
-    {
+        // only the host can spawn players.
         if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
-        if (SessionManager.Instance == null || SessionManager.Instance.CurrentSession == null) return;
+        if (spawnedPlayers.ContainsKey(playerID)) return;
 
-        foreach (PlayerSessionInfo player in SessionManager.Instance.CurrentSession.Players)
-        {
-            if (!player.IsConnected) continue;
+        PlayerID? playerid = SessionManager.Instance.GetPlayerIDForSteam(steamID);
+        if (!playerid.HasValue) return;
 
-            PlayerID? playerID = SessionManager.Instance.GetPlayerIDForSteam(player.SteamID);
-            if (!playerID.HasValue) continue;
-
-            RestoreOrSpawnPlayer(playerID.Value, player.SteamID, player.DisplayName);
-        }
-    }
-    
-    private void RestoreOrSpawnPlayer(PlayerID playerID, ulong steamID, string displayName)
-    {
-        if (NetworkManager.main == null || !NetworkManager.main.isServer) return;
-
-        currentPlayerIds[steamID] = playerID;
-
-        if (spawnedPlayers.TryGetValue(steamID, out NetworkIdentity oldIdentity))
-        {
-            if (oldIdentity != null && oldIdentity.isSpawned)
-            {
-                oldIdentity.GiveOwnership(playerID);
-                ApplyPlayerName(oldIdentity.gameObject, steamID, displayName);
-                Debug.Log($"[SpawnManager] Restored ownership for {displayName}");
-                return;
-            }
-
-            spawnedPlayers.Remove(steamID);
-        }
-
-        SpawnPoint point = GetSpawnPointForPlayer(steamID);
-
+        SpawnPoint point = GetNextSpawnPoint();
         if (point == null)
         {
             Debug.LogError($"[SpawnManager] No spawn point available for {displayName}. Cannot spawn player.");
             return;
         }
+        
+        //Track which point is for what player
+        playerSpawnPoints[playerID] = point;
+        occupiedPoints.Add(point);
+        point.LastUsedTime = Time.time;
 
         GameObject gameObject = Instantiate(playerPrefab, point.transform.position, point.transform.rotation);
         NetworkIdentity networkIdentity = gameObject.GetComponent<NetworkIdentity>();
-
         if (networkIdentity == null)
         {
-            Debug.LogError("[SpawnManager] Player prefab missing NetworkIdentity!");
+            Debug.LogError($"[SpawnManager] Player prefab missing NetworkIdentity!");
             return;
         }
-
-        spawnedPlayers[steamID] = networkIdentity;
+        
+        spawnedPlayers[playerID] = networkIdentity;
         networkIdentity.GiveOwnership(playerID);
-        ApplyPlayerName(gameObject, steamID, displayName);
-
+        
+        var playerInfo = SessionManager.Instance.CurrentSession.GetPlayer(steamID);
+        var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
+        
+        if (nameplate != null)
+        {
+            nameplate.SetName(displayName, playerInfo.Value.ColorIndex);
+        }
+        
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
     }
     
     private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
     {
-        currentPlayerIds.Remove(steamID);
-        
         //Free his spawn point before sending him home
-        if(playerSpawnPoints.TryGetValue(steamID, out SpawnPoint freedPoint))
+        if(playerSpawnPoints.TryGetValue(playerID, out SpawnPoint freedPoint))
         {
-            playerSpawnPoints.Remove(steamID);
+            playerSpawnPoints.Remove(playerID);
             occupiedPoints.Remove(freedPoint);
             Debug.Log($"[SpawnManager] Spawn point is now free -> {freedPoint.name} <-");
         }
 
-        if (!spawnedPlayers.TryGetValue(steamID, out var identity)) return;
+        if (!spawnedPlayers.TryGetValue(playerID, out var identity)) return;
 
-        spawnedPlayers.Remove(steamID);
+        spawnedPlayers.Remove(playerID);
 
-        if (identity != null && identity.isSpawned) identity.Despawn();
+        if (identity != null && identity.isSpawned)
+            identity.Despawn();
     }
     
     
@@ -143,8 +118,6 @@ public class SpawnManager : MonoBehaviour
         Debug.Log($"[SpawnManager] Spawning existing players");
         foreach (var player in SessionManager.Instance.CurrentSession.Players)
         {
-            if (!player.IsConnected) continue;
-            
             PlayerID? playerid = SessionManager.Instance.GetPlayerIDForSteam(player.SteamID);
             if (playerid.HasValue)
             {
@@ -220,36 +193,6 @@ public class SpawnManager : MonoBehaviour
         }
 
         return availablePoints[0];
-    }
-    
-    private SpawnPoint GetSpawnPointForPlayer(ulong steamID)
-    {
-        if (playerSpawnPoints.TryGetValue(steamID, out SpawnPoint point) && point != null)
-        {
-            return point;
-        }
-
-        point = GetNextSpawnPoint();
-
-        if (point != null)
-        {
-            playerSpawnPoints[steamID] = point;
-            occupiedPoints.Add(point);
-            point.LastUsedTime = Time.time;
-        }
-
-        return point;
-    }
-
-    private void ApplyPlayerName(GameObject playerObject, ulong steamID, string displayName)
-    {
-        PlayerSessionInfo? playerInfo = SessionManager.Instance.CurrentSession.GetPlayer(steamID);
-        PlayerNameplate nameplate = playerObject.GetComponentInChildren<PlayerNameplate>();
-
-        if (nameplate != null && playerInfo.HasValue)
-        {
-            nameplate.SetName(displayName, playerInfo.Value.ColorIndex);
-        }
     }
     
 }

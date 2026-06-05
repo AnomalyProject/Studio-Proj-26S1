@@ -39,24 +39,8 @@ public class SessionPlayerRegistry
 
     public void Register(PlayerID playerID, ulong steamID, bool isHost)
     {
-        PlayerID? oldPlayerID = FindPlayerIDForSteam(steamID);
-
-        if (oldPlayerID.HasValue && oldPlayerID.Value != playerID)
-        {
-            playerConnectionMap.Remove(oldPlayerID.Value);
-
-            if (hostPlayerID.HasValue && hostPlayerID.Value == oldPlayerID.Value)
-            {
-                hostPlayerID = null;
-            }
-        }
-
         playerConnectionMap[playerID] = steamID;
-
-        if (isHost)
-        {
-            hostPlayerID = playerID;
-        }
+        if (isHost) hostPlayerID = playerID;
     }
 
     public void Unregister(PlayerID playerID)

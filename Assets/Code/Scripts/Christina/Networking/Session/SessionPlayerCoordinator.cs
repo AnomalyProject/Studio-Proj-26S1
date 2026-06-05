@@ -99,6 +99,11 @@ public class SessionPlayerCoordinator
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
         }
         
+        if (waitingPlayerID.Value != playerID)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Reconnect PlayerID did not match the disconnected player.");
+        }
+        
         PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
         
         if (!playerInfo.HasValue)
