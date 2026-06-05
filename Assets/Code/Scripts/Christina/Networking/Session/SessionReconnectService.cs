@@ -80,6 +80,10 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         if (state == ConnectionState.Connected)
         {
             wasConnected = true;
+            if (isWaitingToReconnect)
+            {
+                Debug.Log("[SessionReconnectService] Transport connected: waiting for session reconnect approval.");
+            }
             return;
         }
 
@@ -112,19 +116,20 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     
     private void HandleReconnectApproved()
     {
-        if (!isWaitingToReconnect) return;
-
-        isWaitingToReconnect = false;
-        wasConnected = true;
-        StopReconnectRoutine();
-
-        OnReconnected?.Invoke();
+        CompleteReconnect("session approval");
     }
     
     private void HandleLocalSessionReady()
     {
         wasConnected = true;
-        Debug.Log("[SessionReconnectService] Local session ready; reconnect tracking armed.");
+        Debug.Log("[SessionReconnectService] Local session ready: reconnect tracking armed.");
+
+        if (isWaitingToReconnect &&
+            NetworkManager.main != null &&
+            NetworkManager.main.clientState == ConnectionState.Connected)
+        {
+            CompleteReconnect("local session ready");
+        }
     }
     
     public float ReconnectTimeoutSeconds
@@ -191,6 +196,18 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         }
 
         reconnectRoutine = null;
+    }
+    
+    private void CompleteReconnect(string source)
+    {
+        if (!isWaitingToReconnect) return;
+
+        isWaitingToReconnect = false;
+        wasConnected = true;
+        StopReconnectRoutine();
+
+        Debug.Log($"[SessionReconnectService] Reconnect completed by {source}.");
+        OnReconnected?.Invoke();
     }
 
     private void StopReconnectRoutine()
