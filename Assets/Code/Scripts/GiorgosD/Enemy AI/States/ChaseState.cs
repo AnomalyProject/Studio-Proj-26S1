@@ -27,9 +27,15 @@ public class ChaseState : BaseState
     {
         target = brain.TargetPos;
 
-        if (target == null) 
+        if (target == null)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
+        }
+        
+        if (!body.IsTargetReachable(target.position))
+        {
+            brain.ChangeState(EnemyBrain.StateID.Investigate, target);
             return;
         }
 

@@ -244,6 +244,26 @@ public class EnemyPawn : NetworkBehaviour
         }
     }
     #endregion
+
+    #region Target Reachability Check
+    /// <summary>
+    /// Checks if it can reach the player
+    /// </summary>
+    /// <param name="targetPos"></param>
+    /// <returns></returns>
+    public bool IsTargetReachable(Vector3 targetPos)
+    {
+        if (!NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+            return false;
+
+        NavMeshPath path = new();
+
+        if (!agent.CalculatePath(hit.position, path))
+            return false;
+
+        return path.status == NavMeshPathStatus.PathComplete;
+    }
+    #endregion
     
     #region Sight
     /// <summary>
@@ -338,7 +358,7 @@ public class EnemyPawn : NetworkBehaviour
 
         return false;
     }
-
+    
     /// <summary>
     /// This func increases and decreases the Sight angle to mimic the enemy looking around for the player when it loses sight.
     /// </summary>
