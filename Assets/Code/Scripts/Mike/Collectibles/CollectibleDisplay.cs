@@ -4,7 +4,9 @@ public class CollectibleDisplay : MonoBehaviour
 {
     [SerializeField] private CollectibleSO collectibleData;
 
-    private void Start()
+    private void Start() => UpdateVisuals();
+
+    public void UpdateVisuals()
     {
         if (collectibleData == null)
         {
