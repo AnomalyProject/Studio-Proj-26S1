@@ -7,5 +7,5 @@ using UnityEngine;
 [System .Serializable]
 public class SaveData
 {
-    
+    public HashSet<string> collectiblesGathered = new();
 }
