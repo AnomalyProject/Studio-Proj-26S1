@@ -201,11 +201,7 @@ public class ChatUI : MonoBehaviour
         }
         else
         {
-            if (!SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
-            {
-                ReceiveMessage("<color=red>[System]</color>", "Steam is not available in this editor session.");
-                return;
-            }
+            ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
             TextChatManager.Instance.SendChatMessage(text, localSteamID);
         }
 
@@ -377,11 +373,7 @@ public class ChatUI : MonoBehaviour
 
     private void WhisperToPlayer(string targetName, string message)
     {
-        if (!SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
-        {
-            ReceiveMessage("<color=red>[System]</color>", "Steam is not available in this editor session.");
-            return;
-        }
+        ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
         TextChatManager.Instance.SendWhisper(targetName, message, localSteamID);
 
         //ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);   <-- Debug

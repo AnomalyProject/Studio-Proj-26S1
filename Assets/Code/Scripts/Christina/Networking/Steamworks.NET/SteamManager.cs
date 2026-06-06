@@ -15,10 +15,6 @@ using System.Collections;
 using Steamworks;
 #endif
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 //
 // The SteamManager provides a base implementation of Steamworks.NET on which you can build upon.
 // It handles the basics of starting up and shutting down the SteamAPI for use.
@@ -48,17 +44,6 @@ public class SteamManager : MonoBehaviour {
 	}
 
 	protected SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
-	
-	// --- christina
-#if UNITY_EDITOR
-	private const string EnableSteamInEditorPrefKey = "Anomaly.EnableSteamInEditor";
-
-	public static bool SteamEnabledInEditor
-	{
-		get => EditorPrefs.GetBool(EnableSteamInEditorPrefKey, false);
-		set => EditorPrefs.SetBool(EnableSteamInEditorPrefKey, value);
-	}
-#endif
 
 	[AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
 	protected static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText) {
@@ -93,11 +78,6 @@ public class SteamManager : MonoBehaviour {
 
 		// We want our SteamManager Instance to persist across scenes.
 		DontDestroyOnLoad(gameObject);
-		
-		// --- christina
-#if UNITY_EDITOR
-		if (!SteamEnabledInEditor) return;
-#endif
 
 		if (!Packsize.Test()) {
 			Debug.LogError("[Steamworks.NET] Packsize Test returned false, the wrong version of Steamworks.NET is being run in this platform.", this);
@@ -116,14 +96,12 @@ public class SteamManager : MonoBehaviour {
 			// Once you get a Steam AppID assigned by Valve, you need to replace AppId_t.Invalid with it and
 			// remove steam_appid.txt from the game depot. eg: "(AppId_t)480" or "new AppId_t(480)".
 			// See the Valve documentation for more information: https://partner.steamgames.com/doc/sdk/api#initialization_and_shutdown
-#if !UNITY_EDITOR
 			if (SteamAPI.RestartAppIfNecessary(AppId_t.Invalid)) {
 				Debug.Log("[Steamworks.NET] Shutting down because RestartAppIfNecessary returned true. Steam will restart the application.");
 
 				Application.Quit();
 				return;
 			}
-#endif
 		}
 		catch (System.DllNotFoundException e) { // We catch this exception here, as it will be the first occurrence of it.
 			Debug.LogError("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib. It's likely not in the correct location. Refer to the README for more details.\n" + e, this);

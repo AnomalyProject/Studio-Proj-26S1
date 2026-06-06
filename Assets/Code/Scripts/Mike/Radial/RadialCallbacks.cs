@@ -6,7 +6,7 @@ public class RadialCallbacks : MonoBehaviour
 {
     public void SendTextMessage(string msg)
     {
-        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
+        ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
         TextChatManager.Instance.SendChatMessage(msg, ownerSteamID);
     }
 

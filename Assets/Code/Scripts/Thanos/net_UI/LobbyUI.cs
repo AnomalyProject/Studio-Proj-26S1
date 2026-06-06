@@ -91,11 +91,10 @@ public class LobbyUI : MonoBehaviour
 
     private void UpdateLobbyVisibility(GameState state)
     {
-        bool shouldShowLobbyUI = state == GameState.Lobby && !IsSoloMode();
-
-        lobbyPanel.SetActive(shouldShowLobbyUI);
-
-        if (shouldShowLobbyUI)
+        bool isLobby = state == GameState.Lobby;
+        lobbyPanel.SetActive(isLobby);
+        
+        if (isLobby)
         {
             RefreshUI();
         }
@@ -103,14 +102,6 @@ public class LobbyUI : MonoBehaviour
 
     private void RefreshUI()
     {
-        if (IsSoloMode())
-        {
-            if (lobbyPanel != null)
-                lobbyPanel.SetActive(false);
-
-            return;
-        }
-        
         if (SessionManager.Instance == null || SessionManager.Instance.LatestClientSession.Players == null) return;
 
         var sessionData = SessionManager.Instance.LatestClientSession;
@@ -125,7 +116,7 @@ public class LobbyUI : MonoBehaviour
         bool isLocalPlayerReady = false;
         bool isLocalPlayerInElevator = false;
         int readyCount = 0;
-        ulong localSteamID = LocalIdentity.ResolveHost().steamID;
+        ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
 
         //Using new list items and calculating states
         foreach (var player in sessionData.Players)
@@ -201,8 +192,6 @@ public class LobbyUI : MonoBehaviour
     
     private void OnPrivacyChanged(int index)
     {
-        if (IsSoloMode()) return;
-        
         if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
 
         string visibility = index == 1 ? "Public" : "Friends Only";
@@ -219,7 +208,6 @@ public class LobbyUI : MonoBehaviour
     
     private void OnInviteClicked()
     {
-        if (IsSoloMode()) return;
         if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TryOpenInviteOverlay())
         {
             ShowMessage("Could not open the Steam invite overlay.");
@@ -228,7 +216,6 @@ public class LobbyUI : MonoBehaviour
     
     private void OnMaxPlayersChanged(int index)
     {
-        if (IsSoloMode()) return;
         if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
 
         var sessionData = SessionManager.Instance.LatestClientSession;
@@ -304,12 +291,6 @@ public class LobbyUI : MonoBehaviour
         }
 
         return null;
-    }
-    
-    private bool IsSoloMode()
-    {
-        return SessionModeManager.Instance != null &&
-               SessionModeManager.Instance.CurrentMode == SessionMode.Solo;
     }
     
     private void ShowMessage(string message, float duration = 2.5f)

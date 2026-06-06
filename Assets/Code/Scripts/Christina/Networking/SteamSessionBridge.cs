@@ -35,7 +35,7 @@ public class SteamSessionBridge : MonoBehaviour
     private int joinStartupAttemptID = 0;
     private bool joinStartupInProgress = false;
     private CSteamID pendingJoinLobbyID;
-    private enum JoinApprovalResult { Pending, Approved, Reconnected, Rejected }
+    private enum JoinApprovalResult { Pending, Approved, Rejected }
     private JoinApprovalResult joinApprovalResult = JoinApprovalResult.Pending;
 
     public JoinStartupStatus CurrentJoinStartupStatus => currentJoinStartupStatus;
@@ -261,16 +261,8 @@ public class SteamSessionBridge : MonoBehaviour
                 JoinStartupStage.LeavingPreviousLobby,
                 "Leaving current Steam lobby before new join attempt.");
         }
-        
-        if (SessionModeManager.Instance == null)
-        {
-            Debug.LogError("[SteamBridge] SessionModeManager missing during join startup.");
-            LeaveSteamLobby();
-            return;
-        }
-        
-        SessionModeManager.Instance.StartJoining();    
-        
+
+        SessionModeManager.Instance.StartJoining();
     }
 
     
@@ -726,12 +718,6 @@ public class SteamSessionBridge : MonoBehaviour
         }
         
         networkManager.StartClient();
-        
-        if (joinCoroutine != null)
-        {
-            StopCoroutine(joinCoroutine);
-            joinCoroutine = null;
-        }
         // we use coroutine because StartClient() is asynchronous.
         // we need to wait for the response to send RPCs
         joinCoroutine = StartCoroutine(WaitForConnectionThenJoin());
@@ -740,10 +726,14 @@ public class SteamSessionBridge : MonoBehaviour
     private IEnumerator WaitForConnectionThenJoin()
     {
         float deadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
-        var networkManager = NetworkManager.main;
+        var networkManager = PurrNet.NetworkManager.main;
 
         // wait until PurrNet reports that the client is connected
-        while (networkManager != null && !networkManager.isClient && Time.realtimeSinceStartup < deadline) yield return null;
+        while (networkManager != null && !networkManager.isClient && Time.realtimeSinceStartup < deadline)
+        {
+            yield return null;
+        }
+
         if (networkManager == null || !networkManager.isClient)
         {
             Debug.LogError("[SteamBridge] Failed to connect to host via PurrNet");
@@ -811,17 +801,14 @@ public class SteamSessionBridge : MonoBehaviour
                 "Transport connected to host successfully.");
         }
         
+        ulong steamID = SteamUser.GetSteamID().m_SteamID;
+        string displayName = SteamFriends.GetPersonaName();
+        
         if (joinStartupInProgress)
         {
             SetJoinStage(
                 JoinStartupStage.SessionJoinRequested,
                 "Transport connected. Requesting session approval from host.");
-        }
-        
-        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved || joinApprovalResult == JoinApprovalResult.Reconnected)
-        {
-            joinCoroutine = null;
-            yield break;
         }
         
         joinApprovalResult = JoinApprovalResult.Pending;
@@ -832,13 +819,15 @@ public class SteamSessionBridge : MonoBehaviour
         // waiting for the host to approve or reject, with a timeout
         float approvalDeadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
 
-        while (joinApprovalResult == JoinApprovalResult.Pending && joinStartupInProgress && Time.realtimeSinceStartup < approvalDeadline)
+        while (joinApprovalResult == JoinApprovalResult.Pending &&
+               joinStartupInProgress &&
+               Time.realtimeSinceStartup < approvalDeadline)
         {
             yield return null;
         }
 
         // success or local teardown happened, so stop cleanly
-        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved || joinApprovalResult == JoinApprovalResult.Reconnected)
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved)
         {
             joinCoroutine = null;
             yield break;
@@ -958,13 +947,9 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerJoined += OnPlayerJoinedSession;
         SessionEvents.OnPlayerLeft += OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobbyFromEvent;
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.OnStateChanged += OnGameStateChanged;    
-        }
+        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
         SessionEvents.OnSessionError += OnSessionErrorReceived;
         SessionEvents.OnPlayerJoined += OnLocalPlayerJoinApproved;
-        SessionEvents.OnReconnectApproved += OnLocalPlayerReconnectApproved;
 
     }
     
@@ -973,13 +958,9 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerJoined -= OnPlayerJoinedSession;
         SessionEvents.OnPlayerLeft -= OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged -= SyncMetadataToSteamLobbyFromEvent;
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;   
-        }
+        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
         SessionEvents.OnSessionError -= OnSessionErrorReceived;
         SessionEvents.OnPlayerJoined -= OnLocalPlayerJoinApproved;
-        SessionEvents.OnReconnectApproved -= OnLocalPlayerReconnectApproved;
 
     }
 
@@ -1008,7 +989,8 @@ public class SteamSessionBridge : MonoBehaviour
     
     private void OnSessionErrorReceived(SessionErrorResponse error)
     {
-        if (!joinStartupInProgress) return;
+        if (!joinStartupInProgress)
+            return;
         
         joinApprovalResult = JoinApprovalResult.Rejected;
         
@@ -1016,19 +998,6 @@ public class SteamSessionBridge : MonoBehaviour
             JoinStartupStage.Failed,
             $"Session join failed: {error.Code} - {error.Message}",
             ConnectionFailureSource.SessionApproval);
-
-        joinStartupInProgress = false;
-    }
-    
-    private void OnLocalPlayerReconnectApproved()
-    {
-        if (!joinStartupInProgress) return;
-
-        joinApprovalResult = JoinApprovalResult.Reconnected;
-
-        SetJoinStage(
-            JoinStartupStage.SessionJoinApproved,
-            "Session reconnect approved for local player.");
 
         joinStartupInProgress = false;
     }

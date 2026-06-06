@@ -37,8 +37,6 @@ public static class SessionSnapshotFactory
             info.IsReady = p.IsReady;
             info.IsHost = p.IsHost;
             info.IsInElevator = p.IsInElevator;
-            info.IsConnected = p.IsConnected;
-            info.IsWaitingToReconnect = !p.IsConnected;
             players.Add(info);
         }
         
