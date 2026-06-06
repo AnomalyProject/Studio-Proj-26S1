@@ -224,4 +224,12 @@ public class PasswordProtectedLobby : MonoBehaviour
         MainMenuManager.Instance.JoinCoOp(pendingMetadataLobbyId);
     }
 
+    private void OnDestroy()
+    {
+        if(lobbyDataUpdateCallback != null)
+        {
+            lobbyDataUpdateCallback.Dispose();
+            lobbyDataUpdateCallback = null;
+        }
+    }
 }
