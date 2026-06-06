@@ -741,6 +741,13 @@ public class SessionModeManager : MonoBehaviour
     {
         if (status.Stage == JoinStartupStage.Failed)
         {
+            //===============================================
+            if(status.Message.Contains("password"))
+            {
+                LastJoinFailureMessage = "";
+                return;
+            }
+            //===============================================
             LastJoinFailureMessage =  $"Could not join lobby: {status.Message}";
             Debug.LogWarning($"[SessionModeManager] Join failed: {status.Message}");
             ReturnToMenu();
