@@ -32245,7 +32245,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1815602621}
         m_TargetAssemblyTypeName: PasswordProtectedLobby, Assembly-CSharp
-        m_MethodName: ConfirmHostSetup
+        m_MethodName: SubmitJoinPassword
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -33045,6 +33045,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 1
+      - m_Target: {fileID: 1815602621}
+        m_TargetAssemblyTypeName: PasswordProtectedLobby, Assembly-CSharp
+        m_MethodName: CloseJoinPasswordPanel
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &1779813967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33098,7 +33110,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1781323332
 RectTransform:
   m_ObjectHideFlags: 0
