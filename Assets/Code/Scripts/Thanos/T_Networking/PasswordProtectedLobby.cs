@@ -77,8 +77,9 @@ public class PasswordProtectedLobby : MonoBehaviour
     public void OnSteamLobbyCreated(CSteamID lobbyId)
     {
         bool hasPassword = !string.IsNullOrEmpty(SessionModeManager.Instance.PendingLobbyPassword);
+        Debug.LogError($"[PasswordProtectedLobby] PendingLobbyPassword='{SessionModeManager.Instance.PendingLobbyPassword}' hasPassword={hasPassword}");
         SteamMatchmaking.SetLobbyData(lobbyId, "has_password", hasPassword ? "true" : "false");
-        Debug.Log($"[PasswordCoordinator] has_password metadata set to {hasPassword} for lobby {lobbyId}");
+        Debug.LogError($"[PasswordProtectedLobby] has_password metadata set to {hasPassword} for lobby {lobbyId}");
     }
 
     private void ShowHostError(string message)
@@ -89,6 +90,7 @@ public class PasswordProtectedLobby : MonoBehaviour
     public void TryJoinLobby(ulong lobbyId)
     {
         string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password");
+        Debug.LogError($"[PasswordProtectedLobby] Attempting to join lobby {lobbyId} with has_password={hasPassword}");
 
         if (hasPassword == "true")
         {
