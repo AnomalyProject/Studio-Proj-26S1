@@ -5,7 +5,9 @@ using UnityEngine.Events;
 public class CollectibleInteractable : MonoBehaviour, IInteractable<PlayerBody>
 {
     [SerializeField] private CollectibleSO collectibleData;
-    [SerializeField] UnityEvent onCollected;
+    [SerializeField] private UnityEvent onCollected;
+
+    public CollectibleSO CollectibleData => collectibleData;
 
     public Task<bool> CanInteract(PlayerBody interactor)
     {
