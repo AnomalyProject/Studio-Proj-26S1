@@ -13,6 +13,18 @@ public class PlayerListUI : MonoBehaviour
 
     public void Setup(ClientPlayerInfo playerInfo)
     {
+        
+        nameText.text = playerInfo.DisplayName;
+        
+        // disconnection check
+        if (playerInfo.IsWaitingToReconnect)
+        {
+            statusText.text = "Disconnected - waiting to reconnect";
+            statusText.color = Color.yellow;
+            hostIndicator.SetActive(playerInfo.IsHost);
+            return;
+        }
+        
         nameText.text = playerInfo.DisplayName;
         
         //Ready status colour
