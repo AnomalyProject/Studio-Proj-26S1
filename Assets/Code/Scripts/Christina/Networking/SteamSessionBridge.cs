@@ -879,9 +879,9 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
-        Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
-        RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
-
+        //Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
+        //RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
+        PasswordProtectedLobby.Instance?.TryJoinLobby(callback.m_steamIDLobby.m_SteamID);
     }
     
     // note: only lobby owner can set the metadata
