@@ -1,4 +1,5 @@
 using Steamworks;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -31,6 +32,7 @@ public class PasswordProtectedLobby : MonoBehaviour
     [SerializeField] private TMP_Text joinErrorText;
 
     private ulong pendingJoinLobbyId;
+    private ulong pendingMetadataLobbyId;
 
     private void Awake()
     {
@@ -39,6 +41,11 @@ public class PasswordProtectedLobby : MonoBehaviour
 
         hostSetupPanel.SetActive(false);
         joinPasswordPanel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        lobbyDataUpdateCallback = Callback<LobbyDataUpdate_t>.Create(OnLobbyDataReceived);
     }
 
     public void HostPublic()
@@ -89,19 +96,22 @@ public class PasswordProtectedLobby : MonoBehaviour
 
     public void TryJoinLobby(ulong lobbyId)
     {
-        string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password").ToLower();
+        //string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password").ToLower();
 
-        if (hasPassword == "true")
-        {
-            pendingJoinLobbyId = lobbyId;
-            OpenJoinPasswordPanel();
-            Debug.LogError("Inside the iffy if");
-            return;
-        }
+        //if (hasPassword == "true")
+        //{
+        //    pendingJoinLobbyId = lobbyId;
+        //    OpenJoinPasswordPanel();
+        //    Debug.LogError("Inside the iffy if");
+        //    return;
+        //}
 
-        Debug.LogError($"[PasswordProtectedLobby] Attempting to join lobby {lobbyId} with has_password={hasPassword}");
+        //Debug.LogError($"[PasswordProtectedLobby] Attempting to join lobby {lobbyId} with has_password={hasPassword}");
 
-        MainMenuManager.Instance.JoinCoOp(lobbyId);
+        //MainMenuManager.Instance.JoinCoOp(lobbyId);
+
+        pendingMetadataLobbyId = lobbyId;
+        SteamMatchmaking.RequestLobbyData(new CSteamID(lobbyId));
     }
 
     private void OpenJoinPasswordPanel()
@@ -186,4 +196,30 @@ public class PasswordProtectedLobby : MonoBehaviour
     {
         return SteamSessionBridge.Instance.CurrentLobbyID;
     }
+
+    private void OnLobbyDataReceived(LobbyDataUpdate_t callback)
+    {
+        if (callback.m_ulSteamIDLobby != pendingMetadataLobbyId) return;
+        if (callback.m_bSuccess == 0)
+        {
+            // metadata fetch failed, just try joining directly
+            MainMenuManager.Instance.JoinCoOp(pendingMetadataLobbyId);
+            return;
+        }
+
+        string hasPassword = SteamMatchmaking.GetLobbyData(
+            new CSteamID(pendingMetadataLobbyId), "has_password");
+
+        Debug.Log($"[PasswordProtectedLobby] has_password='{hasPassword}'");
+
+        if (hasPassword.Equals("true", StringComparison.OrdinalIgnoreCase))
+        {
+            pendingJoinLobbyId = pendingMetadataLobbyId;
+            OpenJoinPasswordPanel();
+            return;
+        }
+
+        MainMenuManager.Instance.JoinCoOp(pendingMetadataLobbyId);
+    }
+
 }
