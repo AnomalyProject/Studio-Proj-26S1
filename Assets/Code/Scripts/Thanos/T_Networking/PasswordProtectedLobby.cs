@@ -32,7 +32,9 @@ public class PasswordProtectedLobby : MonoBehaviour
     [SerializeField] private TMP_Text joinErrorText;
 
     private ulong pendingJoinLobbyId;
+
     private ulong pendingMetadataLobbyId;
+    private Callback<LobbyDataUpdate_t> lobbyDataUpdateCallback;
 
     private void Awake()
     {
