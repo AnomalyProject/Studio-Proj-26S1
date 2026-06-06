@@ -4,7 +4,7 @@ public class CollectibleDisplay : MonoBehaviour
 {
     [SerializeField] private CollectibleSO collectibleData;
 
-    private void Start() => UpdateVisuals();
+    private void Awake() => UpdateVisuals();
 
     public void UpdateVisuals()
     {
