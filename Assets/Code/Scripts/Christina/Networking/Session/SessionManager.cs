@@ -36,6 +36,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionLobbyCoordinator lobbyCoordinator;
     private SessionFlowCoordinator flowCoordinator;
     private SessionSettingsService settingsService;
+    private SessionKickVoteService kickVoteService;
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
@@ -91,6 +92,22 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
         flowCoordinator = new SessionFlowCoordinator(sessionStore);
         settingsService = new SessionSettingsService(sessionStore);
+        kickVoteService = new SessionKickVoteService(sessionStore, registry);
+    }
+    
+    private void Update()
+    {
+        if (!isServer || kickVoteService == null) return;
+
+        if (kickVoteService.Tick(Time.realtimeSinceStartup, out ClientKickVoteData data, out KickVoteOutcome outcome))
+        {
+            OnKickVoteUpdated_Client(data);
+
+            if (outcome == KickVoteOutcome.Expired)
+            {
+                OnKickVoteFinished_Client(false, "Kick vote expired.");
+            }
+        }
     }
 
     /// <summary>
@@ -132,6 +149,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         hostRegistrationCoroutine = null;
         latestClientSession = default;
         registry.Clear();
+        kickVoteService.Clear();
 
         if (GameStateManager.Instance != null)
         {
@@ -448,6 +466,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 SessionCommandResult.Failed(
                     SessionErrorCode.InvalidState,
                     "Could not verify Steam lobby identity."
+                )
+            );
+            return;
+        }
+        
+        if (kickVoteService.IsKickedFromSession(steamID))
+        {
+            SendCommandErrorIfFailed(
+                sender,
+                SessionCommandResult.Failed(
+                    SessionErrorCode.InvalidState,
+                    "You were removed from this session."
                 )
             );
             return;
@@ -901,6 +931,99 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
+    
+    #region Kick 
+    
+    [ServerRpc(requireOwnership: false)]
+    public void RequestStartKickVote(ulong targetSteamID, SessionKickReason reason, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        SessionCommandResult result = kickVoteService.TryStartVote(
+            sender,
+            targetSteamID,
+            reason,
+            Time.realtimeSinceStartup,
+            out ClientKickVoteData data
+        );
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+
+        OnKickVoteUpdated_Client(data);
+    }
+
+    [ServerRpc(requireOwnership: false)]
+    public void RequestCastKickVote(bool voteYes, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        SessionCommandResult result = kickVoteService.TryCastVote(
+            sender,
+            voteYes,
+            Time.realtimeSinceStartup,
+            out ClientKickVoteData data,
+            out KickVoteOutcome outcome,
+            out ulong targetSteamID
+        );
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+
+        OnKickVoteUpdated_Client(data);
+
+        if (outcome == KickVoteOutcome.Passed)
+        {
+            ExecuteVoteKick(targetSteamID);
+        }
+        else if (outcome == KickVoteOutcome.Failed)
+        {
+            OnKickVoteFinished_Client(false, "Kick vote failed.");
+        }
+    }
+    
+    private void ExecuteVoteKick(ulong targetSteamID)
+    {
+        SessionCommandResult result = playerCoordinator.TryRemovePlayerBySteamID(targetSteamID, out PlayerID targetPlayerID);
+
+        if (!result.Success)
+        {
+            OnKickVoteFinished_Client(false, result.Message);
+            return;
+        }
+
+        if (reconnectRoutines.ContainsKey(targetSteamID))
+        {
+            StopCoroutine(reconnectRoutines[targetSteamID]);
+            reconnectRoutines.Remove(targetSteamID);
+        }
+
+        SendLocalPlayerKicked(targetPlayerID, "You were removed from this session by group vote.");
+        BroadcastPlayerLeft(targetPlayerID, targetSteamID, "Removed by group vote.");
+        OnKickVoteFinished_Client(true, "Player removed by group vote.");
+    }
+
+    [ObserversRpc]
+    private void OnKickVoteUpdated_Client(ClientKickVoteData data)
+    {
+        SessionEvents.InvokeKickVoteUpdated(data);
+    }
+
+    [ObserversRpc]
+    private void OnKickVoteFinished_Client(bool succeeded, string message)
+    {
+        SessionEvents.InvokeKickVoteFinished(succeeded, message);
+    }
+
+    [TargetRpc]
+    private void SendLocalPlayerKicked(PlayerID target, string message)
+    {
+        SessionEvents.InvokeLocalPlayerKicked(message);
+
+        if (SessionModeManager.Instance != null)
+        {
+            SessionModeManager.Instance.ReturnToMenu();
+        }
+    }
+    #endregion
 
     #region Error Handling
     /// <summary>
@@ -926,4 +1049,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
+    
+    
 }

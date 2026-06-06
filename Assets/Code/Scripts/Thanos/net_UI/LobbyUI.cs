@@ -36,6 +36,7 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private TMP_Text messageText;
     
     private Coroutine messageCoroutine;
+    private ulong pendingKickTargetSteamID;
     
     private void Awake()
     {
@@ -131,7 +132,7 @@ public class LobbyUI : MonoBehaviour
         foreach (var player in sessionData.Players)
         {
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
-            listItem.Setup(player);
+            listItem.Setup(player, localSteamID, OpenKickReasonPanel);
 
             if (player.IsReady && player.IsInElevator)
             {
@@ -197,6 +198,19 @@ public class LobbyUI : MonoBehaviour
         
         startButton.gameObject.SetActive(false);
         startButton.interactable = false;
+    }
+    
+    private void OpenKickReasonPanel(ulong targetSteamID)
+    {
+        pendingKickTargetSteamID = targetSteamID;
+        
+        // todo: show reason panel here.
+    }
+
+    public void ConfirmKickVote(int reasonIndex)
+    {
+        SessionKickReason reason = (SessionKickReason)reasonIndex;
+        SessionManager.Instance.RequestStartKickVote(pendingKickTargetSteamID, reason);
     }
     
     private void OnPrivacyChanged(int index)

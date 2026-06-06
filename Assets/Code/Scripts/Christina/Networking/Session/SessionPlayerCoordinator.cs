@@ -80,6 +80,19 @@ public class SessionPlayerCoordinator
         return true;
     }
     
+    public SessionCommandResult TryRemovePlayerBySteamID(ulong steamID, out PlayerID playerID)
+    {
+        playerID = default;
+
+        PlayerID? foundPlayerID = registry.FindPlayerIDForSteam(steamID);
+        if (!foundPlayerID.HasValue) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not connected.");
+
+        playerID = foundPlayerID.Value;
+        RemovePlayerInternal(playerID, steamID);
+
+        return SessionCommandResult.Succeeded();
+    }
+    
     public SessionCommandResult TryReconnect(PlayerID playerID, ulong steamID)
     {
         if (!sessionStore.HasSession)
