@@ -7,5 +7,8 @@ using UnityEngine;
 [System .Serializable]
 public class SaveData
 {
+    /// <summary>
+    /// Hashset of the <see cref="CollectibleSO.ID"/>'s gathered.
+    /// </summary>
     public HashSet<string> collectiblesGathered = new();
 }
