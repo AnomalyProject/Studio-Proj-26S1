@@ -89,9 +89,9 @@ public class PasswordProtectedLobby : MonoBehaviour
 
     public void TryJoinLobby(ulong lobbyId)
     {
-        string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password");
+        string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password").ToLower();
 
-        if (hasPassword.Equals("true", System.StringComparison.OrdinalIgnoreCase))
+        if (hasPassword == "true")
         {
             pendingJoinLobbyId = lobbyId;
             OpenJoinPasswordPanel();
