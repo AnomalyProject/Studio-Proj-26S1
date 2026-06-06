@@ -90,14 +90,16 @@ public class PasswordProtectedLobby : MonoBehaviour
     public void TryJoinLobby(ulong lobbyId)
     {
         string hasPassword = SteamMatchmaking.GetLobbyData(new CSteamID(lobbyId), "has_password");
-        Debug.LogError($"[PasswordProtectedLobby] Attempting to join lobby {lobbyId} with has_password={hasPassword}");
 
         if (hasPassword == "true")
         {
             pendingJoinLobbyId = lobbyId;
             OpenJoinPasswordPanel();
+            Debug.LogError("Inside the iffy if");
             return;
         }
+
+        Debug.LogError($"[PasswordProtectedLobby] Attempting to join lobby {lobbyId} with has_password={hasPassword}");
 
         MainMenuManager.Instance.JoinCoOp(lobbyId);
     }
