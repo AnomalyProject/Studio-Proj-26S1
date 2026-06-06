@@ -11,12 +11,16 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private PlayerInteraction interaction;
     [SerializeField] private GameObject bodyVisuals;
+    [SerializeField] private AudioSource audioSource;
     
     [Header("Local Player")]
     [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener playerAudioListener;
     [SerializeField] private CameraLean playerCameraLean;
     [SerializeField] private GameObject nameplateVisuals;
+
+    [Header("Misc")]
+    [SerializeField] private AudioClip burpClip;
     
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
@@ -24,6 +28,7 @@ public class PlayerBody : NetworkBehaviour
     public Camera PlayerCamera => playerCamera;
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
+    public AudioSource AudioSource => audioSource;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
@@ -61,6 +66,18 @@ public class PlayerBody : NetworkBehaviour
     //    bool local = newOwner.HasValue && newOwner == localPlayer;
     //    if (!TryApplyOwnership(local)) return;
     //}
+
+    [ObserversRpc(requireServer: false)] public void DoBurp(float afterSeconds)
+    {
+        CancelInvoke(nameof(Burp));
+        Invoke(nameof(Burp), afterSeconds);
+    }
+
+    private void Burp()
+    {
+        if (!audioSource) return;
+        audioSource.PlayOneShot(burpClip);
+    }
 
     private bool TryApplyOwnership(bool local)
     {

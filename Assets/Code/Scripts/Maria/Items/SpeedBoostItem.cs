@@ -1,3 +1,4 @@
+using PurrNet;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -46,16 +47,8 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
         if(!await CanInteract(interactor)) return false;
         interactor.Movement.ApplySpeedBoost(multiplierAdditive, duration);
         if (consumeSound != null) consumeSound.Play();
+        interactor.DoBurp(afterSeconds: interactor.Movement.SpeedBoostTimeRemaining);
         await Task.Delay((int)(consumeSound.clip.length * 1000));
-
-        // Schedule the 'effect end' sound to play when the final boost expires using the AudioSource on the item holder, since this object will be destroyed
-        if (transform.parent.TryGetComponent(out AudioSource itemHolderAudioSource))
-        {
-            itemHolderAudioSource.Stop();
-            itemHolderAudioSource.clip = speedBoostOverSound;
-            itemHolderAudioSource.PlayDelayed(duration);
-        }
-
         return true;
     }
     #endregion

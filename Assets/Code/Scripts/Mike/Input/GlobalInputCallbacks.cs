@@ -36,4 +36,23 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
             if (CurrentContext != InputContext.Chat) SetContext(InputContext.Chat);
         }
     }
+
+    public void OnToggleRadial(InputAction.CallbackContext context)
+    {
+        switch(context.phase)
+        {
+            case InputActionPhase.Started:
+                if (CurrentContext == InputContext.Player) LockAt(InputContext.Radial);
+                break;
+
+            case InputActionPhase.Canceled:
+
+                if (CurrentContext == InputContext.Radial)
+                {
+                    Unlock();
+                    SetContext(InputContext.Player);
+                }
+                break;
+        }
+    }
 }

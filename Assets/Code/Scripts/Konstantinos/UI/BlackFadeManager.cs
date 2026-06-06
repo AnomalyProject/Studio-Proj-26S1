@@ -3,12 +3,14 @@ using UnityEngine;
 
 public class BlackFadeManager : MonoBehaviour
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    public static void ResetAnimatorReference() => anim = null;
+
     public static BlackFadeManager Instance;
+    static private Animator anim;
 
-    public Animator anim;
-
-    [SerializeField] float transitionTime = 1.0f;
-
+    [SerializeField] private float transitionTime = 1.0f;
+    public float TransitionTime => transitionTime;
 
     private void Awake()
     {
@@ -19,10 +21,12 @@ public class BlackFadeManager : MonoBehaviour
         }
 
         Instance = this;
+        anim = GetComponentInChildren<Animator>();
 
         DontDestroyOnLoad(gameObject);
-    }
 
+        PlayerBody.OnLocalPlayerSpawned += playerBody => FadeOut();
+    }
 
     public void FadeIn()
     {
@@ -39,7 +43,7 @@ public class BlackFadeManager : MonoBehaviour
         StartCoroutine(FadeInAndOut());
     }
 
-    IEnumerator FadeInAndOut()
+    private IEnumerator FadeInAndOut()
     {
         anim.SetTrigger("Fade In");
         yield return new WaitForSeconds(transitionTime);
