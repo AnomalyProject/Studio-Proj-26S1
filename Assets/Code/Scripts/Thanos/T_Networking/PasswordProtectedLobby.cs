@@ -22,7 +22,6 @@ public class PasswordProtectedLobby : MonoBehaviour
     [Header("Host")]
     [SerializeField] private GameObject hostSetupPanel;
     [SerializeField] private GameObject firstSelectedHostSetup;
-    [SerializeField] private GameObject passwordFieldRoot;
     [SerializeField] private TMP_InputField hostPasswordInput;
 
     [Header("Join")]
@@ -40,7 +39,6 @@ public class PasswordProtectedLobby : MonoBehaviour
 
         hostSetupPanel.SetActive(false);
         joinPasswordPanel.SetActive(false);
-        passwordFieldRoot.SetActive(false);
     }
 
     public void HostPublic()
@@ -52,7 +50,6 @@ public class PasswordProtectedLobby : MonoBehaviour
     {
         hostSetupPanel.SetActive(true);
         hostPasswordInput.text = "";
-        passwordFieldRoot.SetActive(false);
         EventSystem.current.SetSelectedGameObject(firstSelectedHostSetup);
     }
 
@@ -60,11 +57,6 @@ public class PasswordProtectedLobby : MonoBehaviour
     {
         hostSetupPanel.SetActive(false);
     }
-    public void OnPrivateToggleChanged(bool isOn)
-    {
-        passwordFieldRoot.SetActive(isOn);
-    }
-
     public void ConfirmHostSetup()
     {
         string password = hostPasswordInput.text.Trim();
