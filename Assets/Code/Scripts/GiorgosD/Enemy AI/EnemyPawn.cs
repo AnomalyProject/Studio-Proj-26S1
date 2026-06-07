@@ -21,7 +21,8 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Range(0, 180), Tooltip("Gives the designer te ability to set the how wide the AIs sight is in rad")] private float sightAngle;
     [SerializeField, Range(0, 180), Tooltip("How wide the AIs sight is when searching for the player. (Idle uses it to mock a looking around with its head anim)")] private float sightAngleSearch;
     private float sightAngleNormal;
-    [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private float eyePos = 1.5f;
+
+    [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private Transform eyePos;
     private Collider[] playersInSight = new Collider[4]; 
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
@@ -336,7 +337,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     private bool IsPlayerDetected(Transform player, out Vector3 direction, out float distance)
     {
-        Vector3 offset = (player.position + Vector3.up * eyePos) - (transform.position + Vector3.up * eyePos);
+        Vector3 offset = (player.position + eyePos.position) - (transform.position + eyePos.position);
         float sqrDistance = offset.sqrMagnitude;
         
         distance = Mathf.Sqrt(sqrDistance);
@@ -361,8 +362,8 @@ public class EnemyPawn : NetworkBehaviour
         {
             float rayLength = Mathf.Max(distance - 0.1f, 0f);
             if (rayLength <= 0) return true;
-            Debug.DrawRay(transform.position + Vector3.up * eyePos, direction * distance, Color.darkGreen);
-            return !Physics.Raycast(transform.position + Vector3.up * eyePos, direction, rayLength, obstacleLayer);
+            Debug.DrawRay(transform.position + eyePos.position, direction * distance, Color.darkGreen);
+            return !Physics.Raycast(transform.position + eyePos.position, direction, rayLength, obstacleLayer);
         }
 
         return false;
