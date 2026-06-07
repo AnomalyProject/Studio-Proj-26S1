@@ -255,7 +255,10 @@ public class LobbyUI : MonoBehaviour
             return;
         }
 
-        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers))
+        // fix for dev testing
+        bool isDevHost = SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.DevHost;
+
+        if (!isDevHost && (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers)))
         {
             ShowMessage("Failed to update max players.");
             maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);
