@@ -8,7 +8,7 @@ using UnityEngine;
 public class NarrationEvent : MonoBehaviour
 {
     [SerializeField] private bool triggerOnce = false;
-    [SerializeField] NarrationEntry entry;
+    [SerializeField] private NarrationEntry entry;
 
     public void PlayNarration()
     {
