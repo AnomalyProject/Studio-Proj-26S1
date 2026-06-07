@@ -28,6 +28,9 @@ public class NetworkDebugDisplay : MonoBehaviour
         // #if UNITY_EDITOR 
         // return;
         // #endif
+        
+        // -- from christina: added guard so the console doesn't scream if steam isn't available
+        if (!SteamManager.Initialized) return;
 
         int Xpos = 209;
         int Ypos = 173;
