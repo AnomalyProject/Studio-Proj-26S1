@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using PurrNet;
 using UnityEngine;
 
@@ -10,5 +11,12 @@ public class AnimToEnemyBridge : NetworkBehaviour
         if (!isServer) return;
         
         body.StartAttack();
+    }
+
+    public void AttackEnd()
+    {
+        if (!isServer) return;
+        
+        body.EndAttack();
     }
 }

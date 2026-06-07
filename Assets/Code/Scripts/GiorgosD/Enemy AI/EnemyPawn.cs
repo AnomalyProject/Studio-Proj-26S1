@@ -49,6 +49,7 @@ public class EnemyPawn : NetworkBehaviour
     public UnityEvent<PlayerBody> OnPlayerSpotted;
     public UnityEvent OnLostPlayer;
     public UnityEvent OnStartAttack;
+    public UnityEvent OnEndAttack;
     public UnityEvent<PlayerBody> OnPlayerAttacked;
     #endregion
 
@@ -105,6 +106,14 @@ public class EnemyPawn : NetworkBehaviour
     public void StartAttack()
     {
         InvokeStartAttack();
+    }
+
+    /// <summary>
+    /// Tells attack state to fire change state
+    /// </summary>
+    public void EndAttack()
+    {
+        InvokeEndAttack();
     }
     
     /// <summary>
@@ -443,6 +452,15 @@ public class EnemyPawn : NetworkBehaviour
     private void InvokeStartAttack()
     {
         OnStartAttack?.Invoke();
+    }
+
+    /// <summary>
+    /// Invokes End Attack
+    /// </summary>
+    [ObserversRpc]
+    private void InvokeEndAttack()
+    {
+        OnEndAttack?.Invoke();
     }
     
     /// <summary>

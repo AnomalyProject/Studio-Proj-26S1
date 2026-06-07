@@ -5,6 +5,7 @@ using UnityEngine;
 public class AttackState : BaseState
 {
     private Transform target;
+    private bool hasHitTarget;
 
     public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
@@ -18,7 +19,10 @@ public class AttackState : BaseState
         Debug.Log("Attacking");
         
         target = brain.TargetPos;
+        hasHitTarget = false;
+        
         body.OnStartAttack.AddListener(DoAttack);
+        body.OnEndAttack.AddListener(Outcome);
 
         body.anim.SetTrigger("Attack");
     }
@@ -49,22 +53,26 @@ public class AttackState : BaseState
             Debug.Log("Player Attacked");
         
             body.InvokeAttacked(target.GetComponent<PlayerBody>());
+            
+            hasHitTarget = true;
+        }
+    }
 
+    private void Outcome()
+    {
+        if (hasHitTarget)
+        {
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }
         else
         {
-            ChangeToChaseState();
+            brain.ChangeState(EnemyBrain.StateID.Chase, target);
         }
-    }
-
-    private void ChangeToChaseState()
-    {
-        brain.ChangeState(EnemyBrain.StateID.Chase, target);
     }
 
     public override void Exit()
     {
         body.OnStartAttack.RemoveListener(DoAttack);
+        body.OnEndAttack.RemoveListener(Outcome);
     }
 }
