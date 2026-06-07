@@ -25,7 +25,7 @@ public class InGameCheats : MonoBehaviour
         DevConsole.RegisterCommand("nextvar", mapVarComm);
 
         DevConsole.CommandData clearsave = new DevConsole.CommandData("Deletes all save files.", ClearSave);
-        DevConsole.RegisterCommand("clearsave", mapVarComm);
+        DevConsole.RegisterCommand("clearsave", clearsave);
 
         NoClip.CreateNoClip();
 
