@@ -1,14 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Singleton. Manages playback of narrator lines in response to gameplay events.
+/// Enforces a one-line-at-a-time lock so narration never overlaps or interrupts gameplay.
+/// Delegates subtitle display to <see cref="SubtitleManager"/> and audio to <see cref="AudioManager"/>.
+/// FirstTimeOnly entries are tracked in <see cref="SaveData.narratorFiredIDs"/> and persisted
+/// immediately via <see cref="SaveSystem.QuickSave"/> so flags survive crashes mid-playback.
+/// </summary>
 public class NarratorManager : MonoBehaviour
 {
     public static NarratorManager Instance { get; private set; }
 
-    private const string SaveKey = "NarratorFiredIDs";
-
     private bool isPlaying = false;
-    private HashSet<string> firedOnceIDs = new();
+
+    // Direct reference into CurrentSave — no local copy, so there's no risk of the
+    // in-memory set drifting out of sync with the save data before a QuickSave.
+    private static HashSet<string> FiredIDs => RefrenceManager.CurrentSave.narratorFiredIDs;
 
     private void Awake()
     {
@@ -19,12 +27,17 @@ public class NarratorManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        LoadFiredFlags();
+        // No load call needed here — RefrenceManager.LoadLastSave() runs at
+        // AfterAssembliesLoaded, which is guaranteed to fire before any scene Awake.
     }
 
+    /// <summary>
+    /// Attempts to play the narrator line associated with the given entry.
+    /// Silently ignored if another line is already playing, the entry is null,
+    /// or the entry is firstTimeOnly and has already fired this save.
+    /// </summary>
     public void TriggerNarration(NarrationEntry entry)
     {
-        // Null check must come before any access to entry's properties
         if (entry == null)
         {
             Debug.LogWarning("[NarratorManager] TriggerNarration called with a null entry.");
@@ -37,7 +50,7 @@ public class NarratorManager : MonoBehaviour
             return;
         }
 
-        if (entry.FirstTimeOnly && firedOnceIDs.Contains(entry.TriggerID))
+        if (entry.FirstTimeOnly && FiredIDs.Contains(entry.TriggerID))
         {
             Debug.Log($"[NarratorManager] '{entry.TriggerID}' already fired (firstTimeOnly). Skipping.");
             return;
@@ -46,11 +59,14 @@ public class NarratorManager : MonoBehaviour
         PlayEntry(entry);
     }
 
+    /// <summary>
+    /// Clears all firstTimeOnly fired flags and immediately quick-saves.
+    /// Useful for new game setup or debug resets.
+    /// </summary>
     public void ResetAllFlags()
     {
-        firedOnceIDs.Clear();
-        PlayerPrefs.DeleteKey(SaveKey);
-        PlayerPrefs.Save();
+        FiredIDs.Clear();
+        SaveSystem.QuickSave(RefrenceManager.CurrentSave);
         Debug.Log("[NarratorManager] All narrator flags reset.");
     }
 
@@ -60,15 +76,13 @@ public class NarratorManager : MonoBehaviour
 
         if (entry.FirstTimeOnly)
         {
-            firedOnceIDs.Add(entry.TriggerID);
-            SaveFiredFlags();
+            // Persist immediately so the flag survives a crash or force-quit mid-playback.
+            FiredIDs.Add(entry.TriggerID);
+            SaveSystem.QuickSave(RefrenceManager.CurrentSave);
         }
 
         if (SubtitleManager.Instance != null)
-        {
-            // Pass OnLineFinished as the callback so isPlaying resets when subtitles finish
             SubtitleManager.Instance.ShowSubtitle(entry.Subtitles, entry.FinalSubOffset, OnLineFinished);
-        }
         else
         {
             Debug.LogWarning("[NarratorManager] SubtitleManager instance not found.");
@@ -84,19 +98,6 @@ public class NarratorManager : MonoBehaviour
         }
     }
 
+    // Called by SubtitleManager when the last cue finishes, releasing the playback lock.
     private void OnLineFinished() => isPlaying = false;
-
-    private void SaveFiredFlags()
-    {
-        PlayerPrefs.SetString(SaveKey, string.Join(",", firedOnceIDs));
-        PlayerPrefs.Save();
-    }
-
-    private void LoadFiredFlags()
-    {
-        string saved = PlayerPrefs.GetString(SaveKey, "");
-        firedOnceIDs = string.IsNullOrEmpty(saved)
-            ? new HashSet<string>()
-            : new HashSet<string>(saved.Split(','));
-    }
 }

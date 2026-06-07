@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+/// <summary>
+/// Singleton. Sequences and displays timed subtitle cues for the narrator system.
+/// Receives a list of <see cref="SubtitleEntry"/> cues from <see cref="NarratorManager"/>,
+/// advances through them as elapsed time passes each cue's timestamp, then fades the panel
+/// out after a final offset and fires the onComplete callback to release the playback lock.
+/// </summary>
 public class SubtitleManager : MonoBehaviour
 {
     public static SubtitleManager Instance { get; private set; }
@@ -37,6 +43,11 @@ public class SubtitleManager : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
+    /// <summary>
+    /// Begins sequencing through the given subtitle cues.
+    /// If a sequence is already running it is stopped and replaced immediately.
+    /// <paramref name="onComplete"/> is fired after the panel finishes fading out.
+    /// </summary>
     public void ShowSubtitle(List<SubtitleEntry> subtitles, float finalSubOffset, System.Action onComplete = null)
     {
         if (currentRoutine != null)
@@ -45,6 +56,9 @@ public class SubtitleManager : MonoBehaviour
         currentRoutine = StartCoroutine(SubtitleSequenceRoutine(subtitles, finalSubOffset, onComplete));
     }
 
+    /// <summary>
+    /// Immediately stops the current sequence and fades the panel out.
+    /// </summary>
     public void HideSubtitle(System.Action onComplete = null)
     {
         if (currentRoutine != null)
@@ -71,8 +85,8 @@ public class SubtitleManager : MonoBehaviour
         int index = 0;
         bool panelVisible = false;
 
-        // Sort by timestamp defensively — authoring order may vary
-        var sorted = new List<SubtitleEntry>(subtitles);
+        // Sort defensively — authoring order in the Inspector is not guaranteed.
+        List<SubtitleEntry> sorted = new List<SubtitleEntry>(subtitles);
         sorted.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
 
         while (index < sorted.Count)
@@ -113,6 +127,10 @@ public class SubtitleManager : MonoBehaviour
         HideSubtitle(onComplete);
     }
 
+    /// <summary>
+    /// Updates the subtitle panel text. Hides the speaker label if
+    /// <see cref="showSpeakerLabel"/> is false or the cue has no speaker name.
+    /// </summary>
     private void SetContent(string speaker, string dialogue)
     {
         if (dialogueText != null)
@@ -135,6 +153,15 @@ public class SubtitleManager : MonoBehaviour
         onComplete?.Invoke();
     }
 
+    /// <summary>
+    /// Lerps the <see cref="canvasGroup"/> alpha from <paramref name="from"/> to <paramref name="to"/>
+    /// over <paramref name="duration"/> seconds. If duration is zero or less, the target alpha is applied instantly.
+    /// A final assignment after the loop guarantees the target value is reached exactly,
+    /// since deltaTime accumulation can fall slightly short.
+    /// </summary>
+    /// <param name="from">Alpha value to start from (0 = transparent, 1 = fully visible).</param>
+    /// <param name="to">Alpha value to end at.</param>
+    /// <param name="duration">Length of the fade in seconds.</param>
     private IEnumerator Fade(float from, float to, float duration)
     {
         if (canvasGroup == null) yield break;

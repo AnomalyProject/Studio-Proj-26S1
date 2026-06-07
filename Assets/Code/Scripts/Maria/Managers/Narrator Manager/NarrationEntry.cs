@@ -1,6 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// ScriptableObject data container for a single narrator line.
+/// Holds the trigger ID, optional voice clip, a list of timed subtitle cues,
+/// and whether the line should only fire once per save profile.
+/// Created via Assets > Create > Narrator > DialogueEntry.
+/// </summary>
 [CreateAssetMenu(menuName = "Narrator/DialogueEntry", fileName = "NarrationEntry")]
 public class NarrationEntry : ScriptableObject
 {

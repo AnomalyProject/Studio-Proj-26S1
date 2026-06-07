@@ -2,10 +2,20 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Custom Inspector for <see cref="NarrationEntry"/>.
+/// Adds an in-editor audio preview with Play/Pause/Stop controls and a live subtitle
+/// display that shows the active cue at the clip's current position — matching exactly
+/// what <see cref="SubtitleManager"/> would show at runtime, without entering Play mode.
+/// Must live in an Editor/ folder.
+/// </summary>
 [CustomEditor(typeof(NarrationEntry))]
 public class NarrationEntryEditor : Editor
 {
     private bool paused;
+
+    // AudioUtil is an internal Unity editor class — accessed via reflection since it has
+    // no public API. Resolves fresh each access; cheap enough for editor-only use.
     private static System.Type AudioUtil => typeof(AudioImporter).Assembly.GetType("UnityEditor.AudioUtil");
 
     private static void PlayClip(AudioClip clip) => AudioUtil.GetMethod("PlayPreviewClip", BindingFlags.Static | BindingFlags.Public,
@@ -17,6 +27,9 @@ public class NarrationEntryEditor : Editor
     private static void StopClip() => AudioUtil.GetMethod("StopAllPreviewClips", BindingFlags.Static | BindingFlags.Public)?.Invoke(null, null);
     private static float ClipPosition() => (float)(AudioUtil.GetMethod("GetPreviewClipPosition", BindingFlags.Static | BindingFlags.Public)?.Invoke(null, null) ?? 0f);
     private static bool IsPlaying() => (bool)(AudioUtil.GetMethod("IsPreviewClipPlaying", BindingFlags.Static | BindingFlags.Public)?.Invoke(null, null) ?? false);
+
+    // Repaint is hooked to EditorApplication.update so the timestamp and active cue
+    // refresh every editor tick while the clip is playing, without entering Play mode.
     private void OnEnable() => EditorApplication.update += Repaint;
     private void OnDisable() 
     { 
@@ -77,7 +90,7 @@ public class NarrationEntryEditor : Editor
             EditorGUILayout.LabelField($"{seconds}:{milliseconds:D2}", EditorStyles.centeredGreyMiniLabel);
         }
 
-        // Active subtitle cue
+        // Mirror the SubtitleManager cue selection: last entry whose timestamp is <= current position.
         SubtitleEntry? active = null;
         foreach (SubtitleEntry cue in entry.Subtitles)
         {

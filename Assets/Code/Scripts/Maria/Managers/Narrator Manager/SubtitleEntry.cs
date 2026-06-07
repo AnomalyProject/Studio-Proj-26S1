@@ -1,5 +1,10 @@
 using UnityEngine;
 
+/// <summary>
+/// A single timed subtitle cue within a <see cref="NarrationEntry"/>.
+/// Timestamp is relative to the start of the narration line — the SubtitleManager
+/// displays this cue once elapsed playback time reaches it.
+/// </summary>
 [System.Serializable] public struct SubtitleEntry
 {
     [SerializeField, Min(0)] private float timestamp;
