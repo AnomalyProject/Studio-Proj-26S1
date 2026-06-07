@@ -30,7 +30,7 @@ public class InvestigateState : BaseState
 
         target = brain.TargetPos;
 
-        // If the player is close enough, switch to chase state because sometimes when the it reaches the player it goes idle.
+        // If the player is close enough, switch to chase state because sometimes when it reaches the player it goes idle.
         if (Vector3.Distance(body.transform.position, target.position) < 3.0f && target.CompareTag("Player"))
         {
             brain.ChangeState(EnemyBrain.StateID.Chase, target);
