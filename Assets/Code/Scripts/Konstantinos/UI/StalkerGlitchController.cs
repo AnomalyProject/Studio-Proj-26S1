@@ -1,6 +1,6 @@
-using System;
 using UnityEngine;
 using PurrNet;
+using System;
 
 public class StalkerGlitchController : MonoBehaviour
 {
