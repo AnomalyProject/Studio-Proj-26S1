@@ -16,7 +16,8 @@ public class NarratorManager : MonoBehaviour
 
     // Direct reference into CurrentSave — no local copy, so there's no risk of the
     // in-memory set drifting out of sync with the save data before a QuickSave.
-    private static HashSet<string> FiredIDs => RefrenceManager.CurrentSave.narratorFiredIDs;
+    private HashSet<string> FiredIDs => RefrenceManager.CurrentSave.narratorFiredIDs;
+    private HashSet<string> IgnoredIDs = new();
 
     private void Awake()
     {
@@ -36,27 +37,30 @@ public class NarratorManager : MonoBehaviour
     /// Silently ignored if another line is already playing, the entry is null,
     /// or the entry is firstTimeOnly and has already fired this save.
     /// </summary>
-    public void TriggerNarration(NarrationEntry entry)
+    public bool TryTriggerNarration(NarrationEntry entry)
     {
         if (entry == null)
         {
             Debug.LogWarning("[NarratorManager] TriggerNarration called with a null entry.");
-            return;
+            return false;
         }
 
         if (isPlaying)
         {
             Debug.Log($"[NarratorManager] Ignoring '{entry.TriggerID}' — line already playing.");
-            return;
+            return false;
         }
+
+        if (IgnoredIDs.Contains(entry.TriggerID)) return false;
 
         if (entry.FirstTimeOnly && FiredIDs.Contains(entry.TriggerID))
         {
             Debug.Log($"[NarratorManager] '{entry.TriggerID}' already fired (firstTimeOnly). Skipping.");
-            return;
+            return false;
         }
 
         PlayEntry(entry);
+        return true;
     }
 
     /// <summary>
@@ -66,6 +70,7 @@ public class NarratorManager : MonoBehaviour
     public void ResetAllFlags()
     {
         FiredIDs.Clear();
+        IgnoredIDs.Clear();
         SaveSystem.QuickSave(RefrenceManager.CurrentSave);
         Debug.Log("[NarratorManager] All narrator flags reset.");
     }
@@ -100,4 +105,8 @@ public class NarratorManager : MonoBehaviour
 
     // Called by SubtitleManager when the last cue finishes, releasing the playback lock.
     private void OnLineFinished() => isPlaying = false;
+    public void AddIgnoredEntry(NarrationEntry entry)
+    {
+        if(!IgnoredIDs.Contains(entry.TriggerID)) IgnoredIDs.Add(entry.TriggerID);
+    }
 }

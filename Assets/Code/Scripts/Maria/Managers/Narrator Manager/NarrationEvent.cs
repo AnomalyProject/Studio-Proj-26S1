@@ -7,11 +7,16 @@ using UnityEngine;
 /// </summary>
 public class NarrationEvent : MonoBehaviour
 {
+    [SerializeField] private bool triggerOnce = false;
     [SerializeField] NarrationEntry entry;
 
     public void PlayNarration()
     {
-        if(NarratorManager.Instance && entry)
-        NarratorManager.Instance.TriggerNarration(entry);
+        if (!NarratorManager.Instance || entry == null) return;
+
+        if (NarratorManager.Instance.TryTriggerNarration(entry) && triggerOnce)
+        {
+            NarratorManager.Instance.AddIgnoredEntry(entry);
+        }
     }
 }
