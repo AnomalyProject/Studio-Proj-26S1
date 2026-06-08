@@ -20,6 +20,7 @@ public class PingLocation : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
+        ulong ownerSteamID = (ulong)owner.Value.id;
 
         if (asServer)
         {
@@ -27,8 +28,6 @@ public class PingLocation : NetworkBehaviour
             RefrenceManager.Instance.Gameplay.AnomalyManager.OnMapChanged += (_) => DestroyCurrentPing_Server();
             return;
         }
-
-        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
 
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);

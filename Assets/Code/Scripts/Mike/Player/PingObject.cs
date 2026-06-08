@@ -20,10 +20,11 @@ public class PingObject : NetworkBehaviour
     }
 
     [ObserversRpc(bufferLast: true)]
-    public void SetColor_Observers(Color color)
+    public void SetColor_Observers(Color color, int index)
     {
         if (pingImage != null)
         {
+            pingImage.color = PlayerColour.GetColor(index);
             pingImage.color = color;
         }
     }
