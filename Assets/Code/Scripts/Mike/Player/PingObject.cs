@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class PingObject : NetworkBehaviour
 {
     [SerializeField] private float scaleMultiplier = 0.5f;
-    [SerializeField] private Image pingImage;
+    [SerializeField] public Image pingImage;
 
     private void LateUpdate()
     {
