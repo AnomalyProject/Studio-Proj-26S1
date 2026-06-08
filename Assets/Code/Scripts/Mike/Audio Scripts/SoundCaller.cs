@@ -1,33 +1,37 @@
 using UnityEngine;
 
-public abstract class SoundCaller : MonoBehaviour
+public class SoundCaller : MonoBehaviour
 {
-    protected void PlayUIClip(AudioClip clip)
+    public void PlayUIClip(AudioClip clip)
     {
         if (AudioManager.Instance && clip) AudioManager.Instance.PlayUI(clip);
     }
 
-    protected void PlaySFXClip(AudioClip clip)
+    public void PlaySFXClip(AudioClip clip)
     {
         if (AudioManager.Instance && clip) AudioManager.Instance.PlaySFX(clip);
     }
 
-    protected void PlayMusic(AudioClip clip)
+    public void PlayMusic(AudioClip clip)
     {
         if (AudioManager.Instance && clip) AudioManager.Instance.PlayMusic(clip);
     }
-    protected void StopMusic()
+    public void StopMusic()
     {
         if (AudioManager.Instance) AudioManager.Instance.StopMusic();
     }
 
-    protected void CrossfadeMusic(AudioClip clip)
+    public void CrossfadeMusic(AudioClip clip)
     {
         if (AudioManager.Instance && clip) AudioManager.Instance.CrossFadeMusic(clip);
     }
 
-    protected void FadeOutMusic(AudioClip clip)
+    public void FadeOutMusic(AudioClip clip)
     {
         if (AudioManager.Instance) AudioManager.Instance.FadeOutMusic(clip);
+    }
+    public void FadeOutMusic()
+    {
+        if (AudioManager.Instance) AudioManager.Instance.FadeOutMusic(null);
     }
 }
