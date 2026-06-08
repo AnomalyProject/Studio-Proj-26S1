@@ -19,5 +19,12 @@ public class PingObject : NetworkBehaviour
         transform.localScale = Vector3.one * scale;
     }
 
-    [ObserversRpc] public void SetColor_Observers(Color color) => pingImage.color = color;
+    [ObserversRpc(bufferLast: true)]
+    public void SetColor_Observers(Color color)
+    {
+        if (pingImage != null)
+        {
+            pingImage.color = color;
+        }
+    }
 }
