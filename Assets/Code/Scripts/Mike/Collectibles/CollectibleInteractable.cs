@@ -11,16 +11,16 @@ public class CollectibleInteractable : MonoBehaviour, IInteractable<PlayerBody>
     public CollectibleSO CollectibleData => collectibleData;
     public bool CollectibleGathered => RefrenceManager.CurrentSave.collectiblesGathered.Contains(collectibleData.ID);
 
-    private void Awake()
+    private void Start()
     {
-        if (CollectibleGathered) onDisableEffects?.Invoke();
+        if (CollectibleGathered) onDisableEffects.Invoke();
     }
 
     public Task<bool> CanInteract(PlayerBody interactor) => Task.FromResult(!CollectibleGathered);
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
         RefrenceManager.CurrentSave.collectiblesGathered.Add(collectibleData.ID);
-        onDisableEffects?.Invoke();
+        onDisableEffects.Invoke();
         onCollected.Invoke();
         await Task.Run(() => SaveSystem.QuickSave(RefrenceManager.CurrentSave));
         return true;

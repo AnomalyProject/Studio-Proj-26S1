@@ -33,7 +33,7 @@ public class PingLocation : NetworkBehaviour
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
-        if (playerInfo.HasValue) pingColor = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
+        if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
     public void CreatePing(InputAction.CallbackContext ctx)
