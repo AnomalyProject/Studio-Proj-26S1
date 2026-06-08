@@ -88,6 +88,7 @@ public class SpawnManager : MonoBehaviour
             nameplate.SetName(displayName, playerInfo.Value.ColorIndex);
         }
 
+        //logic replication for test
         if(ping != null)
         {
             ping.SetColor(playerInfo.Value.ColorIndex);
