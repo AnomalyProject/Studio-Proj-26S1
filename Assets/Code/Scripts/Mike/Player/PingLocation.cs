@@ -70,6 +70,11 @@ public class PingLocation : NetworkBehaviour
         currentPing = null;
     }
 
+    public void SetColour(int index)
+    {
+        pingPrefab.pingImage.color = PlayerColour.GetColor(index);
+    }
+
     [ObserversRpc] private void InvokeOnPingLocation_Observers()
     {
         if(pingSFX && AudioManager.Instance != null) AudioManager.Instance.PlaySFX(pingSFX);
