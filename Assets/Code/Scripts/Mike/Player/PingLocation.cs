@@ -28,8 +28,7 @@ public class PingLocation : NetworkBehaviour
             return;
         }
 
-        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
-
+        ulong ownerSteamID = (ulong)owner.Value.id;
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
