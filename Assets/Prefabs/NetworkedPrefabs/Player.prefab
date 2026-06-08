@@ -386,6 +386,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4606633856125498859}
   - component: {fileID: 4543138664715801701}
+  - component: {fileID: 987018529344929020}
   - component: {fileID: 177643267097350056}
   m_Layer: 8
   m_Name: HUD Camera
@@ -461,6 +462,38 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &987018529344929020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3146642001898983726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48d2823de41067044b4b203626574aef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StalkerGlitchController
+  playerBody: {fileID: 6675929724497548166}
+  playerCamera: {fileID: 4543138664715801701}
+  glitchMaterial: {fileID: 2100000, guid: b6bafa7810ad21345ab92454210cf917, type: 2}
+  identity: {fileID: 3674273088732647212}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  obstructionLayers:
+    serializedVersion: 2
+    m_Bits: 891
+  glitchInSpeed: 0.3
+  glitchOutSpeed: 0.6
+  maxNoiseAmount: 100
+  maxGlitchStrength: 0.8
+  minScanLinesTransparency: 0
+  visibilitySearchRadius: 1000
+  glitchAudioSource: {fileID: 0}
+  glitchLoopClip: {fileID: 0}
+  maxGlitchVolume: 1
+  playLoopAutomatically: 1
 --- !u!114 &177643267097350056
 MonoBehaviour:
   m_ObjectHideFlags: 0
