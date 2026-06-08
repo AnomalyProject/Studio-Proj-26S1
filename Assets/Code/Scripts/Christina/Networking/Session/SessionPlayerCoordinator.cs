@@ -80,20 +80,7 @@ public class SessionPlayerCoordinator
         return true;
     }
     
-    public SessionCommandResult TryRemovePlayerBySteamID(ulong steamID, out PlayerID playerID)
-    {
-        playerID = default;
-
-        PlayerID? foundPlayerID = registry.FindPlayerIDForSteam(steamID);
-        if (!foundPlayerID.HasValue) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not connected.");
-
-        playerID = foundPlayerID.Value;
-        RemovePlayerInternal(playerID, steamID);
-
-        return SessionCommandResult.Succeeded();
-    }
-    
-    public SessionCommandResult TryReconnect(PlayerID newPlayerID, ulong steamID)
+    public SessionCommandResult TryReconnect(PlayerID playerID, ulong steamID)
     {
         if (!sessionStore.HasSession)
         {
@@ -105,22 +92,27 @@ public class SessionPlayerCoordinator
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player is not waiting to reconnect.");
         }
 
-        PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
+        PlayerID? waitingPlayerID = registry.FindPlayerIDForSteam(steamID);
 
-        if (!playerInfo.HasValue)
+        if (!waitingPlayerID.HasValue)
         {
             return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
         }
         
-        PlayerID? oldPlayerID = registry.FindPlayerIDForSteam(steamID);
-        
-        if (oldPlayerID.HasValue && oldPlayerID.Value != newPlayerID)
+        if (waitingPlayerID.Value != playerID)
         {
-            registry.Unregister(oldPlayerID.Value);
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Reconnect PlayerID did not match the disconnected player.");
+        }
+        
+        PlayerSessionInfo? playerInfo = sessionStore.Current.GetPlayer(steamID);
+        
+        if (!playerInfo.HasValue)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Player was not found in session.");
         }
 
         sessionStore.Current.SetPlayerConnected(steamID, true, 0f);
-        registry.Register(newPlayerID, steamID, playerInfo.Value.IsHost);
+        registry.Register(playerID, steamID, playerInfo.Value.IsHost);
 
         return SessionCommandResult.Succeeded();
     }

@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 
 public class ReconnectUIController : MonoBehaviour
@@ -12,16 +11,14 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text headerText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text timerText;
-
-    [SerializeField] private Slider fillSlider;
-    [SerializeField] private Slider backgroundSlider;
+    [SerializeField] private Slider loadingSlider;
 
     [Header("Toast Reference")]
     [SerializeField] private GameObject toastPanel;
     [SerializeField] private TMP_Text toastText;
 
     [Header("Settings")]
-    [SerializeField] private float sliderSpeed = 1f;
+    [SerializeField] private float sliderSpeed = 2f;
 
     private IReconnect _networkService;
     private Coroutine _countdownRoutine;
@@ -29,8 +26,7 @@ public class ReconnectUIController : MonoBehaviour
 
     //Debug keys to simulate connection events
     private void Update()
-    {
-        #if UNITY_EDITOR
+    { 
         if (Input.GetKeyDown(KeyCode.Alpha9))
         {
             HandleConnectionLost();
@@ -40,9 +36,8 @@ public class ReconnectUIController : MonoBehaviour
         {
             HandleReconnected();
         }
-        #endif
     }
-
+    
     //@Christina : call this method and add the actual service
     public void InjectDependencies(IReconnect networkService)
     {
@@ -52,12 +47,9 @@ public class ReconnectUIController : MonoBehaviour
         _networkService.OnConnectionLost += HandleConnectionLost;
         _networkService.OnHostMigrating += HandleHostMigrating;
         _networkService.OnReconnected += HandleReconnected;
-        _networkService.OnReconnectFailed += HandleReconnectFailed;
 
         ResetUIState();
     }
-    
-    
 
     private void ResetUIState()
     {
@@ -94,7 +86,7 @@ public class ReconnectUIController : MonoBehaviour
         headerText.text = header;
         statusText.text = status;
 
-        LockReconnectInput();
+        HandleInput();
 
         if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
         _countdownRoutine = StartCoroutine(CountdownRoutine());
@@ -107,31 +99,13 @@ public class ReconnectUIController : MonoBehaviour
 
         timeLeft = Mathf.Max(1f, timeLeft);
 
-        float marqueeAge = 0f;
-        float initialFill = 0.3f;
-
-        fillSlider.value = initialFill;
-
         while (timeLeft > 0)
         {
             timerText.text = $"Reconnect timeout: 0:{Mathf.CeilToInt(timeLeft):D2}";
 
-            if (fillSlider != null && backgroundSlider != null)
+            if (loadingSlider != null)
             {
-                marqueeAge += Time.unscaledDeltaTime * sliderSpeed;
-
-                float cycleProgress = marqueeAge % 2f;
-
-                if (cycleProgress < 1f)
-                {
-                    fillSlider.value = cycleProgress + initialFill;
-                    backgroundSlider.value = cycleProgress;
-                }
-                else
-                {
-                    fillSlider.value = (cycleProgress - 1f) + initialFill;
-                    backgroundSlider.value = cycleProgress - 1f;
-                }
+                loadingSlider.value = Mathf.PingPong(Time.unscaledTime * sliderSpeed, 1f);
             }
 
             timeLeft -= Time.unscaledDeltaTime;
@@ -147,7 +121,7 @@ public class ReconnectUIController : MonoBehaviour
 
         overlayPanel.SetActive(false);
 
-        RestoreGameplayInput();
+        HandleInput();
 
         if (_toastRoutine != null) StopCoroutine(_toastRoutine);
         _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
@@ -165,11 +139,9 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleTimeout()
     {
-        Debug.Log("[ReconnectUI] Timeout reached. Returning to menu.");
-        
         ResetUIState();
         
-        RestoreGameplayInput();
+        HandleInput();
         
         _networkService?.CancelAndReturnToMenu();
     }
@@ -186,23 +158,18 @@ public class ReconnectUIController : MonoBehaviour
             _networkService.OnConnectionLost -= HandleConnectionLost;
             _networkService.OnHostMigrating -= HandleHostMigrating;
             _networkService.OnReconnected -= HandleReconnected;
-            _networkService.OnReconnectFailed -= HandleReconnectFailed;
         }
     }
 
-    private void HandleReconnectFailed(string reason)
+    private void HandleInput()
     {
-        ResetUIState();
-        RestoreGameplayInput();
-    }
-
-    private void LockReconnectInput()
-    {
-        InputBridge.SetContext(InputBridge.InputContext.None);
-    }
-
-    private void RestoreGameplayInput()
-    {
-        InputBridge.SetContext(InputBridge.InputContext.Player);
+        if (InputBridge.CurrentContext == InputBridge.InputContext.Player)
+        {
+            InputBridge.SetContext(InputBridge.InputContext.None);
+        }
+        else if (InputBridge.CurrentContext == InputBridge.InputContext.None)
+        {
+            InputBridge.SetContext(InputBridge.InputContext.Player);
+        }
     }
 }

@@ -5,7 +5,6 @@ public interface IReconnect
     event Action OnConnectionLost;
     event Action OnHostMigrating;
     event Action OnReconnected;
-    event Action<string> OnReconnectFailed;
     
     float ReconnectTimeoutSeconds { get; }
     

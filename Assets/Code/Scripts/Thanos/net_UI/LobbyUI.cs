@@ -36,7 +36,6 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private TMP_Text messageText;
     
     private Coroutine messageCoroutine;
-    private ulong pendingKickTargetSteamID;
     
     private void Awake()
     {
@@ -132,7 +131,7 @@ public class LobbyUI : MonoBehaviour
         foreach (var player in sessionData.Players)
         {
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
-            listItem.Setup(player, localSteamID, OpenKickReasonPanel);
+            listItem.Setup(player);
 
             if (player.IsReady && player.IsInElevator)
             {
@@ -200,19 +199,6 @@ public class LobbyUI : MonoBehaviour
         startButton.interactable = false;
     }
     
-    private void OpenKickReasonPanel(ulong targetSteamID)
-    {
-        pendingKickTargetSteamID = targetSteamID;
-        
-        // todo: show reason panel here.
-    }
-
-    public void ConfirmKickVote(int reasonIndex)
-    {
-        SessionKickReason reason = (SessionKickReason)reasonIndex;
-        SessionManager.Instance.RequestStartKickVote(pendingKickTargetSteamID, reason);
-    }
-    
     private void OnPrivacyChanged(int index)
     {
         if (IsSoloMode()) return;
@@ -255,10 +241,7 @@ public class LobbyUI : MonoBehaviour
             return;
         }
 
-        // fix for dev testing
-        bool isDevHost = SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.DevHost;
-
-        if (!isDevHost && (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers)))
+        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers))
         {
             ShowMessage("Failed to update max players.");
             maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);

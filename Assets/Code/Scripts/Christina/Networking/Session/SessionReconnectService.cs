@@ -10,7 +10,6 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     public event Action OnConnectionLost;
     public event Action OnHostMigrating;
     public event Action OnReconnected;
-    public event Action<string> OnReconnectFailed;
 
     private bool wasConnected;
     private bool isWaitingToReconnect;
@@ -39,7 +38,6 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         SessionEvents.OnHostMigrationStarted += HandleHostMigrationStarted;
         SessionEvents.OnReconnectApproved += HandleReconnectApproved;
         SessionEvents.OnLocalSessionReady += HandleLocalSessionReady;
-        SessionEvents.OnSessionError += HandleSessionError;
         
         if (SessionModeManager.Instance != null)
         {
@@ -62,7 +60,6 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         SessionEvents.OnHostMigrationStarted -= HandleHostMigrationStarted;
         SessionEvents.OnReconnectApproved -= HandleReconnectApproved;
         SessionEvents.OnLocalSessionReady -= HandleLocalSessionReady;
-        SessionEvents.OnSessionError -= HandleSessionError;
         
         if (SessionModeManager.Instance != null)
         {
@@ -159,25 +156,6 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
             NetworkManager.main.clientState == ConnectionState.Connected)
         {
             CompleteReconnect("local session ready");
-        }
-    }
-    
-    private void HandleSessionError(SessionErrorResponse error)
-    {
-        if (!isWaitingToReconnect) return;
-
-        Debug.LogWarning($"[SessionReconnectService] Reconnect failed: {error.Code} - {error.Message}");
-
-        isWaitingToReconnect = false;
-        wasConnected = false;
-
-        StopReconnectRoutine();
-
-        OnReconnectFailed?.Invoke(error.Message);
-
-        if (SessionModeManager.Instance != null)
-        {
-            SessionModeManager.Instance.ReturnToMenu();
         }
     }
     
