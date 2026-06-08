@@ -91,7 +91,7 @@ public class SpawnManager : MonoBehaviour
         //logic replication for test
         if(ping != null)
         {
-            ping.SetColour(playerInfo.Value.ColorIndex);
+            ping.SetColor(playerInfo.Value.ColorIndex);
         }
 
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
