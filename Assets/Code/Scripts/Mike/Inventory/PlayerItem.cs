@@ -1,10 +1,12 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerItem : NetworkBehaviour
 {
     [SerializeField, HideInInspector] private MeshRenderer[] renderers;
     [SerializeField, HideInInspector] private Canvas[] canvases;
+    [SerializeField] private UnityEvent onLocalSpawn;
 
     private IReadOnlyItemStack boundStack;
     private int boundSlot;
@@ -22,6 +24,7 @@ public class PlayerItem : NetworkBehaviour
             // Hide UI on other clients
             foreach (Canvas canvas in canvases) canvas.enabled = false;
         }
+        else onLocalSpawn.Invoke();
     }
 
     [ContextMenu("Validate Renderers")]
