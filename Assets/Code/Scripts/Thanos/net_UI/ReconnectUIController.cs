@@ -143,6 +143,8 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleTimeout()
     {
+        Debug.Log("[ReconnectUI] Timeout reached. Returning to menu.");
+        
         ResetUIState();
         
         RestoreGameplayInput();
