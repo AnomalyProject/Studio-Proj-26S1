@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 
 public class ReconnectUIController : MonoBehaviour
@@ -47,9 +48,12 @@ public class ReconnectUIController : MonoBehaviour
         _networkService.OnConnectionLost += HandleConnectionLost;
         _networkService.OnHostMigrating += HandleHostMigrating;
         _networkService.OnReconnected += HandleReconnected;
+        _networkService.OnReconnectFailed += HandleReconnectFailed;
 
         ResetUIState();
     }
+    
+    
 
     private void ResetUIState()
     {
@@ -86,7 +90,7 @@ public class ReconnectUIController : MonoBehaviour
         headerText.text = header;
         statusText.text = status;
 
-        HandleInput();
+        LockReconnectInput();
 
         if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
         _countdownRoutine = StartCoroutine(CountdownRoutine());
@@ -121,7 +125,7 @@ public class ReconnectUIController : MonoBehaviour
 
         overlayPanel.SetActive(false);
 
-        HandleInput();
+        RestoreGameplayInput();
 
         if (_toastRoutine != null) StopCoroutine(_toastRoutine);
         _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
@@ -141,7 +145,7 @@ public class ReconnectUIController : MonoBehaviour
     {
         ResetUIState();
         
-        HandleInput();
+        RestoreGameplayInput();
         
         _networkService?.CancelAndReturnToMenu();
     }
@@ -158,18 +162,23 @@ public class ReconnectUIController : MonoBehaviour
             _networkService.OnConnectionLost -= HandleConnectionLost;
             _networkService.OnHostMigrating -= HandleHostMigrating;
             _networkService.OnReconnected -= HandleReconnected;
+            _networkService.OnReconnectFailed -= HandleReconnectFailed;
         }
     }
 
-    private void HandleInput()
+    private void HandleReconnectFailed(string reason)
     {
-        if (InputBridge.CurrentContext == InputBridge.InputContext.Player)
-        {
-            InputBridge.SetContext(InputBridge.InputContext.None);
-        }
-        else if (InputBridge.CurrentContext == InputBridge.InputContext.None)
-        {
-            InputBridge.SetContext(InputBridge.InputContext.Player);
-        }
+        ResetUIState();
+        RestoreGameplayInput();
+    }
+
+    private void LockReconnectInput()
+    {
+        InputBridge.SetContext(InputBridge.InputContext.None);
+    }
+
+    private void RestoreGameplayInput()
+    {
+        InputBridge.SetContext(InputBridge.InputContext.Player);
     }
 }
