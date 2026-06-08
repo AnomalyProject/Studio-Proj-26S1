@@ -25,47 +25,33 @@ public class PingLocation : NetworkBehaviour
         {
             if(RefrenceManager.Instance)
             RefrenceManager.Instance.Gameplay.AnomalyManager.OnMapChanged += (_) => DestroyCurrentPing_Server();
-            //return;
+            return;
         }
 
-        //if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
+        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
 
-        //SessionData currentSession = SessionManager.Instance?.CurrentSession;
-        //PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
+        SessionData currentSession = SessionManager.Instance?.CurrentSession;
+        PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
-        //if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
+        if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
     public void CreatePing(InputAction.CallbackContext ctx)
     {
-        if (!ctx.started || !isOwner) return;
+        if (!ctx.started) return;
 
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit hit, pingMaxDistance, pingLayer))
         {
-            CreatePing_ServerRpc(hit.point); //removed arg pingColor
+            CreatePing_ServerRpc(hit.point, pingColor);
         }
     }
 
-    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location) //removed arg pingColor
+    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location, Color color)
     {
         DestroyCurrentPing_Server();
 
-        Color colour = PlayerColour.GetColor(0);
-
-        if (owner.HasValue)
-        {
-            ulong ownerSteamID = (ulong)owner.Value.id;
-            SessionData currentSession = SessionManager.Instance?.CurrentSession;
-            PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
-
-            if (playerInfo.HasValue)
-            {
-                colour = playerInfo.Value.GetPlayerColor();
-            }
-        }
-
         currentPing = Instantiate(pingPrefab, location, Quaternion.identity);
-        currentPing.SetColor_Observers(colour);
+        currentPing.SetColor_Observers(color);
         InvokeOnPingLocation_Observers();
 
         if(pingDuration > 0) Destroy(currentPing, pingDuration);
