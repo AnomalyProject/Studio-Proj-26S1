@@ -35,22 +35,22 @@ public class PingLocation : NetworkBehaviour
         if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
-    public void CreatePing(InputAction.CallbackContext ctx)
+    public void CreatePing(InputAction.CallbackContext ctx, int index)
     {
         if (!ctx.started) return;
 
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit hit, pingMaxDistance, pingLayer))
         {
-            CreatePing_ServerRpc(hit.point, pingColor);
+            CreatePing_ServerRpc(hit.point, pingColor, index);
         }
     }
 
-    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location, Color color)
+    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location, Color color, int index)
     {
         DestroyCurrentPing_Server();
 
         currentPing = Instantiate(pingPrefab, location, Quaternion.identity);
-        currentPing.SetColor_Observers(color);
+        currentPing.SetColor_Observers(color, index);
         InvokeOnPingLocation_Observers();
 
         if(pingDuration > 0) Destroy(currentPing, pingDuration);
