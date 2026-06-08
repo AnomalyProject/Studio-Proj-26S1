@@ -46,6 +46,8 @@ public class SessionPlayerRegistry
     public void Unregister(PlayerID playerID)
     {
         playerConnectionMap.Remove(playerID);
+        
+        if (hostPlayerID.HasValue && hostPlayerID.Value == playerID) hostPlayerID = null;
     }
 
     public bool IsRegistered(PlayerID playerID)

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2052334265579669461}
   - component: {fileID: 3952242809129204366}
   - component: {fileID: 3374081651377321764}
+  - component: {fileID: -3014132910048488909}
   m_Layer: 3
   m_Name: Flashlight Holdable
   m_TagString: Untagged
@@ -59,6 +60,21 @@ MonoBehaviour:
   renderers:
   - {fileID: 1786246034863117498}
   canvases: []
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -3014132910048488909}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   flashlightLight: {fileID: 2128018387592418699}
   maxDurabilitySeconds: 30
   drainSpeedMultiplier: 1
@@ -194,6 +210,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-3014132910048488909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4170464921663025152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: 118f3fa2d1fc3ce459c0f41d7e99af99, type: 2}
 --- !u!1 &7410716989099837303
 GameObject:
   m_ObjectHideFlags: 0
