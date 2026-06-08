@@ -57,6 +57,11 @@ public class PingLocation : NetworkBehaviour
         if(pingDuration > 0) Destroy(currentPing, pingDuration);
     }
 
+    public void SetColor(int color)
+    {
+        currentPing.pingImage.color = PlayerColour.GetColor(color);
+    }
+
     private void DestroyCurrentPing_Server()
     {
         if (!isServer) return;
