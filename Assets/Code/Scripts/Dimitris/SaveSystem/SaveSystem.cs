@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using UnityEngine;
@@ -27,7 +28,7 @@ public static class SaveSystem
             string slotName = GetFileName(slotIndex);
             string path = Path.Combine(SAVE_FOLDER, slotName); //Creates a full file path
             //if (File.Exists(path)) File.Copy(path, path + ".bak", true); //Back ups in case already exists
-            File.WriteAllText(path, JsonUtility.ToJson(data, true)); //Writes to a file and turns SaveData to Json String, Serialization
+            File.WriteAllText(path, JsonConvert.SerializeObject(data)); //Writes to a file and turns SaveData to Json String, Serialization
             Debug.Log("Saved: " + slotName);
             OnSaveEvent?.Invoke(data);
         }
@@ -36,6 +37,8 @@ public static class SaveSystem
             Debug.LogError("Failed to save: " + e.Message);
         }
     }
+
+    public static void QuickSave(SaveData data) => Save(data, slotIndex: 100);
     public static SaveData Load(int slotIndex)  //Loads certain Slot
     {
         try
@@ -52,7 +55,8 @@ public static class SaveSystem
             }
             Debug.Log("Loaded:" + slotName);
             string json = File.ReadAllText(path);
-            SaveData data = JsonUtility.FromJson<SaveData>(json);
+           
+            SaveData data = JsonConvert.DeserializeObject<SaveData>(json);
 
             if (data != null)
             {
@@ -96,14 +100,14 @@ public static class SaveSystem
             path = mostRecentFile.FullName;//Sets path
             Debug.Log("Loaded:" + mostRecentFile.Name);
             json = File.ReadAllText(path); //Reads the file
-            SaveData data = JsonUtility.FromJson<SaveData>(json); //Turns Json to SaveData ,Deserialization
+            SaveData data = JsonConvert.DeserializeObject<SaveData>(json); //Turns Json to SaveData ,Deserialization
             if (data != null) OnLoadEvent?.Invoke(data);
             return data;
         }
         else
         {
             Debug.Log("No save files found");
-            return null;
+            return new SaveData();
         }
     }
 

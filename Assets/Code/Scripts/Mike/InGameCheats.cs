@@ -24,11 +24,15 @@ public class InGameCheats : MonoBehaviour
         DevConsole.CommandData mapVarComm = new DevConsole.CommandData("Change to a new map variation. (server only, optional args: true = with anomalies, false = no anomaly)", NextAnomaly);
         DevConsole.RegisterCommand("nextvar", mapVarComm);
 
+        DevConsole.CommandData clearsave = new DevConsole.CommandData("Deletes all save files.", ClearSave);
+        DevConsole.RegisterCommand("clearsave", clearsave);
+
         NoClip.CreateNoClip();
 
         Registered = true;
     }
 
+    private void ClearSave(string[] obj) => SaveSystem.DeleteAllSaves();
     private void RichCheat(string[] args)
     {
         if (PlayerBody.localPlayerBody) AddItemToPlayer_Server(PlayerBody.localPlayerBody, currencyItem, currencyItem.MaxStackSize);

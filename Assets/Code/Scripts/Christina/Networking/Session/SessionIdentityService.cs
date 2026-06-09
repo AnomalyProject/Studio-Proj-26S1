@@ -46,6 +46,20 @@ public class SessionIdentityService
         return true;
     }
     
+    public bool TryResolveReconnectJoiner(PlayerID sender, out ulong steamID, out string displayName)
+    {
+        steamID = 0;
+        displayName = FallbackDisplayName;
+
+        if (!PurrSteamUtils.TryGetSteamID(sender, out steamID)) return false;
+        if (steamID == 0) return false;
+
+        string rawName = SteamFriends.GetFriendPersonaName(new CSteamID(steamID));
+        displayName = Sanitize(rawName);
+
+        return true;
+    }
+    
     public string Sanitize(string displayName)
     {
         if (string.IsNullOrWhiteSpace(displayName))
