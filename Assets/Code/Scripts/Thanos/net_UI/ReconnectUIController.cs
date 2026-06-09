@@ -12,14 +12,16 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text headerText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text timerText;
-    [SerializeField] private Slider loadingSlider;
+
+    [SerializeField] private Slider fillSlider;
+    [SerializeField] private Slider backgroundSlider;
 
     [Header("Toast Reference")]
     [SerializeField] private GameObject toastPanel;
     [SerializeField] private TMP_Text toastText;
 
     [Header("Settings")]
-    [SerializeField] private float sliderSpeed = 2f;
+    [SerializeField] private float sliderSpeed = 1f;
 
     private IReconnect _networkService;
     private Coroutine _countdownRoutine;
@@ -27,7 +29,8 @@ public class ReconnectUIController : MonoBehaviour
 
     //Debug keys to simulate connection events
     private void Update()
-    { 
+    {
+        #if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.Alpha9))
         {
             HandleConnectionLost();
@@ -37,8 +40,9 @@ public class ReconnectUIController : MonoBehaviour
         {
             HandleReconnected();
         }
+        #endif
     }
-    
+
     //@Christina : call this method and add the actual service
     public void InjectDependencies(IReconnect networkService)
     {
@@ -103,13 +107,31 @@ public class ReconnectUIController : MonoBehaviour
 
         timeLeft = Mathf.Max(1f, timeLeft);
 
+        float marqueeAge = 0f;
+        float initialFill = 0.3f;
+
+        fillSlider.value = initialFill;
+
         while (timeLeft > 0)
         {
             timerText.text = $"Reconnect timeout: 0:{Mathf.CeilToInt(timeLeft):D2}";
 
-            if (loadingSlider != null)
+            if (fillSlider != null && backgroundSlider != null)
             {
-                loadingSlider.value = Mathf.PingPong(Time.unscaledTime * sliderSpeed, 1f);
+                marqueeAge += Time.unscaledDeltaTime * sliderSpeed;
+
+                float cycleProgress = marqueeAge % 2f;
+
+                if (cycleProgress < 1f)
+                {
+                    fillSlider.value = cycleProgress + initialFill;
+                    backgroundSlider.value = cycleProgress;
+                }
+                else
+                {
+                    fillSlider.value = (cycleProgress - 1f) + initialFill;
+                    backgroundSlider.value = cycleProgress - 1f;
+                }
             }
 
             timeLeft -= Time.unscaledDeltaTime;
