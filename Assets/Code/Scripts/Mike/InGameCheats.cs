@@ -32,7 +32,7 @@ public class InGameCheats : MonoBehaviour
         Registered = true;
     }
 
-    private void ClearSave(string[] obj) => SaveSystem.DeleteAllSaves();
+    private void ClearSave(string[] obj) => RefrenceManager.DeleteAllSaves();
     private void RichCheat(string[] args)
     {
         if (PlayerBody.localPlayerBody) AddItemToPlayer_Server(PlayerBody.localPlayerBody, currencyItem, currencyItem.MaxStackSize);
