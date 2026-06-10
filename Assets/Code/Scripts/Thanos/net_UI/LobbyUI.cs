@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Steamworks;
 using System.Collections;
+using System.Collections.Generic;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -35,6 +35,13 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private GameObject messagePanel;
     [SerializeField] private TMP_Text messageText;
     
+    [Header("Kick to Vote")]
+    [SerializeField] private GameObject kickReasonPanel;
+    [SerializeField] private TMP_Text kickReasonTargetText;
+    [SerializeField] private TMP_Dropdown kickReasonDropdown;
+    [SerializeField] private Button kickReasonConfirmButton;
+    [SerializeField] private Button kickReasonCancelButton;
+    
     private Coroutine messageCoroutine;
     private ulong pendingKickTargetSteamID;
     
@@ -48,6 +55,11 @@ public class LobbyUI : MonoBehaviour
         inviteButton.onClick.AddListener(OnInviteClicked);
         privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
         maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
+        
+        kickReasonConfirmButton.onClick.AddListener(OnKickReasonConfirmed);
+        kickReasonCancelButton.onClick.AddListener(HideKickReasonPanel);
+        
+        SetupKickReasonDropdown();
     }
     
 
@@ -69,6 +81,8 @@ public class LobbyUI : MonoBehaviour
         
         SessionEvents.OnSessionError += HandleSessionError;
         SessionEvents.OnHostMigrationStarted += HandleHostMigrationStarted;
+        
+        SessionEvents.OnKickVoteFinished += HandleKickVoteFinished;
 
     }
 
@@ -83,6 +97,8 @@ public class LobbyUI : MonoBehaviour
         
         SessionEvents.OnSessionError -= HandleSessionError;
         SessionEvents.OnHostMigrationStarted -= HandleHostMigrationStarted;
+        
+        SessionEvents.OnKickVoteFinished -= HandleKickVoteFinished;
     }
 
     private void HandleStateChanged(GameState previousState, GameState newState)
@@ -204,13 +220,65 @@ public class LobbyUI : MonoBehaviour
     {
         pendingKickTargetSteamID = targetSteamID;
         
-        // todo: show reason panel here.
+        if (kickReasonPanel) kickReasonPanel.SetActive(true);
+        
+        if (kickReasonTargetText) kickReasonTargetText.text = $"Remove {GetPlayerDisplayName(targetSteamID)}?";
+    }
+    
+    private void SetupKickReasonDropdown()
+    {
+        if (kickReasonDropdown == null) return;
+
+        kickReasonDropdown.ClearOptions();
+
+        List<string> options = new List<string>
+        {
+            SessionKickReason.AfkNotParticipating.ToDisplayText(),
+            SessionKickReason.PreventingGroupFromContinuing.ToDisplayText(),
+            SessionKickReason.HarassmentAbusiveCommunication.ToDisplayText(),
+            SessionKickReason.CheatingOrExploiting.ToDisplayText(),
+            SessionKickReason.Other.ToDisplayText()
+        };
+
+        kickReasonDropdown.AddOptions(options);
+        kickReasonDropdown.SetValueWithoutNotify(0);
+    }
+
+    private void OnKickReasonConfirmed()
+    {
+        ConfirmKickVote(kickReasonDropdown.value);
+    }
+
+    private void HideKickReasonPanel()
+    {
+        if (kickReasonPanel != null) kickReasonPanel.SetActive(false);
+
+        pendingKickTargetSteamID = 0;
+    }
+
+    private string GetPlayerDisplayName(ulong steamID)
+    {
+        var sessionData = SessionManager.Instance.LatestClientSession;
+
+        if (sessionData.Players == null) return "player";
+
+        foreach (var player in sessionData.Players)
+        {
+            if (player.SteamID == steamID) return player.DisplayName;
+        }
+
+        return "player";
     }
 
     public void ConfirmKickVote(int reasonIndex)
     {
+        if (pendingKickTargetSteamID == 0) return;
+        
         SessionKickReason reason = (SessionKickReason)reasonIndex;
         SessionManager.Instance.RequestStartKickVote(pendingKickTargetSteamID, reason);
+        
+        HideKickReasonPanel();
+        
     }
     
     private void OnPrivacyChanged(int index)
@@ -271,6 +339,13 @@ public class LobbyUI : MonoBehaviour
     private void HandleSessionError(SessionErrorResponse error)
     {
         ShowMessage(error.Message, 3f);
+    }
+    
+    private void HandleKickVoteFinished(bool succeeded, string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))  message = succeeded ? "Kick vote passed." : "Kick vote failed.";
+        
+        ShowMessage(message, succeeded ? 3f : 2.5f);
     }
     
     private void HandleHostMigrationStarted(string newHostName)
