@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -75,3 +76,4 @@ public class ObjectGuidRegistryMerger : EditorWindow
         EditorUtility.DisplayDialog("Merge Complete", $"Merged A INTO B\n\nAdded: {added}\nReplaced: {replaced}\nMatches: {matches}", "OK");
     }
 }
+#endif
