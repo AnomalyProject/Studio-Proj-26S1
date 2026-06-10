@@ -1,5 +1,6 @@
 using System.Collections;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using PurrNet;
 
@@ -23,7 +24,10 @@ using PurrNet;
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
-    
+
+    [SerializeField] private float reconnectTimeoutSeconds = 60f;
+    public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
+
     // --- FIELDS
     private SessionPlayerRegistry registry;
     private SessionStateStore sessionStore;
@@ -32,9 +36,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private SessionLobbyCoordinator lobbyCoordinator;
     private SessionFlowCoordinator flowCoordinator;
     private SessionSettingsService settingsService;
+    private SessionKickVoteService kickVoteService;
 
     private Coroutine hostRegistrationCoroutine;
     private const float hostRegistrationTimeoutSeconds = 5f;
+
+    private readonly Dictionary<ulong, Coroutine> reconnectRoutines = new Dictionary<ulong, Coroutine>();
 
     // --- PROPERTIES
     // Convenience check for whether this machine isn the host.
@@ -56,12 +63,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public static event Action OnServerSessionChanged;
 
     public ElevatorLobbyState CurrentElevatorState => sessionStore.HasSession ? sessionStore.Current.ElevatorState : ElevatorLobbyState.Open;
-    
+
     // Singleton instance. Accessible globally so RPCs can be called from UI.
     public static SessionManager Instance { get; private set; }
 
     #endregion
-    
+
     #region Lifecycle
     /// <summary>
     /// Singleton setup. If a duplicate SessionManager exists, destroy it.
@@ -77,7 +84,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        
+
         registry = new SessionPlayerRegistry();
         sessionStore = new SessionStateStore();
         identityService = new SessionIdentityService();
@@ -85,6 +92,22 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         lobbyCoordinator = new SessionLobbyCoordinator(sessionStore, registry);
         flowCoordinator = new SessionFlowCoordinator(sessionStore);
         settingsService = new SessionSettingsService(sessionStore);
+        kickVoteService = new SessionKickVoteService(sessionStore, registry);
+    }
+    
+    private void Update()
+    {
+        if (!isServer || kickVoteService == null) return;
+
+        if (kickVoteService.Tick(Time.realtimeSinceStartup, out ClientKickVoteData data, out KickVoteOutcome outcome))
+        {
+            OnKickVoteUpdated_Client(data);
+
+            if (outcome == KickVoteOutcome.Expired)
+            {
+                OnKickVoteFinished_Client(false, "Kick vote expired.");
+            }
+        }
     }
 
     /// <summary>
@@ -126,13 +149,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         hostRegistrationCoroutine = null;
         latestClientSession = default;
         registry.Clear();
+        kickVoteService.Clear();
 
         if (GameStateManager.Instance != null)
         {
             GameStateManager.Instance.OnStateChanged -= HandleStateChanged;
         }
     }
-    
+
     /// <summary>
     /// Initializes a new SessionData with default settings and transitions to Lobby state.
     /// SessionData is created BEFORE the state transition to ensure it exists if anything
@@ -153,7 +177,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Host and Player Connection Handling
     /// <summary>
     ///  Registers the first connected player as the host and broadcasts them to the session.
@@ -223,6 +247,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         Debug.Log($"[SessionManager] Player connected: PlayerID {playerID} (Reconnect: {isReconnect})");
 
+        if (TryHandleReconnect(playerID, isReconnect)) return;
+
         if (registry.Count != 0) return;
 
         if (!sessionStore.HasSession)
@@ -242,6 +268,43 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
     }
 
+    private bool TryHandleReconnect(PlayerID playerID, bool isReconnect)
+    {
+        if (!sessionStore.HasSession) return false;
+        if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName)) return false;
+
+        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) return false;
+        
+        if (!isReconnect)
+        {
+            Debug.LogWarning($"[SessionManager] SteamID {steamID} tried to reconnect with a new PurrNet PlayerID {playerID}. Rejecting reconnect.");
+            return false;
+        }
+
+        SessionCommandResult result = playerCoordinator.TryReconnect(playerID, steamID);
+
+        if (!result.Success)
+        {
+            Debug.LogWarning($"[SessionManager] Reconnect failed for {steamID}: {result.Message}");
+            return false;
+        }
+
+        if (reconnectRoutines.ContainsKey(steamID))
+        {
+            StopCoroutine(reconnectRoutines[steamID]);
+            reconnectRoutines.Remove(steamID);
+        }
+
+        SendReconnectApproved(playerID);
+        SendSessionUpdate();
+        SendSessionSnapshot(playerID, SessionSnapshotFactory.Build(CurrentSession));
+        SendStateChangeToClient(playerID, GameStateManager.Instance.CurrentState);
+
+        Debug.Log($"[SessionManager] Player reconnected: {displayName} ({steamID}) Reconnect flag: {isReconnect}");
+
+        return true;
+    }
+
     /// <summary>
     /// PurrNet IPlayerEvents callback. Fires automatically when any player disconnects.
     /// Only runs server-side. SessionPlayerCoordinator removes the player from session data,
@@ -252,17 +315,48 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!asServer) return;
         Debug.Log($"[SessionManager] Player Disconnected: PlayerID {playerID}");
 
-        if (!playerCoordinator.TryHandleDisconnect(playerID, out ulong steamID))
+        float reconnectDeadline = Time.realtimeSinceStartup + reconnectTimeoutSeconds;
+
+        if (!playerCoordinator.TryMarkDisconnected(playerID, reconnectDeadline, out ulong steamID))
         {
             Debug.LogWarning($"[SessionManager] Disconnected PlayerID {playerID} was not in the session.");
             return;
         }
 
-        BroadcastPlayerLeft(playerID, steamID, "Disconnected");
+        SendSessionUpdate();
+
+        if (reconnectRoutines.ContainsKey(steamID))
+        {
+            StopCoroutine(reconnectRoutines[steamID]);
+            reconnectRoutines.Remove(steamID);
+        }
+
+        reconnectRoutines[steamID] = StartCoroutine(ReconnectTimeoutRoutine(playerID, steamID, reconnectDeadline));
+    }
+
+    private IEnumerator ReconnectTimeoutRoutine(PlayerID oldPlayerID, ulong steamID, float reconnectDeadline)
+    {
+        while (Time.realtimeSinceStartup < reconnectDeadline) yield return null;
+
+        reconnectRoutines.Remove(steamID);
+
+        if (CurrentSession == null) yield break;
+
+        if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) yield break;
+
+        SessionCommandResult result = playerCoordinator.TryRemoveDisconnectedPlayer(steamID, oldPlayerID);
+
+        if (!result.Success)
+        {
+            Debug.LogWarning($"[SessionManager] Failed to remove disconnected player {steamID}: {result.Message}");
+            yield break;
+        }
+
+        BroadcastPlayerLeft(oldPlayerID, steamID, "Reconnect timeout expired.");
     }
 
     #endregion
-    
+
     #region Session Management and Lobby State
 
 
@@ -314,7 +408,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Join, Leave, Ready Requests
     /// <summary>
     /// Client-to-server RPC: requests to join the active session.
@@ -328,6 +422,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public void RequestJoinSession(RPCInfo info = default)
     {
         PlayerID sender = info.sender;
+        
+        if (TryRestoreExistingSession(sender)) return;
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
@@ -340,10 +436,64 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             );
             return;
         }
+        
+        if (kickVoteService.IsKickedFromSession(steamID))
+        {
+            SendCommandErrorIfFailed(
+                sender,
+                SessionCommandResult.Failed(
+                    SessionErrorCode.InvalidState,
+                    "You were removed from this session."
+                )
+            );
+            return;
+        }
 
         SessionCommandResult result = TryAcceptJoin(sender, steamID, displayName);
 
         if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+    
+    private bool TryRestoreExistingSession(PlayerID sender)
+    {
+        if (!sessionStore.HasSession) return false;
+
+        if (!identityService.TryResolveReconnectJoiner(sender, out ulong steamID, out string displayName)) return false;
+
+        PlayerSessionInfo? existingPlayer = CurrentSession.GetPlayer(steamID);
+        if (!existingPlayer.HasValue) return false;
+
+        bool senderAlreadyRegistered = registry.TryGetSteamID(sender, out ulong registeredSteamID) && registeredSteamID == steamID;
+
+        bool wasWaitingToReconnect = CurrentSession.IsPlayerWaitingToReconnect(steamID);
+
+        if (!wasWaitingToReconnect && !senderAlreadyRegistered) return false;
+
+        if (wasWaitingToReconnect)
+        {
+            SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, steamID);
+
+            if (SendCommandErrorIfFailed(sender, reconnectResult)) return true; 
+        }
+        else
+        {
+            CurrentSession.SetPlayerConnected(steamID, true, 0f);
+        }
+
+        if (reconnectRoutines.ContainsKey(steamID))
+        {
+            StopCoroutine(reconnectRoutines[steamID]);
+            reconnectRoutines.Remove(steamID);
+        }
+
+        SendReconnectApproved(sender);
+        SendSessionUpdate();
+        SendSessionSnapshot(sender, SessionSnapshotFactory.Build(CurrentSession));
+        SendStateChangeToClient(sender, GameStateManager.Instance.CurrentState);
+
+        Debug.Log($"[SessionManager] Session restored for {displayName} ({steamID}). Was waiting: {wasWaitingToReconnect}");
+
+        return true;
     }
 
     /// <summary>
@@ -391,7 +541,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(sender, steamID, displayName, isHost: false);
         return result;
     }
-    
+
 
     /// <summary>
     /// Client-to-server RPC: requests to voluntarily leave the session.
@@ -464,7 +614,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         return result;
     }
-    
+
     #endregion
 
     #region Match Flow
@@ -497,7 +647,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (result.Success) SendSessionUpdate();
         return result;
     }
-    
+
     /// <summary>
     /// Client-to-server RPC: host requests to start the match. Three validations:
     /// 1. Sender is the host (authority check via SessionPlayerRegistry)
@@ -542,14 +692,14 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public bool TryStartMatchFromServer()
     {
         if (!isServer) return false;
-        
+
         SessionCommandResult result = flowCoordinator.TryStartMatch();
         if (!result.Success) Debug.LogWarning($"[SessionManager] Start match failed: {result.ErrorCode} - {result.Message}");
 
         return result.Success;
     }
     #endregion
-    
+
     #region Settings
     /// <summary>
     /// Client-to-server RPC: host requests to change session settings. Host-only.
@@ -597,7 +747,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         Debug.Log("[SessionManager] Settings updated.");
         return SessionCommandResult.Succeeded();
     }
-    
+
     /// <summary>
     /// Converts a string key and value into a typed session settings update.
     /// </summary>
@@ -653,9 +803,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Broadcasts and Client Sync
-    
+
     /// <summary>
     /// Broadcasts the current session snapshot to clients and notifies server listeners that the session changed.
     /// </summary>
@@ -664,7 +814,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         OnSessionUpdated_Client(SessionSnapshotFactory.Build(CurrentSession));
         OnServerSessionChanged?.Invoke();
     }
-    
+
     /// <summary>
     ///  Notifies clients and server systems that a player joined, then syncs state for non-host players.
     /// </summary>
@@ -697,7 +847,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendSessionUpdate();
         OnServerPlayerRemoved?.Invoke(playerID, steamID, reason);
     }
-    
+
     /// <summary>
     /// Server-to-all-clients broadcast: notifies every client that a player joined.
     /// This is the ONLY path that fires the PlayerJoined event. The server doesnt
@@ -766,7 +916,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (GameStateManager.Instance.CurrentState == stateToTransition) return;
         GameStateManager.Instance.RequestStateChange(stateToTransition);
     }
-    
+
     /// <summary>
     /// Sends the current session snapshot to one client and notifies local UI listeners.
     /// </summary>
@@ -777,12 +927,112 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         latestClientSession = clientData;
         SessionEvents.InvokeSessionDataChanged();
+        SessionEvents.InvokeLocalSessionReady();
         Debug.Log("[SessionManager] [Client] Received initial session snapshot.");
     }
-    
+
+    [TargetRpc]
+    private void SendReconnectApproved(PlayerID target)
+    {
+        SessionEvents.InvokeReconnectApproved();
+        Debug.Log("[SessionManager] [Client] Reconnect approved.");
+    }
 
     #endregion
     
+    #region Kick 
+    
+    [ServerRpc(requireOwnership: false)]
+    public void RequestStartKickVote(ulong targetSteamID, SessionKickReason reason, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        SessionCommandResult result = kickVoteService.TryStartVote(
+            sender,
+            targetSteamID,
+            reason,
+            Time.realtimeSinceStartup,
+            out ClientKickVoteData data
+        );
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+
+        OnKickVoteUpdated_Client(data);
+    }
+
+    [ServerRpc(requireOwnership: false)]
+    public void RequestCastKickVote(bool voteYes, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+
+        SessionCommandResult result = kickVoteService.TryCastVote(
+            sender,
+            voteYes,
+            Time.realtimeSinceStartup,
+            out ClientKickVoteData data,
+            out KickVoteOutcome outcome,
+            out ulong targetSteamID
+        );
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+
+        OnKickVoteUpdated_Client(data);
+
+        if (outcome == KickVoteOutcome.Passed)
+        {
+            ExecuteVoteKick(targetSteamID);
+        }
+        else if (outcome == KickVoteOutcome.Failed)
+        {
+            OnKickVoteFinished_Client(false, "Kick vote failed.");
+        }
+    }
+    
+    private void ExecuteVoteKick(ulong targetSteamID)
+    {
+        SessionCommandResult result = playerCoordinator.TryRemovePlayerBySteamID(targetSteamID, out PlayerID targetPlayerID);
+
+        if (!result.Success)
+        {
+            OnKickVoteFinished_Client(false, result.Message);
+            return;
+        }
+
+        if (reconnectRoutines.ContainsKey(targetSteamID))
+        {
+            StopCoroutine(reconnectRoutines[targetSteamID]);
+            reconnectRoutines.Remove(targetSteamID);
+        }
+
+        SendLocalPlayerKicked(targetPlayerID, "You were removed from this session by group vote.");
+        BroadcastPlayerLeft(targetPlayerID, targetSteamID, "Removed by group vote.");
+        OnKickVoteFinished_Client(true, "Player removed by group vote.");
+    }
+
+    [ObserversRpc]
+    private void OnKickVoteUpdated_Client(ClientKickVoteData data)
+    {
+        SessionEvents.InvokeKickVoteUpdated(data);
+    }
+
+    [ObserversRpc]
+    private void OnKickVoteFinished_Client(bool succeeded, string message)
+    {
+        SessionEvents.InvokeKickVoteFinished(succeeded, message);
+    }
+
+    [TargetRpc]
+    private void SendLocalPlayerKicked(PlayerID target, string message)
+    {
+        SessionEvents.InvokeLocalPlayerKicked(message);
+
+        if (SessionModeManager.Instance != null)
+        {
+            SessionModeManager.Instance.ReturnToMenu();
+        }
+    }
+    #endregion
+
     #region Error Handling
     /// <summary>
     /// Server-to-one-client RPC: sends a structured error to a specific client.
@@ -807,4 +1057,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
+    
+    
 }

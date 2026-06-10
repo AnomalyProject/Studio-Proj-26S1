@@ -28,12 +28,12 @@ public class PingLocation : NetworkBehaviour
             return;
         }
 
-        ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
+        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
 
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
-        if (playerInfo.HasValue) pingColor = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
+        if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
     public void CreatePing(InputAction.CallbackContext ctx)
