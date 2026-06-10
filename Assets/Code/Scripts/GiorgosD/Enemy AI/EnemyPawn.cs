@@ -269,7 +269,7 @@ public class EnemyPawn : NetworkBehaviour
         if (!agent.CalculatePath(hit.position, path))
             return false;
 
-        return path.status == NavMeshPathStatus.PathComplete;
+        return path.status == NavMeshPathStatus.PathComplete || path.status == NavMeshPathStatus.PathPartial;
     }
     #endregion
     
