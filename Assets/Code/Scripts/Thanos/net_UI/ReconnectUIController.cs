@@ -18,7 +18,6 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text toastText;
 
     [Header("Settings")]
-    [SerializeField] private float timeoutDuration = 30f;
     [SerializeField] private float sliderSpeed = 2f;
 
     private IReconnect _networkService;
@@ -95,7 +94,10 @@ public class ReconnectUIController : MonoBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        float timeLeft = timeoutDuration;
+        // changed this because the server should own the reconnect timeout. The UI only displays it.
+        float timeLeft = _networkService != null ? _networkService.ReconnectTimeoutSeconds : 30f;
+
+        timeLeft = Mathf.Max(1f, timeLeft);
 
         while (timeLeft > 0)
         {
