@@ -13,7 +13,6 @@ public class IdleState : BaseState
         base.Enter();
 
         body.Search(true);
-        // Idle animation/search animation (looking left and right animation)
         
         timer = brain.IdleTime;
         body.OnPlayerSpotted.AddListener(HandlePlayerSpotted);
