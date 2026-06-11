@@ -191,7 +191,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
 
-        int quantityRemoved = Inventory.Remove(slotIndex, stack.GetQuantity());
+        int quantityRemoved = Inventory.Remove(slotIndex, 1);
         if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;
 
         Vector3 throwDirection = itemHolder.transform.forward + Vector3.up;
