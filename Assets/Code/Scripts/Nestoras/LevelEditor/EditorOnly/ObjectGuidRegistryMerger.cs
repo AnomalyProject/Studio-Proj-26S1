@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using static ObjectGuidRegistry;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ public class ObjectGuidRegistryMerger : EditorWindow
     private ObjectGuidRegistry destinationRegistry; // B
 
     [MenuItem("Window/ObjectGUIDRegistryMerger")]
-    private static void ShowWindow() => GetWindow<ObjectGuidRegistryMerger>("Registry Merger");
+    private static void ShowWindow() => GetWindow<ObjectGuidRegistryMerger>("ObjectGUIDRegistry Merger");
 
     private void OnGUI()
     {
@@ -17,11 +18,11 @@ public class ObjectGuidRegistryMerger : EditorWindow
         EditorGUILayout.HelpBox("This tool merges an ObjectGUIDRegistry over another. The data of A will be appended into B.\nIf A & B contain conflicts, A will be prioritized, while B will be overriden.\nA is never modified.\nB will be changed and saved.", MessageType.Warning);
         GUILayout.Space(10);
 
-        EditorGUILayout.LabelField("Source Registry (A)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Source ObjectGUIDRegistry (A)", EditorStyles.boldLabel);
         sourceRegistry = (ObjectGuidRegistry)EditorGUILayout.ObjectField(sourceRegistry, typeof(ObjectGuidRegistry), false);
         GUILayout.Space(5);
 
-        EditorGUILayout.LabelField("Destination Registry (B)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Destination ObjectGUIDRegistry (B)", EditorStyles.boldLabel);
         destinationRegistry = (ObjectGuidRegistry)EditorGUILayout.ObjectField(destinationRegistry, typeof(ObjectGuidRegistry), false);
         GUILayout.Space(20);
 
@@ -37,18 +38,18 @@ public class ObjectGuidRegistryMerger : EditorWindow
     private static void Merge(ObjectGuidRegistry source, ObjectGuidRegistry destination)
     {
         Undo.RecordObject(destination, "Merge ObjectGuidRegistry");
-        Dictionary<string, ObjectGuidRegistry.Entry> destinationLookup = new Dictionary<string, ObjectGuidRegistry.Entry>();
-        foreach (var entry in destination.entries) if (!string.IsNullOrEmpty(entry.guid)) destinationLookup[entry.guid] = entry;
+        Dictionary<string, Entry> destinationLookup = new Dictionary<string, Entry>();
+        foreach (Entry entry in destination.entries) if (!string.IsNullOrEmpty(entry.guid)) destinationLookup[entry.guid] = entry;
 
         int added = 0;
         int replaced = 0;
         int matches = 0;
 
-        foreach (var sourceEntry in source.entries)
+        foreach (Entry sourceEntry in source.entries)
         {
             if (string.IsNullOrEmpty(sourceEntry.guid)) continue;
 
-            if (destinationLookup.TryGetValue(sourceEntry.guid, out var destinationEntry))
+            if (destinationLookup.TryGetValue(sourceEntry.guid, out Entry destinationEntry))
             {
                 if (destinationEntry.obj == sourceEntry.obj)
                 {
@@ -60,7 +61,7 @@ public class ObjectGuidRegistryMerger : EditorWindow
             }
             else
             {
-                destination.entries.Add(new ObjectGuidRegistry.Entry
+                destination.entries.Add(new Entry
                 {
                     guid = sourceEntry.guid,
                     obj = sourceEntry.obj
