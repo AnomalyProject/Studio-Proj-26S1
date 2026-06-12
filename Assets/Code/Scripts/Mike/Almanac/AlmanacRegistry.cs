@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -64,6 +65,45 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
         }
 
         return entries;
+    }
+    public static IEnumerable<AlmanacEntryInfo> GetEntriesByCategory(AlmanacType type) =>
+    GetAllEntries().Where(e => e.entryData.EntryType == type).OrderBy(e => e.entryData.name);
+    public static bool CategoryHasNewEntries(AlmanacType type) =>
+    GetAllEntries().Any(e => e.entryData.EntryType == type && e.discovered && !e.viewed);
+
+    /// <summary>
+    /// Returns a nomalized float 0-1 of the total completion.
+    /// </summary>
+    /// <returns></returns>
+    public static float GetTotalCompletion()
+    {
+        float total = Registry.Count;
+        if (total == 0) return 1;
+
+        float aquired = RefrenceManager.CurrentSave.almanacEntries.Count;
+        return aquired / total;
+    }
+
+    /// <summary>
+    /// Returns a normalized float 0-1 of a specific almanac type.
+    /// </summary>
+    /// <param name="entryType"></param>
+    /// <returns></returns>
+    public static float GetCategoryCompletion(AlmanacType entryType)
+    {
+        var entries = Registry.Where(entry => entry.EntryType == entryType);
+
+        float total = entries.Count();
+        if (total == 0) return 1;
+
+        float aquired = 0;
+
+        foreach(var e in entries)
+        {
+            if (IsEntryDiscovered(e.ID, out _)) aquired++;
+        }
+
+        return aquired / total;
     }
     #endregion
 
