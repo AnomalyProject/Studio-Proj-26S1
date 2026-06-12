@@ -1,9 +1,8 @@
-using PurrNet;
-using Steamworks;
-using System;
-using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine;
+using PurrNet;
+using System;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
