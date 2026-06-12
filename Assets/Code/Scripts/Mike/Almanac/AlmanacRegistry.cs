@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -116,4 +117,25 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
         foreach(var entry in Resources.LoadAll<AlmanacEntrySO>("Almanac")) _registry.Add(entry);
     }
     #endregion
+
+    public static void DebugAlmanac()
+    {
+        string output = "[ALMANAC]\n\n";
+
+        output += $"Registry Count: {Registry.Count}\n";
+        output += $"Total Progress: ({GetTotalCompletion()}/1)\n";
+        output += "\n";
+        foreach(var type in Enum.GetValues(typeof(AlmanacType)))
+        {
+            output += $"[{type.ToString()}] Progress: ({GetCategoryCompletion((AlmanacType)type)}/1) ---\n";
+
+            IEnumerable<AlmanacEntryInfo> typeEntries = GetEntriesByCategory((AlmanacType)type);
+            foreach(var entry in typeEntries)
+            {
+                output += $"{entry.entryData.CollectibleName} | Discovered: {entry.discovered} | Viewed: {entry.viewed}\n";
+            }
+            output += "\n";
+        }
+        Debug.Log(output);
+    }
 }

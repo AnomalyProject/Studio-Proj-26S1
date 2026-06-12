@@ -2,7 +2,7 @@ using UnityEngine;
 
 public enum AlmanacType
 {
-    Anomaly,
-    Gadget,
-    Area
+    Anomalies,
+    Gadgets,
+    Areas
 }
