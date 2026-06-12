@@ -7,6 +7,8 @@ public class AlmanacDiscovery : MonoBehaviour
     public void DicoverEntry() => Discover(almanacEntry);
     public static void Discover(AlmanacEntrySO entry)
     {
+        if (entry == null) return;
+
         if (RefrenceManager.CurrentSave.almanacEntries.TryAdd(entry.ID, false))
         {
             SaveSystem.QuickSave(RefrenceManager.CurrentSave);
