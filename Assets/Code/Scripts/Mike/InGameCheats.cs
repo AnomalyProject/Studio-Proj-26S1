@@ -27,11 +27,15 @@ public class InGameCheats : MonoBehaviour
         DevConsole.CommandData clearsave = new DevConsole.CommandData("Deletes all save files.", ClearSave);
         DevConsole.RegisterCommand("clearsave", clearsave);
 
+        DevConsole.CommandData almanac = new DevConsole.CommandData("Debugs your almanac progress.", DebugAlmanac);
+        DevConsole.RegisterCommand("almanac", almanac);
+
         NoClip.CreateNoClip();
 
         Registered = true;
     }
 
+    private void DebugAlmanac(string[] args) => AlmanacRegistry.DebugAlmanac();
     private void ClearSave(string[] obj) => RefrenceManager.DeleteAllSaves();
     private void RichCheat(string[] args)
     {
