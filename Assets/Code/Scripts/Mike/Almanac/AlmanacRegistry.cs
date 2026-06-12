@@ -33,8 +33,21 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
     #endregion
 
     #region Exposed & Control
+    /// <summary>
+    /// Does the entry exist in the current save file?
+    /// </summary>
+    /// <returns>True if the entry exists.</returns>
     public static bool IsEntryDiscovered(string entryID, out bool viewed) => 
         RefrenceManager.CurrentSave.almanacEntries.TryGetValue(entryID, out viewed);
+
+    /// <inheritdoc cref="IsEntryDiscovered(string, out bool)"/>
+    public static bool IsEntryDiscovered(AlmanacEntrySO entry, out bool viewed) => IsEntryDiscovered(entry.ID, out viewed);
+
+    /// <summary>
+    /// Marks an entry as viewed if discovered.
+    /// </summary>
+    /// <param name="entryID"></param>
+    /// <param name="quicksave"></param>
     public static void MarkViewed(string entryID, bool quicksave)
     {
         if(IsEntryDiscovered(entryID, out bool viewed) && !viewed)
@@ -45,6 +58,13 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
             SaveSystem.QuickSave(RefrenceManager.CurrentSave);
         }
     }
+
+    /// <inheritdoc cref="MarkViewed(string, bool)"/>
+    public static void MarkViewed(AlmanacEntrySO entry, bool quicksave) => MarkViewed(entry.ID, quicksave);
+
+    /// <summary>
+    /// Marks all discovered entries as viewed.
+    /// </summary>
     public static void MarkAllViewed()
     {
         foreach(string discoveredKey in RefrenceManager.CurrentSave.almanacEntries.Keys)
@@ -54,6 +74,11 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
 
         SaveSystem.QuickSave(RefrenceManager.CurrentSave);
     }
+
+    /// <summary>
+    /// Every entry in the registry, disovered or not.
+    /// </summary>
+    /// <returns></returns>
     public static IEnumerable<AlmanacEntryInfo> GetAllEntries()
     {
         List<AlmanacEntryInfo> entries = new();
@@ -67,8 +92,20 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
 
         return entries;
     }
+
+    /// <summary>
+    /// Every entry in a category. Discovered or not.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public static IEnumerable<AlmanacEntryInfo> GetEntriesByCategory(AlmanacType type) =>
     GetAllEntries().Where(e => e.entryData.EntryType == type).OrderBy(e => e.entryData.name);
+
+    /// <summary>
+    /// Wheather a category has any entry that is not marked as viewed.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public static bool CategoryHasNewEntries(AlmanacType type) =>
     GetAllEntries().Any(e => e.entryData.EntryType == type && e.discovered && !e.viewed);
 
