@@ -269,7 +269,7 @@ public class EnemyPawn : NetworkBehaviour
         if (!agent.CalculatePath(hit.position, path))
             return false;
 
-        return path.status == NavMeshPathStatus.PathComplete || path.status == NavMeshPathStatus.PathPartial;
+        return path.status == NavMeshPathStatus.PathComplete;
     }
     #endregion
     
@@ -283,10 +283,11 @@ public class EnemyPawn : NetworkBehaviour
         
         if (cachedPlayer != null)
         {
-            if (IsTargetVisible(cachedPlayer.transform))
+            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position))
             {
                 hasPlayer = true;
                 timer = 0f;
+                InvokeSpotted(cachedPlayer);
                 return;
             }
             
@@ -303,6 +304,7 @@ public class EnemyPawn : NetworkBehaviour
                 {
                     hasPlayer = true;
                     timer = 0f;
+                    InvokeSpotted(cachedPlayer);
                     return;
                 }
             }
@@ -322,7 +324,7 @@ public class EnemyPawn : NetworkBehaviour
                 cachedPlayer = player;
                 hasPlayer = true;
                 timer = 0f;
-                InvokeSpotted(player);
+                InvokeSpotted(cachedPlayer);
                 break; 
             }
         }
