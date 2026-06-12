@@ -1,6 +1,7 @@
 using PurrNet;
 using UnityEngine;
-public class MovingObject : MonoBehaviour
+[RequireComponent(typeof(NetworkTransform))]
+public class MovingObject : NetworkBehaviour
 {
     [Header("Movement")]
     [SerializeField, Tooltip("Applies Movement")] private bool doesMove = true;
@@ -20,6 +21,7 @@ public class MovingObject : MonoBehaviour
 
     private void Update()
     {
+        if (!isServer) return;
         DoMove(Time.deltaTime);
         DoRotate(Time.deltaTime);
     }
