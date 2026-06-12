@@ -16,4 +16,9 @@ public class SaveData
     /// Hashset of <see cref="NarrationEntry.TriggerID"/>'s that have already fired (firstTimeOnly).
     /// </summary>
     public HashSet<string> narratorFiredIDs = new();
+
+    /// <summary>
+    /// Dictionary with ID keys and viewed bool values for almanac entries.
+    /// </summary>
+    public Dictionary<string, bool> almanacEntries = new();
 }
