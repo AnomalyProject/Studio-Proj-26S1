@@ -58,6 +58,8 @@ public class ShoveComponent : NetworkBehaviour
     /// <param name="context"></param>
     public void OnShovePreformed(InputAction.CallbackContext context)
     {
+        if (!context.performed)
+            return;
         StartShove();
     }
     
@@ -86,8 +88,11 @@ public class ShoveComponent : NetworkBehaviour
                 Vector3 pushDir = target.transform.position - transform.position;
                 pushDir.y = 0;
                 pushDir.Normalize();
-                
-                PushPlayer(target, pushDir * shoveForce);
+                //different angles for difference in side and front/back force
+                float angle = Vector3.SignedAngle(transform.forward, pushDir, Vector3.up);
+                float sideFactor = Mathf.Abs(Mathf.Sin(angle * Mathf.Deg2Rad));
+                float finalForce = shoveForce * Mathf.Lerp(0.5f, 1f, sideFactor);
+                PushPlayer(target, pushDir * finalForce);
 
                 StartCoroutine(CooldownShove());
 
@@ -149,6 +154,7 @@ public class ShoveComponent : NetworkBehaviour
         if (anim != null)
         {
             anim.ApplyShove(force);
+            anim.ApplyShoveLocomotion(force);
             anim.SetStunned(true);
         }
 
@@ -170,7 +176,7 @@ public class ShoveComponent : NetworkBehaviour
     #endregion
     private IEnumerator RecoverRoutine()
     {
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.7f);
         FPSController fps = GetComponent<FPSController>();
 
         if (fps != null)
@@ -181,12 +187,12 @@ public class ShoveComponent : NetworkBehaviour
         PlayerAnimatorController anim =
             GetComponent<PlayerAnimatorController>();
 
-        if (anim != null)
+       /* if (anim != null)
         {
             anim.GetUp();
-        }
+        }*/
 
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.3f);
 
         if (anim != null)
         {

@@ -86,7 +86,7 @@ public class FPSController : MonoBehaviour
     private void Update()
     {
         if (!IsLocalPlayer) return;
-        if (IsStunned) return;
+       // if (IsStunned) return;
         HandleGroundCheck();
         ApplyMovement();
         HandleGravity();

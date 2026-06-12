@@ -27,7 +27,10 @@ public class PlayerAnimatorController : NetworkBehaviour
     //Lerp variables
     private float currentMoveX;
     private float currentMoveY;
-
+    //shove locomotion
+    private float externalMoveX;
+    private float externalMoveY;
+    
     [SerializeField] private float lerpSpeed = 20f;
 
     private void Awake()
@@ -52,9 +55,10 @@ public class PlayerAnimatorController : NetworkBehaviour
         shoveXHash = Animator.StringToHash("ShoveX");
         shoveYHash = Animator.StringToHash("ShoveY");
         shovedHash = Animator.StringToHash("Shoved");
-        getUpHash = Animator.StringToHash("GetUp");
+       // getUpHash = Animator.StringToHash("GetUp");
         isStunnedHash = Animator.StringToHash("IsStunned");
         pushHash = Animator.StringToHash("Push");
+        
     }
 
     // Update is called once per frame
@@ -67,6 +71,9 @@ public class PlayerAnimatorController : NetworkBehaviour
         
         
         Vector2 moveInput = fpsController.MoveInput;
+        moveInput.x += externalMoveX;
+        moveInput.y += externalMoveY;
+        moveInput = Vector2.ClampMagnitude(moveInput,1f);
         currentMoveX = Mathf.Lerp(currentMoveX, moveInput.x, Time.deltaTime * lerpSpeed);
         currentMoveY = Mathf.Lerp(currentMoveY, moveInput.y, Time.deltaTime * lerpSpeed);
         UpdateAnimator(currentMoveX, currentMoveY, fpsController.IsCrouching , fpsController.IsSprinting);
@@ -87,32 +94,59 @@ public class PlayerAnimatorController : NetworkBehaviour
     }
     public void ApplyShove(Vector3 force)
     {
+       
         Vector3 localDir = transform.InverseTransformDirection(force.normalized);
 
         animator.SetFloat(shoveXHash, localDir.x);
         animator.SetFloat(shoveYHash, localDir.z);
+       
 
         animator.SetTrigger(shovedHash);
+        
     }
+    public void ApplyShoveLocomotion(Vector3 force)
+    {
+        Vector3 local = transform.InverseTransformDirection(force);
+        externalMoveX = Mathf.Clamp(local.x / 5f, -1f, 1f);
+        externalMoveY = Mathf.Clamp(local.z / 5f, -1f, 1f);
+        StartCoroutine(ClearShoveLocomotion());
+    }
+
     public void SetStunned(bool state)
     {
         animator.SetBool(isStunnedHash, state);
     }
-    public void GetUp()
+   /* public void GetUp()
     {
         animator.SetTrigger(getUpHash);
-    }
+    }*/
     public void PlayPushAnimation()
     {
-        animator.SetLayerWeight(1, 1f);//for override base layer
+       
         animator.SetTrigger(pushHash);
-        StartCoroutine(DisablePushLayer());
+        
     }
-    private IEnumerator DisablePushLayer()
+    
+    
+    private IEnumerator ClearShoveLocomotion()
     {
-        yield return new WaitForSeconds(1f); // duration of push
+        float t = 0f;
+        float startX = externalMoveX;
+        float startY = externalMoveY;
 
-        animator.SetLayerWeight(1, 0f); //resets weight
+        while (t < 1.8)
+        {
+            t += Time.deltaTime;
+            float k = t / 1.8f;
+
+            externalMoveX = Mathf.Lerp(startX, 0f, k);
+            externalMoveY = Mathf.Lerp(startY, 0f, k);
+
+            yield return null;
+        }
+
+        externalMoveX = 0f;
+        externalMoveY = 0f;
     }
     /*  // Since moveInput is private in FPSController
       // Converts world velocity to local space and clamps it for Animator parameters
