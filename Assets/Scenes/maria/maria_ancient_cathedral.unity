@@ -264,6 +264,58 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5264746329921483345, guid: fa2cbeefa9004514582bd015367f49b0, type: 3}
   m_PrefabInstance: {fileID: 2565449358569164198}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &807105803
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 807105805}
+  - component: {fileID: 807105804}
+  m_Layer: 0
+  m_Name: Statues Look At Player
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &807105804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807105803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d02e86fb22314d40aa91632416e4279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModificationApplier
+  levelModification: {fileID: 11400000, guid: bc9a89e47dfe8e948af6d7a1fb8eb2fa, type: 2}
+  applied: 0
+  onEnable:
+    m_PersistentCalls:
+      m_Calls: []
+  onDisable:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &807105805
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807105803}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 510467578}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963237074
 GameObject:
   m_ObjectHideFlags: 0
@@ -1881,6 +1933,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5264746329921483345, guid: fa2cbeefa9004514582bd015367f49b0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1988223726}
+    - targetCorrespondingSourceObject: {fileID: 5264746329921483345, guid: fa2cbeefa9004514582bd015367f49b0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 807105805}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fa2cbeefa9004514582bd015367f49b0, type: 3}
 --- !u!1660057539 &9223372036854775807
