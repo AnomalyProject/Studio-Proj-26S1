@@ -7573,6 +7573,7 @@ GameObject:
   - component: {fileID: 1202477957096887876}
   - component: {fileID: 3634556146931483452}
   - component: {fileID: 453214319724138494}
+  - component: {fileID: -2292632747952205079}
   m_Layer: 0
   m_Name: Anomaly Detector Pickup
   m_TagString: Untagged
@@ -7770,7 +7771,19 @@ MonoBehaviour:
   _visitiblityRules: {fileID: 0}
   onPickup:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: -2292632747952205079}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   itemStack:
     itemData: {fileID: 11400000, guid: fd588f7e20f4d1f4fbcab405a1f8684f, type: 2}
     quantity: 1
@@ -7795,3 +7808,17 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2756328, y: 0.65313184, z: 0.1051022}
   m_Center: {x: -0.003488839, y: 0.20148045, z: 0.004315514}
+--- !u!114 &-2292632747952205079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9216265108855166085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: bb29c254a5937954e96a9e66c1c49a70, type: 2}

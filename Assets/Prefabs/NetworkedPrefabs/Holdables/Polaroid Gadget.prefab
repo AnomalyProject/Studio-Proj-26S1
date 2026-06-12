@@ -497,6 +497,7 @@ GameObject:
   - component: {fileID: 2409669826641473870}
   - component: {fileID: 7690024165470231851}
   - component: {fileID: 9098521830460307018}
+  - component: {fileID: -9001537268096130859}
   m_Layer: 8
   m_Name: Polaroid Gadget
   m_TagString: Untagged
@@ -547,6 +548,21 @@ MonoBehaviour:
   - {fileID: 5983155697810134414}
   canvases:
   - {fileID: 3329990867662770109}
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -9001537268096130859}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   totalCharges: 4
   cooldownSeconds: 1
   pictureItemData: {fileID: 11400000, guid: 7f8a95a9e556b76469335a98946b3b14, type: 2}
@@ -681,6 +697,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-9001537268096130859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4864577436276923018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: 33ec15bd4f441d547b8d784a9900a4f5, type: 2}
 --- !u!1 &5571124697425360021
 GameObject:
   m_ObjectHideFlags: 0
