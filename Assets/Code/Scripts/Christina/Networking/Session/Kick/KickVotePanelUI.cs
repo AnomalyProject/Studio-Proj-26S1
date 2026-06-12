@@ -36,10 +36,30 @@ public class KickVotePanelUI : MonoBehaviour
         root.SetActive(data.HasActiveVote);
 
         if (!data.HasActiveVote) return;
+        
+        bool isTarget = false;
+        
+        if (SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
+        {
+            isTarget = data.TargetSteamID == localSteamID;
+        }
 
-        titleText.text = $"Remove {data.TargetDisplayName}?";
+        if (isTarget)
+        {
+            titleText.text = "A vote has started to remove you";
+            progressText.text = "Waiting for the group decision...";
+            yesButton.gameObject.SetActive(false);
+            noButton.gameObject.SetActive(false);
+        }
+        else
+        {
+            titleText.text = $"Remove {data.TargetDisplayName}?";
+            progressText.text = $"{data.YesVotes}/{data.RequiredYesVotes} yes votes";
+            yesButton.gameObject.SetActive(true);
+            noButton.gameObject.SetActive(true);
+        }
+        
         reasonText.text = data.Reason.ToDisplayText();
-        progressText.text = $"{data.YesVotes}/{data.RequiredYesVotes} yes votes";
         timerText.text = $"{Mathf.CeilToInt(data.RemainingSeconds)}s";
     }
 
