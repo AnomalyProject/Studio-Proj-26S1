@@ -3,10 +3,8 @@ using PurrNet;
 
 /// <summary>
 /// Rotates this object to always face the nearest player.
-/// Only the server drives rotation; a NetworkTransform component
-/// on this GameObject replicates the result to clients.
 /// </summary>
-public class TurnToLookAt : NetworkBehaviour
+public class TurnToLookAt : MonoBehaviour
 {
     #region Serialized Fields
     [Header("Facing Settings")]
@@ -21,26 +19,22 @@ public class TurnToLookAt : NetworkBehaviour
     #endregion
 
     #region Private Fields
-    private Transform _target;
-    private float _nextRefresh;
+    private Transform target;
+    private float nextRefresh;
     #endregion
 
     #region Unity Callbacks
     private void Update()
     {
-        // Only the server computes and applies rotation.
-        // NetworkTransform propagates the result to all clients.
-        if (!isServer) return;
-
-        if (Time.time >= _nextRefresh)
+        if (Time.time >= nextRefresh)
         {
-            _target = FindNearestPlayer();
-            _nextRefresh = Time.time + targetRefreshInterval;
+            target = FindNearestPlayer();
+            nextRefresh = Time.time + targetRefreshInterval;
         }
 
-        if (_target == null) return;
+        if (target == null) return;
 
-        FaceTarget(_target.position);
+        FaceTarget(target.position);
     }
     #endregion
 
