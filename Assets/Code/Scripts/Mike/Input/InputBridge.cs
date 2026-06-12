@@ -34,6 +34,9 @@ public static class InputBridge
 
         [InputContextConfig(mapName: nameof(IA_Global.Chat), cursorVisible: true)]
         Radial,
+
+        [InputContextConfig(mapName: nameof(IA_Global.UI), cursorVisible: true)]
+        Almanac,
     }
     private struct MapCursorPair
     {
