@@ -48,6 +48,7 @@ public class PlayerBodyColour : NetworkBehaviour
 
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
+        Debug.LogWarning($"[BodyColour] OnSpawned: ownerSteamID={ownerSteamID}, playerInfo.HasValue={playerInfo.HasValue}");
         if (playerInfo.HasValue)
         {
             ApplyColour(playerInfo.Value.GetPlayerColor());
