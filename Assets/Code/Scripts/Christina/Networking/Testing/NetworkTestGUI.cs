@@ -16,6 +16,9 @@ public class NetworkTestUI : MonoBehaviour
 
     private const int MaxLogEntries = 5;
 
+    string passwordAttempt = "test";
+    RPCInfo info = default;
+
     private void OnEnable()
     {
         SessionEvents.OnPlayerJoined += LogPlayerJoined;
@@ -135,7 +138,7 @@ public class NetworkTestUI : MonoBehaviour
 
         if (GUILayout.Button("Request Join"))
         {
-            SessionManager.Instance.RequestJoinSession();
+            SessionManager.Instance.RequestJoinSession(passwordAttempt, info = default);
         }
 
         if (GUILayout.Button("Toggle Ready"))
