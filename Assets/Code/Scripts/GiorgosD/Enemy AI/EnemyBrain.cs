@@ -1,7 +1,6 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
@@ -129,7 +128,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         if (!isServer) return;
 
         if (currentStateID == StateID.Alert || currentStateID == StateID.Investigate) return;
-
+        
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
         ChangeState(StateID.Alert, alertedBy.transform);
     }
