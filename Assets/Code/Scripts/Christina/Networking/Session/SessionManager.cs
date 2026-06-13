@@ -25,6 +25,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
 
+    
+    //todelete: dummy comment
     [SerializeField] private float reconnectTimeoutSeconds = 60f;
     public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
 
