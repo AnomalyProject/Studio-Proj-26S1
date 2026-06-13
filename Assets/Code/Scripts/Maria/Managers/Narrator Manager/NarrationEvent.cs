@@ -1,3 +1,4 @@
+using UnityEngine.Events;
 using UnityEngine;
 
 /// <summary>
@@ -9,6 +10,7 @@ public class NarrationEvent : MonoBehaviour
 {
     [SerializeField] private bool triggerOnce = false;
     [SerializeField] private NarrationEntry entry;
+    [SerializeField] private UnityEvent onNarrationFinished;
 
     public void PlayNarration()
     {
@@ -17,6 +19,9 @@ public class NarrationEvent : MonoBehaviour
         if (NarratorManager.Instance.TryTriggerNarration(entry) && triggerOnce)
         {
             NarratorManager.Instance.AddIgnoredEntry(entry);
+            Invoke(nameof(OnNarrationFinsihed), entry.Clip.length);
         }
     }
+
+    private void OnNarrationFinsihed() => onNarrationFinished?.Invoke();
 }

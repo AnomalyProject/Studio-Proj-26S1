@@ -28,6 +28,7 @@ public class EnvironmentLightingManager : MonoBehaviour
         public float ambientReflectionIntensity = 1f;
         public Color ambientShadowColor = new Color(0.42f, 0.478f, 0.627f);
         public Color directionalLightColor;
+        public Material skybox;
     }
 
     public void SetEnvironmentLighting(int index)
@@ -77,5 +78,6 @@ public class EnvironmentLightingManager : MonoBehaviour
         RenderSettings.reflectionIntensity = targetReflectionIntensity;
         RenderSettings.ambientLight = targetAmbientLight;
         if (directionalLight != null) directionalLight.color = targetDirectionalLightColor;
+        if (targetSettings.skybox != null) RenderSettings.skybox = targetSettings.skybox;
     }
 }
