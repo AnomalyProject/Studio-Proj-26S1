@@ -131,7 +131,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
                 if (identity != null && identity.isSpawned)
                 {
-                    SessionManager.Instance.RequestJoinSession();
+                    SessionManager.Instance.RequestJoinSession("");
                     reconnectApprovalRoutine = null;
                     yield break;
                 }
