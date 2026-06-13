@@ -177,7 +177,8 @@ public class TutorialManager : NetworkBehaviour
                 OnObjectiveUpdated.Invoke("Purchase a flashlight.");
                 break;
             case 5: // Return from void (collectibe tutorial)
-                OnObjectiveUpdated.Invoke($"Pick up {collectible.GetComponentInChildren<CollectibleInteractable>().CollectibleData.name}");
+                CollectibleInteractable collectibleInteractable = collectible.GetComponentInChildren<CollectibleInteractable>();
+                if (collectibleInteractable != null) OnObjectiveUpdated.Invoke($"Pick up {collectibleInteractable.CollectibleData.name}");
                 break;
         }
     }
