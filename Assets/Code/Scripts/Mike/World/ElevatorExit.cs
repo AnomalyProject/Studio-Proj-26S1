@@ -95,6 +95,8 @@ public class ElevatorExit : LevelExitPoint
     [ContextMenu("Open Doors")]
     public void OpenDoors()
     {
+        Debug.Log($"{StackTraceUtility.ExtractStackTrace()}");
+
         anim.SetTrigger("Open");
         audioSource.Stop();
 
