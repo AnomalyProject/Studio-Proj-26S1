@@ -30,7 +30,7 @@ public class TutorialManager : NetworkBehaviour
     private bool votedAnomalyPresent;
 
     public UnityEvent<float> OnVoidTimerTick;
-    public UnityEvent<int> onProgressChanged;
+    public UnityEvent<string> onFloorChanged;
     public UnityEvent AfterFirstElevator, AfterSecondElevator, AfterEnteringVoid, LeavingVoid, OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
 
     private void Awake()
@@ -49,7 +49,6 @@ public class TutorialManager : NetworkBehaviour
         activeLevel.gameObject.SetActive(true);
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
     }
-
     private void OnEnable() => MapOrientor.OnElevatorInteracted += HandleElevatorButtonPressed;
     private void OnDisable() => MapOrientor.OnElevatorInteracted -= HandleElevatorButtonPressed;
     protected override void OnDestroy()
@@ -83,13 +82,13 @@ public class TutorialManager : NetworkBehaviour
                 break;
             case 3: // Entering Void (vending machine tutorial)
                 SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
-                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(1);
                 ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (passcode needed for it to open again)
+                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(1);
                 break;
             case 4: // Returning from void (collectibe tutorial)
                 QueueElevatorInteraction(entryEnabled: false, exitEnabled: true);
-                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
                 ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (pick up collectible for it to open again)
+                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
                 break;
         }
     }
@@ -125,6 +124,24 @@ public class TutorialManager : NetworkBehaviour
 
         mapOrientor.EntryElevator.SetChoice(true);
         mapOrientor.ExitElevator.SetChoice(false);
+    }
+    public void UpdateFloorNumbers()
+    {
+        switch (CurrentProgress)
+        {
+            case 1: // First anomaly (forced correct decision)
+                onFloorChanged.Invoke("1/4");
+                break;
+            case 2: // No Anomaly
+                onFloorChanged.Invoke("2/4");
+                break;
+            case 3: // Second anomaly (player can vote incorrectly)
+                onFloorChanged.Invoke("3/4");
+                break;
+            case 5:
+                onFloorChanged.Invoke("4/4");
+                break;
+        }
     }
     // On Doors Fully Opened
     public void Narrate()

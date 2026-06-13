@@ -7,13 +7,13 @@ using System;
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
 {
-    [Serializable] struct InidicationMessage
+    [Serializable] protected struct InidicationMessage
     {
         public Color indicationColor;
         public Sprite indicationSprite;
     }
 
-    [SerializeField, Header("Animation Events")] UnityEvent OnFullyClosed;
+    [SerializeField, Header("Animation Events")] private UnityEvent OnFullyClosed;
     [SerializeField] private UnityEvent OnFullyOpened, OnStartOpen;
     [SerializeField] private Renderer[] anomalyColorIndicators;
     [SerializeField] private Image anomalyImage;
