@@ -20,7 +20,6 @@ public class PingLocation : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
-        ulong ownerSteamID = (ulong)owner.Value.id;
 
         if (asServer)
         {
@@ -29,28 +28,30 @@ public class PingLocation : NetworkBehaviour
             return;
         }
 
+        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
+
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
         if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
-    public void CreatePing(InputAction.CallbackContext ctx, int index)
+    public void CreatePing(InputAction.CallbackContext ctx)
     {
         if (!ctx.started) return;
 
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit hit, pingMaxDistance, pingLayer))
         {
-            CreatePing_ServerRpc(hit.point, pingColor, index);
+            CreatePing_ServerRpc(hit.point, pingColor);
         }
     }
 
-    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location, Color color, int index)
+    [ServerRpc] private void CreatePing_ServerRpc(Vector3 location, Color color)
     {
         DestroyCurrentPing_Server();
 
         currentPing = Instantiate(pingPrefab, location, Quaternion.identity);
-        currentPing.SetColor_Observers(color, index);
+        currentPing.SetColor_Observers(color);
         InvokeOnPingLocation_Observers();
 
         if(pingDuration > 0) Destroy(currentPing, pingDuration);

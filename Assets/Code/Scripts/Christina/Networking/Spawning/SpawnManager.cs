@@ -81,19 +81,12 @@ public class SpawnManager : MonoBehaviour
         
         var playerInfo = SessionManager.Instance.CurrentSession.GetPlayer(steamID);
         var nameplate = gameObject.GetComponentInChildren<PlayerNameplate>();
-        var ping = gameObject.GetComponentInChildren<PingLocation>();
-
+        
         if (nameplate != null)
         {
             nameplate.SetName(displayName, playerInfo.Value.ColorIndex);
         }
-
-        //logic replication for test
-        if(ping != null)
-        {
-            ping.SetColor(playerInfo.Value.ColorIndex);
-        }
-
+        
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
     }
     
