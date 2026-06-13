@@ -422,8 +422,12 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     public void RequestJoinSession(string passwordAttempt, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
+        
+        // existing approved session members must be allowed to restore without re-entering the lobby password.
+        if (TryRestoreExistingSession(sender)) return;
 
         string expected = SessionModeManager.Instance?.PendingLobbyPassword ?? "";
+        
         if (!string.IsNullOrEmpty(expected) && passwordAttempt != expected)
         {
             SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(
@@ -431,8 +435,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 "Incorrect lobby password."));
             return;
         }
-
-        if (TryRestoreExistingSession(sender)) return;
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
