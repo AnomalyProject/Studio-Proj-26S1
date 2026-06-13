@@ -48,10 +48,6 @@ public class PasswordProtectedLobby : MonoBehaviour
     private void Start()
     {
         lobbyDataUpdateCallback = Callback<LobbyDataUpdate_t>.Create(OnLobbyDataReceived);
-        if (SteamSessionBridge.Instance != null && SteamSessionBridge.Instance.TryGetPendingInviteLobby(out ulong lobbyId))
-        {
-            TryJoinLobby(lobbyId);
-        }
     }
 
     public void HostPublic()
@@ -59,7 +55,6 @@ public class PasswordProtectedLobby : MonoBehaviour
         SessionModeManager.Instance.PendingLobbyPassword = "";
         MainMenuManager.Instance.HostCoOp();
     }
-    
     public void OpenHostPasswordPanel()
     {
         hostSetupPanel.SetActive(true);
@@ -71,7 +66,6 @@ public class PasswordProtectedLobby : MonoBehaviour
     {
         hostSetupPanel.SetActive(false);
     }
-    
     public void ConfirmHostSetup()
     {
         string password = hostPasswordInput.text.Trim();
@@ -135,7 +129,6 @@ public class PasswordProtectedLobby : MonoBehaviour
         joinPasswordPanel.SetActive(false);
         pendingJoinLobbyId = 0;
     }
-    
     public void SubmitJoinPassword()
     {
         string attempt = joinPasswordInput.text.Trim();

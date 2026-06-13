@@ -34,9 +34,4 @@ public class RefrenceManager : MonoBehaviour
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     private static void LoadLastSave() => CurrentSave = SaveSystem.LoadLast();
-    public static void DeleteAllSaves()
-    {
-        SaveSystem.DeleteAllSaves();
-        CurrentSave = new();
-    }
 }

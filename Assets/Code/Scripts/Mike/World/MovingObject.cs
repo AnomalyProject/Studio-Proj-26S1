@@ -1,5 +1,6 @@
 using PurrNet;
 using UnityEngine;
+
 [RequireComponent(typeof(NetworkTransform))]
 public class MovingObject : NetworkBehaviour
 {
@@ -22,6 +23,7 @@ public class MovingObject : NetworkBehaviour
     private void Update()
     {
         if (!isServer) return;
+
         DoMove(Time.deltaTime);
         DoRotate(Time.deltaTime);
     }

@@ -41,8 +41,6 @@ public class SteamSessionBridge : MonoBehaviour
     public JoinStartupStatus CurrentJoinStartupStatus => currentJoinStartupStatus;
     public event System.Action<JoinStartupStatus> OnJoinStartupStatusChanged;
     
-    private ulong pendingInviteLobbyId;
-    private bool hasPendingInviteLobby;
     
     // tracks if LobbyCreated_t succeded for this boot attempt
     private bool hostLobbyCreated = false;
@@ -108,12 +106,23 @@ public class SteamSessionBridge : MonoBehaviour
                 {
                     Debug.Log($"[SteamBridge] Launched with +connect_lobby {lobbyId}");
 
-                    pendingInviteLobbyId = lobbyId;
-                    hasPendingInviteLobby = true;
+                    joinStartupAttemptID++;
+                    joinStartupInProgress = true;
+                    joinApprovalResult = JoinApprovalResult.Pending; 
+                    pendingJoinLobbyID = new CSteamID(lobbyId);
 
                     SetJoinStage(
                         JoinStartupStage.JoinRequestReceived,
                         $"Join requested via launch argument for lobby {lobbyId}");
+
+                    if (SessionModeManager.Instance == null)
+                    {
+                        Debug.LogError("[SteamBridge] SessionModeManager missing during join startup.");
+                        LeaveSteamLobby();
+                        return;
+                    }
+                    
+                    SessionModeManager.Instance.StartJoining();
                 }
                 else
                 {
@@ -141,17 +150,6 @@ public class SteamSessionBridge : MonoBehaviour
         );
         
         lobbyCreatedCallResult.Set(apiCall);
-    }
-    
-    public bool TryGetPendingInviteLobby(out ulong lobbyId)
-    {
-        lobbyId = pendingInviteLobbyId;
-
-        if (!hasPendingInviteLobby) return false;
-
-        hasPendingInviteLobby = false;
-        pendingInviteLobbyId = 0;
-        return true;
     }
     
     public bool UpdateRichPresence(GameState state)
@@ -881,18 +879,10 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
-        ulong lobbyId = callback.m_steamIDLobby.m_SteamID;
-
-        Debug.Log($"[SteamBridge] Steam invite requested for lobby: {callback.m_steamIDLobby}");
-
-        if (PasswordProtectedLobby.Instance != null)
-        {
-            PasswordProtectedLobby.Instance.TryJoinLobby(lobbyId);
-            return;
-        }
-
-        pendingInviteLobbyId = lobbyId;
-        hasPendingInviteLobby = true;
+        //Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
+        //RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
+        PasswordProtectedLobby.Instance?.TryJoinLobby(callback.m_steamIDLobby.m_SteamID);
+        Debug.LogError($"[SteamBridge] OnGameLobbyJoinRequested lobby: {callback.m_steamIDLobby}");
     }
     
     // note: only lobby owner can set the metadata

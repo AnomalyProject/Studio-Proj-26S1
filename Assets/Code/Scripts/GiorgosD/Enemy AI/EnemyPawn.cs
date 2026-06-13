@@ -235,7 +235,7 @@ public class EnemyPawn : NetworkBehaviour
     
     #region Sight Lost Timer
     /// <summary>
-    /// A timer that checks when the ai actually should lose the player and stop following his live pos
+    /// A timer that checkes when the ai actually should lose the player and stop following his live pos
     /// </summary>
     private void LostTimer()
     {
@@ -263,8 +263,10 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     public bool IsTargetReachable(Vector3 targetPos)
     {
-        if (!NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+        if (!NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
             return false;
+
+        NavMeshPath path = new();
 
         if (!agent.CalculatePath(hit.position, path))
             return false;
@@ -281,94 +283,87 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
         
-        if (cachedPlayer != null)
-        {
-            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position))
-            {
-                hasPlayer = true;
-                timer = 0f;
-                InvokeSpotted(cachedPlayer);
-                return;
-            }
-            
-            Vector3 targetDestination = cachedPlayer.transform.position;
-            if (cachedPlayer.TryGetComponent<Collider>(out Collider col))
-            {
-                targetDestination = col.bounds.center;
-            }
-
-            float distanceToTarget = Vector3.Distance(eyePos.position, targetDestination);
-            if (distanceToTarget <= autoDetectRange)
-            {
-                if (!Physics.Raycast(eyePos.position, (targetDestination - eyePos.position).normalized, distanceToTarget, obstacleLayer))
-                {
-                    hasPlayer = true;
-                    timer = 0f;
-                    InvokeSpotted(cachedPlayer);
-                    return;
-                }
-            }
-            
-            hasPlayer = false;
-            return;
-        }
-        
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
         
+        PlayerBody closestDetectedPlayer = null;
+        float minSqrDist = Mathf.Infinity;
+
         for (int i = 0; i < count; i++)
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
-
-            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position))
+            
+            if (player == null) continue;
+            
+            if (IsPlayerDetected(player.transform, out Vector3 direction, out float distance))
             {
-                cachedPlayer = player;
-                hasPlayer = true;
-                timer = 0f;
-                InvokeSpotted(cachedPlayer);
-                break; 
+                float sqrDist = distance * distance;
+                if (sqrDist < minSqrDist)
+                {
+                    minSqrDist = sqrDist;
+                    closestDetectedPlayer = player;
+                }
             }
+        }
+
+        Array.Clear(playersInSight, 0, playersInSight.Length);
+        
+        if (closestDetectedPlayer != null)
+        {
+            hasPlayer = true;
+            timer = 0f;
+
+            if (cachedPlayer != closestDetectedPlayer)
+            {
+                cachedPlayer = closestDetectedPlayer;
+                InvokeSpotted(cachedPlayer);
+                Debug.Log($"Target Locked: {cachedPlayer.name}");
+            }
+        }
+        else if (cachedPlayer != null)
+        {
+            hasPlayer = false;
+            cachedPlayer = null;
+            timer = 0f;
         }
     }
 
+    
     /// <summary>
-    /// Checks if player is visible in the view cone or autodetect range
+    /// Checks if the enemy can actually see the player.
     /// </summary>
-    /// <param name="target"></param>
+    /// <param name="player"></param>
+    /// <param name="direction"></param>
+    /// <param name="distance"></param>
     /// <returns></returns>
-    private bool IsTargetVisible(Transform target)
+    private bool IsPlayerDetected(Transform player, out Vector3 direction, out float distance)
     {
-        Vector3 targetDestination = target.position;
-        if (target.TryGetComponent<Collider>(out Collider col))
+        Vector3 offset = (player.position + eyePos.position) - (transform.position + eyePos.position);
+        float sqrDistance = offset.sqrMagnitude;
+        
+        distance = Mathf.Sqrt(sqrDistance);
+
+        if (distance < 0.001f)
         {
-            targetDestination = col.bounds.center;
+            direction = Vector3.zero;
+            return true;
         }
 
-        float distanceToTarget = Vector3.Distance(eyePos.position, targetDestination);
+        direction = offset / distance;
         
-        if (distanceToTarget <= autoDetectRange)
-        {
-            if (!Physics.Raycast(eyePos.position, (targetDestination - eyePos.position).normalized, distanceToTarget, obstacleLayer))
-            {
-                return true; 
-            }
-        }
+        Vector3 flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        Vector3 flatDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
         
-        Vector3 directionToTarget = (targetDestination - eyePos.position).normalized;
-        
-        Vector3 flatForward = transform.forward;
-        flatForward.y = 0;
-        flatForward.Normalize();
+        bool inAutoRange = distance <= autoDetectRange;
 
-        Vector3 flatDirection = directionToTarget;
-        flatDirection.y = 0;
-        flatDirection.Normalize();
-        
-        if (Vector3.Angle(flatForward, flatDirection) < sightAngle / 2f)
+        float thresholdAngle = Mathf.Cos(sightAngle * 0.5f * Mathf.Deg2Rad);
+        bool inSightAngle = Vector3.Dot(flatForward, flatDirection) > thresholdAngle;
+
+        if (inAutoRange || inSightAngle)
         {
-            if (!Physics.Raycast(eyePos.position, directionToTarget, distanceToTarget, obstacleLayer))
-            {
-                return true;
-            }
+            float rayLength = Mathf.Max(distance - 0.1f, 0f);
+            if (rayLength <= 0) return true;
+            Debug.DrawRay(transform.position + eyePos.position, direction * distance, Color.darkGreen);
+            return !Physics.Raycast(transform.position + eyePos.position, direction, rayLength, obstacleLayer);
         }
 
         return false;

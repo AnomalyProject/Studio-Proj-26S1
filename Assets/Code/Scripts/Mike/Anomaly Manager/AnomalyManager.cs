@@ -45,7 +45,7 @@ public class AnomalyManager : NetworkBehaviour
     void Awake()
     {
         mapOrientor = GetComponent<MapOrientor>();
-        OnMapChanged += HandleMapChange;
+        OnMapChanged += mapOrientor.OrientMap;
 
         if (!mapsArePrefabs)
         {
@@ -220,8 +220,6 @@ public class AnomalyManager : NetworkBehaviour
         activeMap.BaseMap.SetActive(!variation.ReplacesBaseMap);
         variation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
-
-        if (variation.AlmanacEntry != null) AlmanacDiscovery.Discover(variation.AlmanacEntry);
     }
     private void ReleaseActiveMap(bool destroy)
     {
@@ -246,11 +244,6 @@ public class AnomalyManager : NetworkBehaviour
         currentMapState.entryPointID = entry.id.Value;
         currentMapState.entryPosition = entry.transform.position;
         currentMapState.entryRotation = entry.transform.rotation;
-    }
-    private void HandleMapChange(GameMap map)
-    {
-        mapOrientor.OrientMap(map);
-        AlmanacDiscovery.Discover(map.AlmanacEntry);
     }
     #endregion
 }

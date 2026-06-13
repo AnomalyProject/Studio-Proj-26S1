@@ -5,8 +5,6 @@ public class GameMap : NetworkBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
     [SerializeField] AudioClip mapMusicTheme;
-    [SerializeField, Tooltip("Optional Alamanc Entry")] private AlmanacEntrySO _almanacEntry;
-    public AlmanacEntrySO AlmanacEntry => _almanacEntry;
     public AudioClip MapMusicTheme => mapMusicTheme;
     public Transform EntryPointAnchor => entryPointAnchor;
     public Transform ExitPointAnchor => exitPointAnchor;
