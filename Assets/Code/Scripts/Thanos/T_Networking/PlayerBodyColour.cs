@@ -7,6 +7,8 @@ public class PlayerBodyColour : NetworkBehaviour
     [SerializeField] private Renderer suitRenderer;
     [SerializeField] private int materialIndex = 0;
 
+    private Material runtimeMat;
+
     [ObserversRpc(bufferLast: true)]
     public void SetBodyColour(int colourIndex)
     {
@@ -17,10 +19,14 @@ public class PlayerBodyColour : NetworkBehaviour
     {
         if (suitRenderer == null) return;
 
-        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-        suitRenderer.GetPropertyBlock(mpb, materialIndex);
-        mpb.SetColor("_BaseColor", color);
-        suitRenderer.SetPropertyBlock(mpb, materialIndex);
+        if (runtimeMat == null)
+        {
+            Material[] mats = suitRenderer.materials;
+            runtimeMat = mats[materialIndex];
+            suitRenderer.materials = mats;
+        }
+
+        runtimeMat.color = color;
     }
 
     protected override void OnSpawned(bool asServer)
