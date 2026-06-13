@@ -94,7 +94,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         settingsService = new SessionSettingsService(sessionStore);
         kickVoteService = new SessionKickVoteService(sessionStore, registry);
     }
-    
+
     private void Update()
     {
         if (!isServer || kickVoteService == null) return;
@@ -274,7 +274,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName)) return false;
 
         if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) return false;
-        
+
         if (!isReconnect)
         {
             Debug.LogWarning($"[SessionManager] SteamID {steamID} tried to reconnect with a new PurrNet PlayerID {playerID}. Rejecting reconnect.");
@@ -419,11 +419,22 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// and the elevator has not started leaving.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(RPCInfo info = default)
+    public void RequestJoinSession(string passwordAttempt, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
         
+        // existing approved session members must be allowed to restore without re-entering the lobby password.
         if (TryRestoreExistingSession(sender)) return;
+
+        string expected = SessionModeManager.Instance?.PendingLobbyPassword ?? "";
+        
+        if (!string.IsNullOrEmpty(expected) && passwordAttempt != expected)
+        {
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(
+                SessionErrorCode.InvalidState,
+                "Incorrect lobby password."));
+            return;
+        }
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
@@ -436,7 +447,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             );
             return;
         }
-        
+
         if (kickVoteService.IsKickedFromSession(steamID))
         {
             SendCommandErrorIfFailed(
@@ -453,7 +464,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private bool TryRestoreExistingSession(PlayerID sender)
     {
         if (!sessionStore.HasSession) return false;
@@ -473,7 +484,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, steamID);
 
-            if (SendCommandErrorIfFailed(sender, reconnectResult)) return true; 
+            if (SendCommandErrorIfFailed(sender, reconnectResult)) return true;
         }
         else
         {
@@ -939,9 +950,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Kick 
-    
+
     [ServerRpc(requireOwnership: false)]
     public void RequestStartKickVote(ulong targetSteamID, SessionKickReason reason, RPCInfo info = default)
     {
@@ -987,7 +998,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             OnKickVoteFinished_Client(false, "Kick vote failed.");
         }
     }
-    
+
     private void ExecuteVoteKick(ulong targetSteamID)
     {
         SessionCommandResult result = playerCoordinator.TryRemovePlayerBySteamID(targetSteamID, out PlayerID targetPlayerID);
@@ -1057,6 +1068,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
-    
+
+
 }
