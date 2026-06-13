@@ -34,7 +34,7 @@ public class TutorialManager : NetworkBehaviour
 
     public static event Action<TutorialManager> OnInitialized, OnDestroyed;
     public UnityEvent<float> OnVoidTimerTick;
-    public UnityEvent<string> onFloorChanged;
+    public UnityEvent<string> onFloorChanged, OnObjectiveUpdated;
     public UnityEvent AfterFirstElevator, AfterSecondElevator, AfterEnteringVoid, OnVoidExitButtonPressed, LeavingVoid, OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
 
     private void Awake()
@@ -69,6 +69,7 @@ public class TutorialManager : NetworkBehaviour
     }
     private void HandleElevatorButtonPressed(LevelExitPoint usedElevator, bool votedAnomalyPresent)
     {
+        UpdateObjective(string.Empty);
         usedElevator.SetInteraction(false);
         StartCoroutine(ElevatorSetup(votedAnomalyPresent));
         StopVoidTimer();
@@ -151,7 +152,7 @@ public class TutorialManager : NetworkBehaviour
             case 3: // Second anomaly (player can vote incorrectly)
                 onFloorChanged.Invoke("3/4");
                 break;
-            case 5:
+            case 5: // Return from void (collectibe tutorial)
                 onFloorChanged.Invoke("4/4");
                 break;
         }
@@ -168,25 +169,26 @@ public class TutorialManager : NetworkBehaviour
                 AfterSecondElevator?.Invoke();
                 break;
             case 3: // Second anomaly (player can vote incorrectly)
+                OnObjectiveUpdated.Invoke("Check for anomalies and pick the appropriate elevator.");
                 break;
             case 4: // Void (vending machine tutorial)
-                if (!unlockedVoidExit) AfterEnteringVoid?.Invoke();
+                if (unlockedVoidExit) break;
+                AfterEnteringVoid?.Invoke();
+                OnObjectiveUpdated.Invoke("Purchase a flashlight.");
+                break;
+            case 5: // Return from void (collectibe tutorial)
+                OnObjectiveUpdated.Invoke($"Pick up {collectible.GetComponentInChildren<CollectibleInteractable>().CollectibleData.name}");
                 break;
         }
     }
-    private void StopVoidTimer()
-    {
-        if (voidTimerCoroutine == null) return;
-        StopCoroutine(voidTimerCoroutine);
-        voidTimerCoroutine = null;
-    }
+    public void UpdateObjective(string newObjective) => OnObjectiveUpdated.Invoke(newObjective);
+    public void SetCurrentProgress(int progress) => CurrentProgress = progress;
     private IEnumerator TransitionToMenu()
     {
         BlackFadeManager.Instance?.FadeIn();
         yield return new WaitForSeconds(BlackFadeManager.Instance.TransitionTime);
         SessionModeManager.Instance.ReturnToMenu();
     }
-    public void SetCurrentProgress(int progress) => CurrentProgress = progress;
     private void SwichLevel(AnomalyMap newLevel)
     {
         activeLevel.gameObject.SetActive(false);
@@ -246,6 +248,12 @@ public class TutorialManager : NetworkBehaviour
         if (activeLevel != voidLevel || unlockedVoidExit) return;
         if (voidTimerCoroutine != null) StopCoroutine(voidTimerCoroutine);
         voidTimerCoroutine = StartCoroutine(VoidTimer(voidTimeLimit));
+    }
+    private void StopVoidTimer()
+    {
+        if (voidTimerCoroutine == null) return;
+        StopCoroutine(voidTimerCoroutine);
+        voidTimerCoroutine = null;
     }
     private IEnumerator VoidTimer(float timeLimit)
     {
