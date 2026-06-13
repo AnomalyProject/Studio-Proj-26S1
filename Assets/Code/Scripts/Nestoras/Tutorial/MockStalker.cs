@@ -55,7 +55,7 @@ public class MockStalker : MonoBehaviour
             // Cancel visual snap
             visualsRoot.rotation = oldVisualWorld;
 
-            shove.OnShovePreformed(new InputAction.CallbackContext());
+            shove.OnShovePreformed();
             agent.SetDestination(transform.position);
         }
     }

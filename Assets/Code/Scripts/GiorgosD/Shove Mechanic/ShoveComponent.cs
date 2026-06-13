@@ -61,7 +61,8 @@ public class ShoveComponent : NetworkBehaviour
             return;
         StartShove();
     }
-    
+    public void OnShovePreformed() => StartShove();
+
     /// <summary>
     /// Detects player and does the shove math
     /// </summary>
