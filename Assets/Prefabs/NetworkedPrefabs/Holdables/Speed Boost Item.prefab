@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3653489709831364869}
   - component: {fileID: 1360091935486815447}
   - component: {fileID: -667593755343560751}
+  - component: {fileID: 4331268626714696512}
   m_Layer: 0
   m_Name: Speed Boost Item
   m_TagString: Untagged
@@ -58,6 +59,22 @@ MonoBehaviour:
   renderers:
   - {fileID: 2191477874043239256}
   canvases: []
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4331268626714696512}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  almanacEntry: {fileID: 11400000, guid: b3066ff6166628d4ebbf2f5689a5c1c8, type: 2}
   multiplierAdditive: 0.5
   duration: 10
   consumeSound: {fileID: -667593755343560751}
@@ -159,6 +176,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &4331268626714696512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2833188847100196079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: cc18ef46a387fc2468d78b66e35a8b86, type: 2}
 --- !u!1001 &8463541990223828621
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,10 +1,9 @@
 using System.Collections;
-using System.IO;
 using UnityEngine;
 
 public class BootstrapController : MonoBehaviour
 {
-    [SerializeField] private string defaultFirstScene = "MainMenuChristina";
+    [SerializeField] private string defaultFirstScene = "MainMenu";
     [SerializeField] private BootstrapSceneRegistry sceneRegistry;
 
     void Start()

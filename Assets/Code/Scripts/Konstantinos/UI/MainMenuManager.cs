@@ -40,14 +40,14 @@ public class MainMenuManager : MonoBehaviour
     [Header("Manager Settings")]
     [SerializeField] private bool enableOnStart = true;
 
-    public static MainMenuManager instance;
+    public static MainMenuManager Instance;
 
     private void Awake()
     {
-        instance = this;
+        Instance = this;
         SetMenuActivity(false);
     }
-    private void OnDestroy() => instance = null;
+    private void OnDestroy() => Instance = null;
 
     private void OnEnable()
     {
@@ -74,6 +74,7 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator Start()
     {
+        BlackFadeManager.Instance?.FadeOut();
         yield return null;
         if (!enableOnStart) yield break;
 
@@ -153,8 +154,9 @@ public class MainMenuManager : MonoBehaviour
         SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim?.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration/ 1.5f);
-        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
         yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
         SessionModeManager.Instance.StartSolo();
     }
 
@@ -168,9 +170,27 @@ public class MainMenuManager : MonoBehaviour
         SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
         mainCameraAnim.SetTrigger("Play");
         yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
-        if (ElevatorDoorAnim != null) { ElevatorDoorAnim.enabled = true; }
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
         yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
         SessionModeManager.Instance.StartHosting();
+    }
+
+    public void JoinCoOp(ulong lobbyId)
+    {
+       StartCoroutine(JoinCoOpWithDelay(lobbyId));
+    }
+
+    IEnumerator JoinCoOpWithDelay(ulong lobbyId)
+    {
+        SetMenuActivity(false);
+        SettingsManager.Instance?.SwitchCanvasMode(RenderMode.ScreenSpaceOverlay); // makes Settings screen space
+        mainCameraAnim.SetTrigger("Play");
+        yield return new WaitForSeconds(mainCameraAnimDuration / 1.5f);
+        if (ElevatorDoorAnim != null) ElevatorDoorAnim.enabled = true;
+        yield return new WaitForSeconds(mainCameraAnimDuration / 2.5f);
+        if (BlackFadeManager.Instance != null) BlackFadeManager.Instance?.FadeIn();
+        SteamSessionBridge.Instance.RequestJoinLobbyById(lobbyId);
     }
 
     public void OpenSettings()

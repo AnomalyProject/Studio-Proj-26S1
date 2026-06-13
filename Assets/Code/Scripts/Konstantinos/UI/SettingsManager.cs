@@ -1,9 +1,9 @@
-using System;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using TMPro;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityEngine;
+using TMPro;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -152,7 +152,7 @@ public class SettingsManager : MonoBehaviour
         resolutionDropdown.RefreshShownValue();
 
         resolutionValue = currentResolutionIndex;
-
+        OnResolutionChanged(resolutionValue);
 
 
         // Initialize V-Sync
@@ -160,14 +160,15 @@ public class SettingsManager : MonoBehaviour
         else vSync = true;
 
         vSyncToggle.isOn = vSync;
-
+        ToggleVSync(vSync);
 
 
         // Initialize FullScreen
         if (PlayerPrefs.HasKey("Fullscreen")) fullscreen = bool.Parse(PlayerPrefs.GetString("Fullscreen"));
-        else fullscreen = true; 
+        else fullscreen = true;
 
         fullscreenToggle.isOn = fullscreen;
+        ToggleFullscreen(fullscreen);
     }
 
     void InitializeControls()
@@ -308,48 +309,36 @@ public class SettingsManager : MonoBehaviour
     // Audio
     public void OnMasterVolumeChanged(float value)
     {
-        masterVolume = value;
+        masterVolume = Mathf.Clamp01(value);
 
-        // Convert linear slider position into logarithmic response
-        float logarithmicValue = Mathf.Log10(Mathf.Lerp(0.0001f, 1f, masterVolume)) + 1f;
-
-        AudioManager.Instance.Volume(AudioManager.AudioChannel.Master, logarithmicValue);
+        AudioManager.Instance.Volume(AudioManager.AudioChannel.Master, masterVolume);
 
         PlayerPrefs.SetFloat("Master Volume", masterVolume); // save linear value so we can call the method with it
     }
 
     public void OnMusicVolumeChanged(float value)
     {
-        musicVolume = value;
+        musicVolume = Mathf.Clamp01(value);
 
-        // Convert linear slider position into logarithmic response
-        float logarithmicValue = Mathf.Log10(Mathf.Lerp(0.0001f, 1f, value)) + 1f;
-
-        AudioManager.Instance.Volume(AudioManager.AudioChannel.Music, logarithmicValue);
+        AudioManager.Instance.Volume(AudioManager.AudioChannel.Music, musicVolume);
 
         PlayerPrefs.SetFloat("Music Volume", musicVolume); // save linear value so we can call the method with it
     }
 
     public void OnSFXVolumeChanged(float value)
     {
-        SFXVolume = value;
+        SFXVolume = Mathf.Clamp01(value);
 
-        // Convert linear slider position into logarithmic response
-        float logarithmicValue = Mathf.Log10(Mathf.Lerp(0.0001f, 1f, value)) + 1f;
-
-        AudioManager.Instance.Volume(AudioManager.AudioChannel.SFX, logarithmicValue);
+        AudioManager.Instance.Volume(AudioManager.AudioChannel.SFX, SFXVolume);
 
         PlayerPrefs.SetFloat("SFX Volume", SFXVolume); // save linear value so we can call the method with it
     }
 
     public void OnUIVolumeChanged(float value)
     {
-        UIVolume = value;
+        UIVolume = Mathf.Clamp01(value);
 
-        // Convert linear slider position into logarithmic response
-        float logarithmicValue = Mathf.Log10(Mathf.Lerp(0.0001f, 1f, value)) + 1f;
-
-        AudioManager.Instance.Volume(AudioManager.AudioChannel.UI, logarithmicValue);
+        AudioManager.Instance.Volume(AudioManager.AudioChannel.UI, UIVolume);
 
         PlayerPrefs.SetFloat("UI Volume", UIVolume); // save linear value so we can call the method with it
     }
@@ -362,7 +351,7 @@ public class SettingsManager : MonoBehaviour
 
         Resolution selectedResolution = Screen.resolutions[value];
 
-        Debug.Log(
+        Debug.Log( 
             $"[SettingsManager] Resolution changed to " +
             $"{selectedResolution.width}x{selectedResolution.height}"
         );
@@ -397,7 +386,7 @@ public class SettingsManager : MonoBehaviour
 
         Screen.fullScreen = fullscreen;
 
-        PlayerPrefs.SetString("Fullscreen", vSync.ToString());
+        PlayerPrefs.SetString("Fullscreen", fullscreen.ToString());
     }
 
     //------------------------------------------------------------//

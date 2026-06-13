@@ -26,7 +26,6 @@ public class AlertState : BaseState
         if (body.IsFacingTarget(target.position))
         {
             brain.ChangeState(EnemyBrain.StateID.Investigate, target);
-            return;
         }
     }
 

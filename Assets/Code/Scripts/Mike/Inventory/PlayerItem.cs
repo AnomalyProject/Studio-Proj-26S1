@@ -1,10 +1,13 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerItem : NetworkBehaviour
 {
     [SerializeField, HideInInspector] private MeshRenderer[] renderers;
     [SerializeField, HideInInspector] private Canvas[] canvases;
+    [SerializeField] private UnityEvent onLocalSpawn;
+    [SerializeField, Tooltip("Optional Entry Scriptable Object. Registers on Creation.")] private AlmanacEntrySO almanacEntry;
 
     private IReadOnlyItemStack boundStack;
     private int boundSlot;
@@ -21,6 +24,11 @@ public class PlayerItem : NetworkBehaviour
 
             // Hide UI on other clients
             foreach (Canvas canvas in canvases) canvas.enabled = false;
+        }
+        else
+        {
+            if (almanacEntry != null) AlmanacDiscovery.Discover(almanacEntry);
+            onLocalSpawn.Invoke();
         }
     }
 

@@ -13,8 +13,9 @@ public struct PlayerSessionInfo
     public bool IsHost;
     public DateTime JoinedAt;
     public bool IsInElevator;
-    
     public int ColorIndex;
+    public bool IsConnected;
+    public float ReconnectDeadline;
 
 
     public PlayerSessionInfo(ulong steamID, string name, bool isHost = false, int teamID = -1, bool isInElevator = false)
@@ -24,14 +25,16 @@ public struct PlayerSessionInfo
         IsHost = isHost;
         TeamID = teamID;
         IsReady = false;
-        JoinedAt = DateTime.UtcNow; // TODO: check if we need to convert to long
+        JoinedAt = DateTime.UtcNow;
         IsInElevator = isInElevator;
         ColorIndex = 0;
+        IsConnected = true;
+        ReconnectDeadline = 0f;
     }
 
-}
+    public Color GetPlayerColor() => PlayerColour.GetColor(ColorIndex);
 
-//That comment right here is a test for sonarQube setup + 3
+}
 
 [Serializable]
 public struct ClientPlayerInfo
@@ -41,8 +44,11 @@ public struct ClientPlayerInfo
     public bool IsReady;
     public bool IsHost;
     public bool IsInElevator;
+    public bool IsConnected;
+    public bool IsWaitingToReconnect;
+    public int ColorIndex;
 }
-    
+
 [Serializable]
 public struct ClientSessionData
 {
@@ -53,7 +59,7 @@ public struct ClientSessionData
     public int PlayerCount;
     public List<ClientPlayerInfo> Players;
     public ElevatorLobbyState ElevatorState;
-    
+
     //workaround for serialization issues with Dictionaries
     public List<string> CustomPropertyKeys;
     public List<string> CustomPropertyValues;
@@ -71,7 +77,7 @@ public class SessionData
     public DateTime CreatedAt { get; private set; }
     public GameState CurrentState { get; set; }
     public Dictionary<string, string> CustomProperties { get; set; } = new Dictionary<string, string>();
-    
+
     // elevator
     public ElevatorLobbyState ElevatorState;
     public bool AllPlayersReadyInElevator => Players.Count > 0 && Players.All(pp => pp.IsInElevator && pp.IsReady);
@@ -88,19 +94,23 @@ public class SessionData
     {
         if (Players.Any(pp => pp.SteamID == newPlayer.SteamID))
         {
-            List<int> usedColors = Players.Select(p => p.ColorIndex).ToList();
-            List<int> availableColors = new List<int> { 0, 1, 2, 3 };
-            availableColors.RemoveAll(c => usedColors.Contains(c));
-            
-            if (availableColors.Count > 0)
-            {
-                int randomIndex = UnityEngine.Random.Range(0, availableColors.Count);
-                newPlayer.ColorIndex = availableColors[randomIndex];
-            }
-            
-            Debug.Log($"[SessionDataManager] Player {newPlayer.SteamID} already exists. Skipping to next player.");
+            Debug.LogWarning($"[SessionDataManager] Player {newPlayer.SteamID} already exists.");
             return;
         }
+
+        List<int> usedColors = Players.Select(p => p.ColorIndex).ToList();
+        int assignedColor = 0;
+
+        for (int i = 0; i < PlayerColour.Colors.Length; i++)
+        {
+            if (!usedColors.Contains(i))
+            {
+                assignedColor = i;
+                break;
+            }
+        }
+
+        newPlayer.ColorIndex = assignedColor;
         Players.Add(newPlayer);
     }
 
@@ -135,8 +145,33 @@ public class SessionData
 
     public void SetCustomProperty(string key, string value) => CustomProperties[key] = value;
 
-    public string GetCustomProperty(string key)
+    public string GetCustomProperty(string key) => CustomProperties.ContainsKey(key) ? CustomProperties[key] : "";
+
+    public int FindPlayerIndex(ulong steamID) => Players.FindIndex(pp => pp.SteamID == steamID);
+
+    public bool SetPlayerConnected(ulong steamID, bool connected, float reconnectDeadline)
     {
-        return CustomProperties.TryGetValue(key, out string value) ? value : null;
+        int index = FindPlayerIndex(steamID);
+
+        if (index < 0) return false;
+
+        PlayerSessionInfo player = Players[index];
+        player.IsConnected = connected;
+        player.ReconnectDeadline = reconnectDeadline;
+        Players[index] = player;
+
+        return true;
+    }
+
+    public bool IsPlayerWaitingToReconnect(ulong steamID)
+    {
+        int index = FindPlayerIndex(steamID);
+
+        if (index < 0)
+        {
+            return false;
+        }
+
+        return !Players[index].IsConnected;
     }
 }

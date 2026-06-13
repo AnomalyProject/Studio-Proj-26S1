@@ -1,11 +1,24 @@
+using System.Collections.Generic;
+using UnityEngine.Events;
+using UnityEngine;
 using PurrNet;
 using TMPro;
-using UnityEngine;
-using UnityEngine.Events;
 
 public class KeypadInteractable : NetworkBehaviour
 {
     public const int maxDigits = 4; // max digits a password can generate
+    public const int glyphCount = 16; // number of glyphs
+
+    public struct PasswordData
+    {
+        public string digits;
+        public byte[] glyphIndicies;
+        public PasswordData(string digits, byte[] glyphIndicies)
+        {
+            this.digits = digits;
+            this.glyphIndicies = glyphIndicies;
+        }
+    }
 
     [Header("Debug")]
     public bool debugMouseInput; // use OnMouseDown() to interact with buttons for test purposes
@@ -14,7 +27,8 @@ public class KeypadInteractable : NetworkBehaviour
     [Header("Events")]
     public UnityEvent OnAccessGranted;
     public UnityEvent OnAccessDenied;
-    public UnityEvent<string> OnPasswordGenerated, OnInputChanged;
+    public UnityEvent<PasswordData> OnPasswordGenerated;
+    public UnityEvent<string> OnPasswordDigitsGenerated, OnInputChanged;
 
     private string requiredPassword;
     private SyncVar<string> currentInput = new SyncVar<string>(ownerAuth: false); // sync var to display changes on all clients
@@ -25,9 +39,10 @@ public class KeypadInteractable : NetworkBehaviour
 
 
     [Header("World & Feedback")]
-    [SerializeField] TextMeshPro inputText;
-    [SerializeField] TextMeshPro statusText;
-    [SerializeField] KeypadButton[] myButtons;
+    [SerializeField] private TextMeshPro statusText;
+    [SerializeField] private TextMeshPro inputText;
+    [SerializeField] private TextMeshPro glyphsText;
+    [SerializeField] private KeypadButton[] myButtons;
 
     private void OnEnable()
     {
@@ -43,9 +58,9 @@ public class KeypadInteractable : NetworkBehaviour
 
         if(asServer) currentInput.value = "";
 
-        if (inputText != null && statusText != null) 
+        if (inputText != null && statusText != null && glyphsText != null) 
         { 
-            inputText.text = statusText.text = ""; // texts clear
+            inputText.text = statusText.text = glyphsText.text = ""; // texts clear
         }
 
         if(!asServer)
@@ -57,23 +72,45 @@ public class KeypadInteractable : NetworkBehaviour
         if (!isServer) return;
         char[] digits = new char[maxDigits]; // create a new array with the size of maxDigits
 
+        // Populate list with all possible glyphs (0-15) for random selection
+        List<byte> possibleGlyphs = new List<byte>(glyphCount);
+        for (byte i = 0; i < glyphCount; i++) possibleGlyphs.Add(i);
+
+        byte[] glyphIndecies = new byte[maxDigits];
+
         for (int i = 0; i < maxDigits; i++) // loops as many times as the max possible digits
         {
             digits[i] = (char)('0' + Random.Range(0, 10)); // picks a random digit and inserts it into the array index i
+
+            byte selectedGlyph = possibleGlyphs[Random.Range(0, possibleGlyphs.Count)]; // randomly select a glyph index from the remaining possible glyphs
+            glyphIndecies[i] = selectedGlyph; // assign the selected glyph index
+            possibleGlyphs.Remove(selectedGlyph);
         }
         requiredPassword = new string(digits); // store password
-        NotifyPasswordGenerated(requiredPassword);
+        NotifyPasswordGenerated(new PasswordData(requiredPassword, glyphIndecies));
 
         // Question: How do the players get clues as to which the correct digits are? 
         // do they just guess??
         // is it a future task for this script to generate clues too?
+
+        // Answer: yes. done.
     }
 
-    [ObserversRpc(bufferLast: true)]
-    private void NotifyPasswordGenerated(string password)     // fire event on all clients
+    [ObserversRpc(bufferLast: true)] // fire event on all clients
+    private void NotifyPasswordGenerated(PasswordData passwordData)
     {
-        Debug.Log($"Password generated RPC received: {password}");
-        OnPasswordGenerated?.Invoke(password);
+        OnPasswordGenerated?.Invoke(passwordData);
+        OnPasswordDigitsGenerated?.Invoke(requiredPassword);
+        SetGlyphs(passwordData.glyphIndicies); // set the glyphs for the password
+    }
+
+    private void SetGlyphs(byte[] glyphIndecies)
+    {
+        if (glyphsText == null) return;
+
+        string glyphsDisplay = string.Empty;
+        for (int i = 0; i < glyphIndecies.Length; i++) glyphsDisplay += $"<sprite={glyphIndecies[i]}>";
+        glyphsText.text = glyphsDisplay;
     }
 
     void InitializeButtons()
@@ -126,9 +163,6 @@ public class KeypadInteractable : NetworkBehaviour
         }
     }
 
-
-
-
     // Status RPCs
     [ObserversRpc(bufferLast: true)]
     private void NotifyAccessGranted()
@@ -139,6 +173,7 @@ public class KeypadInteractable : NetworkBehaviour
             statusText.text = "Access Granted";
         }
         if (inputText != null) inputText.text = "";
+        if (glyphsText != null) glyphsText.text = "";
         OnAccessGranted?.Invoke();
     }
 

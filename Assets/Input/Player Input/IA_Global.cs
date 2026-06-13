@@ -127,6 +127,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Radial"",
+                    ""type"": ""Button"",
+                    ""id"": ""4b748f90-baca-4220-9fa7-a3c91a51efd9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -204,6 +213,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Toggle Chat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4520782a-9721-4385-b1b3-3f810a787f64"",
+                    ""path"": ""<Keyboard>/b"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Radial"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5ea50773-f8c6-44d0-a915-8b6cc1906312"",
+                    ""path"": ""<Gamepad>/dpad/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Radial"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -966,6 +997,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Duck Mode"",
+                    ""type"": ""Button"",
+                    ""id"": ""e205a174-6e68-4c59-8f66-a1ec4e0556e6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1331,6 +1371,39 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Shove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""76905aad-7318-47e2-b6be-ef992db81c81"",
+                    ""path"": ""OneModifier(modifiersOrder=1)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""fc49d5cb-002f-44a4-ab03-73dfadb2fb46"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""797792f8-193c-4121-984e-1b1504357226"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -1346,6 +1419,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Radial"",
+                    ""type"": ""Value"",
+                    ""id"": ""3954e3f8-cd41-4351-b4d6-739d7e278252"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -1368,6 +1450,17 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4d00caea-e787-4107-ba91-2e5a2e079bd5"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Radial"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1850,6 +1943,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Global_ToggleDev = m_Global.FindAction("Toggle Dev", throwIfNotFound: true);
         m_Global_ToggleBug = m_Global.FindAction("Toggle Bug", throwIfNotFound: true);
         m_Global_ToggleChat = m_Global.FindAction("Toggle Chat", throwIfNotFound: true);
+        m_Global_ToggleRadial = m_Global.FindAction("Toggle Radial", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1883,9 +1977,11 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
         m_Player_PingLocation = m_Player.FindAction("Ping Location", throwIfNotFound: true);
         m_Player_Shove = m_Player.FindAction("Shove", throwIfNotFound: true);
+        m_Player_ToggleDuckMode = m_Player.FindAction("Toggle Duck Mode", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
+        m_Chat_Radial = m_Chat.FindAction("Radial", throwIfNotFound: true);
         // NoClip
         m_NoClip = asset.FindActionMap("NoClip", throwIfNotFound: true);
         m_NoClip_Move = m_NoClip.FindAction("Move", throwIfNotFound: true);
@@ -1985,6 +2081,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Global_ToggleDev;
     private readonly InputAction m_Global_ToggleBug;
     private readonly InputAction m_Global_ToggleChat;
+    private readonly InputAction m_Global_ToggleRadial;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -2012,6 +2109,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleChat".
         /// </summary>
         public InputAction @ToggleChat => m_Wrapper.m_Global_ToggleChat;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleRadial".
+        /// </summary>
+        public InputAction @ToggleRadial => m_Wrapper.m_Global_ToggleRadial;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -2050,6 +2151,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleChat.started += instance.OnToggleChat;
             @ToggleChat.performed += instance.OnToggleChat;
             @ToggleChat.canceled += instance.OnToggleChat;
+            @ToggleRadial.started += instance.OnToggleRadial;
+            @ToggleRadial.performed += instance.OnToggleRadial;
+            @ToggleRadial.canceled += instance.OnToggleRadial;
         }
 
         /// <summary>
@@ -2073,6 +2177,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleChat.started -= instance.OnToggleChat;
             @ToggleChat.performed -= instance.OnToggleChat;
             @ToggleChat.canceled -= instance.OnToggleChat;
+            @ToggleRadial.started -= instance.OnToggleRadial;
+            @ToggleRadial.performed -= instance.OnToggleRadial;
+            @ToggleRadial.canceled -= instance.OnToggleRadial;
         }
 
         /// <summary>
@@ -2427,6 +2534,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_DropItem;
     private readonly InputAction m_Player_PingLocation;
     private readonly InputAction m_Player_Shove;
+    private readonly InputAction m_Player_ToggleDuckMode;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -2499,6 +2607,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Shove => m_Wrapper.m_Player_Shove;
         /// <summary>
+        /// Provides access to the underlying input action "Player/ToggleDuckMode".
+        /// </summary>
+        public InputAction @ToggleDuckMode => m_Wrapper.m_Player_ToggleDuckMode;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -2569,6 +2681,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started += instance.OnShove;
             @Shove.performed += instance.OnShove;
             @Shove.canceled += instance.OnShove;
+            @ToggleDuckMode.started += instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed += instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled += instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -2625,6 +2740,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started -= instance.OnShove;
             @Shove.performed -= instance.OnShove;
             @Shove.canceled -= instance.OnShove;
+            @ToggleDuckMode.started -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled -= instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -2663,6 +2781,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Chat;
     private List<IChatActions> m_ChatActionsCallbackInterfaces = new List<IChatActions>();
     private readonly InputAction m_Chat_Submit;
+    private readonly InputAction m_Chat_Radial;
     /// <summary>
     /// Provides access to input actions defined in input action map "Chat".
     /// </summary>
@@ -2678,6 +2797,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Chat/Submit".
         /// </summary>
         public InputAction @Submit => m_Wrapper.m_Chat_Submit;
+        /// <summary>
+        /// Provides access to the underlying input action "Chat/Radial".
+        /// </summary>
+        public InputAction @Radial => m_Wrapper.m_Chat_Radial;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -2707,6 +2830,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Submit.started += instance.OnSubmit;
             @Submit.performed += instance.OnSubmit;
             @Submit.canceled += instance.OnSubmit;
+            @Radial.started += instance.OnRadial;
+            @Radial.performed += instance.OnRadial;
+            @Radial.canceled += instance.OnRadial;
         }
 
         /// <summary>
@@ -2721,6 +2847,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Submit.started -= instance.OnSubmit;
             @Submit.performed -= instance.OnSubmit;
             @Submit.canceled -= instance.OnSubmit;
+            @Radial.started -= instance.OnRadial;
+            @Radial.performed -= instance.OnRadial;
+            @Radial.canceled -= instance.OnRadial;
         }
 
         /// <summary>
@@ -3014,6 +3143,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleChat(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Radial" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleRadial(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -3227,6 +3363,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnShove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Duck Mode" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleDuckMode(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
@@ -3242,6 +3385,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSubmit(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Radial" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRadial(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "NoClip" which allows adding and removing callbacks.

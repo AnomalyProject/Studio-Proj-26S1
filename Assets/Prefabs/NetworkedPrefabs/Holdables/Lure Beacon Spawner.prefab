@@ -101,6 +101,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2836859782931437144}
   - component: {fileID: 2796467842901276166}
+  - component: {fileID: -8870508944047613914}
   m_Layer: 8
   m_Name: Lure Beacon Spawner
   m_TagString: Untagged
@@ -150,6 +151,22 @@ MonoBehaviour:
   - {fileID: 8717439915470726698}
   - {fileID: 2333733700152424932}
   canvases: []
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -8870508944047613914}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  almanacEntry: {fileID: 11400000, guid: 53562be3a9c37954abfd3cad15ea1db5, type: 2}
   spawnPrefab: {fileID: 2151367098485744667, guid: 61116258e5c15e6439271fe7438f80ff, type: 3}
   previewObject: {fileID: 2333733700152424932}
   rayDistance: 3
@@ -161,6 +178,20 @@ MonoBehaviour:
     m_Bits: 4294967295
   validColor: {r: 0.5647059, g: 0.9333334, b: 0.5647059, a: 1}
   invalidColor: {r: 0.8627452, g: 0.1921569, b: 0.1960784, a: 1}
+--- !u!114 &-8870508944047613914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3042016805969262792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: 7547c6cc0b6491444a435bd3e45bf34d, type: 2}
 --- !u!1001 &8626392439110608933
 PrefabInstance:
   m_ObjectHideFlags: 0

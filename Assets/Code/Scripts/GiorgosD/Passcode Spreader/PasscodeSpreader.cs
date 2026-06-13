@@ -1,33 +1,30 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using PurrNet;
 using TMPro;
-using UnityEngine;
 
 public class PasscodeSpreader : NetworkBehaviour
 {
     [SerializeField] private TextMeshPro[] texts;
+    [SerializeField] private bool applySymbols = true;
 
-    private void Awake()
-    {
-        DisableTexts();
-    }
+    private void Awake() => DisableTexts();
 
     #region Sread logic
     /// <summary>
     /// Spreads the input between different TextMeshes (Adds the remainder of the input to the last mesh) and Shuffles them.
     /// </summary>
     /// <param name="input"> its a string that OnPasswordGenerated passes. </param>
-    public void Spread(string input)
+    public void Spread(KeypadInteractable.PasswordData passwordData)
     {
         if (!isServer) return;
-        if (texts == null || texts.Length == 0 || string.IsNullOrEmpty(input)) return;
+        if (texts == null || texts.Length == 0 || string.IsNullOrEmpty(passwordData.digits)) return;
         
         int[] indices = Enumerable.Range(0, texts.Length).ToArray();
         
         ShufleIndices(indices);
-
-        SyncPasscodes(indices, input);  // Made it a ToArray() cause i heard array is easier than list to pass on network
+        SyncPasscodes(indices, passwordData);
     }
 
     /// <summary>
@@ -51,11 +48,11 @@ public class PasscodeSpreader : NetworkBehaviour
     /// Syncs the Passcode TextMeshes on Network.
     /// </summary>
     [ObserversRpc(bufferLast: true)]
-    private void SyncPasscodes(int[] indices, string input)
+    private void SyncPasscodes(int[] indices, KeypadInteractable.PasswordData passwordData)
     {
         DisableTexts();
         
-        int textLength = input.Length;
+        int textLength = passwordData.digits.Length;
         int meshCount = texts.Length;
 
         for (int i = 0; i < meshCount; i++)
@@ -67,13 +64,11 @@ public class PasscodeSpreader : NetworkBehaviour
 
             if (i == meshCount - 1 && textLength > meshCount)
             {
-                textTarget.text = input.Substring(i);
+                textTarget.text = passwordData.digits.Substring(i);
+                // Place symbols next to each digit
+                if (applySymbols) for (int j = i; j < textLength; j++) textTarget.text = textTarget.text.Insert(j, $"<sprite={passwordData.glyphIndicies[j]}>");
             }
-            else
-            {
-                textTarget.text = input[i].ToString();
-            }
-            
+            else textTarget.text = passwordData.digits[i].ToString() + (applySymbols ? $"<sprite={passwordData.glyphIndicies[i]}>" : string.Empty);
             textTarget.gameObject.SetActive(true);
         }
     }
