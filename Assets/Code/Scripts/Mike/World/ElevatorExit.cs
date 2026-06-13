@@ -24,8 +24,8 @@ public class ElevatorExit : LevelExitPoint
     [SerializeField] private Material avatarGreenMat, avatarRedMat;
 
     [SerializeField] private bool openOnStart;
-    private AudioSource audioSource;
-    private Animator anim;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private Animator anim;
 
     [Header("Audio")]
     [SerializeField] private AudioClip openClip;
@@ -55,8 +55,8 @@ public class ElevatorExit : LevelExitPoint
         base.OnSpawned(asServer);
         if (asServer) return;
 
-        anim = GetComponent<Animator>();
-        audioSource = GetComponent<AudioSource>();
+        if (anim == null) anim = GetComponent<Animator>();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
         UpdateAnomalyIndicators(bHasAnomaly);
 
         if (openOnStart) OpenDoors();

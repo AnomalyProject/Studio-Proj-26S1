@@ -5,8 +5,12 @@ using PurrNet;
 
 public class TutorialManager : NetworkBehaviour
 {
+    public static TutorialManager Instance;
+
     [SerializeField] private AnomalyMap mainLevel;
     [SerializeField] private AnomalyMap voidLevel;
+    [SerializeField] private PickUpSpawner duckSpawner;
+    [SerializeField] private GameObject collectible;
     private AnomalyMap activeLevel;
     private MapOrientor mapOrientor;
 
@@ -20,15 +24,22 @@ public class TutorialManager : NetworkBehaviour
     [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
     [SerializeField, Min(1f)] private float voidTimeLimit = 3600;
 
-    [SerializeField] private int CurrentProgress = 1;
-    private bool ElevatorCoolDown;
+    [SerializeField] private int CurrentProgress = 0;
 
     private Coroutine voidTimerCoroutine;
+    private bool votedAnomalyPresent;
 
     public UnityEvent<float> OnVoidTimerTick;
-    public UnityEvent OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
+    public UnityEvent<int> onProgressChanged;
+    public UnityEvent AfterFirstElevator, AfterSecondElevator, AfterEnteringVoid, LeavingVoid, OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
 
-    private void Awake() => mapOrientor = GetComponent<MapOrientor>();
+    private void Awake()
+    {
+        Instance = this;
+
+        mapOrientor = GetComponent<MapOrientor>();
+        mapOrientor.ExitElevator.QueueOnSpawned(() => ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors());
+    }
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
@@ -41,57 +52,54 @@ public class TutorialManager : NetworkBehaviour
 
     private void OnEnable() => MapOrientor.OnElevatorInteracted += HandleElevatorButtonPressed;
     private void OnDisable() => MapOrientor.OnElevatorInteracted -= HandleElevatorButtonPressed;
-    public void OnVoidPasscodeEntered() => ((ElevatorExit)mapOrientor.ExitElevator).OpenDoors();
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Instance = null;
+    }
+    public void OnTaskCompleted() => ((ElevatorExit)mapOrientor.ExitElevator).OpenDoors();
     private void HandleElevatorButtonPressed(LevelExitPoint usedElevator, bool votedAnomalyPresent)
     {
-        if (!TryStartCooldown()) return;
         usedElevator.SetInteraction(false);
         StartCoroutine(ElevatorSetup(votedAnomalyPresent));
         StopVoidTimer();
     }
+    // On Button Press
     private IEnumerator ElevatorSetup(bool votedAnomalyPresent)
     {
         yield return new WaitForSeconds(elevatorSetupDelay);
+        this.votedAnomalyPresent = votedAnomalyPresent;
 
-        switch (CurrentProgress)
+        switch (CurrentProgress++)
         {
-            case 1: // First anomaly (forced correct decision)
+            case 0: // First anomaly (forced correct decision)
                 QueueElevatorInteraction(entryEnabled: true, exitEnabled: false);
                 break;
-            default: // No anomaly
+            case 1: // No anomaly
                 QueueElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 break;
-            case 3: // Second anomaly (player can vote incorrectly)
+            case 2: // Second anomaly (player can vote incorrectly)
                 QueueElevatorInteraction(entryEnabled: true, exitEnabled: true);
                 break;
-            case 4: // Entering Void (vending machine tutorial)
+            case 3: // Entering Void (vending machine tutorial)
                 SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 EnvironmentLightingManager.Instance?.SetEnvironmentLighting(1);
-                ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors();
-                if (votedAnomalyPresent)
-                {
-                    // Play narration "Excellent work! But, for the sake our training exercise, here's what would have happened of you entered the wrong elevator."
-                    OnRightDecisionBeforeVoid?.Invoke();
-                }
-                else
-                {
-                    // Play narration "Good thing your contract doesn't cover vision insurance."
-                    OnWrongDecisionBeforeVoid?.Invoke();
-                }
+                ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (passcode needed for it to open again)
                 break;
-            case 5: // Returning from void (collectibe tutorial)
+            case 4: // Returning from void (collectibe tutorial)
                 QueueElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
+                ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (pick up collectible for it to open again)
                 break;
         }
-        TryStartCooldown();
     }
+    // On Doors Fully Closed
     public void UpdateMap()
     {
         activeLevel.DisableAll(keepBase: true);
         mapOrientor.OrientMap(activeLevel);
 
-        switch (CurrentProgress++)
+        switch (CurrentProgress)
         {
             case 1: // First anomaly (forced correct decision)
                 mainLevel.AnomalyVariations[0].GroupRoot.SetActive(true);
@@ -100,18 +108,15 @@ public class TutorialManager : NetworkBehaviour
                 mainLevel.AnomalyVariations[1].GroupRoot.SetActive(true);
                 break;
             case 4: // Void (vending machine tutorial)
-                if (activeLevel == voidLevel) break;
-                mainLevel.gameObject.SetActive(false);
-                voidLevel.gameObject.SetActive(true);
-                activeLevel = voidLevel;
-                mapOrientor.OrientMap(activeLevel);
-                CurrentProgress--; // The other elevator closing also increases the progress
+                if (votedAnomalyPresent) OnRightDecisionBeforeVoid?.Invoke();
+                else OnWrongDecisionBeforeVoid?.Invoke();
+                SwichLevel(voidLevel);
+                duckSpawner.SpawnItems();
                 break;
             case 5: // Return from void (collectibe tutorial)
-                voidLevel.gameObject.SetActive(false);
-                mainLevel.gameObject.SetActive(true);
-                activeLevel = mainLevel;
-                mapOrientor.OrientMap(activeLevel);
+                LeavingVoid?.Invoke();
+                SwichLevel(mainLevel);
+                collectible.SetActive(true);
                 break;
             case 6: // Return to main menu
                 StartCoroutine(TransitionToMenu());
@@ -120,6 +125,24 @@ public class TutorialManager : NetworkBehaviour
 
         mapOrientor.EntryElevator.SetChoice(true);
         mapOrientor.ExitElevator.SetChoice(false);
+    }
+    // On Doors Fully Opened
+    public void Narrate()
+    {
+        switch (CurrentProgress)
+        {
+            case 1: // First anomaly (forced correct decision)
+                AfterFirstElevator?.Invoke();
+                break;
+            case 2: // No Anomaly
+                AfterSecondElevator?.Invoke();
+                break;
+            case 3: // Second anomaly (player can vote incorrectly)
+                break;
+            case 4: // Void (vending machine tutorial)
+                AfterEnteringVoid?.Invoke();
+                break;
+        }
     }
     private void StopVoidTimer()
     {
@@ -132,6 +155,14 @@ public class TutorialManager : NetworkBehaviour
         BlackFadeManager.Instance?.FadeIn();
         yield return new WaitForSeconds(BlackFadeManager.Instance.TransitionTime);
         SessionModeManager.Instance.ReturnToMenu();
+    }
+    public void SetCurrentProgress(int progress) => CurrentProgress = progress;
+    private void SwichLevel(AnomalyMap newLevel)
+    {
+        activeLevel.gameObject.SetActive(false);
+        activeLevel = newLevel;
+        activeLevel.gameObject.SetActive(true);
+        mapOrientor.OrientMap(activeLevel);
     }
 
     #region Elevator Control
@@ -154,6 +185,7 @@ public class TutorialManager : NetworkBehaviour
         if (!hasPendingInteraction) return;
         hasPendingInteraction = false;
         SetElevatorInteraction(pendingEntryEnabled, pendingExitEnabled);
+        Narrate();
     }
 
     /// <summary>
@@ -199,17 +231,5 @@ public class TutorialManager : NetworkBehaviour
         OnVoidTimerExpired?.Invoke();
         SessionManager.Instance.RequestReturnToLobby();
     }
-    #endregion
-
-    #region Cooldown
-    private bool TryStartCooldown()
-    {
-        if (ElevatorCoolDown) return false;
-
-        ElevatorCoolDown = true;
-        Invoke(nameof(ResetCooldown), decisionCooldown);
-        return true;
-    }
-    private void ResetCooldown() => ElevatorCoolDown = false;
     #endregion
 }
