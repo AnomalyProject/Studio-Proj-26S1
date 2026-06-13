@@ -14,7 +14,7 @@ public class MovingObject : NetworkBehaviour
 
     [Header("Rotation")]
     [SerializeField, Tooltip("Applies Rotation")] private bool doesRotate = true;
-    [SerializeField, Min(0)] private float rotationSpeed;
+    [Min(0)] public float rotationSpeed;
     [SerializeField] private Vector3 rotationAxis;
 
     private float moveTime;

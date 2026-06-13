@@ -1,9 +1,8 @@
+using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
 using System.Collections;
 using PurrNet;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class ShoveComponent : NetworkBehaviour
@@ -18,7 +17,7 @@ public class ShoveComponent : NetworkBehaviour
     
     private CharacterController controller;
     private Vector3 shoveVelocity;
-    private bool isInCooldown;
+    public bool isInCooldown { get; private set; }
     #endregion
 
     #region Events
@@ -88,8 +87,7 @@ public class ShoveComponent : NetworkBehaviour
                 
                 PushPlayer(target, pushDir * shoveForce);
                 
-                StartCoroutine(CooldownShove());
-                
+                StartCoroutine(CooldownShove());   
             }
         }
     }
