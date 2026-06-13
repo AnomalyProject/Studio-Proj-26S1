@@ -128,9 +128,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID == StateID.Chase 
-            || currentStateID == StateID.Attack 
-            || currentStateID == StateID.Alert
+        if (currentStateID == StateID.Alert
             || currentStateID == StateID.Investigate) return;
 
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
