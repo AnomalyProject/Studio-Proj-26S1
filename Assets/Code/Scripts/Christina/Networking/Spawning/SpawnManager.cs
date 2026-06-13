@@ -88,6 +88,21 @@ public class SpawnManager : MonoBehaviour
         }
         
         Debug.Log($"[SpawnManager] Spawned {displayName} at {point.name}");
+
+        var bodyColour = gameObject.GetComponentInChildren<PlayerBodyColour>();
+
+        if (bodyColour != null)
+        {
+            bodyColour.SetBodyColour(playerInfo.Value.ColorIndex);
+        }
+
+        Debug.Log($"[SpawnManager] Player {displayName} spawned with color index {playerInfo.Value.ColorIndex}");
+
+        var pingLocation = gameObject.GetComponentInChildren<PingLocation>();
+        if (pingLocation != null)
+        {
+            pingLocation.SetPingColour_Observers(playerInfo.Value.GetPlayerColor());
+        }
     }
     
     private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
