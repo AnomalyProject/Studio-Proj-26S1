@@ -1,7 +1,8 @@
-using System.Collections;
-using UnityEngine.Events;
-using UnityEngine;
 using PurrNet;
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Events;
 
 public class TutorialManager : NetworkBehaviour
 {
@@ -10,6 +11,7 @@ public class TutorialManager : NetworkBehaviour
     [SerializeField] private AnomalyMap mainLevel;
     [SerializeField] private AnomalyMap voidLevel;
     [SerializeField] private PickUpSpawner duckSpawner;
+    [SerializeField] private PickUpSpawner stalkerSpawner;
     [SerializeField] private GameObject collectible;
     private AnomalyMap activeLevel;
     private MapOrientor mapOrientor;
@@ -28,14 +30,17 @@ public class TutorialManager : NetworkBehaviour
 
     private Coroutine voidTimerCoroutine;
     private bool votedAnomalyPresent;
+    private bool unlockedVoidExit;
 
+    public static event Action<TutorialManager> OnInitialized, OnDestroyed;
     public UnityEvent<float> OnVoidTimerTick;
     public UnityEvent<string> onFloorChanged;
-    public UnityEvent AfterFirstElevator, AfterSecondElevator, AfterEnteringVoid, LeavingVoid, OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
+    public UnityEvent AfterFirstElevator, AfterSecondElevator, AfterEnteringVoid, OnVoidExitButtonPressed, LeavingVoid, OnWrongDecisionBeforeVoid, OnRightDecisionBeforeVoid, OnVoidTimerExpired;
 
     private void Awake()
     {
         Instance = this;
+        OnInitialized?.Invoke(this);
 
         mapOrientor = GetComponent<MapOrientor>();
         mapOrientor.ExitElevator.QueueOnSpawned(() => ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors());
@@ -55,8 +60,13 @@ public class TutorialManager : NetworkBehaviour
     {
         base.OnDestroy();
         Instance = null;
+        OnDestroyed?.Invoke(this);
     }
-    public void OnTaskCompleted() => ((ElevatorExit)mapOrientor.ExitElevator).OpenDoors();
+    public void OnTaskCompleted()
+    {
+        if (activeLevel == voidLevel) unlockedVoidExit = true;
+        ((ElevatorExit)mapOrientor.ExitElevator).OpenDoors();
+    }
     private void HandleElevatorButtonPressed(LevelExitPoint usedElevator, bool votedAnomalyPresent)
     {
         usedElevator.SetInteraction(false);
@@ -89,6 +99,7 @@ public class TutorialManager : NetworkBehaviour
                 QueueElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (pick up collectible for it to open again)
                 EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
+                OnVoidExitButtonPressed?.Invoke();
                 break;
         }
     }
@@ -111,6 +122,7 @@ public class TutorialManager : NetworkBehaviour
                 else OnWrongDecisionBeforeVoid?.Invoke();
                 SwichLevel(voidLevel);
                 duckSpawner.SpawnItems();
+                stalkerSpawner.SpawnItems();
                 break;
             case 5: // Return from void (collectibe tutorial)
                 LeavingVoid?.Invoke();
@@ -125,6 +137,7 @@ public class TutorialManager : NetworkBehaviour
         mapOrientor.EntryElevator.SetChoice(true);
         mapOrientor.ExitElevator.SetChoice(false);
     }
+    // On Doors Open Start
     public void UpdateFloorNumbers()
     {
         switch (CurrentProgress)
@@ -157,7 +170,7 @@ public class TutorialManager : NetworkBehaviour
             case 3: // Second anomaly (player can vote incorrectly)
                 break;
             case 4: // Void (vending machine tutorial)
-                AfterEnteringVoid?.Invoke();
+                if (!unlockedVoidExit) AfterEnteringVoid?.Invoke();
                 break;
         }
     }
@@ -230,7 +243,7 @@ public class TutorialManager : NetworkBehaviour
     #region Void Timer
     public void StartVoidTimer()
     {
-        if (activeLevel != voidLevel) return;
+        if (activeLevel != voidLevel || unlockedVoidExit) return;
         if (voidTimerCoroutine != null) StopCoroutine(voidTimerCoroutine);
         voidTimerCoroutine = StartCoroutine(VoidTimer(voidTimeLimit));
     }
@@ -244,9 +257,7 @@ public class TutorialManager : NetworkBehaviour
             timeRemaining -= 1f;
             OnVoidTimerTick.Invoke(timeRemaining);
         }
-
         OnVoidTimerExpired?.Invoke();
-        SessionManager.Instance.RequestReturnToLobby();
     }
     #endregion
 }
