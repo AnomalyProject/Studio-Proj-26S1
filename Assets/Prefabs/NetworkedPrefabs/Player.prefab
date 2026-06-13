@@ -838,6 +838,7 @@ GameObject:
   - component: {fileID: 4187899725846059103}
   - component: {fileID: 3959773706458874589}
   - component: {fileID: 6246991274505363181}
+  - component: {fileID: 9119088765063259439}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -1449,7 +1450,7 @@ MonoBehaviour:
   pingDuration: 10
   pingLayer:
     serializedVersion: 2
-    m_Bits: 2003
+    m_Bits: 979
   pingSFX: {fileID: 8300000, guid: ce2c735db2b86ed44b8a7eb1af1466db, type: 3}
   OnPingLocation:
     m_PersistentCalls:
@@ -1638,6 +1639,29 @@ MonoBehaviour:
   OnDeactivated:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9119088765063259439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4722490883632117968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4b309128a6b9b4a853b2fdafcb6043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBodyColour
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  suitRenderer: {fileID: 5164973429249175986}
+  materialIndex: 1
 --- !u!1 &5348312652502001726
 GameObject:
   m_ObjectHideFlags: 0
@@ -1895,6 +1919,11 @@ MonoBehaviour:
 --- !u!4 &609654828406960972 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0309233d3f13d3745ad74c4ebd4fa78a, type: 3}
+  m_PrefabInstance: {fileID: 1152733124731409575}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &5164973429249175986 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5211508491986625813, guid: 0309233d3f13d3745ad74c4ebd4fa78a, type: 3}
   m_PrefabInstance: {fileID: 1152733124731409575}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &6780590493857833423 stripped
