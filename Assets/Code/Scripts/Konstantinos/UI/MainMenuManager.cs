@@ -36,6 +36,12 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject messagePanel;
     [SerializeField] private TMP_Text messageText;
 
+    [SerializeField] private GameObject PasswordProtectedPanel;
+    [SerializeField] private GameObject firstSelectedButtonPP;
+
+    [SerializeField] private GameObject InputPasswordPanel;
+    [SerializeField] private GameObject PasswordInputField;
+
     [Space(10)]
     [Header("Manager Settings")]
     [SerializeField] private bool enableOnStart = true;
@@ -110,40 +116,53 @@ public class MainMenuManager : MonoBehaviour
         switch (index)
         {
             case 0:
+                ResetPanels();
                 startPanel.SetActive(true);
-                modePanel.SetActive(false);
-                coopPanel.SetActive(false);
-                joinPanel.SetActive(false);
 
                 EventSystem.current.SetSelectedGameObject(firstSelectedButtonStart);
                 break;
             case 1:
-                startPanel.SetActive(false);
+                ResetPanels();
                 modePanel.SetActive(true);
-                coopPanel.SetActive(false);
-                joinPanel.SetActive(false);
 
                 EventSystem.current.SetSelectedGameObject(firstSelectedButtonMode);
                 break;
             case 2:
-                startPanel.SetActive(false);
-                modePanel.SetActive(false);
+                ResetPanels();
                 coopPanel.SetActive(true);
-                joinPanel.SetActive(false);
 
                 EventSystem.current.SetSelectedGameObject(firstSelectedButtonCoop);
                 break;
             case 3:
-                startPanel.SetActive(false);
-                modePanel.SetActive(false);
-                coopPanel.SetActive(false);
+                ResetPanels();
                 joinPanel.SetActive(true);
 
                 EventSystem.current.SetSelectedGameObject(firstSelectedButtonJoin);
                 break;
+            case 4:
+                ResetPanels();
+                PasswordProtectedPanel.SetActive(true);
+
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonPP);
+                break;
+            case 5:
+                ResetPanels();
+                InputPasswordPanel.SetActive(true);
+
+                EventSystem.current.SetSelectedGameObject(PasswordInputField);
+                break;
         }
     }
 
+    private void ResetPanels()
+    {
+        startPanel.SetActive(false);
+        modePanel.SetActive(false);
+        coopPanel.SetActive(false);
+        joinPanel.SetActive(false);
+        PasswordProtectedPanel.SetActive(false);
+        InputPasswordPanel.SetActive(false);
+    }
     public void StartGame()
     {
         StartCoroutine(StartGameWithDelay());
@@ -208,7 +227,7 @@ public class MainMenuManager : MonoBehaviour
     }
     #endregion
 
-    private void ShowMessage(string message)
+    public void ShowMessage(string message)
     {
         if (messagePanel == null || messageText == null) return;
 
