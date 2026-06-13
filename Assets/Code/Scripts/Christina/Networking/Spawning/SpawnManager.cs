@@ -97,6 +97,12 @@ public class SpawnManager : MonoBehaviour
         }
 
         Debug.Log($"[SpawnManager] Player {displayName} spawned with color index {playerInfo.Value.ColorIndex}");
+
+        var pingLocation = gameObject.GetComponentInChildren<PingLocation>();
+        if (pingLocation != null)
+        {
+            pingLocation.SetPingColour_Observers(playerInfo.Value.GetPlayerColor());
+        }
     }
     
     private void HandlePlayerRemoved(PlayerID playerID, ulong steamID, string reason)
