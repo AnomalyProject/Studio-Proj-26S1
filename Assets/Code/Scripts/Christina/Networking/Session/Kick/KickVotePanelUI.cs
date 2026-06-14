@@ -11,6 +11,9 @@ public class KickVotePanelUI : MonoBehaviour
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
+    
+    private ClientKickVoteData currentVoteData;
+    private float localVoteEndsAt;
 
     private void Awake()
     {
@@ -30,12 +33,24 @@ public class KickVotePanelUI : MonoBehaviour
         SessionEvents.OnKickVoteUpdated -= HandleVoteUpdated;
         SessionEvents.OnKickVoteFinished -= HandleVoteFinished;
     }
+    
+    private void Update()
+    {
+        if (root == null || !root.activeSelf) return;
+
+        float remainingSeconds = Mathf.Max(0f, localVoteEndsAt - Time.realtimeSinceStartup);
+
+        if (timerText != null) timerText.text = $"{Mathf.CeilToInt(remainingSeconds)}s";
+    }
 
     private void HandleVoteUpdated(ClientKickVoteData data)
     {
         root.SetActive(data.HasActiveVote);
 
         if (!data.HasActiveVote) return;
+        
+        currentVoteData = data;
+        localVoteEndsAt = Time.realtimeSinceStartup + data.RemainingSeconds;
         
         bool isTarget = false;
         

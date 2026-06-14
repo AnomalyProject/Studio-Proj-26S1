@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -108,7 +109,7 @@ public class LobbyUI : MonoBehaviour
 
     private void UpdateLobbyVisibility(GameState state)
     {
-        bool shouldShowLobbyUI = state == GameState.Lobby && !IsSoloMode();
+        bool shouldShowLobbyUI = (state == GameState.Lobby || state == GameState.InGame) && !IsSoloMode();
 
         lobbyPanel.SetActive(shouldShowLobbyUI);
 
@@ -122,9 +123,7 @@ public class LobbyUI : MonoBehaviour
     {
         if (IsSoloMode())
         {
-            if (lobbyPanel != null)
-                lobbyPanel.SetActive(false);
-
+            if (lobbyPanel != null) lobbyPanel.SetActive(false);
             return;
         }
         
@@ -137,18 +136,26 @@ public class LobbyUI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+        
+        //Updating start button - only the host can see it, if everyone is ready he can press it-
+        bool isHost = SessionManager.Instance.IsHost;
+        bool isLobby = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.Lobby;
+        bool isInGame = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.InGame;
+        bool canStartKickVote = sessionData.Players != null && sessionData.Players.Count(player => player.IsConnected) >= 3 && (isInGame || (isLobby && sessionData.ElevatorState == ElevatorLobbyState.Open));
+
 
         bool allPlayersReady = true;
         bool isLocalPlayerReady = false;
         bool isLocalPlayerInElevator = false;
         int readyCount = 0;
         ulong localSteamID = LocalIdentity.ResolveHost().steamID;
-
+        
+       
         //Using new list items and calculating states
         foreach (var player in sessionData.Players)
         {
             var listItem = Instantiate(playerListItemPrefab, playerListContainer);
-            listItem.Setup(player, localSteamID, OpenKickReasonPanel);
+            listItem.Setup(player, localSteamID, OpenKickReasonPanel, canStartKickVote);
 
             if (player.IsReady && player.IsInElevator)
             {
@@ -171,10 +178,9 @@ public class LobbyUI : MonoBehaviour
         //Updating ready status
         if (readyButton != null)
         {
-            readyButton.interactable =
-                isLocalPlayerInElevator &&
-                !isLocalPlayerReady &&
-                sessionData.ElevatorState == ElevatorLobbyState.Open;
+            readyButton.gameObject.SetActive(isLobby);
+            
+            readyButton.interactable = isLocalPlayerInElevator && !isLocalPlayerReady && sessionData.ElevatorState == ElevatorLobbyState.Open;
         }
 
         if (readyButtonText != null)
@@ -203,12 +209,10 @@ public class LobbyUI : MonoBehaviour
                 }
             }
         }
-
-        //Updating start button - only the host can see it, if everyone is ready he can press it-
-        bool isHost = SessionManager.Instance.IsHost;
         
-        hostControlsRoot.SetActive(isHost);
-        inviteButton.interactable = SteamSessionBridge.Instance != null;
+        hostControlsRoot.SetActive(isLobby && isHost);
+        inviteButton.gameObject.SetActive(isLobby);
+        inviteButton.interactable = isLobby && SteamSessionBridge.Instance != null;
         
         ApplyLobbySettings(sessionData, isHost);
         

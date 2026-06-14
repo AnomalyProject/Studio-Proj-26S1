@@ -51,6 +51,9 @@ public class SessionKickVoteService
         voteData = new ClientKickVoteData();
 
         if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no active session.");
+        
+        if (!CanUseVoteKick())
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick is only available in the lobby or in game.");
 
         if (activeVote != null) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "A kick vote is already active.");
 
@@ -61,6 +64,11 @@ public class SessionKickVoteService
         if (nextPlayerVoteStartAllowedAt.TryGetValue(starterSteamID, out float playerCooldown) && now < playerCooldown) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You must wait before starting another kick vote.");
 
         SessionData session = sessionStore.Current;
+        
+        if (GameStateManager.Instance.CurrentState == GameState.Lobby && session.ElevatorState != ElevatorLobbyState.Open)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick is disabled while the elevator is leaving.");
+        }
 
         PlayerSessionInfo? target = session.GetPlayer(targetSteamID);
         if (!target.HasValue) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Target player was not found.");
@@ -232,6 +240,18 @@ public class SessionKickVoteService
         );
 
         return activeVote.NoVotes.Count >= blockingNoVotes;
+    }
+    
+    /// <summary>
+    /// Vote-kick is allowed while players are gathered in the lobby or actively in game.
+    /// It is blocked in menu/loading-style states where player removal can break flow setup.
+    /// </summary>
+    private bool CanUseVoteKick()
+    {
+        if (GameStateManager.Instance == null) return false;
+
+        GameState state = GameStateManager.Instance.CurrentState;
+        return state == GameState.Lobby || state == GameState.InGame;
     }
 
     private List<ulong> GetEligibleVoters(ulong targetSteamID)
