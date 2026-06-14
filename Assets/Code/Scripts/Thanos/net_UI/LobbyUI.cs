@@ -29,6 +29,7 @@ public class LobbyUI : MonoBehaviour
     
     [Header("Host Controls")]
     [SerializeField] private GameObject hostControlsRoot;
+    [SerializeField] private GameObject leftControlsRoot;
     [SerializeField] private TMP_Dropdown privacyDropdown;
     [SerializeField] private TMP_Dropdown maxPlayersDropdown;
 
@@ -141,7 +142,7 @@ public class LobbyUI : MonoBehaviour
         bool isHost = SessionManager.Instance.IsHost;
         bool isLobby = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.Lobby;
         bool isInGame = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.InGame;
-        bool canStartKickVote = sessionData.Players != null && sessionData.Players.Count(player => player.IsConnected) >= 2 && (isInGame || (isLobby && sessionData.ElevatorState == ElevatorLobbyState.Open));
+        bool canStartKickVote = sessionData.Players != null && sessionData.Players.Count(player => player.IsConnected) >= 3 && (isInGame || (isLobby && sessionData.ElevatorState == ElevatorLobbyState.Open));
 
 
         bool allPlayersReady = true;
@@ -211,6 +212,7 @@ public class LobbyUI : MonoBehaviour
         }
         
         hostControlsRoot.SetActive(isLobby && isHost);
+        leftControlsRoot.SetActive(isLobby);
         inviteButton.gameObject.SetActive(isLobby);
         inviteButton.interactable = isLobby && SteamSessionBridge.Instance != null;
         
