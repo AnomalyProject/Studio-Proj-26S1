@@ -141,7 +141,7 @@ public class LobbyUI : MonoBehaviour
         bool isHost = SessionManager.Instance.IsHost;
         bool isLobby = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.Lobby;
         bool isInGame = GameStateManager.Instance != null && GameStateManager.Instance.CurrentState == GameState.InGame;
-        bool canStartKickVote = sessionData.Players != null && sessionData.Players.Count(player => player.IsConnected) >= 3 && (isInGame || (isLobby && sessionData.ElevatorState == ElevatorLobbyState.Open));
+        bool canStartKickVote = sessionData.Players != null && sessionData.Players.Count(player => player.IsConnected) >= 2 && (isInGame || (isLobby && sessionData.ElevatorState == ElevatorLobbyState.Open));
 
 
         bool allPlayersReady = true;
