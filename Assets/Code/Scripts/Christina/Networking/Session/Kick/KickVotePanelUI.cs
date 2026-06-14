@@ -54,7 +54,7 @@ public class KickVotePanelUI : MonoBehaviour
         
         bool isTarget = false;
         
-        if (SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
+        if (SessionModeManager.Instance != null && SessionModeManager.Instance.TryGetLocalSessionSteamID(out ulong localSteamID))
         {
             isTarget = data.TargetSteamID == localSteamID;
         }

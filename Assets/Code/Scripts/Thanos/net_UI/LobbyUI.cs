@@ -149,7 +149,9 @@ public class LobbyUI : MonoBehaviour
         bool isLocalPlayerReady = false;
         bool isLocalPlayerInElevator = false;
         int readyCount = 0;
-        ulong localSteamID = LocalIdentity.ResolveHost().steamID;
+        ulong localSteamID = 0;
+
+        if (SessionModeManager.Instance != null) SessionModeManager.Instance.TryGetLocalSessionSteamID(out localSteamID);
         
        
         //Using new list items and calculating states
