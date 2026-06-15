@@ -11,58 +11,49 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private TMP_Text headerText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text timerText;
-    [SerializeField] private Slider loadingSlider;
+
+    [SerializeField] private Slider fillSlider;
+    [SerializeField] private Slider backgroundSlider;
 
     [Header("Toast Reference")]
     [SerializeField] private GameObject toastPanel;
     [SerializeField] private TMP_Text toastText;
 
     [Header("Settings")]
-    [SerializeField] private float sliderSpeed = 2f;
+    [SerializeField] private float sliderSpeed = 1f;
 
     private IReconnect _networkService;
+    private IAfk _afkService;
     private Coroutine _countdownRoutine;
     private Coroutine _toastRoutine;
 
-    //Debug keys to simulate connection events
     private void Update()
-    { 
-        if (Input.GetKeyDown(KeyCode.Alpha9))
-        {
-            HandleConnectionLost();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha0))
-        {
-            HandleReconnected();
-        }
+    {
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Alpha9)) HandleConnectionLost();
+        if (Input.GetKeyDown(KeyCode.Alpha0)) HandleReconnected();
+        if (Input.GetKeyDown(KeyCode.Alpha8)) HandleAfkDetected();   // debug: simulate AFK
+#endif
     }
-    
-    //@Christina : call this method and add the actual service
+
     public void InjectDependencies(IReconnect networkService)
     {
         _networkService = networkService;
 
-        //Events
         _networkService.OnConnectionLost += HandleConnectionLost;
         _networkService.OnHostMigrating += HandleHostMigrating;
         _networkService.OnReconnected += HandleReconnected;
+        _networkService.OnReconnectFailed += HandleReconnectFailed;
 
         ResetUIState();
     }
-
-    private void ResetUIState()
+    public void InjectAfkDependencies(IAfk afkService)
     {
-        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
-        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _afkService = afkService;
 
-        overlayPanel.SetActive(false);
-        toastPanel.SetActive(false);
-
-        timerText.text = "";
-        toastText.text = "";
+        _afkService.OnAfkDetected += HandleAfkDetected;
+        _afkService.OnAfkCancelled += HandleAfkCancelled;
     }
-
     private void HandleConnectionLost()
     {
         ShowOverlay("Connection Lost", "Reconnecting");
@@ -70,14 +61,43 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleHostMigrating()
     {
-        ShowOverlay("Connection Lost", "Host disconnected � migrating session...");
+        ShowOverlay("Connection Lost", "Host disconnected — migrating session...");
+    }
+    private void HandleReconnected()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+
+        overlayPanel.SetActive(false);
+        RestoreGameplayInput();
+
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
     }
 
+    private void HandleReconnectFailed(string reason)
+    {
+        ResetUIState();
+        RestoreGameplayInput();
+    }
+    private void HandleAfkDetected()
+    {
+        ShowOverlay("Connection Lost", "Reconnecting");
+        RestoreGameplayInput();
+    }
+
+    private void HandleAfkCancelled()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+
+        overlayPanel.SetActive(false);
+
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _toastRoutine = StartCoroutine(ShowToastRoutine("Welcome back!"));
+    }
     private void ShowOverlay(string header, string status)
     {
-        //Do not show reconnect UI if player is on Menu
         if (SceneManager.GetActiveScene().name == "MainMenu") return;
-        
+
         if (_toastRoutine != null) StopCoroutine(_toastRoutine);
         toastPanel.SetActive(false);
         toastText.text = "";
@@ -86,7 +106,7 @@ public class ReconnectUIController : MonoBehaviour
         headerText.text = header;
         statusText.text = status;
 
-        HandleInput();
+        LockReconnectInput();
 
         if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
         _countdownRoutine = StartCoroutine(CountdownRoutine());
@@ -94,18 +114,34 @@ public class ReconnectUIController : MonoBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        // changed this because the server should own the reconnect timeout. The UI only displays it.
         float timeLeft = _networkService != null ? _networkService.ReconnectTimeoutSeconds : 30f;
-
         timeLeft = Mathf.Max(1f, timeLeft);
+
+        float marqueeAge = 0f;
+        float initialFill = 0.3f;
+
+        fillSlider.value = initialFill;
 
         while (timeLeft > 0)
         {
             timerText.text = $"Reconnect timeout: 0:{Mathf.CeilToInt(timeLeft):D2}";
 
-            if (loadingSlider != null)
+            if (fillSlider != null && backgroundSlider != null)
             {
-                loadingSlider.value = Mathf.PingPong(Time.unscaledTime * sliderSpeed, 1f);
+                marqueeAge += Time.unscaledDeltaTime * sliderSpeed;
+
+                float cycleProgress = marqueeAge % 2f;
+
+                if (cycleProgress < 1f)
+                {
+                    fillSlider.value = cycleProgress + initialFill;
+                    backgroundSlider.value = cycleProgress;
+                }
+                else
+                {
+                    fillSlider.value = (cycleProgress - 1f) + initialFill;
+                    backgroundSlider.value = cycleProgress - 1f;
+                }
             }
 
             timeLeft -= Time.unscaledDeltaTime;
@@ -113,18 +149,6 @@ public class ReconnectUIController : MonoBehaviour
         }
 
         HandleTimeout();
-    }
-
-    private void HandleReconnected()
-    {
-        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
-
-        overlayPanel.SetActive(false);
-
-        HandleInput();
-
-        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
-        _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
     }
 
     private IEnumerator ShowToastRoutine(string message)
@@ -139,10 +163,10 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleTimeout()
     {
+        Debug.Log("[ReconnectUI] Timeout reached. Returning to menu.");
+
         ResetUIState();
-        
-        HandleInput();
-        
+        RestoreGameplayInput();
         _networkService?.CancelAndReturnToMenu();
     }
 
@@ -150,7 +174,27 @@ public class ReconnectUIController : MonoBehaviour
     {
         HandleTimeout();
     }
+    private void ResetUIState()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
 
+        overlayPanel.SetActive(false);
+        toastPanel.SetActive(false);
+
+        timerText.text = "";
+        toastText.text = "";
+    }
+
+    private void LockReconnectInput()
+    {
+        InputBridge.SetContext(InputBridge.InputContext.None);
+    }
+
+    private void RestoreGameplayInput()
+    {
+        InputBridge.SetContext(InputBridge.InputContext.Player);
+    }
     private void OnDestroy()
     {
         if (_networkService != null)
@@ -158,18 +202,13 @@ public class ReconnectUIController : MonoBehaviour
             _networkService.OnConnectionLost -= HandleConnectionLost;
             _networkService.OnHostMigrating -= HandleHostMigrating;
             _networkService.OnReconnected -= HandleReconnected;
+            _networkService.OnReconnectFailed -= HandleReconnectFailed;
         }
-    }
 
-    private void HandleInput()
-    {
-        if (InputBridge.CurrentContext == InputBridge.InputContext.Player)
+        if (_afkService != null)
         {
-            InputBridge.SetContext(InputBridge.InputContext.None);
-        }
-        else if (InputBridge.CurrentContext == InputBridge.InputContext.None)
-        {
-            InputBridge.SetContext(InputBridge.InputContext.Player);
+            _afkService.OnAfkDetected -= HandleAfkDetected;
+            _afkService.OnAfkCancelled -= HandleAfkCancelled;
         }
     }
 }
