@@ -231,13 +231,13 @@ public class ChatUI : MonoBehaviour
                 if (parts.Length > 2)
                 {
                     string targetName = "";
-                    string message = string.Join(" ", parts, 1, parts.Length - 2);
+                    string message = string.Join(" ", parts, 1, parts.Length - 1);
 
                     foreach (string name in GetActivePlayerNames())
                     {
                         if (message.Contains(name))
                         {
-                            message.Replace(name, "").Trim();
+                            message = message.Replace(name, "");
                             targetName = name;
                             break;
                         }
