@@ -31,7 +31,7 @@ public class AfkHandler : NetworkBehaviour, IAfk
         }
         else
         {
-            Debug.LogWarning("[AfkHandler] ReconnectUIController not found — AFK UI won't react.");
+            Debug.LogWarning("[AfkHandler] ReconnectUIController not found - AFK UI won't react.");
         }
 
         SessionReconnectService reconnectService = FindFirstObjectByType<SessionReconnectService>(FindObjectsInactive.Include);
@@ -136,7 +136,7 @@ public class AfkHandler : NetworkBehaviour, IAfk
         isTracking = false;
         ResetIdleTimer();
 
-        Debug.Log("[AfkHandler] Player is AFK — triggering reconnect state.");
+        Debug.Log("[AfkHandler] Player is AFK - triggering reconnect state.");
         OnAfkDetected?.Invoke();
     }
 
