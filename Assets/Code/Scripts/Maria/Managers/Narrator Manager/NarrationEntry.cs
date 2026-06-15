@@ -18,6 +18,7 @@ public class NarrationEntry : ScriptableObject
 
     [Tooltip("Optional. Played via AudioManager.PlayUI()")]
     [SerializeField] private AudioClip voiceClip;
+    public AudioClip Clip => voiceClip;
 
     [SerializeField] private List<SubtitleEntry> subtitles = new();
 
