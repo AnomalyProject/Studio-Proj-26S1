@@ -38,7 +38,7 @@ public class SessionStateStore
         data.HostSteamID = hostSteamID;
         data.MapName = "Default";
         data.GameMode = "Default";
-        data.MaxPlayers = 2;
+        data.MaxPlayers = 4;
         
         currentSession = data;
         return currentSession;

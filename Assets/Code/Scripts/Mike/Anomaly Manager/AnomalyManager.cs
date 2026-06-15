@@ -45,7 +45,7 @@ public class AnomalyManager : NetworkBehaviour
     void Awake()
     {
         mapOrientor = GetComponent<MapOrientor>();
-        OnMapChanged += mapOrientor.OrientMap;
+        OnMapChanged += HandleMapChange;
 
         if (!mapsArePrefabs)
         {
@@ -76,10 +76,13 @@ public class AnomalyManager : NetworkBehaviour
         if (!isServer) return;
         RegisterState(RoomState.WinRoom);
     }
-    public void PickMap_Server()
+    public void PickMap_Server() => PickMapByIndex_Server(Random.Range(0, mapCollection.Length));
+    public void PickMapByIndex_Server(int index)
     {
         if (!isServer) return;
-        currentMapState.mapIndex = Random.Range(0, mapCollection.Length);
+        index = Mathf.Clamp(index, 0, mapCollection.Length);
+
+        currentMapState.mapIndex = index;
         currentMapState.variationIndex = -1;
         RegisterState(RoomState.NormalRoom);
     }
@@ -220,6 +223,8 @@ public class AnomalyManager : NetworkBehaviour
         activeMap.BaseMap.SetActive(!variation.ReplacesBaseMap);
         variation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
+
+        if (variation.AlmanacEntry != null) AlmanacDiscovery.Discover(variation.AlmanacEntry);
     }
     private void ReleaseActiveMap(bool destroy)
     {
@@ -244,6 +249,11 @@ public class AnomalyManager : NetworkBehaviour
         currentMapState.entryPointID = entry.id.Value;
         currentMapState.entryPosition = entry.transform.position;
         currentMapState.entryRotation = entry.transform.rotation;
+    }
+    private void HandleMapChange(GameMap map)
+    {
+        mapOrientor.OrientMap(map);
+        AlmanacDiscovery.Discover(map.AlmanacEntry);
     }
     #endregion
 }

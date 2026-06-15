@@ -1,3 +1,4 @@
+using UnityEngine.Events;
 using UnityEngine;
 
 /// <summary>
@@ -9,14 +10,28 @@ public class NarrationEvent : MonoBehaviour
 {
     [SerializeField] private bool triggerOnce = false;
     [SerializeField] private NarrationEntry entry;
+    [SerializeField] private UnityEvent onNarrationFinished;
+
+    private static readonly System.Collections.Generic.Dictionary<string,int> s_lastTriggeredFrame = new();
 
     public void PlayNarration()
     {
         if (!NarratorManager.Instance || entry == null) return;
 
-        if (NarratorManager.Instance.TryTriggerNarration(entry) && triggerOnce)
+        if (entry != null)
         {
-            NarratorManager.Instance.AddIgnoredEntry(entry);
+            if (s_lastTriggeredFrame.TryGetValue(entry.TriggerID, out int f) && f == Time.frameCount)
+            {
+                Debug.Log($"[NarrationEvent] Ignoring duplicate PlayNarration same-frame for {entry.TriggerID}");
+                return;
+            }
+            s_lastTriggeredFrame[entry.TriggerID] = Time.frameCount;
         }
+
+        // Always call through TryTriggerNarration. Manager will queue if needed and
+        // invoke the provided callback when the narration actually finishes.
+        NarratorManager.Instance.TryTriggerNarration(entry, OnNarrationFinsihed, triggerOnce);
     }
+
+    private void OnNarrationFinsihed() => onNarrationFinished?.Invoke();
 }

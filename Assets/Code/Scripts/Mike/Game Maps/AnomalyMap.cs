@@ -5,7 +5,8 @@ public class AnomalyMap : GameMap
 {
     [SerializeField, Tooltip("The normal version of the map, no anomalies.")] private GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] private List<AnomalyGroup> anomalyVariations;
-   
+    public List<AnomalyGroup> AnomalyVariations => anomalyVariations;
+
     private List<int> availableIndices = new();
     public GameObject BaseMap => baseMap;
     public bool HasAnomalyVariations => anomalyVariations != null && anomalyVariations.Count > 0;

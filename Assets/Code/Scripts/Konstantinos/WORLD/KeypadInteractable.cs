@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine;
 using PurrNet;
@@ -70,14 +71,22 @@ public class KeypadInteractable : NetworkBehaviour
     {
         if (!isServer) return;
         char[] digits = new char[maxDigits]; // create a new array with the size of maxDigits
+
+        // Populate list with all possible glyphs (0-15) for random selection
+        List<byte> possibleGlyphs = new List<byte>(glyphCount);
+        for (byte i = 0; i < glyphCount; i++) possibleGlyphs.Add(i);
+
         byte[] glyphIndecies = new byte[maxDigits];
 
         for (int i = 0; i < maxDigits; i++) // loops as many times as the max possible digits
         {
             digits[i] = (char)('0' + Random.Range(0, 10)); // picks a random digit and inserts it into the array index i
-            glyphIndecies[i] = (byte)Random.Range(0, glyphCount); // picks a random glyph index
+
+            byte selectedGlyph = possibleGlyphs[Random.Range(0, possibleGlyphs.Count)]; // randomly select a glyph index from the remaining possible glyphs
+            glyphIndecies[i] = selectedGlyph; // assign the selected glyph index
+            possibleGlyphs.Remove(selectedGlyph);
         }
-        requiredPassword = new string(digits); // store password
+        requiredPassword = new string(digits); // store password or use pre-generated one
         NotifyPasswordGenerated(new PasswordData(requiredPassword, glyphIndecies));
 
         // Question: How do the players get clues as to which the correct digits are? 
