@@ -18,6 +18,9 @@ public class VoidTimer : MonoBehaviour
         defaultColor = timerText.color;
         GameManager.OnInitialized += InitManager;
         GameManager.OnDestroyed += HandleManagerDestruction;
+
+        TutorialManager.OnInitialized += InitManager;
+        TutorialManager.OnDestroyed += HandleManagerDestruction;
     }
 
     private void OnDestroy()
@@ -26,6 +29,7 @@ public class VoidTimer : MonoBehaviour
         GameManager.OnDestroyed -= HandleManagerDestruction;
     }
     private void HandleManagerDestruction(GameManager gameManager) => ShowTimer(false);
+    private void HandleManagerDestruction(TutorialManager tutorialManager) => ShowTimer(false);
 
     private void InitManager(GameManager gameManager)
     {
@@ -49,6 +53,24 @@ public class VoidTimer : MonoBehaviour
 
         gameManager.OnGameReset.AddListener(() => ShowTimer(false));
         gameManager.OnGameWon.AddListener(() => ShowTimer(false));
+    }
+    private void InitManager(TutorialManager tutorialManager)
+    {
+        if (tutorialManager == null) return;
+
+        tutorialManager.OnVoidTimerExpired.AddListener(() =>
+        {
+            timerText.color = Color.red;
+            //Debug.Log("Reward with achievement here");
+        });
+        tutorialManager.OnVoidExitButtonPressed.AddListener(() => ShowTimer(false));
+        tutorialManager.OnVoidTimerTick.AddListener(TickTimer);
+        tutorialManager.AfterEnteringVoid.AddListener(() =>
+        {
+            timerText.text = string.Empty;
+            timerText.color = defaultColor;
+            ShowTimer(true);
+        });
     }
     private void TickTimer(float time) => timerText.text = TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
     private void ShowTimer(bool show) => timerText.gameObject.SetActive(show);

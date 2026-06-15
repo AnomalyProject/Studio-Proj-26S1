@@ -20,7 +20,6 @@ public class EventVolume : NetworkBehaviour
 
     private void Awake()
     {
-
         col = GetComponent<Collider>();
         col.isTrigger = true;
     }
@@ -32,7 +31,6 @@ public class EventVolume : NetworkBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-
         if (!isServer) return;
         if (doOnce && didEnter) return;
 
@@ -47,7 +45,7 @@ public class EventVolume : NetworkBehaviour
     private void OnTriggerExit(Collider other)
     {
         if (!isServer) return;
-        if(doOnce && didExit) return;
+        if (doOnce && didExit) return;
 
         if (((1 << other.gameObject.layer) & detectionLayers) != 0)
         {
