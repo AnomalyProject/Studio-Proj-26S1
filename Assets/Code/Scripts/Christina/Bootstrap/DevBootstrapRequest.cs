@@ -13,7 +13,7 @@ public class DevBootstrapRequest
     public string runtimeSceneName; 
     public string address = "127.0.0.1";
     public int port = 5000;
-    public int maxPlayers = 2;
+    public int maxPlayers = 4;
     // 0 for host, 1++ for clients
     public int playerIndex; 
     public ulong fakeSteamId;
