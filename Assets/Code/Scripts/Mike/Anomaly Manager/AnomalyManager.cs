@@ -76,10 +76,13 @@ public class AnomalyManager : NetworkBehaviour
         if (!isServer) return;
         RegisterState(RoomState.WinRoom);
     }
-    public void PickMap_Server()
+    public void PickMap_Server() => PickMapByIndex_Server(Random.Range(0, mapCollection.Length));
+    public void PickMapByIndex_Server(int index)
     {
         if (!isServer) return;
-        currentMapState.mapIndex = Random.Range(0, mapCollection.Length);
+        index = Mathf.Clamp(index, 0, mapCollection.Length);
+
+        currentMapState.mapIndex = index;
         currentMapState.variationIndex = -1;
         RegisterState(RoomState.NormalRoom);
     }

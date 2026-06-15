@@ -90,7 +90,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     /// </summary>
     private bool HasEnoughPlayers()
     {
-        Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
+        //Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
         return playersInArea.Count >= NetworkManager.main.playerCount;
     }
     #endregion

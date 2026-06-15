@@ -1,14 +1,14 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using System.Linq;
 
-[CustomEditor(typeof(SnapshotID))]
-public class SnapshotIDEditor : Editor
-{
-    public override void OnInspectorGUI() { } // Draw nothing
-}
+//[CustomEditor(typeof(SnapshotID))]
+//public class SnapshotIDEditor : Editor
+//{
+//    public override void OnInspectorGUI() { } // Draw nothing
+//}
 #endif
 
 /// <summary>
@@ -20,12 +20,16 @@ public class SnapshotIDEditor : Editor
 [AddComponentMenu("")]
 public class SnapshotID : MonoBehaviour
 {
+    private static Dictionary<string, SnapshotID> snapshotIDs = new Dictionary<string, SnapshotID>();
+
     public string guid;
     private void Awake() => EnsureGuid();
+    private void OnDestroy() => snapshotIDs.Remove(guid);
 
 #if UNITY_EDITOR
     // Runs in editor when object is created, duplicated, or modified
     private void OnValidate() => EnsureGuid();
+    [InitializeOnLoadMethod] private static void ClearGuidMap() => snapshotIDs.Clear();
 #endif
 
     private void EnsureGuid()
@@ -39,13 +43,14 @@ public class SnapshotID : MonoBehaviour
 
 #if UNITY_EDITOR
         if (PrefabUtility.IsPartOfPrefabAsset(this)) return; // Don't regenerate GUID when making a prefab.
+        if (EditorApplication.isPlaying) return; // Don't regenerate GUIDs when in playmode.
 
         // Detect duplicates in the scene (Ctrl+D)
-        SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        bool duplicateExists = all.Any(x => x != this && x.guid == guid);
-        if (duplicateExists)
+        if (!snapshotIDs.TryGetValue(guid, out SnapshotID cached)) snapshotIDs.Add(guid, this);
+        else if (cached != this)
         {
             guid = System.Guid.NewGuid().ToString();
+            snapshotIDs.Add(guid, this);
             EditorUtility.SetDirty(this); // Mark dirty so Unity saves the change
         }
 #endif

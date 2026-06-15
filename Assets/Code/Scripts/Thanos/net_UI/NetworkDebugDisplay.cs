@@ -32,9 +32,6 @@ public class NetworkDebugDisplay : MonoBehaviour
         // -- from christina: added guard so the console doesn't scream if steam isn't available
         if (!SteamManager.Initialized) return;
 
-        int Xpos = 209;
-        int Ypos = 173;
-
         SteamRelayNetworkStatus_t status = new SteamRelayNetworkStatus_t();
         SteamNetworkingUtils.GetRelayNetworkStatus(out status);
 
@@ -43,8 +40,18 @@ public class NetworkDebugDisplay : MonoBehaviour
         string statusText = $"Steam Network Status: {convertStatus}";
 
         string color = (status.m_eAvail == ESteamNetworkingAvailability.k_ESteamNetworkingAvailability_Current)? "green" : "red";
+        
+        int width = 400;
+        int height = 20;
+        int rightPadding = 12;
+        int bottomPadding = 165; // higher number, higher it gets
+        
+        GUIStyle style = new GUIStyle(GUI.skin.label);
+        style.richText = true;
+        style.alignment = TextAnchor.UpperRight;
 
-        GUI.Label(new Rect(Screen.width - Xpos, Ypos, 400, 20), $"<color={color}>{statusText}</color>");
+        GUI.Label(new Rect(Screen.width - width - rightPadding, Screen.height - bottomPadding, width, height),$"<color={color}>{statusText}</color>", style);
+        
     }
 
     private string GetName(ESteamNetworkingAvailability status)
