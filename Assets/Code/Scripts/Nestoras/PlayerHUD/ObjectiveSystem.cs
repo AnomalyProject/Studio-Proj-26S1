@@ -4,7 +4,7 @@ using TMPro;
 /// <summary>
 /// Nestoras Angelopoulos
 /// 
-/// Simple system for updating the objective on the player's HUD based on the player's progress.
+/// Simple system for updating the objective on the player's HUD during the tutorial.
 /// </summary>
 public class ObjectiveSystem : MonoBehaviour
 {
@@ -12,54 +12,21 @@ public class ObjectiveSystem : MonoBehaviour
 
     private void Awake()
     {
-        GameManager.OnInitialized += InitManager;
-        GameManager.OnDestroyed += HandleManagerDestruction;
+        TutorialManager.OnInitialized += InitManager;
+        TutorialManager.OnDestroyed += HandleManagerDestruction;
     }
     private void OnDestroy()
     {
-        GameManager.OnInitialized -= InitManager;
-        GameManager.OnDestroyed -= HandleManagerDestruction;
+        TutorialManager.OnInitialized -= InitManager;
+        TutorialManager.OnDestroyed -= HandleManagerDestruction;
     }
-    private void InitManager(GameManager gameManager)
+    private void InitManager(TutorialManager tutorialManager)
     {
-        if (gameManager == null) return;
+        if (tutorialManager == null) return;
 
-        gameManager.OnGameReset.AddListener(ResetTutorial);
-        gameManager.OnProgressChanged.AddListener(UpdateObjective);
-        gameManager.OnWrongDecision.AddListener(ExplainVoid);
-
-        gameManager.AnomalyManager.OnStateChanged += HandleStateChanged;
-
-        ResetTutorial();
-    }
-
-    private void HandleStateChanged(AnomalyManager.RoomState state)
-    {
-        if (state != AnomalyManager.RoomState.PunishmentRoom) UpdateObjective(GameManager.Instance.CurrentProgress);
-    }
-
-    private void HandleManagerDestruction(GameManager gameManager)
-    {
-        gameManager.AnomalyManager.OnStateChanged -= HandleStateChanged;
-        objective.enabled = false;
-    }
-
-    private void ExplainVoid()
-    {
         objective.enabled = true;
-        objective.text = "Get to the exit before the timer runs out to keep your progress";
+        tutorialManager.OnObjectiveUpdated.AddListener(UpdateObjective);
     }
-
-    private void UpdateObjective(int progress)
-    {
-        objective.enabled = true;
-        if (progress == 1) objective.text = "If you spot anything different, turn back. Otherwise, keep going.";
-        else if (progress != 0) objective.enabled = false;
-    }
-
-    private void ResetTutorial()
-    {
-        objective.enabled = true;
-        objective.text = "Memorize the layout, and move to the next elevator.";
-    }
+    private void HandleManagerDestruction(TutorialManager tutorialManager) => objective.enabled = false;
+    private void UpdateObjective(string newObjective) => objective.text = newObjective;
 }
