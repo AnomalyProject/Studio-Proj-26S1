@@ -51,6 +51,7 @@ public class InteractUI : MonoBehaviour
     private void OnInteractableLostFocus(IInteractable<PlayerBody> interactable)
     {
         currentInteractable = null;
+        StopAllCoroutines();
         StartCoroutine(FadePrompt(interactable, false));
     }
     private IEnumerator FadePrompt(IInteractable<PlayerBody> interactable, bool show)
