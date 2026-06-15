@@ -1,8 +1,9 @@
+using PurrNet;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class AfkService : MonoBehaviour, IAfk
+public class AfkHandler : NetworkBehaviour, IAfk
 {
     public event Action OnAfkDetected;
     public event Action OnAfkCancelled;
@@ -17,6 +18,12 @@ public class AfkService : MonoBehaviour, IAfk
 
     private void Start()
     {
+        if(isHost)
+        {
+            Debug.Log("[AfkHandler] AFK tracking is disabled for the host.");
+            return;
+        }
+
         ReconnectUIController reconnectUI = FindFirstObjectByType<ReconnectUIController>(FindObjectsInactive.Include);
         if (reconnectUI != null)
         {
@@ -24,7 +31,7 @@ public class AfkService : MonoBehaviour, IAfk
         }
         else
         {
-            Debug.LogWarning("[AfkService] ReconnectUIController not found — AFK UI won't react.");
+            Debug.LogWarning("[AfkHandler] ReconnectUIController not found - AFK UI won't react.");
         }
 
         SessionReconnectService reconnectService = FindFirstObjectByType<SessionReconnectService>(FindObjectsInactive.Include);
@@ -36,7 +43,7 @@ public class AfkService : MonoBehaviour, IAfk
         }
         else
         {
-            Debug.LogWarning("[AfkService] SessionReconnectService not found — AFK will not pause during real disconnects.");
+            Debug.LogWarning("[AfkHandler] SessionReconnectService not found — AFK will not pause during real disconnects.");
         }
 
         SubscribeToAllActions();
@@ -107,13 +114,13 @@ public class AfkService : MonoBehaviour, IAfk
     {
         isTracking = true;
         ResetIdleTimer();
-        Debug.Log("[AfkService] AFK tracking started.");
+        Debug.Log("[AfkHandler] AFK tracking started.");
     }
 
     private void StopTracking()
     {
         isTracking = false;
-        Debug.Log("[AfkService] AFK tracking paused (real disconnect in progress).");
+        Debug.Log("[AfkHandler] AFK tracking paused (real disconnect in progress).");
     }
 
     private void ResetIdleTimer()
@@ -129,7 +136,7 @@ public class AfkService : MonoBehaviour, IAfk
         isTracking = false;
         ResetIdleTimer();
 
-        Debug.Log("[AfkService] Player is AFK — triggering reconnect state.");
+        Debug.Log("[AfkHandler] Player is AFK - triggering reconnect state.");
         OnAfkDetected?.Invoke();
     }
 
@@ -141,7 +148,7 @@ public class AfkService : MonoBehaviour, IAfk
         ResetIdleTimer();
         StartTracking();
 
-        Debug.Log("[AfkService] AFK cancelled by player input.");
+        Debug.Log("[AfkHandler] AFK cancelled by player input.");
         OnAfkCancelled?.Invoke();
     }
     private void HandleConnectionLost()
