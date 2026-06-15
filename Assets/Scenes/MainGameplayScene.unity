@@ -119,6 +119,73 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &9474258
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9474259}
+  - component: {fileID: 9474260}
+  m_Layer: 0
+  m_Name: Light Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9474259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9474258}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1367826330}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9474260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9474258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a3eb2faf6479c044a4a95d214979602, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentLightingManager
+  directionalLight: {fileID: 0}
+  animationDuration: 1
+  lightingSettings:
+  - ambientLightIntensity: 1
+    ambientReflectionIntensity: 1
+    ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  - ambientLightIntensity: 0.65
+    ambientReflectionIntensity: 0.6
+    ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 2100000, guid: 6eecb3bb77b3f7a43a504fceda3b0b5f, type: 2}
+  - ambientLightIntensity: 1
+    ambientReflectionIntensity: 0.8
+    ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 2100000, guid: c051fe5a20f72814f9643eb10ebbd2fc, type: 2}
+  - ambientLightIntensity: 0.6
+    ambientReflectionIntensity: 0.5
+    ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 2100000, guid: de1d750fefeeac642bf9b11a3978ccf5, type: 2}
 --- !u!1 &203844586
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,7 +203,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &203844587
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -467,6 +534,7 @@ Transform:
   m_Children:
   - {fileID: 1204988896}
   - {fileID: 7835441342319278581}
+  - {fileID: 9474259}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1777506153
@@ -596,7 +664,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: mapCollection.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: 'mapCollection.Array.data[1]'
@@ -606,6 +674,38 @@ PrefabInstance:
       propertyPath: 'mapCollection.Array.data[2]'
       value: 
       objectReference: {fileID: 8578147528456770990, guid: 391f077c5ca05a64ea7a683ad034a143, type: 3}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: 'mapCollection.Array.data[3]'
+      value: 
+      objectReference: {fileID: 5400271951404756490, guid: e31aa4de5f698db459c4d7aa091b0394, type: 3}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 9474260}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SetEnvironmentLighting
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: EnvironmentLightingManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 5648415570149415843, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.9980011

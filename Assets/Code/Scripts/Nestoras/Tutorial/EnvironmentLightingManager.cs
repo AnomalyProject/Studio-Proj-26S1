@@ -19,7 +19,8 @@ public class EnvironmentLightingManager : MonoBehaviour
     [SerializeField] private Light directionalLight;
     [SerializeField] private float animationDuration = 1f;
     [SerializeField] private EnvironmentLightingSettings[] lightingSettings;
-    private int lastAppliedIndex = 0;
+    private int lastAppliedIndex = -1;
+    private int appliedIndex = -1;
 
     [Serializable]
     public class EnvironmentLightingSettings
@@ -45,7 +46,11 @@ public class EnvironmentLightingManager : MonoBehaviour
 
     private IEnumerator AnimateLightingChange(int index)
     {
-        if (index >= lightingSettings.Length) yield break;
+        yield return new WaitForEndOfFrame();
+
+        if (index >= lightingSettings.Length || index < 0) yield break;
+        if (index == appliedIndex) yield break;
+        appliedIndex = index;
         if (index != lastAppliedIndex) lastAppliedIndex = index;
 
         float elapsedTime = 0f;
@@ -62,6 +67,7 @@ public class EnvironmentLightingManager : MonoBehaviour
         Color targetAmbientLight = targetSettings.ambientShadowColor;
         Color targetDirectionalLightColor = Color.black;
         if (directionalLight != null) targetDirectionalLightColor = targetSettings.directionalLightColor;
+        if (targetSettings.skybox != null) RenderSettings.skybox = targetSettings.skybox;
         while (elapsedTime < animationDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -78,6 +84,5 @@ public class EnvironmentLightingManager : MonoBehaviour
         RenderSettings.reflectionIntensity = targetReflectionIntensity;
         RenderSettings.ambientLight = targetAmbientLight;
         if (directionalLight != null) directionalLight.color = targetDirectionalLightColor;
-        if (targetSettings.skybox != null) RenderSettings.skybox = targetSettings.skybox;
     }
 }

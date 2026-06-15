@@ -1,5 +1,6 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : NetworkBehaviour
@@ -11,7 +12,7 @@ public class AnomalyManager : NetworkBehaviour
         PunishmentRoom,
         WinRoom
     }
-    struct MapStateData
+    private struct MapStateData
     {
         public int mapIndex;
         public int variationIndex;
@@ -25,24 +26,25 @@ public class AnomalyManager : NetworkBehaviour
 
     public event System.Action<RoomState> OnStateChanged;
     public event System.Action<GameMap> OnMapChanged;
+    [SerializeField] private UnityEvent<int> OnStateChanged_MapIndex;
 
-    [SerializeField] AnomalyMap[] mapCollection;
-    [SerializeField, Range(0, 1)] float anomalyChance = .5f;
-    [SerializeField] GameMap[] punishmentRooms;
-    [SerializeField] GameMap winRoom;
-    [SerializeField, Tooltip("Whether to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool mapsArePrefabs = true;
+    [SerializeField] private AnomalyMap[] mapCollection;
+    [SerializeField, Range(0, 1)] private float anomalyChance = .5f;
+    [SerializeField] private GameMap[] punishmentRooms;
+    [SerializeField] private GameMap winRoom;
+    [SerializeField, Tooltip("Whether to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] private bool mapsArePrefabs = true;
 
-    int loadedMapIndex = -1;
-    AnomalyMap activeMap;
-    GameMap activeUniqueRoom;
-    MapOrientor mapOrientor;
-    MapStateData currentMapState;
+    private int loadedMapIndex = -1;
+    private AnomalyMap activeMap;
+    private GameMap activeUniqueRoom;
+    private MapOrientor mapOrientor;
+    private MapStateData currentMapState;
 
     public RoomState CurrentState => currentMapState.roomState;
     public bool HasAnomaly => currentMapState.roomState == RoomState.AnomalyRoom;
     public MapOrientor MapOrientor => mapOrientor;
 
-    void Awake()
+    private void Awake()
     {
         mapOrientor = GetComponent<MapOrientor>();
         OnMapChanged += HandleMapChange;
@@ -188,6 +190,7 @@ public class AnomalyManager : NetworkBehaviour
 
         currentMapState = data;
         OnStateChanged?.Invoke(data.roomState);
+        OnStateChanged_MapIndex?.Invoke(data.mapIndex);
     }
     /// <summary>
     /// Hides active map and unique room without destroying them.
