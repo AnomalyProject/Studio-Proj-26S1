@@ -242,10 +242,6 @@ public class ChatUI : MonoBehaviour
                             break;
                         }
                     }
-                    if(string.IsNullOrEmpty(targetName))
-                    {
-                        return;
-                    }
 
                     WhisperToPlayer(targetName, message);
                 }
