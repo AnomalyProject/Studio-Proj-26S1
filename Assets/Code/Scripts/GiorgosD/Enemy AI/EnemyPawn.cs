@@ -98,6 +98,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         agent.speed = isRunning ? runSpeed : walkSpeed;
     }
+
     #endregion
 
     #region Attack
@@ -476,6 +477,14 @@ public class EnemyPawn : NetworkBehaviour
     public void InvokeAttacked(PlayerBody player)
     { 
         OnPlayerAttacked?.Invoke(player);
+    }
+    #endregion
+    #region Stun
+    public float StunDuration { get; private set; }
+
+    public void SetStunDuration(float durationSeconds)
+    {
+        StunDuration = durationSeconds;
     }
     #endregion
 }

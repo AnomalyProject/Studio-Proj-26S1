@@ -13,7 +13,8 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         Patrol,
         Chase,
         Attack,
-        Investigate
+        Investigate,
+        Stunned
     }
     [Header("STATE")]
     [SerializeField] private StateID currentStateID;
@@ -57,6 +58,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         stateDictionary.Add(StateID.Chase, new ChaseState(this, body));
         stateDictionary.Add(StateID.Attack, new AttackState(this, body));
         stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
+        stateDictionary.Add(StateID.Stunned, new StunnedState(this, body));
     }
 
     protected override void OnSpawned(bool asServer)
