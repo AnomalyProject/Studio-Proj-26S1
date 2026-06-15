@@ -144,7 +144,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9474258}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentLightingManager
   directionalLight: {fileID: 0}
-  animationDuration: 1
+  animationDuration: 8
   lightingSettings:
   - ambientLightIntensity: 1
     ambientReflectionIntensity: 1
@@ -186,6 +186,18 @@ MonoBehaviour:
     ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
     directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
     skybox: {fileID: 2100000, guid: de1d750fefeeac642bf9b11a3978ccf5, type: 2}
+  winRoomLightingSettings:
+    ambientLightIntensity: 1.4
+    ambientReflectionIntensity: 1
+    ambientShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  voidLightingSettings:
+  - ambientLightIntensity: 1.5
+    ambientReflectionIntensity: 0.5
+    ambientShadowColor: {r: 0.41960785, g: 0.47843137, b: 0.627451, a: 1}
+    directionalLightColor: {r: 0, g: 0, b: 0, a: 0}
+    skybox: {fileID: 2100000, guid: 8426cf3d3939a7d419671f3d5c269c0b, type: 2}
 --- !u!1 &203844586
 GameObject:
   m_ObjectHideFlags: 0
@@ -532,9 +544,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 9474259}
   - {fileID: 1204988896}
   - {fileID: 7835441342319278581}
-  - {fileID: 9474259}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1777506153
@@ -679,8 +691,28 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5400271951404756490, guid: e31aa4de5f698db459c4d7aa091b0394, type: 3}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 9474260}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SetEnvironmentLighting
       objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -699,8 +731,16 @@ PrefabInstance:
       value: SetEnvironmentLighting
       objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: EnvironmentLightingManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: EnvironmentLightingManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: OnMapStateApplied.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: OnStateChanged_MapIndex.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
