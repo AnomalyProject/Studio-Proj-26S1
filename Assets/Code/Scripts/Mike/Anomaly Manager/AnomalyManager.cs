@@ -1,6 +1,6 @@
-using PurrNet;
-using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine;
+using PurrNet;
 
 [RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : NetworkBehaviour
@@ -12,7 +12,7 @@ public class AnomalyManager : NetworkBehaviour
         PunishmentRoom,
         WinRoom
     }
-    private struct MapStateData
+    public struct MapStateData
     {
         public int mapIndex;
         public int variationIndex;
@@ -26,7 +26,7 @@ public class AnomalyManager : NetworkBehaviour
 
     public event System.Action<RoomState> OnStateChanged;
     public event System.Action<GameMap> OnMapChanged;
-    [SerializeField] private UnityEvent<int> OnStateChanged_MapIndex;
+    [SerializeField] private UnityEvent<MapStateData> OnMapStateApplied;
 
     [SerializeField] private AnomalyMap[] mapCollection;
     [SerializeField, Range(0, 1)] private float anomalyChance = .5f;
@@ -190,7 +190,7 @@ public class AnomalyManager : NetworkBehaviour
 
         currentMapState = data;
         OnStateChanged?.Invoke(data.roomState);
-        OnStateChanged_MapIndex?.Invoke(data.mapIndex);
+        OnMapStateApplied?.Invoke(data);
     }
     /// <summary>
     /// Hides active map and unique room without destroying them.
