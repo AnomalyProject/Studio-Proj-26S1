@@ -33,7 +33,7 @@ public class MapOrientor : MonoBehaviour
         exitPoint.transform.position = map.ExitPointAnchor.position;
         exitPoint.transform.rotation = map.ExitPointAnchor.rotation;
     }
-    void SetNewEntryPoint(LevelExitPoint newPoint)
+    private void SetNewEntryPoint(LevelExitPoint newPoint)
     {
         if (newPoint == entryElevator) return;
 
@@ -42,7 +42,7 @@ public class MapOrientor : MonoBehaviour
         exitElevator = temp;
     }
 
-    void HandleExitActivation(LevelExitPoint exitPoint, bool decision)
+    private void HandleExitActivation(LevelExitPoint exitPoint, bool decision)
     {
         SetNewEntryPoint(exitPoint);
         OnElevatorInteracted?.Invoke(exitPoint, decision);

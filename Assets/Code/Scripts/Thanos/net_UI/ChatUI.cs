@@ -230,18 +230,16 @@ public class ChatUI : MonoBehaviour
             case "/whisper":
                 if (parts.Length > 2)
                 {
-                    string targetName = parts[1];
-                    string message = string.Join(" ", parts, 2, parts.Length - 2);
+                    string targetName = "";
+                    string message = string.Join(" ", parts, 1, parts.Length - 2);
 
-                    var playerNames = GetActivePlayerNames();
-
-                    if (parts.Length > 3 && !playerNames.Any(n => n.Contains(targetName, System.StringComparison.OrdinalIgnoreCase)))
+                    foreach (string name in GetActivePlayerNames())
                     {
-                        string twoWordName = $"{parts[1]} {parts[2]}";
-                        if (playerNames.Any(n => n.Contains(twoWordName, System.StringComparison.OrdinalIgnoreCase)))
+                        if (message.Contains(name))
                         {
-                            targetName = twoWordName;
-                            message = string.Join(" ", parts, 3, parts.Length - 3);
+                            message.Replace(name, "").Trim();
+                            targetName = name;
+                            break;
                         }
                     }
 

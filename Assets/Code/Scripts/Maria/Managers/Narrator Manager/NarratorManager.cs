@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -13,6 +14,9 @@ public class NarratorManager : MonoBehaviour
     public static NarratorManager Instance { get; private set; }
 
     private bool isPlaying = false;
+
+    // Now include the triggerOnceRequested flag with queued items
+    private Queue<(NarrationEntry entry, Action callback, bool triggerOnceRequested)> queuedEntries = new Queue<(NarrationEntry, Action, bool)>();
 
     // Direct reference into CurrentSave — no local copy, so there's no risk of the
     // in-memory set drifting out of sync with the save data before a QuickSave.
@@ -34,10 +38,10 @@ public class NarratorManager : MonoBehaviour
 
     /// <summary>
     /// Attempts to play the narrator line associated with the given entry.
-    /// Silently ignored if another line is already playing, the entry is null,
-    /// or the entry is firstTimeOnly and has already fired this save.
+    /// If another line is playing the manager will enqueue this entry.
+    /// Returns true if the line began playing immediately; false if it was queued or rejected.
     /// </summary>
-    public bool TryTriggerNarration(NarrationEntry entry)
+    public bool TryTriggerNarration(NarrationEntry entry, Action onFinished = null, bool triggerOnceRequested = false)
     {
         if (entry == null)
         {
@@ -45,12 +49,7 @@ public class NarratorManager : MonoBehaviour
             return false;
         }
 
-        if (isPlaying)
-        {
-            Debug.Log($"[NarratorManager] Ignoring '{entry.TriggerID}' — line already playing.");
-            return false;
-        }
-
+        // Already globally ignored
         if (IgnoredIDs.Contains(entry.TriggerID)) return false;
 
         if (entry.FirstTimeOnly && FiredIDs.Contains(entry.TriggerID))
@@ -59,7 +58,37 @@ public class NarratorManager : MonoBehaviour
             return false;
         }
 
-        PlayEntry(entry);
+        // If a line is currently playing, enqueue it (with dedupe logic for trigger-once)
+        if (isPlaying)
+        {
+            // If a queued item with the same TriggerID already exists...
+            foreach (var queued in queuedEntries)
+            {
+                if (queued.entry != null && queued.entry.TriggerID == entry.TriggerID)
+                {
+                    // If the caller requested "trigger once", skip adding a duplicate.
+                    if (triggerOnceRequested)
+                    {
+                        Debug.Log($"[NarratorManager] Duplicate queued '{entry.TriggerID}' skipped due to trigger-once request.");
+                        return false;
+                    }
+
+                    // Otherwise allow duplicates
+                    break;
+                }
+            }
+
+            EnqueNarrationEntry(entry, onFinished, triggerOnceRequested);
+            return false;
+        }
+
+        // Not playing — start immediately.
+        PlayEntry(entry, onFinished, triggerOnceRequested);
+
+        // If the caller asked for trigger-once and we started playback immediately,
+        // mark it ignored right away so other callers cannot enqueue duplicates.
+        if (triggerOnceRequested) AddIgnoredEntry(entry);
+
         return true;
     }
 
@@ -75,7 +104,8 @@ public class NarratorManager : MonoBehaviour
         Debug.Log("[NarratorManager] All narrator flags reset.");
     }
 
-    private void PlayEntry(NarrationEntry entry)
+    // PlayEntry now accepts the trigger-once request so queued entries can apply it when they actually start.
+    private void PlayEntry(NarrationEntry entry, Action onFinished, bool triggerOnceRequested)
     {
         isPlaying = true;
 
@@ -86,27 +116,70 @@ public class NarratorManager : MonoBehaviour
             SaveSystem.QuickSave(RefrenceManager.CurrentSave);
         }
 
-        if (SubtitleManager.Instance != null)
-            SubtitleManager.Instance.ShowSubtitle(entry.Subtitles, entry.FinalSubOffset, OnLineFinished);
+        // If this queued item requested trigger-once, mark ignored now so further triggers are blocked
+        if (triggerOnceRequested && !IgnoredIDs.Contains(entry.TriggerID))
+        {
+            IgnoredIDs.Add(entry.TriggerID);
+        }
+
+        // Wrap the subtitle completion so we both release the lock and invoke the caller callback
+        Action wrappedComplete = () =>
+        {
+            OnLineFinished();
+            onFinished?.Invoke();
+        };
+
+        if (SubtitleManager.Instance != null) SubtitleManager.Instance.ShowSubtitle(entry.Subtitles, entry.FinalSubOffset, wrappedComplete);
         else
         {
             Debug.LogWarning("[NarratorManager] SubtitleManager instance not found.");
-            OnLineFinished();
+            wrappedComplete();
         }
 
         if (entry.VoiceClip != null)
         {
-            if (AudioManager.Instance != null)
-                AudioManager.Instance.PlayUI(entry.VoiceClip);
-            else
-                Debug.LogWarning("[NarratorManager] AudioManager instance not found — cannot play voice clip.");
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(entry.VoiceClip);
+            else Debug.LogWarning("[NarratorManager] AudioManager instance not found — cannot play voice clip.");
         }
     }
 
     // Called by SubtitleManager when the last cue finishes, releasing the playback lock.
-    private void OnLineFinished() => isPlaying = false;
+    private void OnLineFinished()
+    {
+        isPlaying = false;
+        if (queuedEntries.Count > 0)
+        {
+            var item = queuedEntries.Dequeue();
+            // Play the dequeued entry and pass along its trigger-once request and callback
+            PlayEntry(item.entry, item.callback, item.triggerOnceRequested);
+        }
+    }
+
+    public void EnqueNarrationEntry(NarrationEntry entry, Action onLineFinished, bool triggerOnceRequested = false)
+    {
+        if (entry == null) return;
+
+        // Ignore if already globally ignored
+        if (IgnoredIDs.Contains(entry.TriggerID)) return;
+
+        // Prevent duplicate queued entries for the same TriggerID if the caller requested trigger-once
+        if (triggerOnceRequested)
+        {
+            foreach (var queued in queuedEntries)
+            {
+                if (queued.entry != null && queued.entry.TriggerID == entry.TriggerID)
+                {
+                    Debug.Log($"[NarratorManager] Skipping enqueue of duplicate '{entry.TriggerID}' due to trigger-once.");
+                    return;
+                }
+            }
+        }
+
+        queuedEntries.Enqueue((entry, onLineFinished, triggerOnceRequested));
+    }
+
     public void AddIgnoredEntry(NarrationEntry entry)
     {
-        if(!IgnoredIDs.Contains(entry.TriggerID)) IgnoredIDs.Add(entry.TriggerID);
+        if (!IgnoredIDs.Contains(entry.TriggerID)) IgnoredIDs.Add(entry.TriggerID);
     }
 }

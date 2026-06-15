@@ -1,20 +1,19 @@
-using PurrNet;
-using Steamworks;
-using System;
-using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine;
+using PurrNet;
+using System;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
 {
-    [Serializable] struct InidicationMessage
+    [Serializable] protected struct InidicationMessage
     {
         public Color indicationColor;
         public Sprite indicationSprite;
     }
 
-    [SerializeField, Header("Animation Events")] UnityEvent OnFullyClosed;
+    [SerializeField, Header("Animation Events")] private UnityEvent OnFullyClosed;
     [SerializeField] private UnityEvent OnFullyOpened, OnStartOpen;
     [SerializeField] private Renderer[] anomalyColorIndicators;
     [SerializeField] private Image anomalyImage;
@@ -25,8 +24,8 @@ public class ElevatorExit : LevelExitPoint
     [SerializeField] private Material avatarGreenMat, avatarRedMat;
 
     [SerializeField] private bool openOnStart;
-    private AudioSource audioSource;
-    private Animator anim;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private Animator anim;
 
     [Header("Audio")]
     [SerializeField] private AudioClip openClip;
@@ -56,8 +55,8 @@ public class ElevatorExit : LevelExitPoint
         base.OnSpawned(asServer);
         if (asServer) return;
 
-        anim = GetComponent<Animator>();
-        audioSource = GetComponent<AudioSource>();
+        if (anim == null) anim = GetComponent<Animator>();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
         UpdateAnomalyIndicators(bHasAnomaly);
 
         if (openOnStart) OpenDoors();
@@ -96,6 +95,8 @@ public class ElevatorExit : LevelExitPoint
     [ContextMenu("Open Doors")]
     public void OpenDoors()
     {
+        Debug.Log($"{StackTraceUtility.ExtractStackTrace()}");
+
         anim.SetTrigger("Open");
         audioSource.Stop();
 
