@@ -30,9 +30,21 @@ public class InGameCheats : MonoBehaviour
         DevConsole.CommandData almanac = new DevConsole.CommandData("Debugs your almanac progress.", DebugAlmanac);
         DevConsole.RegisterCommand("almanac", almanac);
 
+        DevConsole.CommandData nextMap = new DevConsole.CommandData("Change the active map. (server only)", NextMap, "Accepts an integer value for the map index as arg.");
+        DevConsole.RegisterCommand("map", nextMap);
+
         NoClip.CreateNoClip();
 
         Registered = true;
+    }
+
+    private void NextMap(string[] args)
+    {
+        if (!IsManagerValid(out AnomalyManager manager)) return;
+
+        ResetPlayerPosition();
+        if (args.Length > 0 && int.TryParse(args[0], out int index)) manager.PickMapByIndex_Server(index);
+        else manager.PickMap_Server();
     }
 
     private void DebugAlmanac(string[] args) => AlmanacRegistry.DebugAlmanac();

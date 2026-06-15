@@ -190,6 +190,7 @@ public class PlayerInventory : NetworkBehaviour
     [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
+        if (TutorialManager.Instance != null) return; // Don't allow items to be dropped during tutorial to avoid them despawning / getting lost
 
         int quantityRemoved = Inventory.Remove(slotIndex, 1);
         if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;

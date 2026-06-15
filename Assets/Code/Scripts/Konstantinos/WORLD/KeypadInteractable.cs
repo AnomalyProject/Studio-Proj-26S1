@@ -86,7 +86,7 @@ public class KeypadInteractable : NetworkBehaviour
             glyphIndecies[i] = selectedGlyph; // assign the selected glyph index
             possibleGlyphs.Remove(selectedGlyph);
         }
-        requiredPassword = new string(digits); // store password
+        requiredPassword = new string(digits); // store password or use pre-generated one
         NotifyPasswordGenerated(new PasswordData(requiredPassword, glyphIndecies));
 
         // Question: How do the players get clues as to which the correct digits are? 
