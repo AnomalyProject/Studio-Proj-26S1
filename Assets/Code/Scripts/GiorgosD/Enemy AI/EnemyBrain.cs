@@ -1,7 +1,6 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
@@ -14,7 +13,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         Chase,
         Attack,
         Investigate,
-        Stunned
+        Distaracted
     }
     [Header("STATE")]
     [SerializeField] private StateID currentStateID;
@@ -23,7 +22,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
     [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
     [SerializeField, Tooltip("How long the AI will stay idle before it continues to other stuff")] private float idleTimer;
-
+    
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
 
@@ -58,7 +57,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         stateDictionary.Add(StateID.Chase, new ChaseState(this, body));
         stateDictionary.Add(StateID.Attack, new AttackState(this, body));
         stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
-        stateDictionary.Add(StateID.Stunned, new StunnedState(this, body));
+        stateDictionary.Add(StateID.Distaracted, new DistractedState(this, body));
     }
 
     protected override void OnSpawned(bool asServer)
@@ -130,13 +129,17 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID == StateID.Chase 
-            || currentStateID == StateID.Attack 
-            || currentStateID == StateID.Alert
-            || currentStateID == StateID.Investigate) return;
-
+        if (currentStateID == StateID.Distaracted) return;
+        
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
-        ChangeState(StateID.Alert, alertedBy.transform);
+        if (alertedBy.GetComponent<LureItem>())
+        {
+            ChangeState(StateID.Distaracted, alertedBy.transform);
+        }
+        else
+        {
+            ChangeState(StateID.Alert, alertedBy.transform);
+        }
     }
 
     protected override void OnDestroy()

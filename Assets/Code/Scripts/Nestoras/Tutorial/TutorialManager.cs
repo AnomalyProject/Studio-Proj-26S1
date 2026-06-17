@@ -94,12 +94,10 @@ public class TutorialManager : NetworkBehaviour
             case 3: // Entering Void (vending machine tutorial)
                 SetElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (passcode needed for it to open again)
-                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(1);
                 break;
             case 4: // Returning from void (collectibe tutorial)
                 QueueElevatorInteraction(entryEnabled: false, exitEnabled: true);
                 ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors(); // Also close other elevator (pick up collectible for it to open again)
-                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
                 OnVoidExitButtonPressed?.Invoke();
                 break;
         }
@@ -121,12 +119,14 @@ public class TutorialManager : NetworkBehaviour
             case 4: // Void (vending machine tutorial)
                 if (votedAnomalyPresent) OnRightDecisionBeforeVoid?.Invoke();
                 else OnWrongDecisionBeforeVoid?.Invoke();
+                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(1);
                 SwichLevel(voidLevel);
                 duckSpawner.SpawnItems();
                 stalkerSpawner.SpawnItems();
                 break;
             case 5: // Return from void (collectibe tutorial)
                 LeavingVoid?.Invoke();
+                EnvironmentLightingManager.Instance?.SetEnvironmentLighting(0);
                 SwichLevel(mainLevel);
                 collectible.SetActive(true);
                 break;

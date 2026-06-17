@@ -1,6 +1,5 @@
 using PurrNet;
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
@@ -13,7 +12,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private float runSpeed;
     public NavMeshAgent agent { get; private set; }
     public NavMeshPath path { get; private set; }
-    public Animator anim { get; private set; }
+    public NetworkAnimator anim { get; private set; }
 
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
@@ -32,7 +31,7 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
     private bool hasPlayer = false;
     private float timer;
-
+    
     // Aggression will be revised later.
     [Header("Aggression Settings")]
     [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
@@ -57,7 +56,7 @@ public class EnemyPawn : NetworkBehaviour
     #region Body Set up
     private void Awake()
     {
-        anim = GetComponentInChildren<Animator>();
+        anim = GetComponentInChildren<NetworkAnimator>();
         agent = GetComponent<NavMeshAgent>();
         path = new();
         sightAngleNormal = sightAngle;
@@ -75,7 +74,7 @@ public class EnemyPawn : NetworkBehaviour
         }
     }
     #endregion
-
+    
     #region Movement
     /// <summary>
     /// Tells the enemy to move to the target possition.
