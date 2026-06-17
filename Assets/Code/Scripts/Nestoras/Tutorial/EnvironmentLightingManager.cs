@@ -37,25 +37,26 @@ public class EnvironmentLightingManager : MonoBehaviour
 
     public void SetEnvironmentLighting(MapStateData data)
     {
-        StopAllCoroutines();
-        switch (data.roomState)
+        EnvironmentLightingSettings targetSettings = data.roomState switch
         {
-            case RoomState.NormalRoom:
-            case RoomState.AnomalyRoom:
-                SetEnvironmentLighting(data.mapIndex);
-                break;
-            case RoomState.PunishmentRoom:
-                StartCoroutine(AnimateLightingChange(voidLightingSettings[data.uniqueRoomIndex]));
-                break;
-            case RoomState.WinRoom:
-                StartCoroutine(AnimateLightingChange(winRoomLightingSettings));
-                break;
+            RoomState.PunishmentRoom => voidLightingSettings[data.uniqueRoomIndex],
+            RoomState.WinRoom => winRoomLightingSettings,
+            _ => lightingSettings[data.mapIndex]
+        };
+        if (targetSettings != appliedSettings)
+        {
+            StopAllCoroutines();
+            StartCoroutine(AnimateLightingChange(targetSettings));
         }
     }
     public void SetEnvironmentLighting(int index)
     {
-        StopAllCoroutines();
-        StartCoroutine(AnimateLightingChange(lightingSettings[index]));
+        EnvironmentLightingSettings targetSettings = lightingSettings[index];
+        if (targetSettings != appliedSettings)
+        {
+            StopAllCoroutines();
+            StartCoroutine(AnimateLightingChange(targetSettings));
+        }
     }
     
     public void ResetEnvironmentLighting()
@@ -75,10 +76,9 @@ public class EnvironmentLightingManager : MonoBehaviour
         }
 
         // Target values from the selected settings
-        EnvironmentLightingSettings targetSettings = settings;
-        if (targetSettings == appliedSettings) yield break;
-        appliedSettings = targetSettings;
-        if (lastAppliedSettings != targetSettings) lastAppliedSettings = targetSettings;
+        if (settings == appliedSettings) yield break;
+        appliedSettings = settings;
+        if (lastAppliedSettings != settings) lastAppliedSettings = settings;
 
         float elapsedTime = 0f;
         // Store initial values
@@ -87,12 +87,12 @@ public class EnvironmentLightingManager : MonoBehaviour
         Color initialAmbientLight = RenderSettings.ambientLight;
         Color initialDirectionalLightColor = Color.black;
         if (directionalLight != null) initialDirectionalLightColor = directionalLight.color;
-        float targetAmbientIntensity = targetSettings.ambientLightIntensity;
-        float targetReflectionIntensity = targetSettings.ambientReflectionIntensity;
-        Color targetAmbientLight = targetSettings.ambientShadowColor;
+        float targetAmbientIntensity = settings.ambientLightIntensity;
+        float targetReflectionIntensity = settings.ambientReflectionIntensity;
+        Color targetAmbientLight = settings.ambientShadowColor;
         Color targetDirectionalLightColor = Color.black;
-        if (directionalLight != null) targetDirectionalLightColor = targetSettings.directionalLightColor;
-        if (targetSettings.skybox != null) RenderSettings.skybox = targetSettings.skybox;
+        if (directionalLight != null) targetDirectionalLightColor = settings.directionalLightColor;
+        if (settings.skybox != null) RenderSettings.skybox = settings.skybox;
         while (elapsedTime < animationDuration)
         {
             elapsedTime += Time.deltaTime;
