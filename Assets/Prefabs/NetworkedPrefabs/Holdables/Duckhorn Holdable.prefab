@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3920299072126748646}
   - component: {fileID: 828442813647276391}
   - component: {fileID: 6805257446513870119}
+  - component: {fileID: 5462818363833894585}
   m_Layer: 0
   m_Name: Duckhorn Holdable
   m_TagString: Untagged
@@ -60,7 +61,19 @@ MonoBehaviour:
   canvases: []
   onLocalSpawn:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 5462818363833894585}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   almanacEntry: {fileID: 11400000, guid: 34c4f035da7858a42846f985e67d0048, type: 2}
   stunRadius: 8
   durationSeconds: 15
@@ -168,6 +181,23 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &5462818363833894585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220825359796284148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: 95a2b53dc165f62458e3b5e80f3ae234, type: 2}
+  onNarrationFinished:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6881848142501128454
 GameObject:
   m_ObjectHideFlags: 0
