@@ -1,3 +1,4 @@
+using static AnomalyManager;
 using System.Collections;
 using System;
 using UnityEngine;
@@ -19,7 +20,10 @@ public class EnvironmentLightingManager : MonoBehaviour
     [SerializeField] private Light directionalLight;
     [SerializeField] private float animationDuration = 1f;
     [SerializeField] private EnvironmentLightingSettings[] lightingSettings;
-    private int lastAppliedIndex = 0;
+    [SerializeField] private EnvironmentLightingSettings winRoomLightingSettings;
+    [SerializeField] private EnvironmentLightingSettings[] voidLightingSettings;
+    private EnvironmentLightingSettings lastAppliedSettings;
+    private EnvironmentLightingSettings appliedSettings;
 
     [Serializable]
     public class EnvironmentLightingSettings
@@ -31,22 +35,50 @@ public class EnvironmentLightingManager : MonoBehaviour
         public Material skybox;
     }
 
+    public void SetEnvironmentLighting(MapStateData data)
+    {
+        EnvironmentLightingSettings targetSettings = data.roomState switch
+        {
+            RoomState.PunishmentRoom => voidLightingSettings[data.uniqueRoomIndex],
+            RoomState.WinRoom => winRoomLightingSettings,
+            _ => lightingSettings[data.mapIndex]
+        };
+        if (targetSettings != appliedSettings)
+        {
+            StopAllCoroutines();
+            StartCoroutine(AnimateLightingChange(targetSettings));
+        }
+    }
     public void SetEnvironmentLighting(int index)
     {
-        StopAllCoroutines();
-        StartCoroutine(AnimateLightingChange(index));
+        EnvironmentLightingSettings targetSettings = lightingSettings[index];
+        if (targetSettings != appliedSettings)
+        {
+            StopAllCoroutines();
+            StartCoroutine(AnimateLightingChange(targetSettings));
+        }
     }
-
+    
     public void ResetEnvironmentLighting()
     {
         StopAllCoroutines();
-        StartCoroutine(AnimateLightingChange(lastAppliedIndex));
+        StartCoroutine(AnimateLightingChange(lastAppliedSettings));
     }
 
-    private IEnumerator AnimateLightingChange(int index)
+    private IEnumerator AnimateLightingChange(EnvironmentLightingSettings settings)
     {
-        if (index >= lightingSettings.Length) yield break;
-        if (index != lastAppliedIndex) lastAppliedIndex = index;
+        float animationDuration = this.animationDuration;
+        if (Time.timeSinceLevelLoad < 0.1f)
+        {
+            animationDuration = 0.1f;
+            // Wait for RenderSettings to initialize
+            yield return new WaitForEndOfFrame();
+        }
+
+        // Target values from the selected settings
+        if (settings == appliedSettings) yield break;
+        appliedSettings = settings;
+        if (lastAppliedSettings != settings) lastAppliedSettings = settings;
 
         float elapsedTime = 0f;
         // Store initial values
@@ -55,13 +87,12 @@ public class EnvironmentLightingManager : MonoBehaviour
         Color initialAmbientLight = RenderSettings.ambientLight;
         Color initialDirectionalLightColor = Color.black;
         if (directionalLight != null) initialDirectionalLightColor = directionalLight.color;
-        // Target values from the selected settings
-        EnvironmentLightingSettings targetSettings = lightingSettings[index];
-        float targetAmbientIntensity = targetSettings.ambientLightIntensity;
-        float targetReflectionIntensity = targetSettings.ambientReflectionIntensity;
-        Color targetAmbientLight = targetSettings.ambientShadowColor;
+        float targetAmbientIntensity = settings.ambientLightIntensity;
+        float targetReflectionIntensity = settings.ambientReflectionIntensity;
+        Color targetAmbientLight = settings.ambientShadowColor;
         Color targetDirectionalLightColor = Color.black;
-        if (directionalLight != null) targetDirectionalLightColor = targetSettings.directionalLightColor;
+        if (directionalLight != null) targetDirectionalLightColor = settings.directionalLightColor;
+        if (settings.skybox != null) RenderSettings.skybox = settings.skybox;
         while (elapsedTime < animationDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -78,6 +109,5 @@ public class EnvironmentLightingManager : MonoBehaviour
         RenderSettings.reflectionIntensity = targetReflectionIntensity;
         RenderSettings.ambientLight = targetAmbientLight;
         if (directionalLight != null) directionalLight.color = targetDirectionalLightColor;
-        if (targetSettings.skybox != null) RenderSettings.skybox = targetSettings.skybox;
     }
 }
