@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3920299072126748646}
-  - component: {fileID: 6805257446513870119}
   - component: {fileID: 828442813647276391}
+  - component: {fileID: 6805257446513870119}
   m_Layer: 0
   m_Name: Duckhorn Holdable
   m_TagString: Untagged
@@ -34,6 +34,43 @@ Transform:
   - {fileID: 8735142493568367456}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &828442813647276391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220825359796284148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69dbe567119c64a48a0de944c210cf8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuckhornGadget
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  renderers:
+  - {fileID: 7210233875952369229}
+  canvases: []
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls: []
+  almanacEntry: {fileID: 11400000, guid: 34c4f035da7858a42846f985e67d0048, type: 2}
+  stunRadius: 8
+  durationSeconds: 15
+  stunLayerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  useClip: {fileID: 8300000, guid: 4b97ff1e37073f34abadce9e15302da4, type: 3}
+  onUsed:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!82 &6805257446513870119
 AudioSource:
   m_ObjectHideFlags: 0
@@ -43,10 +80,10 @@ AudioSource:
   m_GameObject: {fileID: 1220825359796284148}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -4590799063784688275, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -55,8 +92,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
+  MinDistance: 0.5
+  MaxDistance: 20
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -91,7 +128,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -131,55 +168,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &828442813647276391
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1220825359796284148}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69dbe567119c64a48a0de944c210cf8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DuckhornGadget
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  renderers:
-  - {fileID: 7210233875952369229}
-  canvases: []
-  onLocalSpawn:
-    m_PersistentCalls:
-      m_Calls: []
-  almanacEntry: {fileID: 11400000, guid: 34c4f035da7858a42846f985e67d0048, type: 2}
-  stunRadius: 8
-  durationSeconds: 15
-  stunLayerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  useClip: {fileID: 8300000, guid: 4b97ff1e37073f34abadce9e15302da4, type: 3}
-  onUsed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1 &6881848142501128454
 GameObject:
   m_ObjectHideFlags: 0
