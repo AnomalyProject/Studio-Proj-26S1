@@ -56,6 +56,9 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
+  OnStateChanged_MapIndex:
+    m_PersistentCalls:
+      m_Calls: []
   mapCollection:
   - {fileID: 8064673867262377988, guid: cd3acc0af6ba2c042b76c090f3ac48af, type: 3}
   anomalyChance: 0.5
@@ -182,7 +185,7 @@ MonoBehaviour:
   _visitiblityRules: {fileID: 0}
   anomalyManager: {fileID: 2036968019297628306}
   mapOrientor: {fileID: 1200105713825438942}
-  requiredCorrectDecisions: 5
+  requiredCorrectDecisions: 15
   decisionCooldown: 2
   mapChangeDelay: 6
   punishmentTimeLimit: 300
@@ -455,6 +458,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
   triggerOnce: 1
   entry: {fileID: 11400000, guid: 94feae95ffd64ec418a195f1eeb72f7f, type: 2}
+  onNarrationFinished:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &4511334991924090762
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,6 +541,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
   triggerOnce: 1
   entry: {fileID: 11400000, guid: 876e95cfc1873d942a0fa53ad97efa59, type: 2}
+  onNarrationFinished:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6021099260736174197
 GameObject:
   m_ObjectHideFlags: 0
@@ -615,6 +624,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
   triggerOnce: 1
   entry: {fileID: 11400000, guid: 5252d97ed9887434185dcacc449c4813, type: 2}
+  onNarrationFinished:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8031989990971851814
 GameObject:
   m_ObjectHideFlags: 0

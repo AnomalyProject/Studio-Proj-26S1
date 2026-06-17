@@ -39,6 +39,7 @@ public class SnapshotID : MonoBehaviour
 
 #if UNITY_EDITOR
         if (PrefabUtility.IsPartOfPrefabAsset(this)) return; // Don't regenerate GUID when making a prefab.
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return; // Don't regenerate GUID when entering playmode.
 
         // Detect duplicates in the scene (Ctrl+D)
         SnapshotID[] all = FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None);

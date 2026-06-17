@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 
 public class ReconnectUIController : MonoBehaviour
@@ -24,31 +23,23 @@ public class ReconnectUIController : MonoBehaviour
     [SerializeField] private float sliderSpeed = 1f;
 
     private IReconnect _networkService;
+    private IAfk _afkService;
     private Coroutine _countdownRoutine;
     private Coroutine _toastRoutine;
 
-    //Debug keys to simulate connection events
     private void Update()
     {
-        #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Alpha9))
-        {
-            HandleConnectionLost();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha0))
-        {
-            HandleReconnected();
-        }
-        #endif
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Alpha9)) HandleConnectionLost();
+        if (Input.GetKeyDown(KeyCode.Alpha0)) HandleReconnected();
+        if (Input.GetKeyDown(KeyCode.Alpha8)) HandleAfkDetected();   // debug: simulate AFK
+#endif
     }
 
-    //@Christina : call this method and add the actual service
     public void InjectDependencies(IReconnect networkService)
     {
         _networkService = networkService;
 
-        //Events
         _networkService.OnConnectionLost += HandleConnectionLost;
         _networkService.OnHostMigrating += HandleHostMigrating;
         _networkService.OnReconnected += HandleReconnected;
@@ -56,21 +47,13 @@ public class ReconnectUIController : MonoBehaviour
 
         ResetUIState();
     }
-    
-    
-
-    private void ResetUIState()
+    public void InjectAfkDependencies(IAfk afkService)
     {
-        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
-        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _afkService = afkService;
 
-        overlayPanel.SetActive(false);
-        toastPanel.SetActive(false);
-
-        timerText.text = "";
-        toastText.text = "";
+        _afkService.OnAfkDetected += HandleAfkDetected;
+        _afkService.OnAfkCancelled += HandleAfkCancelled;
     }
-
     private void HandleConnectionLost()
     {
         ShowOverlay("Connection Lost", "Reconnecting");
@@ -78,14 +61,43 @@ public class ReconnectUIController : MonoBehaviour
 
     private void HandleHostMigrating()
     {
-        ShowOverlay("Connection Lost", "Host disconnected � migrating session...");
+        ShowOverlay("Connection Lost", "Host disconnected — migrating session...");
+    }
+    private void HandleReconnected()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+
+        overlayPanel.SetActive(false);
+        RestoreGameplayInput();
+
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
     }
 
+    private void HandleReconnectFailed(string reason)
+    {
+        ResetUIState();
+        RestoreGameplayInput();
+    }
+    private void HandleAfkDetected()
+    {
+        ShowOverlay("Connection Lost", "Reconnecting");
+        RestoreGameplayInput();
+    }
+
+    private void HandleAfkCancelled()
+    {
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+
+        overlayPanel.SetActive(false);
+
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
+        _toastRoutine = StartCoroutine(ShowToastRoutine("Welcome back!"));
+    }
     private void ShowOverlay(string header, string status)
     {
-        //Do not show reconnect UI if player is on Menu
         if (SceneManager.GetActiveScene().name == "MainMenu") return;
-        
+
         if (_toastRoutine != null) StopCoroutine(_toastRoutine);
         toastPanel.SetActive(false);
         toastText.text = "";
@@ -102,9 +114,7 @@ public class ReconnectUIController : MonoBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        // changed this because the server should own the reconnect timeout. The UI only displays it.
         float timeLeft = _networkService != null ? _networkService.ReconnectTimeoutSeconds : 30f;
-
         timeLeft = Mathf.Max(1f, timeLeft);
 
         float marqueeAge = 0f;
@@ -141,18 +151,6 @@ public class ReconnectUIController : MonoBehaviour
         HandleTimeout();
     }
 
-    private void HandleReconnected()
-    {
-        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
-
-        overlayPanel.SetActive(false);
-
-        RestoreGameplayInput();
-
-        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
-        _toastRoutine = StartCoroutine(ShowToastRoutine("Reconnected!"));
-    }
-
     private IEnumerator ShowToastRoutine(string message)
     {
         toastPanel.SetActive(true);
@@ -166,11 +164,9 @@ public class ReconnectUIController : MonoBehaviour
     private void HandleTimeout()
     {
         Debug.Log("[ReconnectUI] Timeout reached. Returning to menu.");
-        
+
         ResetUIState();
-        
         RestoreGameplayInput();
-        
         _networkService?.CancelAndReturnToMenu();
     }
 
@@ -178,22 +174,16 @@ public class ReconnectUIController : MonoBehaviour
     {
         HandleTimeout();
     }
-
-    private void OnDestroy()
+    private void ResetUIState()
     {
-        if (_networkService != null)
-        {
-            _networkService.OnConnectionLost -= HandleConnectionLost;
-            _networkService.OnHostMigrating -= HandleHostMigrating;
-            _networkService.OnReconnected -= HandleReconnected;
-            _networkService.OnReconnectFailed -= HandleReconnectFailed;
-        }
-    }
+        if (_countdownRoutine != null) StopCoroutine(_countdownRoutine);
+        if (_toastRoutine != null) StopCoroutine(_toastRoutine);
 
-    private void HandleReconnectFailed(string reason)
-    {
-        ResetUIState();
-        RestoreGameplayInput();
+        overlayPanel.SetActive(false);
+        toastPanel.SetActive(false);
+
+        timerText.text = "";
+        toastText.text = "";
     }
 
     private void LockReconnectInput()
@@ -204,5 +194,21 @@ public class ReconnectUIController : MonoBehaviour
     private void RestoreGameplayInput()
     {
         InputBridge.SetContext(InputBridge.InputContext.Player);
+    }
+    private void OnDestroy()
+    {
+        if (_networkService != null)
+        {
+            _networkService.OnConnectionLost -= HandleConnectionLost;
+            _networkService.OnHostMigrating -= HandleHostMigrating;
+            _networkService.OnReconnected -= HandleReconnected;
+            _networkService.OnReconnectFailed -= HandleReconnectFailed;
+        }
+
+        if (_afkService != null)
+        {
+            _afkService.OnAfkDetected -= HandleAfkDetected;
+            _afkService.OnAfkCancelled -= HandleAfkCancelled;
+        }
     }
 }
