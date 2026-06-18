@@ -9,6 +9,7 @@ public class AlmanacUI : MonoBehaviour
     [SerializeField] private AlmanacCategoryButton categoryButtonPrefab;
     [SerializeField] private AlmanacEntryUI entryPrefab;
     [SerializeField] private Transform categoryPanel, entryPanel;
+    [SerializeField] AudioClip openClip, categorySelectionClip;
     private bool hasOpenedPanel;
 
     private void Awake()
@@ -30,6 +31,7 @@ public class AlmanacUI : MonoBehaviour
     {
         totalCompletionText.text = $"Total Completion {GetCompletionPercentage(AlmanacRegistry.GetTotalCompletion())}";
         hasOpenedPanel = false;
+        AudioManager.Instance.PlaySFX(openClip);
     }
 
     private void OnDisable()
@@ -40,6 +42,7 @@ public class AlmanacUI : MonoBehaviour
 
     private void OpenCollection(AlmanacType type)
     {
+        AudioManager.Instance.PlaySFX(categorySelectionClip);
         activeCategoryText.text = type.ToString();
         hasOpenedPanel = true;
 
