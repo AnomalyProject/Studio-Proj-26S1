@@ -38,7 +38,6 @@ public class SceneLoader : NetworkBehaviour
     [SerializeField] string debugSceneToLoadOnStart;
     [SerializeField] bool debugUseAsync;
 
-
     // scene validation
     bool SceneExists(string sceneName)
     {
@@ -46,19 +45,13 @@ public class SceneLoader : NetworkBehaviour
         {
             string path = SceneUtility.GetScenePathByBuildIndex(i);
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
-            if (name == sceneName)
-                return true;
+            if (name == sceneName) return true;
         }
         return false;
     }
 
-    bool SceneExists(int sceneIndex)
-    {
-        return sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings;
-    }
-
-
-
+    private bool SceneExists(int sceneIndex) => sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings;
+    
     protected virtual void Awake()
     {
         // singleton pattern
@@ -90,7 +83,6 @@ public class SceneLoader : NetworkBehaviour
             Debug.LogError($"Scene '{sceneName}' does not exist!");
             return;
         }
-
         SceneManager.LoadScene(sceneName);
     }
 
@@ -171,10 +163,7 @@ public class SceneLoader : NetworkBehaviour
         }
     }
 
-    public void ReloadCurrentScene()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+    public void ReloadCurrentScene() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     #region Helpers
     public void ShowUI()
