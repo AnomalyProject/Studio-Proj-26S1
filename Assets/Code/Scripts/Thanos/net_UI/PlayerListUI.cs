@@ -17,14 +17,14 @@ public class PlayerListUI : MonoBehaviour
     [SerializeField] private Button kickButton;
     private ulong playerSteamID;
 
-    public void Setup(ClientPlayerInfo playerInfo, ulong localSteamID, Action<ulong> onKickClicked)
+    public void Setup(ClientPlayerInfo playerInfo, ulong localSteamID, Action<ulong> onKickClicked,bool canStartKickVote)
     {
         playerSteamID = playerInfo.SteamID;
         
         nameText.text = playerInfo.DisplayName;
         hostIndicator.SetActive(playerInfo.IsHost);
         
-        bool canKick = playerInfo.SteamID != localSteamID && !playerInfo.IsHost && !playerInfo.IsWaitingToReconnect;
+        bool canKick = canStartKickVote && playerInfo.SteamID != localSteamID && !playerInfo.IsHost && !playerInfo.IsWaitingToReconnect;
         
         if (kickButton != null)
         {

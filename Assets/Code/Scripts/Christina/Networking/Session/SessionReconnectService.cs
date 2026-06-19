@@ -14,7 +14,8 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
     private bool wasConnected;
     private bool isWaitingToReconnect;
-    
+    public bool IsAfk { get; private set; }
+
     [SerializeField] private float reconnectAttemptDelay = 2f;
     private NetworkManager subscribedNetworkManager;
     private Coroutine reconnectApprovalRoutine;
@@ -69,7 +70,32 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
             SessionModeManager.Instance.OnLocalTeardownStarted -= ResetReconnectState;
         }
     }
-    
+
+    public void TriggerAfkReconnect()
+    {
+        if (isWaitingToReconnect) return;
+
+        IsAfk = true;
+        isWaitingToReconnect = true;
+
+        Debug.Log("[SessionReconnectService] AFK reconnect triggered.");
+        OnConnectionLost?.Invoke();
+    }
+
+    public void CancelAfkReconnect()
+    {
+        if (!IsAfk) return;
+
+        Debug.Log("[SessionReconnectService] AFK cancelled — resuming gameplay.");
+
+        IsAfk = false;
+        isWaitingToReconnect = false;
+
+        StopReconnectRoutine();
+        OnReconnected?.Invoke();
+    }
+
+
     private bool IsLocalTeardownInProgress()
     {
         return SessionModeManager.Instance != null &&
@@ -84,7 +110,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         if (state == ConnectionState.Connected)
         {
             wasConnected = true;
-            if (isWaitingToReconnect && reconnectApprovalRoutine == null)
+            if (isWaitingToReconnect && !IsAfk && reconnectApprovalRoutine == null)
             {
                 Debug.Log("[SessionReconnectService] Transport connected: waiting for session reconnect approval.");
                 reconnectApprovalRoutine = StartCoroutine(RequestReconnectApprovalRoutine());
@@ -112,6 +138,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         
         if (isWaitingToReconnect) return;
         
+        IsAfk = false;
         isWaitingToReconnect = true;
         OnConnectionLost?.Invoke();
 
@@ -131,7 +158,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
                 if (identity != null && identity.isSpawned)
                 {
-                    SessionManager.Instance.RequestJoinSession();
+                    SessionManager.Instance.RequestJoinSession("");
                     reconnectApprovalRoutine = null;
                     yield break;
                 }
@@ -168,6 +195,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
         Debug.LogWarning($"[SessionReconnectService] Reconnect failed: {error.Code} - {error.Message}");
 
+        IsAfk = false;
         isWaitingToReconnect = false;
         wasConnected = false;
 
@@ -194,6 +222,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     
     private void ResetReconnectState()
     {
+        IsAfk = false;
         isWaitingToReconnect = false;
         wasConnected = false;
         StopReconnectRoutine();
@@ -203,6 +232,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     {
         if (SceneManager.GetActiveScene().name == "MainMenu") return;
 
+        IsAfk = false;
         isWaitingToReconnect = false;
         StopReconnectRoutine();
         
@@ -211,6 +241,7 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
 
     public void CancelAndReturnToMenu()
     {
+        IsAfk = false;
         isWaitingToReconnect = false;
         wasConnected = false;
         
@@ -235,6 +266,8 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
         {
             yield return new WaitForSecondsRealtime(reconnectAttemptDelay);
 
+            if (IsAfk) continue;
+
             if (NetworkManager.main == null) continue;
 
             if (NetworkManager.main.clientState != ConnectionState.Disconnected) continue;
@@ -250,6 +283,8 @@ public class SessionReconnectService : MonoBehaviour, IReconnect
     private void CompleteReconnect(string source)
     {
         if (!isWaitingToReconnect) return;
+
+        IsAfk = false;
 
         isWaitingToReconnect = false;
         wasConnected = true;

@@ -12,7 +12,7 @@ public class GameSounds : SoundCaller
 
     private void Awake()
     {
-        anomalyManager.OnMapChanged += OnMapChanged;
+        if (anomalyManager != null) anomalyManager.OnMapChanged += OnMapChanged;
         MapOrientor.OnElevatorInteracted += HandleElevatorInteraction;
         FadeOutMusic(null);
     }
@@ -37,6 +37,7 @@ public class GameSounds : SoundCaller
 
     public void OnElevatorOpened()
     {
+        if (anomalyManager == null) return;
         switch (anomalyManager.CurrentState)
         {
             case AnomalyManager.RoomState.PunishmentRoom:

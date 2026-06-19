@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using PurrNet;
+using PurrNet.Modules;
 
 /// <summary>
 /// Handles the network-facing side of sessions: RPCs, authority checks, broadcasts,
@@ -25,6 +26,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
 
+    
+    //todelete: dummy comment
     [SerializeField] private float reconnectTimeoutSeconds = 60f;
     public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
 
@@ -94,7 +97,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         settingsService = new SessionSettingsService(sessionStore);
         kickVoteService = new SessionKickVoteService(sessionStore, registry);
     }
-    
+
     private void Update()
     {
         if (!isServer || kickVoteService == null) return;
@@ -103,10 +106,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             OnKickVoteUpdated_Client(data);
 
-            if (outcome == KickVoteOutcome.Expired)
-            {
-                OnKickVoteFinished_Client(false, "Kick vote expired.");
-            }
+            HandleKickVoteOutcome(outcome, 0);
         }
     }
 
@@ -274,7 +274,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!identityService.TryResolveReconnectJoiner(playerID, out ulong steamID, out string displayName)) return false;
 
         if (!CurrentSession.IsPlayerWaitingToReconnect(steamID)) return false;
-        
+
         if (!isReconnect)
         {
             Debug.LogWarning($"[SessionManager] SteamID {steamID} tried to reconnect with a new PurrNet PlayerID {playerID}. Rejecting reconnect.");
@@ -324,6 +324,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         }
 
         SendSessionUpdate();
+        
+        HandleKickVotePlayerLeft(steamID);
 
         if (reconnectRoutines.ContainsKey(steamID))
         {
@@ -419,11 +421,22 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     /// and the elevator has not started leaving.
     /// </summary>
     [ServerRpc(requireOwnership: false)]
-    public void RequestJoinSession(RPCInfo info = default)
+    public void RequestJoinSession(string passwordAttempt, RPCInfo info = default)
     {
         PlayerID sender = info.sender;
         
+        // existing approved session members must be allowed to restore without re-entering the lobby password.
         if (TryRestoreExistingSession(sender)) return;
+
+        string expected = SessionModeManager.Instance?.PendingLobbyPassword ?? "";
+        
+        if (!string.IsNullOrEmpty(expected) && passwordAttempt != expected)
+        {
+            SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(
+                SessionErrorCode.InvalidState,
+                "Incorrect lobby password."));
+            return;
+        }
 
         if (!identityService.TryResolveJoiner(sender, out ulong steamID, out string displayName))
         {
@@ -436,7 +449,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
             );
             return;
         }
-        
+
         if (kickVoteService.IsKickedFromSession(steamID))
         {
             SendCommandErrorIfFailed(
@@ -453,7 +466,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
-    
+
     private bool TryRestoreExistingSession(PlayerID sender)
     {
         if (!sessionStore.HasSession) return false;
@@ -473,7 +486,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         {
             SessionCommandResult reconnectResult = playerCoordinator.TryReconnect(sender, steamID);
 
-            if (SendCommandErrorIfFailed(sender, reconnectResult)) return true; 
+            if (SendCommandErrorIfFailed(sender, reconnectResult)) return true;
         }
         else
         {
@@ -507,8 +520,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     {
         PlayerID sender = info.sender;
 
-        if (SessionModeManager.Instance == null ||
-            SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
+        if (SessionModeManager.Instance == null || SessionModeManager.Instance.CurrentMode != SessionMode.DevHost)
         {
             SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev joins are only allowed in Dev Host mode."));
             return;
@@ -517,6 +529,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (fakeSteamID == 0)
         {
             SendCommandErrorIfFailed(sender, SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Dev SteamID was invalid."));
+            return;
+        }
+        
+        if (kickVoteService.IsKickedFromSession(fakeSteamID))
+        {
+            SendCommandErrorIfFailed(
+                sender,
+                SessionCommandResult.Failed(
+                    SessionErrorCode.InvalidState,
+                    "You were removed from this session."
+                )
+            );
             return;
         }
 
@@ -578,6 +602,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         if (!result.Success) return result;
 
         BroadcastPlayerLeft(sender, steamID, "Player left voluntarily.");
+        HandleKickVotePlayerLeft(steamID);
         return result;
     }
 
@@ -939,9 +964,9 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
+
     #region Kick 
-    
+
     [ServerRpc(requireOwnership: false)]
     public void RequestStartKickVote(ulong targetSteamID, SessionKickReason reason, RPCInfo info = default)
     {
@@ -978,16 +1003,36 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         OnKickVoteUpdated_Client(data);
 
-        if (outcome == KickVoteOutcome.Passed)
-        {
-            ExecuteVoteKick(targetSteamID);
-        }
-        else if (outcome == KickVoteOutcome.Failed)
-        {
-            OnKickVoteFinished_Client(false, "Kick vote failed.");
-        }
+        HandleKickVoteOutcome(outcome, targetSteamID);
     }
     
+    /// <summary>
+    /// Applies the final result of a kick vote after the vote service resolves it.
+    /// Passing votes remove the target. Failed, expired, and cancelled votes only
+    /// notify clients because no player should be removed.
+    /// </summary>
+    private void HandleKickVoteOutcome(KickVoteOutcome outcome, ulong targetSteamID)
+    {
+        switch (outcome)
+        {
+            case KickVoteOutcome.Passed:
+                ExecuteVoteKick(targetSteamID);
+                break;
+
+            case KickVoteOutcome.Failed:
+                OnKickVoteFinished_Client(false, "Kick vote failed.");
+                break;
+
+            case KickVoteOutcome.Expired:
+                OnKickVoteFinished_Client(false, "Kick vote expired.");
+                break;
+
+            case KickVoteOutcome.Cancelled:
+                OnKickVoteFinished_Client(false, "Kick vote cancelled.");
+                break;
+        }
+    }
+
     private void ExecuteVoteKick(ulong targetSteamID)
     {
         SessionCommandResult result = playerCoordinator.TryRemovePlayerBySteamID(targetSteamID, out PlayerID targetPlayerID);
@@ -1007,7 +1052,55 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         SendLocalPlayerKicked(targetPlayerID, "You were removed from this session by group vote.");
         BroadcastPlayerLeft(targetPlayerID, targetSteamID, "Removed by group vote.");
         OnKickVoteFinished_Client(true, "Player removed by group vote.");
+        
+        StartCoroutine(ForceDisconnectPlayerAfterKickNotice(targetPlayerID));
     }
+    
+    /// <summary>
+    /// Gives the kicked client a brief moment to receive the kick message before
+    /// the server closes its PurrNet connection.
+    /// </summary>
+    private IEnumerator ForceDisconnectPlayerAfterKickNotice(PlayerID targetPlayerID)
+    {
+        yield return new WaitForSecondsRealtime(0.25f);
+        ForceDisconnectPlayer(targetPlayerID);
+    }
+
+    /// <summary>
+    /// Server-authoritative transport kick. This closes the player's PurrNet connection
+    /// so the feature does not rely on the kicked client voluntarily returning to menu.
+    /// </summary>
+    private void ForceDisconnectPlayer(PlayerID targetPlayerID)
+    {
+        NetworkManager netManager = NetworkManager.main;
+
+        if (netManager == null || !netManager.isServer)
+        {
+            Debug.LogWarning("[SessionManager] Cannot kick player because the server NetworkManager is unavailable.");
+            return;
+        }
+
+        if (!netManager.TryGetModule<PlayersManager>(out PlayersManager playersManager, true))
+        {
+            Debug.LogWarning("[SessionManager] Cannot kick player because PurrNet PlayersManager was not found.");
+            return;
+        }
+
+        playersManager.KickPlayer(targetPlayerID);
+    }
+    
+    /// <summary>
+    /// Notifies the kick vote service that a participant is no longer available.
+    /// Used when a player disconnects or voluntarily leaves while a vote is active.
+    /// </summary>
+    private void HandleKickVotePlayerLeft(ulong steamID)
+    {
+        if (!kickVoteService.HandlePlayerUnavailable( steamID, Time.realtimeSinceStartup, out ClientKickVoteData data, out KickVoteOutcome outcome,out ulong targetSteamID)) return;
+        
+        OnKickVoteUpdated_Client(data);
+        HandleKickVoteOutcome(outcome, targetSteamID);
+    }
+    
 
     [ObserversRpc]
     private void OnKickVoteUpdated_Client(ClientKickVoteData data)
@@ -1057,6 +1150,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-    
-    
+
+
 }

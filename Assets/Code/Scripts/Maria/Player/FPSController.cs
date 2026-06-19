@@ -65,6 +65,8 @@ public class FPSController : MonoBehaviour
     private const float maxSpeedBoostMultiplier = 1.5f;
     private float _speedBoostTimeRemaining = 0f;
     private FOVController FOVController;
+    //animator stun
+    public bool IsStunned { get; set; }
 
     #endregion
 
@@ -84,7 +86,7 @@ public class FPSController : MonoBehaviour
     private void Update()
     {
         if (!IsLocalPlayer) return;
-        
+       // if (IsStunned) return;
         HandleGroundCheck();
         ApplyMovement();
         HandleGravity();

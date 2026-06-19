@@ -36,6 +36,13 @@ public class PingLocation : NetworkBehaviour
         if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
 
+    [ObserversRpc(bufferLast: true)]
+    public void SetPingColour_Observers(Color color)
+    {
+        pingColor = color;
+    }
+
+
     public void CreatePing(InputAction.CallbackContext ctx)
     {
         if (!ctx.started) return;
