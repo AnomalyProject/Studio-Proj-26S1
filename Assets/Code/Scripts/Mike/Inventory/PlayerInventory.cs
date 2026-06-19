@@ -171,8 +171,9 @@ public class PlayerInventory : NetworkBehaviour
     
     private void ShowFocusedHeldItem()
     {
-        if (activeInstance != null)
-            activeInstance.SetActive(false);
+        HideAllHeldItems();
+        
+        if (activeInstance != null) activeInstance.SetActive(false);
 
         activeInstance = null;
 
@@ -185,6 +186,21 @@ public class PlayerInventory : NetworkBehaviour
         activeInstance.SetActive(true);
 
         OnFocusedChanged?.Invoke(stack.GetItemData());
+    }
+    
+    private void HideAllHeldItems()
+    {
+        foreach (PlayerItem item in itemInstances.Values)
+        {
+            if (item != null) item.gameObject.SetActive(false);
+        }
+
+        for (int i = 0; i < itemHolder.childCount; i++)
+        {
+            PlayerItem item = itemHolder.GetChild(i).GetComponent<PlayerItem>();
+
+            if (item != null) item.gameObject.SetActive(false);
+        }
     }
     
     private void HandleStackChanged(IReadOnlyItemStack stack, int slotIndex)
@@ -243,10 +259,15 @@ public class PlayerInventory : NetworkBehaviour
     
     private void ClearHeldItems()
     {
-        foreach (PlayerItem item in itemInstances.Values)
+        for (int i = itemHolder.childCount - 1; i >= 0; i--)
         {
-            if (item != null)
-                Destroy(item.gameObject);
+            Transform child = itemHolder.GetChild(i);
+            PlayerItem item = child.GetComponent<PlayerItem>();
+
+            if (item == null) continue;
+
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
         }
 
         itemInstances.Clear();
@@ -353,6 +374,7 @@ public class PlayerInventory : NetworkBehaviour
     
     private void RebuildHeldItems()
     {
+        ClearHeldItems();
         for (int i = 0; i < Inventory.TotalSlots; i++)
         {
             if (!Inventory.TryGet(i, out IReadOnlyItemStack stack)) continue;
