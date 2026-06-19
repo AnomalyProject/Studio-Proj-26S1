@@ -45,6 +45,9 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject InputPasswordPanel;
     [SerializeField] private TMP_InputField PasswordInputField;
 
+    [SerializeField] private GameObject notesPanel;
+    [SerializeField] private Button firstSelectedButtonNotes;
+
     [Space(10)]
     [Header("Manager Settings")]
     [SerializeField] private bool enableOnStart = true;
@@ -161,6 +164,11 @@ public class MainMenuManager : MonoBehaviour
 
                 EventSystem.current.SetSelectedGameObject(PasswordInputField.gameObject);
                 break;
+            case 6:
+                ResetPanels();
+                notesPanel.SetActive(true);
+                EventSystem.current.SetSelectedGameObject(firstSelectedButtonStartTutorial.gameObject);
+                break;
         }
     }
 
@@ -172,6 +180,7 @@ public class MainMenuManager : MonoBehaviour
         joinPanel.SetActive(false);
         PasswordProtectedPanel.SetActive(false);
         InputPasswordPanel.SetActive(false);
+        notesPanel.SetActive(false);
     }
     public void StartGame()
     {
