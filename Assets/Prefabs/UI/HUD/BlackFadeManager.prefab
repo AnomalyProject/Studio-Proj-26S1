@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 8857238043442507386}
   - component: {fileID: 59428041062843815}
   - component: {fileID: 3363939030578672552}
-  - component: {fileID: 3060112840717504062}
   m_Layer: 5
   m_Name: Fade Black
   m_TagString: Untagged
@@ -76,28 +75,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!95 &3060112840717504062
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8379607985261477141}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2711a3f9a50047e43990bc458b77b222, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &8930376619991619225
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,5 +190,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f0107b339342c449a52b61bfd72418b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlackFadeManager
-  anim: {fileID: 3060112840717504062}
-  transitionTime: 1
+  transitionTime: 0.5
