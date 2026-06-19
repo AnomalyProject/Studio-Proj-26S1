@@ -1,3 +1,4 @@
+using PurrNet;
 using UnityEngine;
 
 public class HoverEffect : MonoBehaviour
@@ -9,15 +10,17 @@ public class HoverEffect : MonoBehaviour
     [SerializeField] private Vector3 rotationSpeed = new Vector3(0f, 10f, 0f);
 
     private Vector3 startPos;
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void OnEnable()
     {
         startPos = transform.position;
     }
+    private void Update()
+    {
+        ApplyHoverEffect();
+    }
 
-    // Update is called once per frame
-    void Update()
+
+    private void ApplyHoverEffect()
     {
         float hoverY = startPos.y + (Mathf.Sin(Time.time * hoverSpeed) * hoverUpDown);
 
