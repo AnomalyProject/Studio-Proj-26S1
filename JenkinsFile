@@ -4,6 +4,7 @@ def branchMap = [
     'worknet': "worknet_testing",
     'ai' : "ai_testing",
     'main'   : "default"
+    'mike' : "hunkyjesus_testing"
 ]
 
 def steamBranch = "unknown"
@@ -68,6 +69,7 @@ pipeline {
                     branch 'network'
                     branch 'worknet'
                     branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {
@@ -84,6 +86,7 @@ pipeline {
                     branch 'network'
                     branch 'worknet'
                     branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {
@@ -104,6 +107,7 @@ pipeline {
                     branch 'network'
                     branch 'worknet'
                     branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {
