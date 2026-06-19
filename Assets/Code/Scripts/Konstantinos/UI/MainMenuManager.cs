@@ -56,12 +56,20 @@ public class MainMenuManager : MonoBehaviour
         Instance = this;
 
         // Unlock 'Start' tab if you have collectible from tutorial
-        if (RefrenceManager.CurrentSave.collectiblesGathered.Contains(tutorialCollectible.ID))
-        {
-            firstSelectedButtonStart.interactable = true;
-            firstSelectedButtonStart.image.color = Color.white;
-        }
+        if (RefrenceManager.CurrentSave.collectiblesGathered.Contains(tutorialCollectible.ID)) UnlockMainGame();
         SetMenuActivity(false);
+
+        DevConsole.RegisterCommand("skiptutorial", new DevConsole.CommandData("Registers the tutorial as complete.", args =>
+        {
+            RefrenceManager.CurrentSave.collectiblesGathered.Add(tutorialCollectible.ID);
+            SaveSystem.QuickSave(RefrenceManager.CurrentSave);
+            UnlockMainGame();
+        }, "Awards the user with the Tutorial collectible, unlocking the main game."));
+    }
+    private void UnlockMainGame()
+    {
+        firstSelectedButtonStart.interactable = true;
+        firstSelectedButtonStart.image.color = Color.white;
     }
     private void OnDestroy() => Instance = null;
 
