@@ -7,7 +7,8 @@ public enum KickVoteOutcome
     None,
     Passed,
     Failed,
-    Expired
+    Expired, 
+    Cancelled
 }
 
 public class SessionKickVoteService
@@ -15,6 +16,7 @@ public class SessionKickVoteService
     private const float VoteDurationSeconds = 25f;
     private const float SessionVoteCooldownSeconds = 45f;
     private const float PlayerStartCooldownSeconds = 120f;
+    private const int MinEligibleVoters = 2;
 
     private readonly SessionStateStore sessionStore;
     private readonly SessionPlayerRegistry registry;
@@ -49,6 +51,9 @@ public class SessionKickVoteService
         voteData = new ClientKickVoteData();
 
         if (!sessionStore.HasSession) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "There is no active session.");
+        
+        if (!CanUseVoteKick())
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick is only available in the lobby or in game.");
 
         if (activeVote != null) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "A kick vote is already active.");
 
@@ -56,23 +61,29 @@ public class SessionKickVoteService
 
         if (!registry.TryGetSteamID(sender, out ulong starterSteamID)) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "You are not in this session.");
 
-        if (nextPlayerVoteStartAllowedAt.TryGetValue(starterSteamID, out float playerCooldown) && now < playerCooldown)
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You must wait before starting another kick vote.");
+        if (nextPlayerVoteStartAllowedAt.TryGetValue(starterSteamID, out float playerCooldown) && now < playerCooldown) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You must wait before starting another kick vote.");
 
         SessionData session = sessionStore.Current;
-
-        if (session.Players.Count < 3) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick is disabled with only two players.");
+        
+        if (GameStateManager.Instance.CurrentState == GameState.Lobby && session.ElevatorState != ElevatorLobbyState.Open)
+        {
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick is disabled while the elevator is leaving.");
+        }
 
         PlayerSessionInfo? target = session.GetPlayer(targetSteamID);
         if (!target.HasValue) return SessionCommandResult.Failed(SessionErrorCode.PlayerNotFound, "Target player was not found.");
+
+        if (!target.Value.IsConnected) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Target player is not connected.");
 
         if (target.Value.IsHost) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "The host cannot be vote-kicked.");
 
         if (targetSteamID == starterSteamID) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You cannot start a vote against yourself.");
 
         List<ulong> eligibleVoters = GetEligibleVoters(targetSteamID);
-        if (!eligibleVoters.Contains(starterSteamID))
-            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You are not allowed to vote.");
+
+        if (eligibleVoters.Count < MinEligibleVoters) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Vote kick requires at least three connected players.");
+
+        if (!eligibleVoters.Contains(starterSteamID)) return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "You are not allowed to vote.");
 
         activeVote = new ActiveKickVote();
         activeVote.StarterSteamID = starterSteamID;
@@ -81,7 +92,7 @@ public class SessionKickVoteService
         activeVote.Reason = reason;
         activeVote.StartedAt = now;
         activeVote.EndsAt = now + VoteDurationSeconds;
-        activeVote.RequiredYesVotes = eligibleVoters.Count;
+        activeVote.RequiredYesVotes = CalculateRequiredYesVotes(eligibleVoters.Count);
         activeVote.EligibleVoters = new HashSet<ulong>(eligibleVoters);
         activeVote.YesVotes.Add(starterSteamID);
 
@@ -120,7 +131,7 @@ public class SessionKickVoteService
             kickedFromSession.Add(activeVote.TargetSteamID);
             FinishVote(now);
         }
-        else if (activeVote.NoVotes.Count > activeVote.EligibleVoters.Count - activeVote.RequiredYesVotes)
+        else if (HasEnoughNoVotesToFail())
         {
             outcome = KickVoteOutcome.Failed;
             FinishVote(now);
@@ -142,6 +153,105 @@ public class SessionKickVoteService
         FinishVote(now);
         voteData = BuildClientData(now);
         return true;
+    }
+    
+    /// <summary>
+    /// Updates the active vote when a player leaves or disconnects.
+    /// Cancels the vote if the target is no longer present, removes departed voters
+    /// from the voter pool, recalculates the threshold, and resolves the vote if the
+    /// new vote counts now pass or fail.
+    /// </summary>
+    public bool HandlePlayerUnavailable(ulong steamID, float now, out ClientKickVoteData voteData, out KickVoteOutcome outcome, out ulong targetSteamID)
+    {
+        voteData = new ClientKickVoteData();
+        outcome = KickVoteOutcome.None;
+        targetSteamID = 0;
+
+        if (activeVote == null) return false;
+
+        targetSteamID = activeVote.TargetSteamID;
+
+        if (steamID == activeVote.TargetSteamID)
+        {
+            outcome = KickVoteOutcome.Cancelled;
+            FinishVote(now);
+            voteData = BuildClientData(now);
+            return true;
+        }
+
+        if (!activeVote.EligibleVoters.Remove(steamID)) return false;
+
+        activeVote.YesVotes.Remove(steamID);
+        activeVote.NoVotes.Remove(steamID);
+
+        if (activeVote.EligibleVoters.Count < MinEligibleVoters)
+        {
+            outcome = KickVoteOutcome.Cancelled;
+            FinishVote(now);
+            voteData = BuildClientData(now);
+            return true;
+        }
+
+        activeVote.RequiredYesVotes = CalculateRequiredYesVotes(activeVote.EligibleVoters.Count);
+
+        if (activeVote.YesVotes.Count >= activeVote.RequiredYesVotes)
+        {
+            outcome = KickVoteOutcome.Passed;
+            kickedFromSession.Add(activeVote.TargetSteamID);
+            FinishVote(now);
+        }
+        else if (HasEnoughNoVotesToFail())
+        {
+            outcome = KickVoteOutcome.Failed;
+            FinishVote(now);
+        }
+
+        voteData = BuildClientData(now);
+        return true;
+    }
+    
+    /// <summary>
+    /// Returns the number of yes votes required to pass a vote kick.
+    /// The target is excluded from the eligible voter count before this is called,
+    /// so this is a strict majority of the players who are allowed to vote.
+    /// </summary>
+    private int CalculateRequiredYesVotes(int eligibleVoterCount)
+    {
+        return eligibleVoterCount / 2 + 1;
+    }
+    
+    /// <summary>
+    /// Returns how many no votes make it mathematically impossible for the vote to pass.
+    /// Example: 3 eligible voters, 2 yes required. Once 2 people vote no, the vote has failed.
+    /// </summary>
+    private int CalculateBlockingNoVotes(int eligibleVoterCount, int requiredYesVotes)
+    {
+        return eligibleVoterCount - requiredYesVotes + 1;
+    }
+    
+    /// <summary>
+    /// Checks whether the active vote has enough no votes to fail immediately.
+    /// </summary>
+    private bool HasEnoughNoVotesToFail()
+    {
+        int blockingNoVotes = CalculateBlockingNoVotes(
+            activeVote.EligibleVoters.Count,
+            activeVote.RequiredYesVotes
+        );
+
+        return activeVote.NoVotes.Count >= blockingNoVotes;
+    }
+    
+    /// <summary>
+    /// Vote-kick is allowed while players are gathered in the lobby or actively in game.
+    /// It is blocked in menu/loading-style states where player removal can break flow setup.
+    /// </summary>
+    private bool CanUseVoteKick()
+    {
+        if (GameStateManager.Instance == null) return false;
+
+        GameState state = GameStateManager.Instance.CurrentState;
+        return state == GameState.Lobby || state == GameState.InGame;
     }
 
     private List<ulong> GetEligibleVoters(ulong targetSteamID)

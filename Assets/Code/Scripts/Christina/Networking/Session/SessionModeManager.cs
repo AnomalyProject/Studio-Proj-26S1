@@ -30,6 +30,8 @@ public class SessionModeManager : MonoBehaviour
 
     public string PendingLobbyPassword { get; set; }
     private Coroutine hostLeftRoutine;
+    
+    private ulong devClientSteamID;
 
     public event Action<SessionMode, SessionMode> OnModeChanged;
 
@@ -188,6 +190,7 @@ public class SessionModeManager : MonoBehaviour
             }
 
             PendingLobbyPassword = string.Empty;
+            devClientSteamID = 0;
             SetMode(SessionMode.None);
         }
         finally
@@ -651,6 +654,8 @@ public class SessionModeManager : MonoBehaviour
 
         SetMode(SessionMode.DevClient);
         GameStateManager.Instance.RequestStateChange(GameState.Lobby);
+        
+        devClientSteamID = request.fakeSteamId;
         StartCoroutine(BeginDevClientFlow(request));
     }
     
@@ -722,6 +727,33 @@ public class SessionModeManager : MonoBehaviour
           // requesting to join with our deterministic dev identity
           Debug.Log($"[SessionModeManager] Dev client connected. Joining as '{request.displayName}' (id {request.fakeSteamId}).");
           SessionManager.Instance.RequestJoinDevSession(request.fakeSteamId, request.displayName);
+      }
+     
+      /// <summary>
+      /// Returns the Steam/session ID that represents this local player in SessionData.
+      /// In normal Steam mode this is the real Steam ID. In DevClient mode(Dev tool) this is the
+      /// deterministic fake ID used when joining the dev session.
+      /// Created for testing purposes.
+      /// </summary>
+      public bool TryGetLocalSessionSteamID(out ulong steamID)
+      {
+          steamID = 0;
+
+          if (currentMode == SessionMode.DevClient && devClientSteamID != 0)
+          {
+              steamID = devClientSteamID;
+              return true;
+          }
+
+          if (SteamIdentity.TryGetLocalSteamID(out steamID)) return true;
+
+          if (currentMode == SessionMode.Solo)
+          {
+              steamID = LocalIdentity.SoloFallbackSteamID;
+              return true;
+          }
+
+          return false;
       }
     
     /// <summary>

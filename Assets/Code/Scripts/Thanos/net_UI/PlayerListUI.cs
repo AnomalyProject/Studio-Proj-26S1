@@ -1,5 +1,8 @@
 using UnityEngine;
 using TMPro;
+using System;
+using UnityEngine.UI;
+
 public class PlayerListUI : MonoBehaviour
 {
     [Header("Player List UI")]
@@ -10,11 +13,29 @@ public class PlayerListUI : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [Tooltip("is Host badge")]
     [SerializeField] private GameObject hostIndicator;
+    
+    [SerializeField] private Button kickButton;
+    private ulong playerSteamID;
 
-    public void Setup(ClientPlayerInfo playerInfo)
+    public void Setup(ClientPlayerInfo playerInfo, ulong localSteamID, Action<ulong> onKickClicked,bool canStartKickVote)
     {
+        playerSteamID = playerInfo.SteamID;
         
         nameText.text = playerInfo.DisplayName;
+        hostIndicator.SetActive(playerInfo.IsHost);
+        
+        bool canKick = canStartKickVote && playerInfo.SteamID != localSteamID && !playerInfo.IsHost && !playerInfo.IsWaitingToReconnect;
+        
+        if (kickButton != null)
+        {
+            kickButton.gameObject.SetActive(canKick);
+            kickButton.onClick.RemoveAllListeners();
+
+            if (canKick)
+            {
+                kickButton.onClick.AddListener(() => onKickClicked?.Invoke(playerSteamID));
+            }
+        }
         
         // disconnection check
         if (playerInfo.IsWaitingToReconnect)
