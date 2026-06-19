@@ -46,7 +46,6 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private TMP_InputField PasswordInputField;
 
     [SerializeField] private GameObject notesPanel;
-    [SerializeField] private Button firstSelectedButtonNotes;
 
     [Space(10)]
     [Header("Manager Settings")]
@@ -167,7 +166,6 @@ public class MainMenuManager : MonoBehaviour
             case 6:
                 ResetPanels();
                 notesPanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(firstSelectedButtonStartTutorial.gameObject);
                 break;
         }
     }
