@@ -1,16 +1,18 @@
 using System.Collections;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class BlackFadeManager : MonoBehaviour
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-    public static void ResetAnimatorReference() => anim = null;
+    public static void ResetInstanceReference() => Instance = null;
 
     public static BlackFadeManager Instance;
-    static private Animator anim;
+    static private Image overlay;
 
-    [SerializeField] private float transitionTime = 1.0f;
+    [SerializeField] private float transitionTime = 0.5f;
     public float TransitionTime => transitionTime;
+    private float targetAlpha = 1f;
 
     private void Awake()
     {
@@ -21,32 +23,47 @@ public class BlackFadeManager : MonoBehaviour
         }
 
         Instance = this;
-        anim = GetComponentInChildren<Animator>();
-
+        overlay = GetComponentInChildren<Image>();
         DontDestroyOnLoad(gameObject);
-
-        PlayerBody.OnLocalPlayerSpawned += playerBody => FadeOut();
     }
 
     public void FadeIn()
     {
-        anim.SetTrigger("Fade In");
+        if (Mathf.Approximately(targetAlpha, 1f)) return;
+        StopAllCoroutines();
+        SetAlpha(0f);
+        StartCoroutine(Fade(1f));
     }
 
+    private void OnLevelWasLoaded(int level) => FadeOut();
     public void FadeOut()
     {
-        anim.SetTrigger("Fade Out");
+        if (Mathf.Approximately(targetAlpha, 0f)) return;
+        StopAllCoroutines();
+        SetAlpha(1f);
+        StartCoroutine(Fade(0f));
     }
 
-    public void FullFade()
+    private IEnumerator Fade(float targetAlpha)
     {
-        StartCoroutine(FadeInAndOut());
-    }
+        this.targetAlpha = targetAlpha;
+        Color color = overlay.color;
+        float startAlpha = overlay.color.a;
 
-    private IEnumerator FadeInAndOut()
+        while (!Mathf.Approximately(overlay.color.a, targetAlpha))
+        {
+            color.a = Mathf.MoveTowards(overlay.color.a, targetAlpha, Time.unscaledDeltaTime / transitionTime);
+            overlay.color = color;
+            yield return null;
+        }
+        color.a = targetAlpha;
+        overlay.color = color;
+    }
+    public void SetAlpha(float alpha)
     {
-        anim.SetTrigger("Fade In");
-        yield return new WaitForSeconds(transitionTime);
-        anim.SetTrigger("Fade Out");
+        StopAllCoroutines();
+        Color color = overlay.color;
+        color.a = alpha;
+        overlay.color = color;
     }
 }

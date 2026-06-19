@@ -67,12 +67,12 @@ public class AlmanacRegistry : MonoBehaviour, IInteractable<PlayerBody>
     /// </summary>
     public static void MarkAllViewed()
     {
-        foreach(string discoveredKey in RefrenceManager.CurrentSave.almanacEntries.Keys)
-        {
-            MarkViewed(discoveredKey, quicksave: false);
-        }
+        var save = RefrenceManager.CurrentSave;
+        var entryKeys = save.almanacEntries.Keys.ToList();
 
-        SaveSystem.QuickSave(RefrenceManager.CurrentSave);
+        foreach (string key in entryKeys) MarkViewed(key, quicksave: false);
+
+        SaveSystem.QuickSave(save);
     }
 
     /// <summary>
