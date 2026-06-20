@@ -84,7 +84,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
 
-        Debug.Log($"Moving to {target}");
+        //Debug.Log($"Moving to {target}");
 
         if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }

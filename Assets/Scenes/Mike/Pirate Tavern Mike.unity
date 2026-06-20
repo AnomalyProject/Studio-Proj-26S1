@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.27973858, g: 0.31895426, b: 0.4, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 0.8
-  m_AmbientMode: 0
+  m_AmbientIntensity: 0.5
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 99a400087584f4263b1a8979d6007ad4, type: 2}
   m_HaloStrength: 0.5
@@ -35,7 +35,7 @@ RenderSettings:
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 0.75
+  m_ReflectionIntensity: 0.4
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
   m_UseRadianceAmbientProbe: 0
@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: a774a929c50c6674cae19a9d203ccbb4, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -119,6 +119,17 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &18177673 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8578147528456770990, guid: 391f077c5ca05a64ea7a683ad034a143, type: 3}
+  m_PrefabInstance: {fileID: 2033096628}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3fb7b05b67073946944eeeee337f20f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnomalyMap
 --- !u!1001 &271978199
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1616,7 +1627,7 @@ PrefabInstance:
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: 'mapCollection.Array.data[0]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 18177673}
     - target: {fileID: 2864429456754395685, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: m_IsActive
       value: 1
