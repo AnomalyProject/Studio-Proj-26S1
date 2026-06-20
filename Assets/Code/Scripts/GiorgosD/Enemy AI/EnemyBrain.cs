@@ -138,9 +138,14 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         {
             ChangeState(StateID.Distaracted, alertedBy.transform);
         }
-        else
+        else if (alertedBy.GetComponent<PlayerBody>())
         {
-            ChangeState(StateID.Alert, alertedBy.transform);
+            PlayerBody playerBody = alertedBy.GetComponent<PlayerBody>();
+            
+            if (!playerBody.IsInvisible)
+            {
+                ChangeState(StateID.Alert, playerBody.transform);
+            }
         }
     }
 

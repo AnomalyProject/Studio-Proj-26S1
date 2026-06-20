@@ -19,9 +19,9 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
         if (audio == null && audio.clip == null && particles == null) return false;
-
+        
         audio.Play();
-        //particles.Play();
+        particles.Play();
             
         int wait = Mathf.CeilToInt(audio.clip.length * 1000);
         await Task.Delay(wait);

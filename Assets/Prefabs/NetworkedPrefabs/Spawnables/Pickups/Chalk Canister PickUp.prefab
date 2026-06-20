@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 3740830827113652352}
   - component: {fileID: 5909943822140512504}
   - component: {fileID: 1682359697494702805}
-  - component: {fileID: 5321807700255305459}
   - component: {fileID: 5099789880464419429}
+  - component: {fileID: 3468422108924461410}
   m_Layer: 0
   m_Name: Chalk Canister PickUp
   m_TagString: Untagged
@@ -104,7 +104,28 @@ MonoBehaviour:
   _velocityStopThreshold: 0.001
   _debugGizmos: 0
   _debugTextOffset: 2
---- !u!114 &5321807700255305459
+--- !u!65 &5099789880464419429
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6340053228512060203}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10312891, y: 0.36659586, z: 0.11062622}
+  m_Center: {x: 0.00049829483, y: -0.15242833, z: 0.00074768066}
+--- !u!114 &3468422108924461410
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,27 +152,6 @@ MonoBehaviour:
   itemStack:
     itemData: {fileID: 11400000, guid: 970dd955605b75c4b80e806cf7f96da4, type: 2}
     quantity: 1
---- !u!65 &5099789880464419429
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6340053228512060203}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.10312891, y: 0.36659586, z: 0.11062622}
-  m_Center: {x: 0.00049829483, y: -0.15242833, z: 0.00074768066}
 --- !u!1001 &6550155469275469240
 PrefabInstance:
   m_ObjectHideFlags: 0

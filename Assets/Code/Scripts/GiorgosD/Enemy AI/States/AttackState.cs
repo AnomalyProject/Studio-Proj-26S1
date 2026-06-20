@@ -8,7 +8,6 @@ public class AttackState : BaseState
 
     public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        
     }
 
     public override void Enter()

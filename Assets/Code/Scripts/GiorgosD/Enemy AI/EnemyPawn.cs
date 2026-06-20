@@ -141,6 +141,10 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!player.isOwner || player.transform.position == null) return;
 
+        PlayerBody playerBody = player.GetComponent<PlayerBody>();
+
+        if (playerBody.IsInvisible) return;
+
         var controller = player.GetComponent<CharacterController>();
 
         if (controller != null) controller.enabled = false;
@@ -243,6 +247,15 @@ public class EnemyPawn : NetworkBehaviour
         
         if (cachedPlayer == null) return;
 
+        if (cachedPlayer.IsInvisible)
+        {
+            hasPlayer = false;
+            cachedPlayer = null;
+            timer = 0f;
+            InvokeOnLost();
+            return;
+        }
+        
         timer += Time.deltaTime;
 
         if (timer >= timeToLost)
@@ -283,7 +296,7 @@ public class EnemyPawn : NetworkBehaviour
         
         if (cachedPlayer != null)
         {
-            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position))
+            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position) && !cachedPlayer.IsInvisible)
             {
                 hasPlayer = true;
                 timer = 0f;
@@ -292,13 +305,13 @@ public class EnemyPawn : NetworkBehaviour
             }
             
             Vector3 targetDestination = cachedPlayer.transform.position;
-            if (cachedPlayer.TryGetComponent<Collider>(out Collider col))
+            if (cachedPlayer.TryGetComponent<Collider>(out Collider col) && !cachedPlayer.IsInvisible)
             {
                 targetDestination = col.bounds.center;
             }
 
             float distanceToTarget = Vector3.Distance(eyePos.position, targetDestination);
-            if (distanceToTarget <= autoDetectRange)
+            if (distanceToTarget <= autoDetectRange && !cachedPlayer.IsInvisible)
             {
                 if (!Physics.Raycast(eyePos.position, (targetDestination - eyePos.position).normalized, distanceToTarget, obstacleLayer))
                 {
@@ -319,7 +332,7 @@ public class EnemyPawn : NetworkBehaviour
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
 
-            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position) || !player.IsInvisible)
+            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position) && !player.IsInvisible)
             {
                 cachedPlayer = player;
                 hasPlayer = true;
@@ -478,6 +491,7 @@ public class EnemyPawn : NetworkBehaviour
         OnPlayerAttacked?.Invoke(player);
     }
     #endregion
+    
     #region Stun
     public float StunDuration { get; private set; }
 
