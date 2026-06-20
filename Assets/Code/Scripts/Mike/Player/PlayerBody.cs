@@ -155,7 +155,7 @@ public class PlayerBody : NetworkBehaviour
         isInvisible.value = false;
     }
 
-    [ServerRpc]
+    [ObserversRpc(bufferLast: true)]
     private void ChangeMatRPC(bool shouldBeInvis)
     {
         if (isOwner)
