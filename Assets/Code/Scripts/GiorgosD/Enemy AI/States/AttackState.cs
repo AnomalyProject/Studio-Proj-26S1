@@ -1,5 +1,4 @@
 using PurrNet;
-using System;
 using UnityEngine;
 
 public class AttackState : BaseState
