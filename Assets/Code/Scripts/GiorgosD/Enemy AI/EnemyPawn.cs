@@ -319,7 +319,7 @@ public class EnemyPawn : NetworkBehaviour
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
 
-            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position))
+            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position) || !player.IsInvisible)
             {
                 cachedPlayer = player;
                 hasPlayer = true;

@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 
 public class PlayerBody : NetworkBehaviour
@@ -21,6 +23,20 @@ public class PlayerBody : NetworkBehaviour
 
     [Header("Misc")]
     [SerializeField] private AudioClip burpClip;
+
+    [Header("Invisibility")] 
+    [SerializeField] private SyncVar<bool> isInvisible;
+    [SerializeField] private float invisibleTimer;
+    [SerializeField] private Material invisMat;
+    private Renderer playerRenderer;
+    private Material[] originalMat;
+    
+    [SerializeField] AudioMixer mainMixer;
+    [SerializeField] private float audioTransTime = 0.4f;
+    private string snapshotNormal = "Normal";
+    private string snapshotMuffled = "Muffled";
+    
+    [SerializeField] private GameObject PPInvis;
     
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
@@ -29,6 +45,7 @@ public class PlayerBody : NetworkBehaviour
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
     public AudioSource AudioSource => audioSource;
+    public bool IsInvisible => isInvisible.value;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
@@ -42,6 +59,12 @@ public class PlayerBody : NetworkBehaviour
     {
         base.OnSpawned(asServer);
 
+        if (bodyVisuals != null)
+        {
+            playerRenderer = bodyVisuals.GetComponentInChildren<Renderer>();
+            originalMat = playerRenderer.sharedMaterials;
+        }
+        
         if (asServer) return;
         if (!TryApplyOwnership(isOwner)) return;
     }
@@ -106,5 +129,62 @@ public class PlayerBody : NetworkBehaviour
         }
 
         return local;
+    }
+    
+    public void StartInvisTimer()
+    {
+        if (!isServer) return;
+        
+        StartCoroutine(InvisTimer());
+    }
+
+    private IEnumerator InvisTimer()
+    {
+        isInvisible.value = true;
+        ChangeMatRPC(true);
+        yield return new WaitForSeconds(invisibleTimer);
+        ChangeMatRPC(false);
+        isInvisible.value = false;
+    }
+
+    [ServerRpc]
+    private void ChangeMatRPC(bool shouldBeInvis)
+    {
+        if (isOwner)
+        {
+            if (PPInvis != null)
+            {
+                PPInvis.SetActive(shouldBeInvis);
+            }
+            
+            if (mainMixer != null)
+            {
+                string targetSnapshot = shouldBeInvis ? snapshotMuffled : snapshotNormal;
+                AudioMixerSnapshot snapshot = mainMixer.FindSnapshot(targetSnapshot);
+                if (snapshot != null)
+                {
+                    snapshot.TransitionTo(audioTransTime);
+                }
+            }
+        }
+        else
+        {
+            if (playerRenderer != null && invisMat != null)
+            {
+                if (shouldBeInvis)
+                {
+                    Material[] invisMats = new  Material[originalMat.Length];
+                    for (int i = 0; i < invisMats.Length; i++)
+                    {
+                        invisMats[i] = invisMat;
+                    }
+                    playerRenderer.materials = invisMats;
+                }
+                else
+                {
+                    playerRenderer.materials = originalMat;
+                }
+            }
+        }
     }
 }

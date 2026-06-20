@@ -33,6 +33,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4606633856125498859}
+  - {fileID: 6325326864437828213}
   m_Father: {fileID: 7145071027208893932}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &5794337579464328323
@@ -1356,6 +1357,15 @@ MonoBehaviour:
   playerCameraLean: {fileID: 5223983998993346721}
   nameplateVisuals: {fileID: 2628281181172639720}
   burpClip: {fileID: 8300000, guid: 0c2ef362cf36a9e48943490891c665b1, type: 3}
+  isInvisible:
+    _value: 0
+    _ownerAuth: 1
+    _sendIntervalInSeconds: 0
+  invisibleTimer: 5
+  invisMat: {fileID: 2100000, guid: a24e157c94d39c340b9ad1d9c62550fc, type: 2}
+  mainMixer: {fileID: 24100000, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
+  audioTransTime: 0.4
+  PPInvis: {fileID: 6535595799148781289}
 --- !u!114 &2519213704156087875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1751,6 +1761,55 @@ Transform:
   - {fileID: 974677987867784691}
   m_Father: {fileID: 6780590493857833423}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6535595799148781289
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6325326864437828213}
+  - component: {fileID: 5750942810834854251}
+  m_Layer: 0
+  m_Name: Post Process Invis Effect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &6325326864437828213
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535595799148781289}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8398281657158445380}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5750942810834854251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535595799148781289}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 100
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 256b62f66554507478b0905439886769, type: 2}
 --- !u!1001 &26888280408622571
 PrefabInstance:
   m_ObjectHideFlags: 0
