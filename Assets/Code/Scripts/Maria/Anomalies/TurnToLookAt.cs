@@ -56,10 +56,7 @@ public class TurnToLookAt : MonoBehaviour
 
     #region Unity Callbacks
 
-    private void Start()
-    {
-        restRotation = transform.rotation;
-    }
+    private void Awake() => restRotation = transform.rotation;
 
     private void Update()
     {
@@ -158,9 +155,9 @@ public class TurnToLookAt : MonoBehaviour
         Transform nearest = null;
         float nearestSqDist = float.MaxValue;
 
-        foreach (PlayerBody identity in FindObjectsByType<PlayerBody>(FindObjectsSortMode.None))
+        foreach (PlayerBody identity in PlayerBody.ActivePlayers)
         {
-            float sqDist = (identity.transform.position - transform.position).sqrMagnitude;
+            float sqDist = (identity.CameraController.transform.position - transform.position).sqrMagnitude;
             if (sqDist < nearestSqDist)
             {
                 nearestSqDist = sqDist;
