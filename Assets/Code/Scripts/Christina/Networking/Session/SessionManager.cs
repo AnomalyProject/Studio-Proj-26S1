@@ -25,10 +25,10 @@ using PurrNet.Modules;
 public class SessionManager : NetworkBehaviour, IPlayerEvents
 {
     #region Fields, Properties, and Events
-
     
-    //todelete: dummy comment
     [SerializeField] private float reconnectTimeoutSeconds = 60f;
+    [SerializeField] private LevelCatalog levelCatalog;
+    
     public float ReconnectTimeoutSeconds => reconnectTimeoutSeconds;
 
     // --- FIELDS
@@ -169,7 +169,8 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
 
         LocalHostIdentity hostIdentity = identityService.ResolveLocalHost();
 
-        sessionStore.CreateSession(hostIdentity.SteamID);
+        SessionData session = sessionStore.CreateSession(hostIdentity.SteamID);
+        ApplyDefaultLevelSelection(session);
 
         GameStateManager.Instance.OnStateChanged += HandleStateChanged;
 
@@ -825,6 +826,59 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
                 update.CustomValue = value;
                 return true;
         }
+    }
+    
+    [ServerRpc(requireOwnership: false)]
+    public void RequestSelectLevel(string levelID, RPCInfo info = default)
+    {
+        PlayerID sender = info.sender;
+        SessionCommandResult result = TrySelectLevel(sender, levelID);
+
+        if (SendCommandErrorIfFailed(sender, result)) return;
+    }
+
+    private SessionCommandResult TrySelectLevel(PlayerID sender, string levelID)
+    {
+        if (!registry.IsHost(sender))
+            return SessionCommandResult.Failed(SessionErrorCode.NotHost, "Only the host can select the level.");
+
+        if (!sessionStore.HasSession)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "No active session.");
+
+        if (GameStateManager.Instance.CurrentState != GameState.Lobby)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Level can only be changed in the lobby.");
+
+        if (sessionStore.Current.ElevatorState != ElevatorLobbyState.Open)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Level cannot be changed while the elevator is leaving.");
+
+        if (levelCatalog == null)
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Level catalog is missing.");
+
+        if (!levelCatalog.TryGetById(levelID, out LevelDefinition level))
+            return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "Selected level is not valid.");
+
+        ApplyLevelSelection(sessionStore.Current, level);
+        sessionStore.Current.ResetReadyStates();
+
+        SendSessionUpdate();
+        Debug.Log($"[SessionManager] Selected level: {level.DisplayName} ({level.SceneName})");
+
+        return SessionCommandResult.Succeeded();
+    }
+    
+    private void ApplyDefaultLevelSelection(SessionData session)
+    {
+        if (levelCatalog == null) return;
+        if (!levelCatalog.TryGetDefault(out LevelDefinition level)) return;
+
+        ApplyLevelSelection(session, level);
+    }
+
+    private void ApplyLevelSelection(SessionData session, LevelDefinition level)
+    {
+        session.SelectedLevelId = level.Id;
+        session.SelectedLevelSceneName = level.SceneName;
+        session.MapName = level.DisplayName;
     }
 
     #endregion

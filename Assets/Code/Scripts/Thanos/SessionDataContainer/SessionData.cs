@@ -59,6 +59,9 @@ public struct ClientSessionData
     public int PlayerCount;
     public List<ClientPlayerInfo> Players;
     public ElevatorLobbyState ElevatorState;
+    
+    // level selection
+    public string SelectedLevelId;
 
     //workaround for serialization issues with Dictionaries
     public List<string> CustomPropertyKeys;
@@ -81,6 +84,10 @@ public class SessionData
     // elevator
     public ElevatorLobbyState ElevatorState;
     public bool AllPlayersReadyInElevator => Players.Count > 0 && Players.All(pp => pp.IsInElevator && pp.IsReady);
+    
+    // level selection
+    public string SelectedLevelId { get; set; }
+    public string SelectedLevelSceneName { get; set; }
 
 
     public SessionData()
