@@ -1,0 +1,624 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: FallingBoxes
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects:
+  - guid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    parentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    isStatic: 1
+    name: SM_Cardboard (7)
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":-0.17364825308322907,"w":0.9848077893257141}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":8.031000137329102,"y":-5.443999767303467,"z":2.7950000762939455}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.LODGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalReferencePoint
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.32044899463653567,"z":-0.004087999928742647}}'
+      - path: m_Size
+        type: 4
+        valueJson: '{"value":1.594359040260315}'
+      - path: m_FadeMode
+        type: 12
+        valueJson: '{"value":0}'
+      - path: m_AnimateCrossFading
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LastLODIsBillboard
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LODs.Array.size
+        type: 3
+        valueJson: '{"value":5}'
+      - path: m_LODs.Array.data[0].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.30000001192092898}'
+      - path: m_LODs.Array.data[0].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[0].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[0].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"283516c9-5e23-4903-901a-9d2b059b092e"}'
+      - path: m_LODs.Array.data[1].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.15000000596046449}'
+      - path: m_LODs.Array.data[1].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[1].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[1].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"dc8d0ee6-777f-42f9-b96f-e43ef035e83a"}'
+      - path: m_LODs.Array.data[2].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.05000000074505806}'
+      - path: m_LODs.Array.data[2].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[2].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[2].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"2298421a-3127-4b16-b7cc-b758c4e83a26"}'
+      - path: m_LODs.Array.data[3].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.029999999329447748}'
+      - path: m_LODs.Array.data[3].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[3].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[3].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"568ce96a-51a6-4906-8ce2-6c30468b054b"}'
+      - path: m_LODs.Array.data[4].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.009999999776482582}'
+      - path: m_LODs.Array.data[4].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[4].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[4].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"d87230c1-8597-4c34-94db-9dfd9d22f776"}'
+    - type: UnityEngine.BoxCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Material
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_IncludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_ExcludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_Size
+        type: 7
+        valueJson: '{"value":{"x":1.218851089477539,"y":0.6394967436790466,"z":0.8125675916671753}}'
+      - path: m_Center
+        type: 7
+        valueJson: '{"value":{"x":-8.940696716308594e-8,"y":0.32044920325279238,"z":-0.004088401794433594}}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"40e214c8-3ce0-4498-929b-57f27676dad9"}'
+  - guid: 13e17977-cfdd-4679-9305-c3f4e80d6f72
+    parentGuid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    isStatic: 1
+    name: SM_Cardboard_LOD0
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"80120c74-f84f-4428-9e0d-74a48ad1a901"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"2f0cce7b-676d-4d93-b0b1-422298985e09"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"13e17977-cfdd-4679-9305-c3f4e80d6f72"}'
+  - guid: cef7fc69-9d8c-4435-a083-37f38860a66b
+    parentGuid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    isStatic: 1
+    name: SM_Cardboard_LOD1
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"80120c74-f84f-4428-9e0d-74a48ad1a901"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"76fe4515-b324-48a2-b382-d65a6e2f238c"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"cef7fc69-9d8c-4435-a083-37f38860a66b"}'
+  - guid: 7ae376ca-48dc-4059-a49a-b36934e75f9f
+    parentGuid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    isStatic: 1
+    name: SM_Cardboard_LOD2
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"80120c74-f84f-4428-9e0d-74a48ad1a901"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"8eebc97f-9076-4d6a-9c51-3d0b4ab794bc"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"7ae376ca-48dc-4059-a49a-b36934e75f9f"}'
+  - guid: 6feb2441-313a-40b7-a50d-a980335ccc10
+    parentGuid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    isStatic: 1
+    name: SM_Cardboard_LOD3
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"80120c74-f84f-4428-9e0d-74a48ad1a901"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"e077e7db-9527-405a-94bd-3463a04556d3"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"6feb2441-313a-40b7-a50d-a980335ccc10"}'
+  - guid: 0d759b27-4a23-4a21-b8d2-379202b2c536
+    parentGuid: 40e214c8-3ce0-4498-929b-57f27676dad9
+    isStatic: 1
+    name: SM_Cardboard_LOD4
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"80120c74-f84f-4428-9e0d-74a48ad1a901"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"9e2bae7d-b80f-44b2-812d-376022e98315"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"0d759b27-4a23-4a21-b8d2-379202b2c536"}'
+  removedGameObjects: []
+  gameObjectModifications:
+  - guid: 1df329cb-154f-4ad3-a51b-e996010faf9f
+    oldParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    newParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    oldIsStatic: 1
+    newIsStatic: 1
+    oldName: SM_Plastic_Barrel
+    newName: SM_Plastic_Barrel
+    oldActive: 1
+    newActive: 1
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents: []
+    removedComponents: []
+    componentModifications:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      oldEnabled: 1
+      newEnabled: 1
+      fieldModifications:
+      - before:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+        after:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.7071068286895752,"w":0.7071068286895752}}'
+      - before:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":8.710356712341309,"y":-7.324807167053223,"z":2.6816635131835939}}'
+        after:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":9.140000343322754,"y":-6.809999942779541,"z":2.6816635131835939}}'
+  - guid: 1e1971ec-26db-4b9d-a8a6-84b4a0e2db50
+    oldParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    newParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    oldIsStatic: 1
+    newIsStatic: 1
+    oldName: SM_Cardboard (5)
+    newName: SM_Cardboard (5)
+    oldActive: 1
+    newActive: 1
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents: []
+    removedComponents: []
+    componentModifications:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      oldEnabled: 1
+      newEnabled: 1
+      fieldModifications:
+      - before:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+        after:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":0.0,"z":-0.17364825308322907,"w":0.9848077893257141}}'
+      - before:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":6.766439914703369,"y":-4.690586090087891,"z":2.25}}'
+        after:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":7.912271976470947,"y":-5.526398658752441,"z":1.8620100021362305}}'

@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: BrickStandUp
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects: []
+  removedGameObjects: []
+  gameObjectModifications:
+  - guid: 8124ae3e-adde-45cb-8e03-ca0b6f553dab
+    oldParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    newParentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    oldIsStatic: 1
+    newIsStatic: 1
+    oldName: SM_BrickHouse_Column_Additional
+    newName: SM_BrickHouse_Column_Additional
+    oldActive: 1
+    newActive: 1
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents: []
+    removedComponents: []
+    componentModifications:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      oldEnabled: 1
+      newEnabled: 1
+      fieldModifications:
+      - before:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.7071068286895752,"y":0.0,"z":0.0,"w":-0.7071068286895752}}'
+        after:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - before:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-5.243559837341309,"y":-5.321549892425537,"z":39.350006103515628}}'
+        after:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-5.639999866485596,"y":-5.321549892425537,"z":40.060001373291019}}'
+      - before:
+          path: m_LocalScale
+          type: 7
+          valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+        after:
+          path: m_LocalScale
+          type: 7
+          valueJson: '{"value":{"x":1.2000000476837159,"y":1.0,"z":1.100000023841858}}'
