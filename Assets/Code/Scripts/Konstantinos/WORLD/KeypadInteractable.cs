@@ -8,6 +8,7 @@ public class KeypadInteractable : NetworkBehaviour
 {
     public const int maxDigits = 4; // max digits a password can generate
     public const int glyphCount = 16; // number of glyphs
+    [SerializeField] private string forcedPassword;
 
     public struct PasswordData
     {
@@ -67,6 +68,10 @@ public class KeypadInteractable : NetworkBehaviour
         currentInput.onChanged += OnInputChanged.Invoke;
     }
 
+    private void OnValidate()
+    {
+        if (forcedPassword.Length > maxDigits) forcedPassword = forcedPassword.Substring(0, maxDigits);
+    }
     public void GenerateNewPassword()
     {
         if (!isServer) return;
@@ -86,7 +91,7 @@ public class KeypadInteractable : NetworkBehaviour
             glyphIndecies[i] = selectedGlyph; // assign the selected glyph index
             possibleGlyphs.Remove(selectedGlyph);
         }
-        requiredPassword = new string(digits); // store password
+        requiredPassword = string.IsNullOrEmpty(forcedPassword) ? new string(digits) : forcedPassword; // store password or use pre-generated one
         NotifyPasswordGenerated(new PasswordData(requiredPassword, glyphIndecies));
 
         // Question: How do the players get clues as to which the correct digits are? 

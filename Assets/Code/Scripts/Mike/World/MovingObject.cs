@@ -1,6 +1,5 @@
 using PurrNet;
 using UnityEngine;
-
 [RequireComponent(typeof(NetworkTransform))]
 public class MovingObject : NetworkBehaviour
 {
@@ -14,7 +13,7 @@ public class MovingObject : NetworkBehaviour
 
     [Header("Rotation")]
     [SerializeField, Tooltip("Applies Rotation")] private bool doesRotate = true;
-    [SerializeField, Min(0)] private float rotationSpeed;
+    [Min(0)] public float rotationSpeed;
     [SerializeField] private Vector3 rotationAxis;
 
     private float moveTime;
@@ -23,7 +22,6 @@ public class MovingObject : NetworkBehaviour
     private void Update()
     {
         if (!isServer) return;
-
         DoMove(Time.deltaTime);
         DoRotate(Time.deltaTime);
     }

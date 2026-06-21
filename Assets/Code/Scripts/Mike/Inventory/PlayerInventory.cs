@@ -1,5 +1,6 @@
 using PurrNet;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -33,16 +34,20 @@ public class PlayerInventory : NetworkBehaviour
     private PlayerBody playerBody;
     private Task<bool> currentUseTask;
     public bool IsUsingItem => currentUseTask != null && !currentUseTask.IsCompleted;
+    
+    private bool inventoryEventsBound;
+    private Coroutine heldItemRebuildRoutine;
 
     private void Awake()
     {
         playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
     }
-
-    protected override void OnSpawned()
+    
+    private void BindInventoryEvents()
     {
-        if (!isOwner) return;
+        if (inventoryEventsBound) return;
+
         Inventory.OnSlotsSwapped += HandleSlotsSwapped;
         Inventory.OnStackAdded += HandleStackCreation;
         Inventory.OnStackChanged += HandleStackChanged;
@@ -52,6 +57,25 @@ public class PlayerInventory : NetworkBehaviour
         Inventory.OnItemRemoved += OnItemRemoved.Invoke;
         OnFocusedChanged += _OnFocusedChanged.Invoke;
         OnItemUsed += _OnItemUsed.Invoke;
+
+        inventoryEventsBound = true;
+    }
+    
+    private void UnbindInventoryEvents()
+    {
+        if (!inventoryEventsBound) return;
+
+        Inventory.OnSlotsSwapped -= HandleSlotsSwapped;
+        Inventory.OnStackAdded -= HandleStackCreation;
+        Inventory.OnStackChanged -= HandleStackChanged;
+        Inventory.OnStackRemoved -= HandleStackRemoval;
+
+        Inventory.OnItemAdded -= OnItemAdded.Invoke;
+        Inventory.OnItemRemoved -= OnItemRemoved.Invoke;
+        OnFocusedChanged -= _OnFocusedChanged.Invoke;
+        OnItemUsed -= _OnItemUsed.Invoke;
+
+        inventoryEventsBound = false;
     }
 
     public void DebugInventory()
@@ -68,44 +92,130 @@ public class PlayerInventory : NetworkBehaviour
             else Debug.Log($"Instances: Item Key: {item.Key}, Item Object: {item.Value.name}");
         }
     }
+    
+    #region Network Lifecycle
+    
+    protected override void OnSpawned()
+    {
+        base.OnSpawned();
+        if (!isOwner) return;
+
+        BindInventoryEvents();
+        RebuildHeldItemsAfterSync();
+    }
+    
+    protected override void OnDespawned()
+    {
+        base.OnDespawned();
+
+        CancelHeldItemRebuild();
+        UnbindInventoryEvents();
+        ClearHeldItems();
+    }
+    
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        CancelHeldItemRebuild();
+        UnbindInventoryEvents();
+    }
+    
+    protected override void OnOwnerReconnected(PlayerID ownerId)
+    {
+        base.OnOwnerReconnected(ownerId);  
+        if(!isOwner) return;
+
+        BindInventoryEvents();
+        RebuildHeldItemsAfterSync();
+    }
+
+    #endregion
+
 
     #region Inventory Event Subscribers
     private void HandleSlotsSwapped(int fromSlot, int toSlot)
     {
-        if (fromSlot != focusedSlot) return;
+        if (fromSlot != focusedSlot && toSlot != focusedSlot) return;
 
-        if (Inventory.TryGet(focusedSlot, out var stack))
-        {
-            PlayerItem itemInstance = itemInstances[stack.GetID()];
-
-            if (itemInstance != activeInstance)
-            {
-                if (activeInstance != null) activeInstance.SetActive(false);
-                activeInstance = itemInstance.gameObject;
-                if (activeInstance != null) activeInstance.SetActive(true);
-            }
-        }
+        ShowFocusedHeldItem();
     }
+    
     private void HandleStackCreation(IReadOnlyItemStack stack, int slotIndex)
     {
-        if (stack.GetItemData().ItemPrefab == null) return;
+        CreateOrUpdateHeldItem(stack, slotIndex);
+        
+        if (activeInstance == null)
+        {
+            focusedSlot = slotIndex;
+            ShowFocusedHeldItem();
+        }
+    }
+    
+    private void CreateOrUpdateHeldItem(IReadOnlyItemStack stack, int slotIndex)
+    {
+        if (stack == null || stack.IsEmpty()) return;
 
-        PlayerItem itemObject = Instantiate(stack.GetItemData().ItemPrefab, parent: itemHolder);
-        itemInstances.Add(stack.GetID(), itemObject);
+        ItemData itemData = stack.GetItemData();
+        if (itemData == null || itemData.ItemPrefab == null) return;
+
+        if (itemInstances.TryGetValue(stack.GetID(), out PlayerItem existingItem))
+        {
+            existingItem.BindTo(this, stack, slotIndex);
+            existingItem.gameObject.SetActive(false);
+            return;
+        }
+
+        PlayerItem itemObject = Instantiate(itemData.ItemPrefab, parent: itemHolder);
+        itemObject.gameObject.SetActive(false);
         itemObject.BindTo(this, stack, slotIndex);
 
-        if (activeInstance == null) ChangeFocused(slotIndex);
-        else itemObject.gameObject.SetActive(false);
+        itemInstances.Add(stack.GetID(), itemObject);
     }
+    
+    private void ShowFocusedHeldItem()
+    {
+        HideAllHeldItems();
+        
+        if (activeInstance != null) activeInstance.SetActive(false);
+
+        activeInstance = null;
+
+        if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return;
+        if (stack == null || stack.IsEmpty()) return;
+
+        if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemObject)) return;
+
+        activeInstance = itemObject.gameObject;
+        activeInstance.SetActive(true);
+
+        OnFocusedChanged?.Invoke(stack.GetItemData());
+    }
+    
+    private void HideAllHeldItems()
+    {
+        foreach (PlayerItem item in itemInstances.Values)
+        {
+            if (item != null) item.gameObject.SetActive(false);
+        }
+
+        for (int i = 0; i < itemHolder.childCount; i++)
+        {
+            PlayerItem item = itemHolder.GetChild(i).GetComponent<PlayerItem>();
+
+            if (item != null) item.gameObject.SetActive(false);
+        }
+    }
+    
     private void HandleStackChanged(IReadOnlyItemStack stack, int slotIndex)
     {
         if (itemInstances.TryGetValue(stack.GetID(), out PlayerItem item)) item.BindTo(this, stack, slotIndex);
     }
+    
     private void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
         if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return;
 
-        if (activeInstance == itemInstance)
+        if (activeInstance == itemInstance.gameObject)
         {
             activeInstance = null;
 
@@ -137,34 +247,36 @@ public class PlayerInventory : NetworkBehaviour
     }
     public void ChangeFocused(int focusAtIndex)
     {
-        if(IsUsingItem) return;
-
-        bool differentIndex = focusedSlot != focusAtIndex;
-
-        if (!differentIndex && activeInstance != null) return;
+        if (IsUsingItem) return;
         if (focusAtIndex >= Inventory.TotalSlots || focusAtIndex < 0) return;
 
-        IReadOnlyItemStack stack;
-        PlayerItem itemObject = null;
-
-        if (differentIndex && Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
-        {
-            itemObject.gameObject?.SetActive(false);
-        }
+        if (focusedSlot == focusAtIndex && activeInstance != null) return;
 
         int previous = focusedSlot;
         focusedSlot = focusAtIndex;
 
-        if (Inventory.TryGet(focusedSlot, out stack) && itemInstances.TryGetValue(stack.GetID(), out itemObject))
+        ShowFocusedHeldItem();
+
+        OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
+    }
+    
+    private void ClearHeldItems()
+    {
+        for (int i = itemHolder.childCount - 1; i >= 0; i--)
         {
-            itemObject.gameObject?.SetActive(true);
+            Transform child = itemHolder.GetChild(i);
+            PlayerItem item = child.GetComponent<PlayerItem>();
+
+            if (item == null) continue;
+
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
         }
 
-        activeInstance = itemObject?.gameObject;
-        OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
-
-        if (stack != null) OnFocusedChanged?.Invoke(stack.GetItemData());
+        itemInstances.Clear();
+        activeInstance = null;
     }
+    
     private async Task<bool> TryUseFocused()
     {
         if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
@@ -190,6 +302,7 @@ public class PlayerInventory : NetworkBehaviour
     [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
+        if (TutorialManager.Instance != null) return; // Don't allow items to be dropped during tutorial to avoid them despawning / getting lost
 
         int quantityRemoved = Inventory.Remove(slotIndex, 1);
         if (stack.GetItemData().PickupPrefab == null || quantityRemoved == 0) return;
@@ -238,6 +351,42 @@ public class PlayerInventory : NetworkBehaviour
         {
             DropConsumed_Server(stack.GetItemData());
         }
+    }
+
+    private void RebuildHeldItemsAfterSync()
+    {
+        CancelHeldItemRebuild();
+        heldItemRebuildRoutine = StartCoroutine(RebuildHeldItemsNextFrame());
+    }
+    
+    private void CancelHeldItemRebuild()
+    {
+        if (heldItemRebuildRoutine == null) return;
+
+        StopCoroutine(heldItemRebuildRoutine);
+        heldItemRebuildRoutine = null;
+    }
+    
+    private IEnumerator RebuildHeldItemsNextFrame()
+    {
+        yield return null;
+
+        heldItemRebuildRoutine = null;
+        RebuildHeldItems();
+    }
+    
+    private void RebuildHeldItems()
+    {
+        ClearHeldItems();
+        for (int i = 0; i < Inventory.TotalSlots; i++)
+        {
+            if (!Inventory.TryGet(i, out IReadOnlyItemStack stack)) continue;
+            if (stack == null || stack.IsEmpty()) continue;
+
+            CreateOrUpdateHeldItem(stack, i);
+        }
+
+        ShowFocusedHeldItem();
     }
 
     #region Input Actions
