@@ -3,7 +3,7 @@ using PurrNet;
 using System.Collections;
 using UnityEngine;
 
-public class LightBrokenAnomaly : NetworkBehaviour
+public class LightBrokenAnomaly : MonoBehaviour
 {
     [SerializeField] private Renderer targetRenderer;
     [SerializeField] private Color emissionColor = Color.white;
@@ -50,36 +50,9 @@ public class LightBrokenAnomaly : NetworkBehaviour
 
         SetEmission(normalIntensity);
     }
-    //Networking RPCs
-    [ServerRpc]
-    private void StartAnomalyServerRpc()
-    {
-        StartAnomalyObserversRpc();
-    }
-
-    [ServerRpc]
-    private void StopAnomalyServerRpc()
-    {
-        StopAnomalyObserversRpc();
-    }
-
-    [ObserversRpc]
-    private void StartAnomalyObserversRpc()
-    {
-        StartCoroutine(StartAfterApply());
-    }
-
-    [ObserversRpc]
-    private void StopAnomalyObserversRpc()
-    {
-        if (anomalyLoop != null)
-        {
-            StopCoroutine(anomalyLoop);
-            anomalyLoop = null;
-        }
-
-        SetEmission(normalIntensity);
-    }
+    
+   
+   
 
     // Broken light effect
     private IEnumerator AnomalyLoop()
@@ -107,6 +80,7 @@ public class LightBrokenAnomaly : NetworkBehaviour
             yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
         }
     }
+   
 
     private void SetEmission(float intensity)
     {
