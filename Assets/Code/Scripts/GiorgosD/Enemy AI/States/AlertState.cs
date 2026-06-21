@@ -31,7 +31,7 @@ public class AlertState : BaseState
 
     private void PlayerFound(PlayerBody player)
     {
-       brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
+        brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
     }
 
     public override void Exit()
