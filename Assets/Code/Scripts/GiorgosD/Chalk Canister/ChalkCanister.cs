@@ -18,7 +18,7 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
     {
         return Task.FromResult(true);
     }
-
+    
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
         if (interactor == null 

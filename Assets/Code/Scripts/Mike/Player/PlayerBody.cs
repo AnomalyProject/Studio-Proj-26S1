@@ -144,8 +144,6 @@ public class PlayerBody : NetworkBehaviour
     
     public void StartInvisTimer()
     {
-        if (!isServer) return;
-     
         StartCoroutine(InvisTimer());
     }
 
