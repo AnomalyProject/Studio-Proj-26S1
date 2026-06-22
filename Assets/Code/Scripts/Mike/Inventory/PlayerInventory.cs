@@ -113,8 +113,9 @@ public class PlayerInventory : NetworkBehaviour
         ClearHeldItems();
     }
     
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         CancelHeldItemRebuild();
         UnbindInventoryEvents();
     }
@@ -143,9 +144,11 @@ public class PlayerInventory : NetworkBehaviour
     {
         CreateOrUpdateHeldItem(stack, slotIndex);
         
-        if (activeInstance == null) focusedSlot = slotIndex;
-        
-        ShowFocusedHeldItem();
+        if (activeInstance == null)
+        {
+            focusedSlot = slotIndex;
+            ShowFocusedHeldItem();
+        }
     }
     
     private void CreateOrUpdateHeldItem(IReadOnlyItemStack stack, int slotIndex)
