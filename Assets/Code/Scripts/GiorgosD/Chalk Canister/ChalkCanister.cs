@@ -4,6 +4,9 @@ using UnityEngine.Events;
 
 public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
 {
+    [Header("Settings")]
+    [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeInSpeed = 0.2f;
+    
     [Header("References")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] ParticleSystem particles;
@@ -18,10 +21,14 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
 
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
-        if (audioSource == null && audioSource.clip == null && particles == null) return false;
+        if (interactor == null 
+            || audioSource == null 
+            || audioSource.clip == null 
+            || particles == null) return false;
         
         audioSource.Play();
         particles.Play();
+        interactor.EnablePPVolume(true, 1.0f, fadeInSpeed);
             
         int wait = Mathf.CeilToInt(audioSource.clip.length * 1000);
         await Task.Delay(wait);

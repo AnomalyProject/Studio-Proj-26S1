@@ -26,6 +26,8 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private PlayerBody cachedPlayer;
+
+    public PlayerBody CachedPlayer => cachedPlayer;
     
     [Header("Lost Player Timer")]
     [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
@@ -84,8 +86,11 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
 
-        //Debug.Log($"Moving to {target}");
-
+        if (cachedPlayer != null && cachedPlayer.IsInvisible)
+        {
+            LostTimer();
+        }
+        
         if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }
 
@@ -205,7 +210,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     public void RotateTowards(Vector3 targetPos)
     {
-        if (!isServer) return;
+        if (!isServer || cachedPlayer != null && cachedPlayer.IsInvisible) return;
 
         Vector3 direction = (targetPos - transform.position);
         direction.y = 0;
@@ -252,6 +257,7 @@ public class EnemyPawn : NetworkBehaviour
             hasPlayer = false;
             cachedPlayer = null;
             timer = 0f;
+            StopAll();
             InvokeOnLost();
             return;
         }

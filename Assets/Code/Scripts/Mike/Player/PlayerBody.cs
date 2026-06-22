@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using PurrNet;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Rendering;
 
 public class PlayerBody : NetworkBehaviour
 {
@@ -27,9 +29,10 @@ public class PlayerBody : NetworkBehaviour
     [Header("Invisible Settings")]
     [SerializeField] private SyncVar<bool> isInvisible;
     [SerializeField] private float invisibleTimer = 5.0f;
-
-    [SerializeField] private GameObject PPInvis;
+    
+    [SerializeField] private Volume PPInvisVolume;
     [SerializeField] private Material invisMat;
+    [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeOutSpeed = 2.0f;
     private Renderer playerRenderer;
     private Material[] originalMat;
     
@@ -146,25 +149,35 @@ public class PlayerBody : NetworkBehaviour
         StartCoroutine(InvisTimer());
     }
 
+    public async void EnablePPVolume(bool isActive, float targetWeight, float fadeSpeed)
+    {
+        if (PPInvisVolume == null) return;
+
+        while (!Mathf.Approximately(PPInvisVolume.weight, targetWeight))
+        {
+            PPInvisVolume.weight = Mathf.MoveTowards(PPInvisVolume.weight, targetWeight, fadeSpeed * Time.deltaTime);
+            
+            await Task.Yield();
+        }
+        
+        PPInvisVolume.weight = targetWeight;
+    }
+
     private IEnumerator InvisTimer()
     {
         isInvisible.value = true;
         ChangeMatRPC(true);
         yield return new WaitForSeconds(invisibleTimer);
-        ChangeMatRPC(false);
+        ChangeMatRPC(false); 
+        EnablePPVolume(false, 0, fadeOutSpeed);
         isInvisible.value = false;
     }
-
+    
     [ObserversRpc(bufferLast: true)]
     private void ChangeMatRPC(bool shouldBeInvis)
     {
         if (isOwner)
         {
-            if (PPInvis != null)
-            {
-                PPInvis.SetActive(shouldBeInvis);
-            }
-         
             if (mainMixer != null)
             {
                 string targetSnapshot = shouldBeInvis ? snapshotMuffled : snapshotNormal;

@@ -58,7 +58,7 @@ public class AttackState : BaseState
 
     private void Outcome()
     {
-        if (hasHitTarget)
+        if (hasHitTarget || body.CachedPlayer.IsInvisible)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }
