@@ -33,6 +33,7 @@ Transform:
   m_Children:
   - {fileID: 793812348881820501}
   - {fileID: 8749820363243038016}
+  - {fileID: 7223072685072337418}
   m_Father: {fileID: 7032054832690312386}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2036968019297628306
@@ -56,7 +57,7 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
-  OnStateChanged_MapIndex:
+  OnMapStateApplied:
     m_PersistentCalls:
       m_Calls: []
   mapCollection:
@@ -673,6 +674,67 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InGameCheats
   cheatsEnabled: 1
   currencyItem: {fileID: 11400000, guid: 0b887c8115b205a45994f550f9448c56, type: 2}
+--- !u!1 &8364363160281644046
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7223072685072337418}
+  - component: {fileID: 363270804599958360}
+  m_Layer: 0
+  m_Name: Currency Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7223072685072337418
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8364363160281644046}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7718683810689320557}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &363270804599958360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8364363160281644046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f74b7ac581f7e648b8bf943d5430897, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurrencySpawner
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  Items:
+  - {fileID: 4158961773394589312, guid: 9305b7631f9b57640bf14ad284dc57e7, type: 3}
+  spawnPoints: []
+  onEnable: 0
+  spawnMode: 0
+  spawnProbability: 0.4
+  randomSpawnAmount: 4
+  anomalyManager: {fileID: 2036968019297628306}
 --- !u!1001 &3281201330020907881
 PrefabInstance:
   m_ObjectHideFlags: 0
