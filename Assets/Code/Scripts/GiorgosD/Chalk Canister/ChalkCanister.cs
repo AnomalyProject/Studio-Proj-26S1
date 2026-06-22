@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
 {
     [Header("References")]
-    [SerializeField] private AudioSource audio;
+    [SerializeField] private AudioSource audioSource;
     [SerializeField] ParticleSystem particles;
     
     [Header("Events")]
@@ -18,12 +18,12 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
 
     public async Task<bool> TryInteract(PlayerBody interactor)
     {
-        if (audio == null && audio.clip == null && particles == null) return false;
+        if (audioSource == null && audioSource.clip == null && particles == null) return false;
         
-        audio.Play();
+        audioSource.Play();
         particles.Play();
             
-        int wait = Mathf.CeilToInt(audio.clip.length * 1000);
+        int wait = Mathf.CeilToInt(audioSource.clip.length * 1000);
         await Task.Delay(wait);
         
         OnUsed?.Invoke();
