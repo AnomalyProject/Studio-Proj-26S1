@@ -45,6 +45,8 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject InputPasswordPanel;
     [SerializeField] private TMP_InputField PasswordInputField;
 
+    [SerializeField] private GameObject notesPanel;
+
     [Space(10)]
     [Header("Manager Settings")]
     [SerializeField] private bool enableOnStart = true;
@@ -56,12 +58,20 @@ public class MainMenuManager : MonoBehaviour
         Instance = this;
 
         // Unlock 'Start' tab if you have collectible from tutorial
-        if (RefrenceManager.CurrentSave.collectiblesGathered.Contains(tutorialCollectible.ID))
-        {
-            firstSelectedButtonStart.interactable = true;
-            firstSelectedButtonStart.image.color = Color.white;
-        }
+        if (RefrenceManager.CurrentSave.collectiblesGathered.Contains(tutorialCollectible.ID)) UnlockMainGame();
         SetMenuActivity(false);
+
+        DevConsole.RegisterCommand("skiptutorial", new DevConsole.CommandData("Registers the tutorial as complete.", args =>
+        {
+            RefrenceManager.CurrentSave.collectiblesGathered.Add(tutorialCollectible.ID);
+            SaveSystem.QuickSave(RefrenceManager.CurrentSave);
+            UnlockMainGame();
+        }, "Awards the user with the Tutorial collectible, unlocking the main game."));
+    }
+    private void UnlockMainGame()
+    {
+        firstSelectedButtonStart.interactable = true;
+        firstSelectedButtonStart.image.color = Color.white;
     }
     private void OnDestroy() => Instance = null;
 
@@ -161,6 +171,10 @@ public class MainMenuManager : MonoBehaviour
 
                 EventSystem.current.SetSelectedGameObject(PasswordInputField.gameObject);
                 break;
+            case 6:
+                ResetPanels();
+                notesPanel.SetActive(true);
+                break;
         }
     }
 
@@ -172,6 +186,7 @@ public class MainMenuManager : MonoBehaviour
         joinPanel.SetActive(false);
         PasswordProtectedPanel.SetActive(false);
         InputPasswordPanel.SetActive(false);
+        notesPanel.SetActive(false);
     }
     public void StartGame()
     {

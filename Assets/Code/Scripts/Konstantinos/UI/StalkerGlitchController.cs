@@ -54,25 +54,25 @@ public class StalkerGlitchController : MonoBehaviour
         InitializeAudio();
     }
 
+    // Disable effect when player despawns
+    private void OnDestroy()
+    {
+        currentIntensity = 0f;
+        UpdateShader();
+        HandleIntensityEvents();
+        UpdateAudio();
+    }
+
     private void InitializeAudio()
     {
-        if (glitchAudioSource == null)
-            return;
+        if (glitchAudioSource == null) return;
 
-        if (glitchLoopClip != null)
-        {
-            glitchAudioSource.clip = glitchLoopClip;
-        }
+        if (glitchLoopClip != null) glitchAudioSource.clip = glitchLoopClip;
 
         glitchAudioSource.loop = true;
         glitchAudioSource.volume = 0f;
 
-        if (playLoopAutomatically &&
-            glitchAudioSource.clip != null &&
-            !glitchAudioSource.isPlaying)
-        {
-            glitchAudioSource.Play();
-        }
+        if (playLoopAutomatically && glitchAudioSource.clip != null && !glitchAudioSource.isPlaying) glitchAudioSource.Play();
     }
 
     private void Update()
@@ -84,14 +84,9 @@ public class StalkerGlitchController : MonoBehaviour
         HandleVisibilityEvents(lookingAtStalker);
 
         float targetIntensity = lookingAtStalker ? 1f : 0f;
-        float speed = lookingAtStalker
-            ? glitchInSpeed
-            : glitchOutSpeed;
+        float speed = lookingAtStalker ? glitchInSpeed : glitchOutSpeed;
 
-        currentIntensity = Mathf.MoveTowards(
-            currentIntensity,
-            targetIntensity,
-            speed * Time.deltaTime);
+        currentIntensity = Mathf.MoveTowards(currentIntensity, targetIntensity, speed * Time.deltaTime);
 
         UpdateShader();
         HandleIntensityEvents();
@@ -100,15 +95,8 @@ public class StalkerGlitchController : MonoBehaviour
 
     private void HandleVisibilityEvents(bool lookingAtStalker)
     {
-        if (lookingAtStalker && !wasLookingAtStalker)
-        {
-            onStartedLookingAtStalker?.Invoke(playerBody);
-        }
-
-        if (!lookingAtStalker && wasLookingAtStalker)
-        {
-            onStoppedLookingAtStalker?.Invoke(playerBody);
-        }
+        if (lookingAtStalker && !wasLookingAtStalker) onStartedLookingAtStalker?.Invoke(playerBody);
+        if (!lookingAtStalker && wasLookingAtStalker) onStoppedLookingAtStalker?.Invoke(playerBody);
 
         wasLookingAtStalker = lookingAtStalker;
     }
@@ -120,15 +108,8 @@ public class StalkerGlitchController : MonoBehaviour
         bool isMaxed = currentIntensity >= 1f - epsilon;
         bool isZero = currentIntensity <= epsilon;
 
-        if (isMaxed && !glitchWasMaxed)
-        {
-            onGlitchMaxed?.Invoke(playerBody);
-        }
-
-        if (isZero && !glitchWasZero)
-        {
-            onGlitchZero?.Invoke(playerBody);
-        }
+        if (isMaxed && !glitchWasMaxed) onGlitchMaxed?.Invoke(playerBody);
+        if (isZero && !glitchWasZero) onGlitchZero?.Invoke(playerBody);
 
         glitchWasMaxed = isMaxed;
         glitchWasZero = isZero;
@@ -136,30 +117,16 @@ public class StalkerGlitchController : MonoBehaviour
 
     private bool IsAnyEnemyVisible()
     {
-        GeometryUtility.CalculateFrustumPlanes(
-            playerCamera,
-            frustumPlanes);
+        GeometryUtility.CalculateFrustumPlanes(playerCamera, frustumPlanes);
 
-        Collider[] enemies = Physics.OverlapSphere(
-            playerCamera.transform.position,
-            visibilitySearchRadius,
-            enemyLayer,
-            QueryTriggerInteraction.Ignore);
+        Collider[] enemies = Physics.OverlapSphere(playerCamera.transform.position, visibilitySearchRadius, enemyLayer, QueryTriggerInteraction.Ignore);
 
         foreach (Collider enemy in enemies)
         {
             Bounds bounds = enemy.bounds;
-
-            bool insideFrustum =
-                GeometryUtility.TestPlanesAABB(
-                    frustumPlanes,
-                    bounds);
-
-            if (!insideFrustum)
-                continue;
-
-            if (HasLineOfSight(enemy))
-                return true;
+            bool insideFrustum = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
+            if (!insideFrustum) continue;
+            if (HasLineOfSight(enemy)) return true;
         }
 
         return false;
@@ -173,13 +140,7 @@ public class StalkerGlitchController : MonoBehaviour
         Vector3 direction = target - origin;
         float distance = direction.magnitude;
 
-        if (Physics.Raycast(
-                origin,
-                direction.normalized,
-                out RaycastHit hit,
-                distance,
-                obstructionLayers | enemyLayer,
-                QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast( origin, direction.normalized, out RaycastHit hit, distance, obstructionLayers | enemyLayer, QueryTriggerInteraction.Ignore))
         {
             return ((1 << hit.collider.gameObject.layer) & enemyLayer) != 0;
         }
@@ -189,35 +150,15 @@ public class StalkerGlitchController : MonoBehaviour
 
     private void UpdateShader()
     {
-        glitchMaterial.SetFloat(
-            "_NoiseAmount",
-            Mathf.Lerp(
-                0f,
-                maxNoiseAmount,
-                currentIntensity));
-
-        glitchMaterial.SetFloat(
-            "_GlitchStrength",
-            Mathf.Lerp(
-                0f,
-                maxGlitchStrength,
-                currentIntensity));
-
-        glitchMaterial.SetFloat(
-            "_ScanLinesTransparency",
-            Mathf.Lerp(
-                1f,
-                minScanLinesTransparency,
-                currentIntensity));
+        glitchMaterial.SetFloat("_NoiseAmount", Mathf.Lerp(0f, maxNoiseAmount, currentIntensity));
+        glitchMaterial.SetFloat("_GlitchStrength", Mathf.Lerp(0f, maxGlitchStrength, currentIntensity));
+        glitchMaterial.SetFloat("_ScanLinesTransparency", Mathf.Lerp(1f, minScanLinesTransparency, currentIntensity));
     }
 
     private void UpdateAudio()
     {
-        if (glitchAudioSource == null)
-            return;
-
-        glitchAudioSource.volume =
-            currentIntensity * maxGlitchVolume;
+        if (glitchAudioSource == null) return;
+        glitchAudioSource.volume = currentIntensity * maxGlitchVolume;
     }
 
     public float CurrentIntensity => currentIntensity;
