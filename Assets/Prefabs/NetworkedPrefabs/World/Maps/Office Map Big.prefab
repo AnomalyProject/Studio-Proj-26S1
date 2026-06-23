@@ -881,7 +881,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4217242622987214961
 Transform:
@@ -5178,7 +5178,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8907849353833483730
 Transform:
@@ -11217,7 +11217,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &474955419268779732
 Transform:
@@ -18485,7 +18485,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &266054116240876440
 Transform:
@@ -24237,7 +24237,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4427667044476694683
 Transform:
@@ -26733,6 +26733,82 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: b7bed3d1-7c71-4eee-a5aa-88bfe8e828db
+--- !u!1 &1667949607626778500
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3441245204022758032}
+  - component: {fileID: 7507166888132521604}
+  m_Layer: 0
+  m_Name: LightOnOffAnomaly
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &3441245204022758032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1667949607626778500}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7087273037353364902}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7507166888132521604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1667949607626778500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d02e86fb22314d40aa91632416e4279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModificationApplier
+  levelModification: {fileID: 11400000, guid: 4c8e886b69bf60246b111f1409127adb, type: 2}
+  applied: 0
+  onEnable:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2893515506305176085}
+        m_TargetAssemblyTypeName: LightBrokenAnomaly, Assembly-CSharp
+        m_MethodName: EnableAnomaly
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onDisable:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2893515506305176085}
+        m_TargetAssemblyTypeName: LightBrokenAnomaly, Assembly-CSharp
+        m_MethodName: DisableAnomaly
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1673572400049315337
 GameObject:
   m_ObjectHideFlags: 0
@@ -27750,19 +27826,7 @@ MonoBehaviour:
   applied: 0
   onEnable:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2193761277798953751}
-        m_TargetAssemblyTypeName: PickUpSpawner, Assembly-CSharp
-        m_MethodName: SpawnItems
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onDisable:
     m_PersistentCalls:
       m_Calls: []
@@ -30042,7 +30106,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &2318568054565423641
 Transform:
@@ -33489,70 +33553,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: 9d044bc0-b885-495d-96fd-59221e71daef
---- !u!1 &2095578187040086325
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3137823964793802503}
-  - component: {fileID: 2193761277798953751}
-  m_Layer: 0
-  m_Name: PickupSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3137823964793802503
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095578187040086325}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.06449, y: 0, z: -25.76985}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1273663082431600051}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2193761277798953751
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095578187040086325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0072f8b2fdc1014bb775d889bc604a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PickUpSpawner
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  Items:
-  - {fileID: 4158961773394589312, guid: 9305b7631f9b57640bf14ad284dc57e7, type: 3}
-  spawnPoints:
-  - {fileID: 7436791722841657755}
-  - {fileID: 9171260078370802548}
-  - {fileID: 6181753046484560573}
-  - {fileID: 1237531411329490672}
-  onEnable: 1
-  spawnMode: 1
-  spawnProbability: 0.2
-  randomSpawnAmount: 0
 --- !u!1 &2096252828741697095
 GameObject:
   m_ObjectHideFlags: 0
@@ -36470,7 +36470,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &2099622868667504598
 Transform:
@@ -45485,19 +45485,7 @@ MonoBehaviour:
   applied: 0
   onEnable:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2193761277798953751}
-        m_TargetAssemblyTypeName: PickUpSpawner, Assembly-CSharp
-        m_MethodName: SpawnItems
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onDisable:
     m_PersistentCalls:
       m_Calls: []
@@ -48495,7 +48483,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &9080634025984799045
 Transform:
@@ -49377,9 +49365,7 @@ Transform:
   - {fileID: 128090399361167885}
   - {fileID: 5682519935162260238}
   - {fileID: 1421151264155073796}
-  - {fileID: 3137823964793802503}
   - {fileID: 6696990758516477844}
-  - {fileID: 3853479630011311033}
   - {fileID: 2691799484234190605}
   - {fileID: 1907646805698175430}
   m_Father: {fileID: 0}
@@ -49409,6 +49395,11 @@ MonoBehaviour:
   exitPointAnchor: {fileID: 5682519935162260238}
   mapMusicTheme: {fileID: 8300000, guid: ac140a640def1a54cb3e283b40f3c193, type: 3}
   _almanacEntry: {fileID: 11400000, guid: b6d88838cbd0d0645a6e233a2f8446f2, type: 2}
+  currencySpawnPoints:
+  - {fileID: 7436791722841657755}
+  - {fileID: 9171260078370802548}
+  - {fileID: 6181753046484560573}
+  - {fileID: 1237531411329490672}
   baseMap: {fileID: 3024347794025815050}
   anomalyVariations:
   - _groupRoot: {fileID: 3045261744540992302}
@@ -49436,6 +49427,15 @@ MonoBehaviour:
     _replacesBaseMap: 0
     _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 6956511962789363483}
+    _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
+  - _groupRoot: {fileID: 1667949607626778500}
+    _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
+  - _groupRoot: {fileID: 3838357362340632093}
+    _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
+  - _groupRoot: {fileID: 3214115680206287125}
     _replacesBaseMap: 0
     _almanacEntry: {fileID: 0}
 --- !u!1 &2950232305204021025
@@ -51012,19 +51012,7 @@ MonoBehaviour:
   applied: 0
   onEnable:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2193761277798953751}
-        m_TargetAssemblyTypeName: PickUpSpawner, Assembly-CSharp
-        m_MethodName: SpawnItems
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onDisable:
     m_PersistentCalls:
       m_Calls: []
@@ -52041,19 +52029,7 @@ MonoBehaviour:
   applied: 0
   onEnable:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2193761277798953751}
-        m_TargetAssemblyTypeName: PickUpSpawner, Assembly-CSharp
-        m_MethodName: SpawnItems
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onDisable:
     m_PersistentCalls:
       m_Calls: []
@@ -53753,7 +53729,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &5505037623446049680
 Transform:
@@ -53858,7 +53834,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7962367826351956861
 Transform:
@@ -54220,6 +54196,58 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: 1d7d1b49-5f8e-4a03-a655-a90a1135d3e8
+--- !u!1 &3214115680206287125
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9012157355293059232}
+  - component: {fileID: 4963857318466602430}
+  m_Layer: 0
+  m_Name: BrokeSecondDoorAnomaly
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &9012157355293059232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3214115680206287125}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7087273037353364902}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4963857318466602430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3214115680206287125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d02e86fb22314d40aa91632416e4279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModificationApplier
+  levelModification: {fileID: 11400000, guid: 96cb323e8d3e66140b8279d5b2f38a95, type: 2}
+  applied: 0
+  onEnable:
+    m_PersistentCalls:
+      m_Calls: []
+  onDisable:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &3220173618747780991
 GameObject:
   m_ObjectHideFlags: 0
@@ -54624,7 +54652,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1248539040879786174
 Transform:
@@ -60376,7 +60404,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7136274582667910557
 Transform:
@@ -60394,7 +60422,7 @@ Transform:
   - {fileID: 3864386590680200107}
   - {fileID: 2318568054565423641}
   m_Father: {fileID: 9111583152699512868}
-  m_LocalEulerAnglesHint: {x: -24.611002, y: 90.00001, z: 90.00001}
+  m_LocalEulerAnglesHint: {x: -60, y: 90.00001, z: 90.00001}
 --- !u!114 &6641238951586239738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63195,6 +63223,58 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: f1d710a0-c168-4410-9fe5-af590ffe21a8
+--- !u!1 &3838357362340632093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2406606332863357843}
+  - component: {fileID: 1296675785015044765}
+  m_Layer: 0
+  m_Name: CarpetDuckAnomaly
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &2406606332863357843
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3838357362340632093}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7087273037353364902}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1296675785015044765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3838357362340632093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d02e86fb22314d40aa91632416e4279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModificationApplier
+  levelModification: {fileID: 11400000, guid: f4338dfeb9a9d2047ab9eb986ea91191, type: 2}
+  applied: 0
+  onEnable:
+    m_PersistentCalls:
+      m_Calls: []
+  onDisable:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &3846149383895357553
 GameObject:
   m_ObjectHideFlags: 0
@@ -67512,7 +67592,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7118866709909218296
 Transform:
@@ -68722,7 +68802,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &656537407253296240
 Transform:
@@ -72208,7 +72288,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1461841617625965427
 Transform:
@@ -72461,6 +72541,7 @@ GameObject:
   - component: {fileID: 5895928529640012817}
   - component: {fileID: 6747889945227895095}
   - component: {fileID: 429036557113471714}
+  - component: {fileID: 2893515506305176085}
   m_Layer: 0
   m_Name: Ceiling_lights_lo
   m_TagString: Untagged
@@ -72575,6 +72656,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: 6f141812-6dd0-48b9-aa68-1affafa2273b
+--- !u!114 &2893515506305176085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4333773325288641452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 058d5919fbce22f479a7340c0b903a67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightBrokenAnomaly
+  targetRenderer: {fileID: 0}
+  emissionColor: {r: 1, g: 1, b: 1, a: 1}
+  normalIntensity: 10
 --- !u!1 &4334245773005586292
 GameObject:
   m_ObjectHideFlags: 0
@@ -79663,7 +79759,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1563075693363875113
 Transform:
@@ -85272,67 +85368,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnapshotID
   guid: 2723af58-9892-4d0f-ba0e-c1a77d200f95
---- !u!1 &5139613085471581713
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3853479630011311033}
-  - component: {fileID: 1713480696557532127}
-  m_Layer: 0
-  m_Name: Polaroid Spawn
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3853479630011311033
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5139613085471581713}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9200895, z: -0, w: 0.39170828}
-  m_LocalPosition: {x: -3.92845, y: 1.26678, z: 6.329}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1273663082431600051}
-  m_LocalEulerAnglesHint: {x: 0, y: 133.878, z: 0}
---- !u!114 &1713480696557532127
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5139613085471581713}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0072f8b2fdc1014bb775d889bc604a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PickUpSpawner
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  Items:
-  - {fileID: 4864577436276923018, guid: 23bcf2b026c3d6942a0ab79d648c4140, type: 3}
-  spawnPoints:
-  - {fileID: 3853479630011311033}
-  onEnable: 1
-  spawnMode: 0
-  spawnProbability: 1
-  randomSpawnAmount: 0
 --- !u!1 &5141349867627874654
 GameObject:
   m_ObjectHideFlags: 0
@@ -90912,7 +90947,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &532967978379086952
 Transform:
@@ -92585,7 +92620,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1105964231082781202
 Transform:
@@ -99033,7 +99068,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1116822438152499777
 Transform:
@@ -106862,7 +106897,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &5662121127571813728
 Transform:
@@ -114786,6 +114821,9 @@ Transform:
   - {fileID: 4244124742986753138}
   - {fileID: 1844898481396059598}
   - {fileID: 8698101165301142891}
+  - {fileID: 3441245204022758032}
+  - {fileID: 2406606332863357843}
+  - {fileID: 9012157355293059232}
   m_Father: {fileID: 1273663082431600051}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6831123874462346468
@@ -119686,7 +119724,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &2892757644119157141
 Transform:
@@ -124182,7 +124220,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1466939636224904767
 Transform:
@@ -126407,7 +126445,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7785039366985723512
 Transform:
@@ -127100,7 +127138,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4119057388187259489
 Transform:
@@ -129095,7 +129133,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &3864386590680200107
 Transform:
@@ -140898,7 +140936,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8720159368240154219
 Transform:
@@ -141959,7 +141997,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 0
 --- !u!4 &9089278373620798157
 Transform:
