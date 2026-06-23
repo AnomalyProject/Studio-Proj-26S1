@@ -1,0 +1,473 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: PizzaOven
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects:
+  - guid: 77d78a33-5e2f-4789-9b51-52936c5b6b2f
+    parentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    isStatic: 1
+    name: SM_PizzaOven_01_A
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.7071068286895752,"z":0.0,"w":-0.7071068286895752}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":-10.024845123291016,"y":-2.0941269397735597,"z":36.590003967285159}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.LODGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalReferencePoint
+        type: 7
+        valueJson: '{"value":{"x":0.004453999921679497,"y":1.8120739459991456,"z":0.0}}'
+      - path: m_Size
+        type: 4
+        valueJson: '{"value":4.017810821533203}'
+      - path: m_FadeMode
+        type: 12
+        valueJson: '{"value":0}'
+      - path: m_AnimateCrossFading
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LastLODIsBillboard
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LODs.Array.size
+        type: 3
+        valueJson: '{"value":4}'
+      - path: m_LODs.Array.data[0].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.30000001192092898}'
+      - path: m_LODs.Array.data[0].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[0].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[0].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"d8c58988-a030-49eb-9c7d-f068ef8e7364"}'
+      - path: m_LODs.Array.data[1].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.15000000596046449}'
+      - path: m_LODs.Array.data[1].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[1].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[1].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"8331b5a8-505f-4a7b-ac7f-d23deb67ddfc"}'
+      - path: m_LODs.Array.data[2].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.05000000074505806}'
+      - path: m_LODs.Array.data[2].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[2].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[2].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"3adbe5c5-a829-48cc-8b23-f9b76f5970e7"}'
+      - path: m_LODs.Array.data[3].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.009999999776482582}'
+      - path: m_LODs.Array.data[3].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[3].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[3].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"72a8720c-46cd-444e-aeec-9ad413bf8039"}'
+    - type: UnityEngine.MeshCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Material
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_IncludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_ExcludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_Convex
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_CookingOptions
+        type: 2
+        valueJson: '{"value":30}'
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"3204adbd-5926-4c19-ab2e-e8d3ad0a741d"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"77d78a33-5e2f-4789-9b51-52936c5b6b2f"}'
+  - guid: b6e0f883-72b5-45df-8ddb-58d4b15fb0be
+    parentGuid: 77d78a33-5e2f-4789-9b51-52936c5b6b2f
+    isStatic: 1
+    name: SM_PizzaOven_01_A_LOD0
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"3cd7396e-6ae8-4490-93dc-923ff4a014e8"}'
+      - path: 'm_Materials.Array.data[1]'
+        type: 11
+        valueJson: '{"value":"a5ddfb89-d6a0-4114-95b6-529c099ecd6b"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"13d3976d-d854-4fa6-b67a-8eff236484e2"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"b6e0f883-72b5-45df-8ddb-58d4b15fb0be"}'
+  - guid: 27f6fe48-7504-44fe-a1f1-8d14c0fa4142
+    parentGuid: 77d78a33-5e2f-4789-9b51-52936c5b6b2f
+    isStatic: 1
+    name: SM_PizzaOven_01_A_LOD1
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"3cd7396e-6ae8-4490-93dc-923ff4a014e8"}'
+      - path: 'm_Materials.Array.data[1]'
+        type: 11
+        valueJson: '{"value":"a5ddfb89-d6a0-4114-95b6-529c099ecd6b"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"c0f9f7e9-a566-4c7a-86f8-f1f7fb32d0df"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"27f6fe48-7504-44fe-a1f1-8d14c0fa4142"}'
+  - guid: 6c7e75c0-2acd-434f-8d62-76f8b9604ec7
+    parentGuid: 77d78a33-5e2f-4789-9b51-52936c5b6b2f
+    isStatic: 1
+    name: SM_PizzaOven_01_A_LOD2
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"3cd7396e-6ae8-4490-93dc-923ff4a014e8"}'
+      - path: 'm_Materials.Array.data[1]'
+        type: 11
+        valueJson: '{"value":"a5ddfb89-d6a0-4114-95b6-529c099ecd6b"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"260fefc3-1338-465f-80ec-64031a30883b"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"6c7e75c0-2acd-434f-8d62-76f8b9604ec7"}'
+  - guid: c6db7f94-0e69-436f-8976-e3899a98333b
+    parentGuid: 77d78a33-5e2f-4789-9b51-52936c5b6b2f
+    isStatic: 1
+    name: SM_PizzaOven_01_A_LOD3
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"3cd7396e-6ae8-4490-93dc-923ff4a014e8"}'
+      - path: 'm_Materials.Array.data[1]'
+        type: 11
+        valueJson: '{"value":"a5ddfb89-d6a0-4114-95b6-529c099ecd6b"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"5de96ce4-261a-4b86-b027-5a6c58a29260"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"c6db7f94-0e69-436f-8976-e3899a98333b"}'
+  removedGameObjects: []
+  gameObjectModifications: []

@@ -1,0 +1,1349 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: CartAndRocks
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects:
+  - guid: cd80be83-945f-42ea-83b4-01ede1ac5878
+    parentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    isStatic: 0
+    name: SM_DebrisPile_01a
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":-0.003659188747406006,"y":-6.241549968719482,"z":27.669355392456056}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.LODGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalReferencePoint
+        type: 7
+        valueJson: '{"value":{"x":0.007222999818623066,"y":0.9584839940071106,"z":-0.009239999577403069}}'
+      - path: m_Size
+        type: 4
+        valueJson: '{"value":10.474658966064454}'
+      - path: m_FadeMode
+        type: 12
+        valueJson: '{"value":0}'
+      - path: m_AnimateCrossFading
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LastLODIsBillboard
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LODs.Array.size
+        type: 3
+        valueJson: '{"value":4}'
+      - path: m_LODs.Array.data[0].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.2991640865802765}'
+      - path: m_LODs.Array.data[0].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[0].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[0].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"afb352c1-39a6-4b53-8126-9e5c046ceba6"}'
+      - path: m_LODs.Array.data[1].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.1497752070426941}'
+      - path: m_LODs.Array.data[1].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[1].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[1].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"1081c0d2-4654-410d-ade4-033e0d03299e"}'
+      - path: m_LODs.Array.data[2].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.05427500233054161}'
+      - path: m_LODs.Array.data[2].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[2].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[2].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"374e716f-82c4-4641-a531-001f0b7cf734"}'
+      - path: m_LODs.Array.data[3].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.007370298728346825}'
+      - path: m_LODs.Array.data[3].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[3].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[3].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"dd7a7b22-cc3f-460b-b2bf-62ef0de9496b"}'
+    - type: UnityEngine.MeshCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Material
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_IncludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_ExcludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_Convex
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_CookingOptions
+        type: 2
+        valueJson: '{"value":30}'
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"92b64a40-3d95-47c9-ae6b-df75946ccee4"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"cd80be83-945f-42ea-83b4-01ede1ac5878"}'
+  - guid: e6f4ad3b-9619-46b4-acfe-d4457f6e0cdf
+    parentGuid: cd80be83-945f-42ea-83b4-01ede1ac5878
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD0
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"9e9e7372-1bc3-421c-ab13-3232e7d1ea57"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"e6f4ad3b-9619-46b4-acfe-d4457f6e0cdf"}'
+  - guid: 93b71e51-4ceb-4446-a0e4-d3bd4828c039
+    parentGuid: cd80be83-945f-42ea-83b4-01ede1ac5878
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD1
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"ecbfed2b-9bfe-44dd-ad66-b3494b8f1541"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"93b71e51-4ceb-4446-a0e4-d3bd4828c039"}'
+  - guid: ac1bceef-fc8d-4029-ad4f-5c1a2f5abf70
+    parentGuid: cd80be83-945f-42ea-83b4-01ede1ac5878
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD2
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"1ed8d0c8-21b8-4bbe-8909-115a4b3db4fe"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"ac1bceef-fc8d-4029-ad4f-5c1a2f5abf70"}'
+  - guid: f5e6ad32-4ec8-41fd-83e5-4371371387d4
+    parentGuid: cd80be83-945f-42ea-83b4-01ede1ac5878
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD3
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"30985a79-8129-4114-9203-ba5d3bbad030"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"f5e6ad32-4ec8-41fd-83e5-4371371387d4"}'
+  - guid: af56342b-57b5-4fb2-9f88-5b645ef1b29c
+    parentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    isStatic: 0
+    name: SM_DebrisPile_01a (1)
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":1.156440019607544,"y":-6.241549968719482,"z":-19.919998168945314}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.LODGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalReferencePoint
+        type: 7
+        valueJson: '{"value":{"x":0.007222999818623066,"y":0.9584839940071106,"z":-0.009239999577403069}}'
+      - path: m_Size
+        type: 4
+        valueJson: '{"value":10.474658966064454}'
+      - path: m_FadeMode
+        type: 12
+        valueJson: '{"value":0}'
+      - path: m_AnimateCrossFading
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LastLODIsBillboard
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LODs.Array.size
+        type: 3
+        valueJson: '{"value":4}'
+      - path: m_LODs.Array.data[0].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.2991640865802765}'
+      - path: m_LODs.Array.data[0].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[0].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[0].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"5b8dd6e6-b822-4e4a-86c6-836a7dc1cda0"}'
+      - path: m_LODs.Array.data[1].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.1497752070426941}'
+      - path: m_LODs.Array.data[1].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[1].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[1].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"3f52a26c-30bc-4129-b746-0c34021739ac"}'
+      - path: m_LODs.Array.data[2].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.05427500233054161}'
+      - path: m_LODs.Array.data[2].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[2].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[2].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"2a38c9ee-ed38-4bd8-bf18-400dbf341dd6"}'
+      - path: m_LODs.Array.data[3].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.007370298728346825}'
+      - path: m_LODs.Array.data[3].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[3].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[3].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"570afebe-e8ff-45ad-85b1-2168a52f69b4"}'
+    - type: UnityEngine.MeshCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Material
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_IncludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_ExcludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_Convex
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_CookingOptions
+        type: 2
+        valueJson: '{"value":30}'
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"92b64a40-3d95-47c9-ae6b-df75946ccee4"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"af56342b-57b5-4fb2-9f88-5b645ef1b29c"}'
+  - guid: 2924c6bf-91f3-443e-9e81-ad3a855d7ad4
+    parentGuid: af56342b-57b5-4fb2-9f88-5b645ef1b29c
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD0
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"9e9e7372-1bc3-421c-ab13-3232e7d1ea57"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"2924c6bf-91f3-443e-9e81-ad3a855d7ad4"}'
+  - guid: a6f657d4-fc5b-4d14-86d8-2b206091946b
+    parentGuid: af56342b-57b5-4fb2-9f88-5b645ef1b29c
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD1
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"ecbfed2b-9bfe-44dd-ad66-b3494b8f1541"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"a6f657d4-fc5b-4d14-86d8-2b206091946b"}'
+  - guid: b2a4340c-6bb1-40ad-881c-f0f12b4d3ae8
+    parentGuid: af56342b-57b5-4fb2-9f88-5b645ef1b29c
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD2
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"1ed8d0c8-21b8-4bbe-8909-115a4b3db4fe"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"b2a4340c-6bb1-40ad-881c-f0f12b4d3ae8"}'
+  - guid: 7182defc-e436-4f94-9dcd-81da80f0ba1e
+    parentGuid: af56342b-57b5-4fb2-9f88-5b645ef1b29c
+    isStatic: 0
+    name: SM_DebrisPile_01a_LOD3
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"5197f8f9-fe19-49e8-9d35-05b21aa7b492"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"30985a79-8129-4114-9203-ba5d3bbad030"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"7182defc-e436-4f94-9dcd-81da80f0ba1e"}'
+  - guid: 1d6d12b9-8a45-4180-914d-e7e5426e1a73
+    parentGuid: 82772921-720b-478e-9d8d-4fba29c1edc5
+    isStatic: 0
+    name: SM_Wooden_Cart_01a
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.7071068286895752,"z":0.0,"w":0.7071068286895752}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":1.4469804763793946,"y":-4.826620578765869,"z":-18.896684646606447}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.LODGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalReferencePoint
+        type: 7
+        valueJson: '{"value":{"x":0.1712930053472519,"y":0.9614160060882568,"z":-0.04366999864578247}}'
+      - path: m_Size
+        type: 4
+        valueJson: '{"value":4.145837783813477}'
+      - path: m_FadeMode
+        type: 12
+        valueJson: '{"value":0}'
+      - path: m_AnimateCrossFading
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LastLODIsBillboard
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_LODs.Array.size
+        type: 3
+        valueJson: '{"value":4}'
+      - path: m_LODs.Array.data[0].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.29567721486091616}'
+      - path: m_LODs.Array.data[0].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[0].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[0].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"a99358b7-2095-49c3-8dc9-af93984b6cb6"}'
+      - path: m_LODs.Array.data[1].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.1497752070426941}'
+      - path: m_LODs.Array.data[1].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[1].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[1].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"7a3e91b9-a826-430a-bd0f-fecc44ae169c"}'
+      - path: m_LODs.Array.data[2].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.05131439119577408}'
+      - path: m_LODs.Array.data[2].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[2].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[2].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"8b9ad617-6700-4b5c-9a07-b10f0c80ed69"}'
+      - path: m_LODs.Array.data[3].screenRelativeHeight
+        type: 4
+        valueJson: '{"value":0.00796445831656456}'
+      - path: m_LODs.Array.data[3].fadeTransitionWidth
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: m_LODs.Array.data[3].renderers.Array.size
+        type: 3
+        valueJson: '{"value":1}'
+      - path: m_LODs.Array.data[3].renderers.Array.data[0].renderer
+        type: 11
+        valueJson: '{"value":"b2baac26-ea74-4ff9-91a2-8f42987ca7e5"}'
+    - type: UnityEngine.MeshCollider, UnityEngine.PhysicsModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Material
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_IncludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_ExcludeLayers
+        type: 21
+        valueJson: '{"value":0}'
+      - path: m_LayerOverridePriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: m_IsTrigger
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_ProvidesContacts
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_Convex
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_CookingOptions
+        type: 2
+        valueJson: '{"value":30}'
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"8ebf3d4a-cbc1-4482-b550-79b2196d38c9"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"1d6d12b9-8a45-4180-914d-e7e5426e1a73"}'
+  - guid: 7e3ade75-f85d-493d-b252-fc11f16de139
+    parentGuid: 1d6d12b9-8a45-4180-914d-e7e5426e1a73
+    isStatic: 0
+    name: SM_Wooden_Cart_01a_LOD0
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"7306e444-613c-43d1-9199-9de25ae3cb2a"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"169da965-42f7-4352-ae87-11b023129891"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"7e3ade75-f85d-493d-b252-fc11f16de139"}'
+  - guid: 59231daa-0753-4f7e-a105-f6342ebf7984
+    parentGuid: 1d6d12b9-8a45-4180-914d-e7e5426e1a73
+    isStatic: 0
+    name: SM_Wooden_Cart_01a_LOD1
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"7306e444-613c-43d1-9199-9de25ae3cb2a"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"ba11a249-5353-41df-b059-f404fec0f42b"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"59231daa-0753-4f7e-a105-f6342ebf7984"}'
+  - guid: 6b2c0906-4a3b-4f11-bf16-24de3fd02ed3
+    parentGuid: 1d6d12b9-8a45-4180-914d-e7e5426e1a73
+    isStatic: 0
+    name: SM_Wooden_Cart_01a_LOD2
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"7306e444-613c-43d1-9199-9de25ae3cb2a"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"dff3782b-8607-4f0a-aed8-e57e65698ae7"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"6b2c0906-4a3b-4f11-bf16-24de3fd02ed3"}'
+  - guid: c187305b-0386-40b9-99b4-075181d8e109
+    parentGuid: 1d6d12b9-8a45-4180-914d-e7e5426e1a73
+    isStatic: 0
+    name: SM_Wooden_Cart_01a_LOD3
+    active: 1
+    tag: Untagged
+    layer: 0
+    components:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_LocalRotation
+        type: 9
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0,"w":1.0}}'
+      - path: m_LocalPosition
+        type: 7
+        valueJson: '{"value":{"x":0.0,"y":0.0,"z":0.0}}'
+      - path: m_LocalScale
+        type: 7
+        valueJson: '{"value":{"x":1.0,"y":1.0,"z":1.0}}'
+    - type: UnityEngine.MeshRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_CastShadows
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_ReceiveShadows
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_DynamicOccludee
+        type: 1
+        valueJson: '{"value":true}'
+      - path: m_StaticShadowCaster
+        type: 1
+        valueJson: '{"value":false}'
+      - path: m_MotionVectors
+        type: 12
+        valueJson: '{"value":1}'
+      - path: m_LightProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_ReflectionProbeUsage
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RenderingLayerMask
+        type: 2
+        valueJson: '{"value":1}'
+      - path: m_RendererPriority
+        type: 2
+        valueJson: '{"value":0}'
+      - path: 'm_Materials.Array.data[0]'
+        type: 11
+        valueJson: '{"value":"7306e444-613c-43d1-9199-9de25ae3cb2a"}'
+      - path: m_ProbeAnchor
+        type: 11
+        valueJson: '{"value":""}'
+      - path: m_LightProbeVolumeOverride
+        type: 11
+        valueJson: '{"value":""}'
+    - type: UnityEngine.MeshFilter, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: m_Mesh
+        type: 11
+        valueJson: '{"value":"ffc7d483-fbaf-4f5f-a0d8-7061e59a8f66"}'
+    - type: SnapshotID, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: guid
+        type: 5
+        valueJson: '{"value":"c187305b-0386-40b9-99b4-075181d8e109"}'
+  removedGameObjects: []
+  gameObjectModifications: []
