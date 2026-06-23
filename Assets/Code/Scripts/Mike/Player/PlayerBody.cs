@@ -26,21 +26,8 @@ public class PlayerBody : NetworkBehaviour
     [Header("Misc")]
     [SerializeField] private AudioClip burpClip;
     
-    [Header("Invisible Settings")]
-    [SerializeField] private SyncVar<bool> isInvisible;
-    [SerializeField] private float invisibleTimer = 5.0f;
-    
-    [SerializeField] private Volume PPInvisVolume;
-    [SerializeField] private Material invisMat;
-    [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeOutSpeed = 2.0f;
-    private Renderer playerRenderer;
-    private Material[] originalMat;
-    
-    [SerializeField] private AudioMixer mainMixer;
-    [SerializeField] private float audioTransTime = 0.4f;
-    private string snapshotNormal = "Normal";
-    private string snapshotMuffled = "Muffled";
-    
+    [Header("Invisibility")]
+    [SerializeField] private PlayerInvisibility invis;
     
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
@@ -49,7 +36,7 @@ public class PlayerBody : NetworkBehaviour
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
     public AudioSource AudioSource => audioSource;
-    public bool IsInvisible => isInvisible;
+    public bool IsInvisible => invis.IsInvis;  // So stalker doesnt have to get ref to PlayerInvisibility every time 
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
@@ -64,16 +51,6 @@ public class PlayerBody : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
-
-        if (bodyVisuals != null)
-        {
-            playerRenderer = bodyVisuals.GetComponentInChildren<Renderer>();
-
-            if (playerRenderer != null)
-            {
-                originalMat = playerRenderer.materials;
-            }
-        }
         
         if(!activePlayers.Contains(this)) activePlayers.Add(this);
         if (asServer) return;
@@ -140,70 +117,5 @@ public class PlayerBody : NetworkBehaviour
         }
 
         return local;
-    }
-    
-    public void StartInvisTimer()
-    {
-        StartCoroutine(InvisTimer());
-    }
-
-    public async void EnablePPVolume(bool isActive, float targetWeight, float fadeSpeed)
-    {
-        if (PPInvisVolume == null) return;
-
-        while (!Mathf.Approximately(PPInvisVolume.weight, targetWeight))
-        {
-            PPInvisVolume.weight = Mathf.MoveTowards(PPInvisVolume.weight, targetWeight, fadeSpeed * Time.deltaTime);
-            
-            await Task.Yield();
-        }
-        
-        PPInvisVolume.weight = targetWeight;
-    }
-
-    private IEnumerator InvisTimer()
-    {
-        isInvisible.value = true;
-        ChangeMatRPC(true);
-        yield return new WaitForSeconds(invisibleTimer);
-        ChangeMatRPC(false); 
-        EnablePPVolume(false, 0, fadeOutSpeed);
-        isInvisible.value = false;
-    }
-    
-    [ObserversRpc(bufferLast: true)]
-    private void ChangeMatRPC(bool shouldBeInvis)
-    {
-        if (isOwner)
-        {
-            if (mainMixer != null)
-            {
-                string targetSnapshot = shouldBeInvis ? snapshotMuffled : snapshotNormal;
-                AudioMixerSnapshot snapshot = mainMixer.FindSnapshot(targetSnapshot);
-                if (snapshot != null)
-                {
-                    snapshot.TransitionTo(audioTransTime);
-                }
-            }
-        }
-        else
-        {
-            if (playerRenderer != null && invisMat != null)
-            {
-                if (shouldBeInvis)
-                {
-                    Material[] invisMats = new  Material[originalMat.Length];
-                    for (int i = 0; i < invisMats.Length; i++)
-                    {
-                        invisMats[i] = invisMat;
-                    }
-                    playerRenderer.materials = invisMats;
-                }
-                else
-                {
-                    playerRenderer.materials = originalMat;
-                }
-            }
-        }
     }
 }

@@ -10,6 +10,7 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
     [Header("References")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] ParticleSystem particles;
+    private PlayerInvisibility playerInvis;
     
     [Header("Events")]
     public UnityEvent OnUsed;
@@ -26,16 +27,18 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
             || audioSource.clip == null 
             || particles == null) return false;
         
+        playerInvis = interactor.GetComponent<PlayerInvisibility>();
+        
         audioSource.Play();
         particles.Play();
-        interactor.EnablePPVolume(true, 1.0f, fadeInSpeed);
+        playerInvis.EnablePPVolume(true, 1.0f, fadeInSpeed);
             
         int wait = Mathf.CeilToInt(audioSource.clip.length * 1000);
         await Task.Delay(wait);
         
         OnUsed?.Invoke();
         
-        interactor.StartInvisTimer();
+        playerInvis.StartInvisTimer();
         
         return true;
     }
