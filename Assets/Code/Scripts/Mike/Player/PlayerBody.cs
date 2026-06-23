@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using PurrNet;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerBody : NetworkBehaviour
 {
@@ -33,6 +33,8 @@ public class PlayerBody : NetworkBehaviour
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
     public static PlayerBody localPlayerBody;
+    private static HashSet<PlayerBody> activePlayers = new();
+    public static IReadOnlyCollection<PlayerBody> ActivePlayers => activePlayers;
 
     // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
     // So the issue is that PlayrBody can register two times. We want to prevent that.  
@@ -42,6 +44,7 @@ public class PlayerBody : NetworkBehaviour
     {
         base.OnSpawned(asServer);
 
+        if(!activePlayers.Contains(this)) activePlayers.Add(this);
         if (asServer) return;
         if (!TryApplyOwnership(isOwner)) return;
     }
@@ -49,7 +52,7 @@ public class PlayerBody : NetworkBehaviour
     protected override void OnDespawned()
     {
         base.OnDespawned();
-        
+        activePlayers.Remove(this);
         if (!isLocalPlayerRegistered) return;
         
         localPlayerBody = null;

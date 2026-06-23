@@ -4,17 +4,17 @@ using PurrNet;
 
 public class PickUpSpawner : NetworkBehaviour
 {
-    private enum SpawnMode
+    protected enum SpawnMode
     {
         SpawnAll,
         RandomSpawn
     }
 
     [Header("General Settings")]
-    [SerializeField] private List<GameObject> Items = new List<GameObject>();
-    [SerializeField] private List<Transform> spawnPoints = new List<Transform>();
-    [SerializeField] private bool onEnable = false;
-    [SerializeField] private SpawnMode spawnMode = SpawnMode.SpawnAll;
+    [SerializeField] protected List<GameObject> Items = new List<GameObject>();
+    [SerializeField] protected List<Transform> spawnPoints = new List<Transform>();
+    [SerializeField] protected bool onEnable = false;
+    [SerializeField] protected SpawnMode spawnMode = SpawnMode.SpawnAll;
     [SerializeField, Range(0f, 1f),Tooltip("The probability that items will actually spawn when requested.")] private float spawnProbability = 1;
     private List<GameObject> spawnedItems = new List<GameObject>();
     [Header("Random Spawn Mode Settings")]
