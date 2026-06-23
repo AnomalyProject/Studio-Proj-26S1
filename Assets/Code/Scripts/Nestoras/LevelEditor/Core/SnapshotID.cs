@@ -18,7 +18,7 @@ public class SnapshotIDEditor : Editor
 /// 
 /// A GUID wrapper for <see cref="GameObject"/>s that need to be tracked in <see cref="LevelModification"/>s.
 /// </summary>
-//[ExecuteAlways]
+[ExecuteAlways]
 [AddComponentMenu("")]
 public class SnapshotID : MonoBehaviour
 {
