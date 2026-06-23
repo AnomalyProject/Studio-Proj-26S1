@@ -36,7 +36,7 @@ public class PlayerBody : NetworkBehaviour
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
     public AudioSource AudioSource => audioSource;
-    public bool IsInvisible => invis.IsInvis;  // So stalker doesnt have to get ref to PlayerInvisibility every time 
+    public PlayerInvisibility  Invis => invis;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
