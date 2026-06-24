@@ -15,3 +15,117 @@ MonoBehaviour:
   bugs:
   - title: '<Bug> [Crouch]'
     description: When uncrouching under a roof clipping occurs.
+  - title: '[Networking] Dev tool: Lobby elevator does not load gameplay scene because
+      dev launch sets state to InGame'
+    description: "When launching the Lobby through\_Dev/Multiplayer/Host Current
+      Scene, the scene loads successfully as a DevHost, but the lobby elevator flow
+      does not progress to the gameplay scene.\n\nExpected: Launching the Lobby with
+      the dev host tool should allow normal lobby flow: player enters elevator ->
+      elevator closes -> gameplay scene loads."
+  - title: '[Unicode Strings] Steam names with non-eng characters can break the game'
+    description: "Having a steam name that uses non english characters (i used greek)
+      and whispering to yourself through the chat, then opening the console, will
+      cause the game to crash after a while\n\nOBSERVED RESULT\nThe game crashes
+      from processing a lot of unknown characters\n\nINTENDED RESULT \nThe game should
+      recognize the characters and display them normally\n\nHARDWARE\nProcessor   
+      Intel(R) Core(TM) i5-9300H CPU @ 2.40GHz (2.40 GHz)\nInstalled RAM    16.0
+      GB \nGraphics card    NVIDIA GeForce RTX 2060 (6 GB)\nIntel(R) UHD Graphics
+      630 (128 MB)\n\nDATE FOUND: 3/6\nBuild Version: 0.0.343"
+  - title: '[Settings] Resolution Change makes the game Dark'
+    description: When changing the resolution from the settings page (either in the
+      Main Menu or the in-game pause menu), the game becomes significantly dimmer.
+      This even happens when moving from 4K to 1080p)
+  - title: '[Networking] Wrong state (in elevator) when players return to Lobby'
+    description: 'After a full session and after win room, when players return to
+      Lobby, their state says: In-Elevator.'
+  - title: '[Text Chat] White space message keeps the chat open'
+    description: 'If you send a whitespace message in the text chat, then chat never
+      closes. '
+  - title: '[Networking] Player''s names in top right corner don''t reset for reconnected
+      client'
+    description: When a client reconnects to the Lobby, player names and status in
+      the top right corner don't reset.
+  - title: '[Collisions] Table Colliders issue & items going through them'
+    description: 'Enw exeis ena item, peta to me to x sta podia twn trapeziwn sto
+      main room tou game   OBSERVED RESULT  Otan petas ena item se ena trapezi, kanei
+      clip mesa apo ta podia tou.   INTENDED RESULT   Ta items prepei na kanoun collide
+      me to trapezi  '
+  - title: '[Collisions] You should NOT be able to climb on items'
+    description: "Me ola ta items boreis na ta kaneis throw kai na aneveis panw tous
+      kai ftaseis se merh pou den prepei\n\nOBSERVED RESULT\nO paikths anevainei
+      panw sto collider twn items kai mporei na ta xrhsimopoihsei gia na skarfalwsei\n\nINTENDED
+      RESULT \nO paikths den mporei na anevei panw sta items "
+  - title: '[Collisions] Players should NOT be able to climb on each other'
+    description: "Sto multiplayer, oi paiktes mporoun na kanoun stack o enas panw
+      ston allo an kapoios einai se mia elevated epifaneia kai mporoun na ftasoun
+      inaccessible theseis\n\nOBSERVED RESULT\nO enas paikths kanei stack panw ston
+      allo, kai ftanei unintended meroi me to coordination tous. Se afth th periptwsh,
+      mporei o enas na paei pisw apo ta rafia kai na kanei softlock olh thn omada
+      giati den mporei na figei.\n\nINTENDED RESULT \nOi paiktes prepei na min kanoun
+      stack kai na einai teleiws inaccessible gwnies me softlocks san afth sto video"
+  - title: '[Elevator] When you spam interact the elevator button, the door animation
+      resets'
+    description: "Sto multiplayer, an enas paikths kanei spam to interact me to elevator
+      button, kanei reset to animation ths portas mexri na stamathsei\n\nOBSERVED
+      RESULT\nElevator door animation loops until player stops\n\nINTENDED RESULT
+      \nPress the button once, the elevator doors work normally"
+  - title: '[Collisions] Main Room Shelf Climbing should NOT happen'
+    description: "Se multiplayer kai single player, sto dwmatio akrivws meta apo
+      to prwto (pou exei to vending machine) oi paiktes mporoun na:\n\n1) Anaivoun
+      sta plevra ths kareklas kai stekontai panw ths\n2)Anevainoun sto pc panw sto
+      trapezi\n3)Kanoun aristera kai deksia kai crouch kai anevainoun panw sto rafi\n\nOBSERVED
+      RESULT\nPlayers reach an unintended position\n\nINTENDED RESULT \nPlayers cant
+      climb over objects and reach these positions"
+  - title: '[Collisions] When you walk over props, you can glitch the environment
+      and go to places where you shouldn''t'
+    description: "\u0391\u03BD \u03C0\u03B5\u03C1\u03C0\u03B1\u03C4\u03AE\u03C3\u03B5\u03B9\u03C2
+      \u03C0\u03AC\u03BD\u03C9 \u03C3\u03B5 \u03BC\u03B9\u03BA\u03C1\u03AC objects,
+      \u03BF \u03C0\u03B1\u03AF\u03BA\u03C4\u03B7\u03C2 \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF
+      \u03BD\u03B1 \u03B1\u03BD\u03AD\u03B2\u03B5\u03B9 \u03C0\u03AC\u03BD\u03C9
+      \u03C4\u03BF\u03C5\u03C2 \u03BA\u03B1\u03B9 \u03BC\u03B5\u03C4\u03AC \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF\u03C2
+      \u03BD\u03B1 \u03C3\u03BA\u03B1\u03C1\u03C6\u03B1\u03BB\u03CE\u03C3\u03B5\u03B9\u03C2
+      \u03C0\u03AC\u03BD\u03C9 \u03C3\u03B5 \u03B1\u03BB\u03BB\u03B1 \u03B1\u03BD\u03C4\u03B9\u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03B1"
+  - title: '[Networking] PasswordProtectedLobbies - Pressing Join after a wrong password
+      will still play join animation'
+    description: "\nCurrent Behaviour: Password is wrong but player gets himself
+      in the door animation and during the join process and validation the system
+      sees his password is wrong and returns him to lobby.\nOn private Lobbies, When
+      a player enters a wrong password and presses Join, the door animation still
+      plays, and then returns to the menu. \n\nExpected Behaviour : If password is
+      wrong just throw an error message on screen and let the player try again without
+      puting him in an animation.\n\nRepro:\nA friend needs to already have a private
+      lobby hosted, then,\nPlayer 2 presses: \nPlay,\nJoin CoOp\nJoin button next
+      to his friends name\nEnter a WRONG password in the input field\nPress the final
+      Join button.\n\n\n\nCurrent Behaviour: Password is wrong but player gets himself
+      in the door animation and during the join process and validation the system
+      sees his password is wrong and returns him to lobby.\nOn private Lobbies, When
+      a player enters a wrong password and presses Join, the door animation still
+      plays, and then returns to the menu. \n\nExpected Behaviour : If password is
+      wrong just throw an error message on screen and let the player try again without
+      puting him in an animation.\n\nRepro:\nA friend needs to already have a private
+      lobby hosted, then,\nPlayer 2 presses: \nPlay,\nJoin CoOp\nJoin button next
+      to his friends name\nEnter a WRONG password in the input field\nPress the final
+      Join button.\n\n\n"
+  - title: '[Crouch] When uncrouching, clipping occurs'
+    description: "\u0391\u03BD \u03BF \u03C0\u03B1\u03AF\u03BA\u03C4\u03B7\u03C2
+      \u03B5\u03AF\u03BD\u03B1\u03B9 \u03BA\u03AC\u03C4\u03C9 \u03B1\u03C0\u03BF
+      \u03BA\u03AC\u03C0\u03BF\u03B9\u03BF \u03B1\u03BD\u03C4\u03B9\u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03BF
+      \u03BA\u03B1\u03B9 \u03BA\u03AC\u03BD\u03B5\u03B9 uncrouch, \u03BA\u03AC\u03BD\u03B5\u03B9
+      clip \u03C4\u03BF\u03BD \u03B5\u03B1\u03C5\u03C4\u03CC \u03C4\u03BF\u03C5 \u03BC\u03AD\u03C3\u03B1
+      \u03C3\u03B5 objects \u03BA\u03B1\u03B9 \u03C3\u03B5 \u03C3\u03B9\u03B3\u03BA\u03B5\u03BA\u03C1\u03B9\u03BC\u03AD\u03BD\u03B1
+      \u03BC\u03AD\u03C1\u03B7 \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF \u03BD\u03B1
+      \u03B2\u03B3\u03B5\u03B9 out of bounds.\n\n\n  \nOBSERVED RESULT: The player
+      clips towards his input, sometimes into walls\nINTENDED RESULT : The player
+      should not be able to clip into objects (maybe remove ability to uncrouch if
+      theres a surface above your head\nHARDWARE Processor    Intel(R) Core(TM) i5-9300H
+      CPU @ 2.40GHz (2.40 GHz) Installed RAM    16.0 GB  \nGraphics card   NVIDIA
+      GeForce RTX 2060 (6 GB) Intel(R) UHD Graphics 630 (128 MB)  \nDATE FOUND: 4/6\n
+      Build Version:  0.0.220"
+  - title: '[Tool - Level Editor] SnapshotID GUIDs reset when viewing prefab in isolation'
+    description: After capturing a snapshot of a hierarchy, all its GameObjects will
+      have a SnapshotID component with a unique GUID. If that hierarchy is part of
+      a prefab, opening the prefab in isolation while also having the prefab loaded
+      in a scene will cause the 'scene' instance of the prefab to register overrides
+      on every SnapshotID that was loaded twice (once in the scene, and once more
+      as the isolated prefab). This causes de-syncs in pre-existing anomalies and
+      can lead to data loss.
