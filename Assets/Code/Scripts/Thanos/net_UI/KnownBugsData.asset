@@ -15,27 +15,14 @@ MonoBehaviour:
   bugs:
   - title: '<Bug> [Crouch]'
     description: When uncrouching under a roof clipping occurs.
-  - title: '[Networking] Dev tool: Lobby elevator does not load gameplay scene because
-      dev launch sets state to InGame'
-    description: "When launching the Lobby through\_Dev/Multiplayer/Host Current
-      Scene, the scene loads successfully as a DevHost, but the lobby elevator flow
-      does not progress to the gameplay scene.\n\nExpected: Launching the Lobby with
-      the dev host tool should allow normal lobby flow: player enters elevator ->
-      elevator closes -> gameplay scene loads."
-  - title: '[Unicode Strings] Steam names with non-eng characters can break the game'
-    description: "Having a steam name that uses non english characters (i used greek)
-      and whispering to yourself through the chat, then opening the console, will
-      cause the game to crash after a while\n\nOBSERVED RESULT\nThe game crashes
-      from processing a lot of unknown characters\n\nINTENDED RESULT \nThe game should
-      recognize the characters and display them normally\n\nHARDWARE\nProcessor   
-      Intel(R) Core(TM) i5-9300H CPU @ 2.40GHz (2.40 GHz)\nInstalled RAM    16.0
-      GB \nGraphics card    NVIDIA GeForce RTX 2060 (6 GB)\nIntel(R) UHD Graphics
-      630 (128 MB)\n\nDATE FOUND: 3/6\nBuild Version: 0.0.343"
-  - title: '[Settings] Resolution Change makes the game Dark'
-    description: When changing the resolution from the settings page (either in the
-      Main Menu or the in-game pause menu), the game becomes significantly dimmer.
-      This even happens when moving from 4K to 1080p)
-  - title: '[Networking] Wrong state (in elevator) when players return to Lobby'
+  - title: '<Bug> [Unicode] '
+    description: 'Having a steam name that uses non english characters can
+
+      break
+      the chat, and crash the game.'
+  - title: '<Bug> [Settings] '
+    description: Resolution Change can make the game Dark.
+  - title: '<Bug> [Networking]'
     description: 'After a full session and after win room, when players return to
       Lobby, their state says: In-Elevator.'
   - title: '[Text Chat] White space message keeps the chat open'
@@ -106,21 +93,6 @@ MonoBehaviour:
       lobby hosted, then,\nPlayer 2 presses: \nPlay,\nJoin CoOp\nJoin button next
       to his friends name\nEnter a WRONG password in the input field\nPress the final
       Join button.\n\n\n"
-  - title: '[Crouch] When uncrouching, clipping occurs'
-    description: "\u0391\u03BD \u03BF \u03C0\u03B1\u03AF\u03BA\u03C4\u03B7\u03C2
-      \u03B5\u03AF\u03BD\u03B1\u03B9 \u03BA\u03AC\u03C4\u03C9 \u03B1\u03C0\u03BF
-      \u03BA\u03AC\u03C0\u03BF\u03B9\u03BF \u03B1\u03BD\u03C4\u03B9\u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03BF
-      \u03BA\u03B1\u03B9 \u03BA\u03AC\u03BD\u03B5\u03B9 uncrouch, \u03BA\u03AC\u03BD\u03B5\u03B9
-      clip \u03C4\u03BF\u03BD \u03B5\u03B1\u03C5\u03C4\u03CC \u03C4\u03BF\u03C5 \u03BC\u03AD\u03C3\u03B1
-      \u03C3\u03B5 objects \u03BA\u03B1\u03B9 \u03C3\u03B5 \u03C3\u03B9\u03B3\u03BA\u03B5\u03BA\u03C1\u03B9\u03BC\u03AD\u03BD\u03B1
-      \u03BC\u03AD\u03C1\u03B7 \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF \u03BD\u03B1
-      \u03B2\u03B3\u03B5\u03B9 out of bounds.\n\n\n  \nOBSERVED RESULT: The player
-      clips towards his input, sometimes into walls\nINTENDED RESULT : The player
-      should not be able to clip into objects (maybe remove ability to uncrouch if
-      theres a surface above your head\nHARDWARE Processor    Intel(R) Core(TM) i5-9300H
-      CPU @ 2.40GHz (2.40 GHz) Installed RAM    16.0 GB  \nGraphics card   NVIDIA
-      GeForce RTX 2060 (6 GB) Intel(R) UHD Graphics 630 (128 MB)  \nDATE FOUND: 4/6\n
-      Build Version:  0.0.220"
   - title: '[Tool - Level Editor] SnapshotID GUIDs reset when viewing prefab in isolation'
     description: After capturing a snapshot of a hierarchy, all its GameObjects will
       have a SnapshotID component with a unique GUID. If that hierarchy is part of
