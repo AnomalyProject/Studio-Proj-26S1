@@ -221,6 +221,10 @@ public class ChatUI : MonoBehaviour
 
         switch (command)
         {
+            case "/iamadeveloper":
+                TextChatManager.Instance.EnableCheats();
+                ReceiveMessage("<color=#FFD700>[System]</color>", "Developer mode enabled! You can now use the Dev Console");
+                break;
             case "/mute":
                 if (parts.Length > 1) MutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;

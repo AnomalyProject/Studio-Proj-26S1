@@ -1,7 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Audio;
+using UnityEngine.Rendering;
 
 public class PlayerBody : NetworkBehaviour
 {
@@ -22,6 +26,9 @@ public class PlayerBody : NetworkBehaviour
     [Header("Misc")]
     [SerializeField] private AudioClip burpClip;
     
+    [Header("Invisibility")]
+    [SerializeField] private PlayerInvisibility invis;
+    
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
@@ -29,6 +36,7 @@ public class PlayerBody : NetworkBehaviour
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
     public AudioSource AudioSource => audioSource;
+    public PlayerInvisibility  Invis => invis;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
@@ -43,7 +51,7 @@ public class PlayerBody : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
-
+        
         if(!activePlayers.Contains(this)) activePlayers.Add(this);
         if (asServer) return;
         if (!TryApplyOwnership(isOwner)) return;
