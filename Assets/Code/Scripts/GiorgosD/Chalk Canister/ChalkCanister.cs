@@ -1,10 +1,13 @@
+using PurrNet;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
 {
-    
+    [Header("Invisible Settings")]
+    [SerializeField] private float invisibleTimer = 15.0f;
+
     [Header("References")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] ParticleSystem particles;
@@ -27,11 +30,12 @@ public class ChalkCanister : PlayerItem, IInteractable<PlayerBody>
             
         int wait = Mathf.CeilToInt(audioSource.clip.length * 1000);
         await Task.Delay(wait);
-        
+
+        RequestActivation_ServerRpc(interactor);
         OnUsed?.Invoke();
-        
-        interactor.Invis.StartInvisTimer();
         
         return true;
     }
+
+    [ServerRpc] private void RequestActivation_ServerRpc(PlayerBody interactor) => interactor.Invis.StartInvisTimer(invisibleTimer);
 }

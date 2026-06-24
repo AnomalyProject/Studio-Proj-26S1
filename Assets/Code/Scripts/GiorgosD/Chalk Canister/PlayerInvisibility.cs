@@ -8,9 +8,6 @@ public class PlayerInvisibility : NetworkBehaviour
 {
     [SerializeField] private GameObject bodyVisuals;
     
-    [Header("Invisible Settings")]
-    [SerializeField] private float invisibleTimer = 5.0f;
-    
     [SerializeField] private Volume PPInvisVolume;
     [SerializeField] private Material invisMat;
     [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeSpeed = 2.0f;
@@ -43,10 +40,10 @@ public class PlayerInvisibility : NetworkBehaviour
         PPInvisVolume.enabled = isOwner;
     }
 
-    [ServerRpc] public void StartInvisTimer()
+    public void StartInvisTimer(float forTime)
     {
         if (!isServer) return;       
-        StartCoroutine(InvisTimer());
+        StartCoroutine(InvisTimer(forTime));
     }
 
     public async void EnablePPVolume(bool isActive, float fadeSpeed)
@@ -65,12 +62,12 @@ public class PlayerInvisibility : NetworkBehaviour
         PPInvisVolume.weight = targetWeight;
     }
 
-    private IEnumerator InvisTimer()
+    private IEnumerator InvisTimer(float forTime)
     {
         if (!isServer || isInvisible.value) yield break;
         
         isInvisible.value = true;
-        yield return new WaitForSeconds(invisibleTimer);
+        yield return new WaitForSeconds(forTime);
         isInvisible.value = false;
     }
 
