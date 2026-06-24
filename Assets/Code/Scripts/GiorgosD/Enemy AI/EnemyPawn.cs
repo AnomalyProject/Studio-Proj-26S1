@@ -26,6 +26,8 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private PlayerBody cachedPlayer;
+
+    public PlayerBody CachedPlayer => cachedPlayer;
     
     [Header("Lost Player Timer")]
     [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
@@ -84,8 +86,11 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
 
-        //Debug.Log($"Moving to {target}");
-
+        if (cachedPlayer != null && cachedPlayer.Invis.IsInvis)
+        {
+            LostTimer();
+        }
+        
         if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }
 
@@ -140,6 +145,10 @@ public class EnemyPawn : NetworkBehaviour
     public void TeleportToSpawn(Vector3 spawn, NetworkIdentity player)
     {
         if (!player.isOwner || player.transform.position == null) return;
+
+        PlayerBody playerBody = player.GetComponent<PlayerBody>();
+
+        if (playerBody.Invis.IsInvis) return;
 
         var controller = player.GetComponent<CharacterController>();
 
@@ -201,7 +210,7 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     public void RotateTowards(Vector3 targetPos)
     {
-        if (!isServer) return;
+        if (!isServer || cachedPlayer != null && cachedPlayer.Invis.IsInvis) return;
 
         Vector3 direction = (targetPos - transform.position);
         direction.y = 0;
@@ -243,6 +252,16 @@ public class EnemyPawn : NetworkBehaviour
         
         if (cachedPlayer == null) return;
 
+        if (cachedPlayer.Invis.IsInvis)
+        {
+            hasPlayer = false;
+            cachedPlayer = null;
+            timer = 0f;
+            StopAll();
+            InvokeOnLost();
+            return;
+        }
+        
         timer += Time.deltaTime;
 
         if (timer >= timeToLost)
@@ -283,7 +302,7 @@ public class EnemyPawn : NetworkBehaviour
         
         if (cachedPlayer != null)
         {
-            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position))
+            if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position) && !cachedPlayer.Invis.IsInvis)
             {
                 hasPlayer = true;
                 timer = 0f;
@@ -292,13 +311,13 @@ public class EnemyPawn : NetworkBehaviour
             }
             
             Vector3 targetDestination = cachedPlayer.transform.position;
-            if (cachedPlayer.TryGetComponent<Collider>(out Collider col))
+            if (cachedPlayer.TryGetComponent<Collider>(out Collider col) && !cachedPlayer.Invis.IsInvis)
             {
                 targetDestination = col.bounds.center;
             }
 
             float distanceToTarget = Vector3.Distance(eyePos.position, targetDestination);
-            if (distanceToTarget <= autoDetectRange)
+            if (distanceToTarget <= autoDetectRange && !cachedPlayer.Invis.IsInvis)
             {
                 if (!Physics.Raycast(eyePos.position, (targetDestination - eyePos.position).normalized, distanceToTarget, obstacleLayer))
                 {
@@ -319,7 +338,7 @@ public class EnemyPawn : NetworkBehaviour
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
 
-            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position))
+            if (IsTargetVisible(player.transform) && IsTargetReachable(player.transform.position) && !player.Invis.IsInvis)
             {
                 cachedPlayer = player;
                 hasPlayer = true;
@@ -478,6 +497,7 @@ public class EnemyPawn : NetworkBehaviour
         OnPlayerAttacked?.Invoke(player);
     }
     #endregion
+    
     #region Stun
     public float StunDuration { get; private set; }
 
