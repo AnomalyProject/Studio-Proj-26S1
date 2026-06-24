@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Threading.Tasks;
 using PurrNet;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -10,24 +9,27 @@ public class PlayerInvisibility : NetworkBehaviour
     [SerializeField] private GameObject bodyVisuals;
     
     [Header("Invisible Settings")]
-    [SerializeField] private SyncVar<bool> isInvisible;
     [SerializeField] private float invisibleTimer = 5.0f;
     
     [SerializeField] private Volume PPInvisVolume;
     [SerializeField] private Material invisMat;
-    [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeOutSpeed = 2.0f;
+    [SerializeField, Tooltip("Lower values mean longer fade in.")] private float fadeSpeed = 2.0f;
     private Renderer playerRenderer;
     private Material[] originalMat;
     
     [SerializeField] private AudioMixer mainMixer;
     [SerializeField] private float audioTransTime = 0.4f;
+    private SyncVar<bool> isInvisible = new(initialValue: false, ownerAuth: false);
     private string snapshotNormal = "Normal";
     private string snapshotMuffled = "Muffled";
-    
+    private int targetWeight;
+
     public bool IsInvis => isInvisible.value;
     
     protected override void OnSpawned(bool asServer)
     {
+        base.OnSpawned(asServer);
+
         if (bodyVisuals == null) return;
         
         playerRenderer = bodyVisuals.GetComponentInChildren<Renderer>();
@@ -36,26 +38,28 @@ public class PlayerInvisibility : NetworkBehaviour
         {
             originalMat = playerRenderer.materials;
         }
+
+        isInvisible.onChanged += ApplyInvisibleEffects;
+        PPInvisVolume.enabled = isOwner;
     }
-    
-    [ObserversRpc(bufferLast: true)]
-    public void StartInvisTimer()
+
+    [ServerRpc] public void StartInvisTimer()
     {
-        if (!isServer) return;
-        
+        if (!isServer) return;       
         StartCoroutine(InvisTimer());
     }
 
-    [ObserversRpc]
-    public async void EnablePPVolume(bool isActive, float targetWeight, float fadeSpeed)
+    public async void EnablePPVolume(bool isActive, float fadeSpeed)
     {
         if (!isOwner || PPInvisVolume == null) return;
+
+        targetWeight = isActive ? 1 : 0;
 
         while (!Mathf.Approximately(PPInvisVolume.weight, targetWeight))
         {
             PPInvisVolume.weight = Mathf.MoveTowards(PPInvisVolume.weight, targetWeight, fadeSpeed * Time.deltaTime);
-            
-            await Task.Yield();
+
+            await Awaitable.NextFrameAsync();
         }
         
         PPInvisVolume.weight = targetWeight;
@@ -63,23 +67,20 @@ public class PlayerInvisibility : NetworkBehaviour
 
     private IEnumerator InvisTimer()
     {
-        if (!isServer) yield break;
+        if (!isServer || isInvisible.value) yield break;
         
         isInvisible.value = true;
-        ChangeMatRPC(true);
         yield return new WaitForSeconds(invisibleTimer);
-        ChangeMatRPC(false); 
-        EnablePPVolume(false, 0, fadeOutSpeed);
         isInvisible.value = false;
     }
-    
-    [ObserversRpc(bufferLast: true)]
-    private void ChangeMatRPC(bool shouldBeInvis)
+
+    private void ApplyInvisibleEffects(bool shouldBeInvis)
     {
         if (isOwner)
         {
             if (mainMixer != null)
             {
+                EnablePPVolume(isActive: shouldBeInvis, fadeSpeed: fadeSpeed);
                 string targetSnapshot = shouldBeInvis ? snapshotMuffled : snapshotNormal;
                 AudioMixerSnapshot snapshot = mainMixer.FindSnapshot(targetSnapshot);
                 if (snapshot != null)
@@ -107,5 +108,13 @@ public class PlayerInvisibility : NetworkBehaviour
                 }
             }
         }
+    }
+
+    protected override void OnDespawned(bool asServer)
+    {
+        base.OnDespawned(asServer);
+
+        if (asServer || !isOwner) return;
+        AudioMixerSnapshot snapshot = mainMixer.FindSnapshot(snapshotNormal);
     }
 }
