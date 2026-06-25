@@ -6326,6 +6326,9 @@ MonoBehaviour:
   - _groupRoot: {fileID: 7643905132004362952}
     _replacesBaseMap: 0
     _almanacEntry: {fileID: 0}
+  - _groupRoot: {fileID: 4041155394669526875}
+    _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
 --- !u!1 &3795378026088825274
 GameObject:
   m_ObjectHideFlags: 0
@@ -7001,6 +7004,58 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &4041155394669526875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 88237832693524818}
+  - component: {fileID: 8213565571249999837}
+  m_Layer: 0
+  m_Name: Corner Clutter Anomaly
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &88237832693524818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4041155394669526875}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3304322370603153674}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8213565571249999837
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4041155394669526875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d02e86fb22314d40aa91632416e4279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModificationApplier
+  levelModification: {fileID: 11400000, guid: 840fd41da0af8e64ca503f34fd2fdc99, type: 2}
+  applied: 0
+  onEnable:
+    m_PersistentCalls:
+      m_Calls: []
+  onDisable:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &4055162969797519712
 GameObject:
   m_ObjectHideFlags: 0
@@ -11559,6 +11614,7 @@ Transform:
   - {fileID: 3701846052935166376}
   - {fileID: 1065545505311911721}
   - {fileID: 9200713976170253621}
+  - {fileID: 88237832693524818}
   m_Father: {fileID: 8784614220202833078}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6822691837514015460
@@ -135960,6 +136016,18 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0.6859905
       objectReference: {fileID: 0}
+    - target: {fileID: 1031013547, guid: abc00000000001701392169515048842, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -213.837
+      objectReference: {fileID: 0}
+    - target: {fileID: 1031013547, guid: abc00000000001701392169515048842, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 26.878006
+      objectReference: {fileID: 0}
+    - target: {fileID: 1031013547, guid: abc00000000001701392169515048842, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 57.355003
+      objectReference: {fileID: 0}
     - target: {fileID: 1031013549, guid: abc00000000001701392169515048842, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
@@ -193960,7 +194028,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1031011939, guid: abc00000000013522832854373745206, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1031011939, guid: abc00000000013522832854373745206, type: 3}
       propertyPath: m_LocalRotation.y
@@ -193968,7 +194036,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1031011939, guid: abc00000000013522832854373745206, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1031011939, guid: abc00000000013522832854373745206, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -55.09
       objectReference: {fileID: 0}
     - target: {fileID: 1031011941, guid: abc00000000013522832854373745206, type: 3}
       propertyPath: m_StaticEditorFlags
