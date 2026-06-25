@@ -25,79 +25,22 @@ MonoBehaviour:
   - title: '<Bug> [Networking]'
     description: 'After a full session and after win room, when players return to
       Lobby, their state says: In-Elevator.'
-  - title: '[Text Chat] White space message keeps the chat open'
-    description: 'If you send a whitespace message in the text chat, then chat never
-      closes. '
-  - title: '[Networking] Player''s names in top right corner don''t reset for reconnected
-      client'
-    description: When a client reconnects to the Lobby, player names and status in
-      the top right corner don't reset.
-  - title: '[Collisions] Table Colliders issue & items going through them'
-    description: 'Enw exeis ena item, peta to me to x sta podia twn trapeziwn sto
-      main room tou game   OBSERVED RESULT  Otan petas ena item se ena trapezi, kanei
-      clip mesa apo ta podia tou.   INTENDED RESULT   Ta items prepei na kanoun collide
-      me to trapezi  '
-  - title: '[Collisions] You should NOT be able to climb on items'
-    description: "Me ola ta items boreis na ta kaneis throw kai na aneveis panw tous
-      kai ftaseis se merh pou den prepei\n\nOBSERVED RESULT\nO paikths anevainei
-      panw sto collider twn items kai mporei na ta xrhsimopoihsei gia na skarfalwsei\n\nINTENDED
-      RESULT \nO paikths den mporei na anevei panw sta items "
-  - title: '[Collisions] Players should NOT be able to climb on each other'
-    description: "Sto multiplayer, oi paiktes mporoun na kanoun stack o enas panw
-      ston allo an kapoios einai se mia elevated epifaneia kai mporoun na ftasoun
-      inaccessible theseis\n\nOBSERVED RESULT\nO enas paikths kanei stack panw ston
-      allo, kai ftanei unintended meroi me to coordination tous. Se afth th periptwsh,
-      mporei o enas na paei pisw apo ta rafia kai na kanei softlock olh thn omada
-      giati den mporei na figei.\n\nINTENDED RESULT \nOi paiktes prepei na min kanoun
-      stack kai na einai teleiws inaccessible gwnies me softlocks san afth sto video"
-  - title: '[Elevator] When you spam interact the elevator button, the door animation
-      resets'
-    description: "Sto multiplayer, an enas paikths kanei spam to interact me to elevator
-      button, kanei reset to animation ths portas mexri na stamathsei\n\nOBSERVED
-      RESULT\nElevator door animation loops until player stops\n\nINTENDED RESULT
-      \nPress the button once, the elevator doors work normally"
-  - title: '[Collisions] Main Room Shelf Climbing should NOT happen'
-    description: "Se multiplayer kai single player, sto dwmatio akrivws meta apo
-      to prwto (pou exei to vending machine) oi paiktes mporoun na:\n\n1) Anaivoun
-      sta plevra ths kareklas kai stekontai panw ths\n2)Anevainoun sto pc panw sto
-      trapezi\n3)Kanoun aristera kai deksia kai crouch kai anevainoun panw sto rafi\n\nOBSERVED
-      RESULT\nPlayers reach an unintended position\n\nINTENDED RESULT \nPlayers cant
-      climb over objects and reach these positions"
-  - title: '[Collisions] When you walk over props, you can glitch the environment
-      and go to places where you shouldn''t'
-    description: "\u0391\u03BD \u03C0\u03B5\u03C1\u03C0\u03B1\u03C4\u03AE\u03C3\u03B5\u03B9\u03C2
-      \u03C0\u03AC\u03BD\u03C9 \u03C3\u03B5 \u03BC\u03B9\u03BA\u03C1\u03AC objects,
-      \u03BF \u03C0\u03B1\u03AF\u03BA\u03C4\u03B7\u03C2 \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF
-      \u03BD\u03B1 \u03B1\u03BD\u03AD\u03B2\u03B5\u03B9 \u03C0\u03AC\u03BD\u03C9
-      \u03C4\u03BF\u03C5\u03C2 \u03BA\u03B1\u03B9 \u03BC\u03B5\u03C4\u03AC \u03BC\u03C0\u03BF\u03C1\u03B5\u03AF\u03C2
-      \u03BD\u03B1 \u03C3\u03BA\u03B1\u03C1\u03C6\u03B1\u03BB\u03CE\u03C3\u03B5\u03B9\u03C2
-      \u03C0\u03AC\u03BD\u03C9 \u03C3\u03B5 \u03B1\u03BB\u03BB\u03B1 \u03B1\u03BD\u03C4\u03B9\u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03B1"
-  - title: '[Networking] PasswordProtectedLobbies - Pressing Join after a wrong password
-      will still play join animation'
-    description: "\nCurrent Behaviour: Password is wrong but player gets himself
-      in the door animation and during the join process and validation the system
-      sees his password is wrong and returns him to lobby.\nOn private Lobbies, When
-      a player enters a wrong password and presses Join, the door animation still
-      plays, and then returns to the menu. \n\nExpected Behaviour : If password is
-      wrong just throw an error message on screen and let the player try again without
-      puting him in an animation.\n\nRepro:\nA friend needs to already have a private
-      lobby hosted, then,\nPlayer 2 presses: \nPlay,\nJoin CoOp\nJoin button next
-      to his friends name\nEnter a WRONG password in the input field\nPress the final
-      Join button.\n\n\n\nCurrent Behaviour: Password is wrong but player gets himself
-      in the door animation and during the join process and validation the system
-      sees his password is wrong and returns him to lobby.\nOn private Lobbies, When
-      a player enters a wrong password and presses Join, the door animation still
-      plays, and then returns to the menu. \n\nExpected Behaviour : If password is
-      wrong just throw an error message on screen and let the player try again without
-      puting him in an animation.\n\nRepro:\nA friend needs to already have a private
-      lobby hosted, then,\nPlayer 2 presses: \nPlay,\nJoin CoOp\nJoin button next
-      to his friends name\nEnter a WRONG password in the input field\nPress the final
-      Join button.\n\n\n"
-  - title: '[Tool - Level Editor] SnapshotID GUIDs reset when viewing prefab in isolation'
-    description: After capturing a snapshot of a hierarchy, all its GameObjects will
-      have a SnapshotID component with a unique GUID. If that hierarchy is part of
-      a prefab, opening the prefab in isolation while also having the prefab loaded
-      in a scene will cause the 'scene' instance of the prefab to register overrides
-      on every SnapshotID that was loaded twice (once in the scene, and once more
-      as the isolated prefab). This causes de-syncs in pre-existing anomalies and
-      can lead to data loss.
+  - title: '<Bug> [Text Chat]'
+    description: ' White space message keeps the chat open '
+  - title: '<Bug> [Networking] '
+    description: Player's names in top right corner don't reset for reconnected client
+  - title: '<Bug> [Collisions]'
+    description: ' Table Colliders issue & items going through them'
+  - title: '<Bug> [Collisions] '
+    description: You should NOT be able to climb on items?
+  - title: '<Bug> [Collisions] '
+    description: Players should not be able to climb on each other
+  - title: '<Bug> [Elevator] '
+    description: When you spam interact the elevator button, the door animation resets
+  - title: '<Bug> [Collisions]'
+    description: ' Main Room Shelf Climbing should NOT happen'
+  - title: '<Bug> [Networking] '
+    description: PasswordProtectedLobbies - Pressing Join after a wrong password
+      will still play join animation
+  - title: '<Bug> [Tool - Level Editor]'
+    description: ' SnapshotID GUIDs reset when viewing prefab in isolation'
