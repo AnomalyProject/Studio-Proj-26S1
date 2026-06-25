@@ -58,6 +58,8 @@ public class TurnToLookAt : MonoBehaviour
 
     private void Awake() => restRotation = transform.rotation;
 
+    private void OnDisable() => transform.rotation = restRotation;
+
     private void Update()
     {
         if (Time.time >= nextRefresh)
