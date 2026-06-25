@@ -5,6 +5,7 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
 {
     void IA_Global.IGlobalActions.OnToggleDev(InputAction.CallbackContext ctx)
     {
+        if (!TextChatManager.IsDevConsoleUnlocked) return;
         if (ctx.started) ToggleContext(InputContext.DevConsole);
     }
 
