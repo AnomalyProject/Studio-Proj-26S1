@@ -157,6 +157,8 @@ public class TurnToLookAt : MonoBehaviour
 
         foreach (PlayerBody identity in PlayerBody.ActivePlayers)
         {
+            if(identity == null || identity.CameraController == null) continue;
+
             float sqDist = (identity.CameraController.transform.position - transform.position).sqrMagnitude;
             if (sqDist < nearestSqDist)
             {
