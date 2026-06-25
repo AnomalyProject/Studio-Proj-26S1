@@ -1,8 +1,8 @@
-using PurrNet;
-using Steamworks;
-using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
+using Steamworks;
+using PurrNet;
 
 public class PingLocation : NetworkBehaviour
 {
@@ -28,13 +28,20 @@ public class PingLocation : NetworkBehaviour
             return;
         }
 
-        ulong ownerSteamID = SteamUser.GetSteamID().m_SteamID;
+        if (!SteamIdentity.TryGetLocalSteamID(out ulong ownerSteamID)) return;
 
         SessionData currentSession = SessionManager.Instance?.CurrentSession;
         PlayerSessionInfo? playerInfo = currentSession?.GetPlayer(ownerSteamID);
 
-        if (playerInfo.HasValue) pingColor = PlayerColour.GetColor(playerInfo.Value.ColorIndex);
+        if (playerInfo.HasValue) pingColor = playerInfo.Value.GetPlayerColor();
     }
+
+    [ObserversRpc(bufferLast: true)]
+    public void SetPingColour_Observers(Color color)
+    {
+        pingColor = color;
+    }
+
 
     public void CreatePing(InputAction.CallbackContext ctx)
     {

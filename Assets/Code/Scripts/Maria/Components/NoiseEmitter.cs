@@ -1,5 +1,6 @@
 using PurrNet;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// Abstract base class for all noise-emitting entities in the game.
@@ -16,12 +17,14 @@ public abstract class NoiseEmitter : NetworkBehaviour
     [Header("Detection")]
     [Tooltip("Any layer whose collider should react to noise - monsters, traps, etc." +
              "Add new reactive layers here without touching code!")]
-    [SerializeField] LayerMask hearableLayers;
-    [SerializeField] AudioClip[] emissionNoises;
+    [SerializeField] private LayerMask hearableLayers;
+    [SerializeField] private AudioClip[] emissionNoises;
+    [SerializeField] private UnityEvent OnEmit;
     #endregion
 
-    #region Protected Field
+    #region Protected Fields
     protected AudioSource audioSource { get; private set; }
+    protected AudioClip[] audioClips { get => emissionNoises; }
     #endregion
 
     #region Unity Lifecycle
@@ -39,7 +42,7 @@ public abstract class NoiseEmitter : NetworkBehaviour
     /// </summary>
     /// <param name="radius">World-space sphere radius for the overlap query.</param>
     /// <param name="emitVolume">Volume at which observers hear the emission. Pass 0 to suppress audio.</param>
-    public void Emit_Server(float radius, float emitVolume = 1)
+    public void Emit_Server(float radius, float emitVolume = 1, int atIndex = -1)
     {
         if (!isServer)
         {
@@ -57,7 +60,7 @@ public abstract class NoiseEmitter : NetworkBehaviour
             if (hit.TryGetComponent(out IAlertable alertable)) alertable.Alert(this);
         }
 
-        int audioIndex = Random.Range(0, emissionNoises.Length);
+        int audioIndex = atIndex == -1 ? Random.Range(0, emissionNoises.Length) : atIndex;
 
         if(emitVolume > 0)
         EmitAudio_ObserversRpc(audioIndex, emitVolume);
@@ -83,8 +86,11 @@ public abstract class NoiseEmitter : NetworkBehaviour
     /// Used by subclasses for sounds that should not be replicated (e.g. local footsteps).
     /// </summary>
     /// <param name="volume">Playback volume.</param>
-    [ObserversRpc] private void EmitAudio_ObserversRpc(int atIndex, float volume = 1) 
-        => audioSource.PlayOneShot(emissionNoises[atIndex], volume);
+    [ObserversRpc] private void EmitAudio_ObserversRpc(int atIndex, float volume = 1)
+    {
+        audioSource.PlayOneShot(emissionNoises[atIndex], volume);
+        OnEmit?.Invoke();
+    }
     #endregion
 
     #region Protected Logic

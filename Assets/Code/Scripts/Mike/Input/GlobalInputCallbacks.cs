@@ -5,6 +5,7 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
 {
     void IA_Global.IGlobalActions.OnToggleDev(InputAction.CallbackContext ctx)
     {
+        if (!TextChatManager.IsDevConsoleUnlocked) return;
         if (ctx.started) ToggleContext(InputContext.DevConsole);
     }
 
@@ -34,6 +35,25 @@ public class GlobalInputCallbacks : IA_Global.IGlobalActions
             // Don't allow opening chat unless we're in the player context
             if (CurrentContext != InputContext.Player) return;
             if (CurrentContext != InputContext.Chat) SetContext(InputContext.Chat);
+        }
+    }
+
+    public void OnToggleRadial(InputAction.CallbackContext context)
+    {
+        switch(context.phase)
+        {
+            case InputActionPhase.Started:
+                if (CurrentContext == InputContext.Player) LockAt(InputContext.Radial);
+                break;
+
+            case InputActionPhase.Canceled:
+
+                if (CurrentContext == InputContext.Radial)
+                {
+                    Unlock();
+                    SetContext(InputContext.Player);
+                }
+                break;
         }
     }
 }

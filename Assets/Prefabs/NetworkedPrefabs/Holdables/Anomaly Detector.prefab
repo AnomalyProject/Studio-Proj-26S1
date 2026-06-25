@@ -251,6 +251,7 @@ GameObject:
   - component: {fileID: 4442346481834954211}
   - component: {fileID: 6256553839861241993}
   - component: {fileID: 313248951596290328}
+  - component: {fileID: -5394405803402792051}
   m_Layer: 8
   m_Name: Anomaly Detector
   m_TagString: Untagged
@@ -383,6 +384,22 @@ MonoBehaviour:
   - {fileID: 8508582938257577336}
   canvases:
   - {fileID: 4277523214726113910}
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -5394405803402792051}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  almanacEntry: {fileID: 11400000, guid: 509511cd7d27b2647b695bd0a3467f54, type: 2}
   bg: {fileID: 2435667184498836293}
   displayText: {fileID: 4472744959162627464}
   anomalyFoundDisplay:
@@ -405,11 +422,6 @@ MonoBehaviour:
     msg: Awaiting User Input...
     clip: {fileID: 0}
     waitTime: 0
-  noSignalDisplay:
-    color: {r: 0.08627451, g: 0.08627451, b: 0.08627451, a: 1}
-    msg: No Signal...
-    clip: {fileID: 8300000, guid: 25bd6d4f1b412ed4e9cd5f0ecc9d15d9, type: 3}
-    waitTime: 0.5
   consumedDisplay:
     color: {r: 0.08627451, g: 0.08627451, b: 0.08627451, a: 1}
     msg: Low Baterry.
@@ -517,6 +529,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-5394405803402792051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4290930813766892628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: bb29c254a5937954e96a9e66c1c49a70, type: 2}
 --- !u!1 &5884565684550183451
 GameObject:
   m_ObjectHideFlags: 0

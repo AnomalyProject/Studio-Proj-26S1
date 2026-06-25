@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// Nestoras Angelopoulos
 /// 
-/// Simple utility for triggering wstuff when GameObjects are toggled
+/// Simple utility for triggering stuff when GameObjects are toggled
 /// </summary>
 public class ObjectToggleEventDispatcher : MonoBehaviour
 {

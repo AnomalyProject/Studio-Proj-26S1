@@ -1,6 +1,6 @@
-using UnityEngine;
 using PurrNet;
 using System.Threading.Tasks;
+using UnityEngine;
 
 /// <summary>
 /// Speed boost consumable item.
@@ -20,6 +20,7 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
     [SerializeField] private float duration = 10f;
 
     [SerializeField] private AudioSource consumeSound;
+    [SerializeField] private AudioClip speedBoostOverSound;
     #endregion
 
     #region IInteractable
@@ -45,7 +46,8 @@ public class SpeedBoostItem : PlayerItem, IInteractable<PlayerBody>
     {
         if(!await CanInteract(interactor)) return false;
         interactor.Movement.ApplySpeedBoost(multiplierAdditive, duration);
-        if(consumeSound != null) consumeSound.Play();
+        if (consumeSound != null) consumeSound.Play();
+        interactor.DoBurp(afterSeconds: interactor.Movement.SpeedBoostTimeRemaining);
         await Task.Delay((int)(consumeSound.clip.length * 1000));
         return true;
     }

@@ -1,9 +1,8 @@
+using UnityEngine.InputSystem;
+using UnityEngine.Events;
+using UnityEngine;
 using System.Collections;
 using PurrNet;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class ShoveComponent : NetworkBehaviour
@@ -18,7 +17,7 @@ public class ShoveComponent : NetworkBehaviour
     
     private CharacterController controller;
     private Vector3 shoveVelocity;
-    private bool isInCooldown;
+    public bool isInCooldown { get; private set; }
     #endregion
 
     #region Events
@@ -58,16 +57,20 @@ public class ShoveComponent : NetworkBehaviour
     /// <param name="context"></param>
     public void OnShovePreformed(InputAction.CallbackContext context)
     {
+        if (!context.performed)
+            return;
         StartShove();
     }
-    
+    public void OnShovePreformed() => StartShove();
+
     /// <summary>
     /// Detects player and does the shove math
     /// </summary>
     private void StartShove()
     {
         if (isInCooldown) return;
-        
+        GetComponent<PlayerAnimatorController>()
+         ?.PlayPushAnimation();
         PlayerShoved?.Invoke();
         
         Ray shoveRay = new Ray(transform.position + Vector3.up, transform.forward);
@@ -85,11 +88,14 @@ public class ShoveComponent : NetworkBehaviour
                 Vector3 pushDir = target.transform.position - transform.position;
                 pushDir.y = 0;
                 pushDir.Normalize();
-                
-                PushPlayer(target, pushDir * shoveForce);
-                
+                //different angles for difference in side and front/back force
+                float angle = Vector3.SignedAngle(transform.forward, pushDir, Vector3.up);
+                float sideFactor = Mathf.Abs(Mathf.Sin(angle * Mathf.Deg2Rad));
+                float finalForce = shoveForce * Mathf.Lerp(0.5f, 1f, sideFactor);
+                PushPlayer(target, pushDir * finalForce);
+
                 StartCoroutine(CooldownShove());
-                
+
             }
         }
     }
@@ -133,6 +139,26 @@ public class ShoveComponent : NetworkBehaviour
     {
         force.y = 0;
         shoveVelocity += force;
+
+
+        FPSController fps = GetComponent<FPSController>();
+
+        if (fps != null)
+        {
+            fps.IsStunned = true;
+        }
+
+        PlayerAnimatorController anim =
+        GetComponent<PlayerAnimatorController>();
+
+        if (anim != null)
+        {
+            anim.ApplyShove(force);
+            anim.ApplyShoveLocomotion(force);
+            anim.SetStunned(true);
+        }
+
+        StartCoroutine(RecoverRoutine());
     }
     #endregion
 
@@ -148,4 +174,29 @@ public class ShoveComponent : NetworkBehaviour
         isInCooldown = false;
     }
     #endregion
+    private IEnumerator RecoverRoutine()
+    {
+        yield return new WaitForSeconds(0.7f);
+        FPSController fps = GetComponent<FPSController>();
+
+        if (fps != null)
+        {
+            fps.IsStunned = false;
+        }
+
+        PlayerAnimatorController anim =
+            GetComponent<PlayerAnimatorController>();
+
+       /* if (anim != null)
+        {
+            anim.GetUp();
+        }*/
+
+        yield return new WaitForSeconds(0.3f);
+
+        if (anim != null)
+        {
+            anim.SetStunned(false);
+        }
+    }
 }

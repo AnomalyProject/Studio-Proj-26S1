@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Steamworks;
+using System.Collections;
 
 
 public class SteamFriendsLobbyBrowser : MonoBehaviour
 {
+    public bool TestMode;
+
     private readonly List<JoinableFriendInfo> joinableFriends = new();
     private Callback<FriendRichPresenceUpdate_t> friendRichPresenceUpdateCallback;
 
@@ -79,6 +82,14 @@ public class SteamFriendsLobbyBrowser : MonoBehaviour
                 lobbyId));
         }
 
+        if (TestMode)
+        {
+            joinableFriends.Add(new JoinableFriendInfo(00, "Babis", 00));
+            joinableFriends.Add(new JoinableFriendInfo(00, "Mitsos", 00));
+            joinableFriends.Add(new JoinableFriendInfo(00, "Takis", 00));
+            joinableFriends.Add(new JoinableFriendInfo(00, "Leon Kennedy", 00));
+        }
+
         OnFriendsUpdated?.Invoke();
     }
 
@@ -90,7 +101,7 @@ public class SteamFriendsLobbyBrowser : MonoBehaviour
             return;
         }
 
-        SteamSessionBridge.Instance.RequestJoinLobbyById(lobbyId);
+        PasswordProtectedLobby.Instance?.TryJoinLobby(lobbyId);
     }
 
     private bool TryParseLobbyId(string connectString, out ulong lobbyId)

@@ -1,7 +1,11 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using PurrNet;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.Audio;
+using UnityEngine.Rendering;
 
 public class PlayerBody : NetworkBehaviour
 {
@@ -11,22 +15,34 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private FPSCameraController cameraController;
     [SerializeField] private PlayerInteraction interaction;
     [SerializeField] private GameObject bodyVisuals;
+    [SerializeField] private AudioSource audioSource;
     
     [Header("Local Player")]
     [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener playerAudioListener;
     [SerializeField] private CameraLean playerCameraLean;
     [SerializeField] private GameObject nameplateVisuals;
+
+    [Header("Misc")]
+    [SerializeField] private AudioClip burpClip;
+    
+    [Header("Invisibility")]
+    [SerializeField] private PlayerInvisibility invis;
     
     public Inventory Inventory => playerInventory.Inventory;
     public FPSController Movement => movement;
     public FPSCameraController CameraController => cameraController;
+    public Camera PlayerCamera => playerCamera;
     public PlayerInteraction Interaction => interaction;
     public PlayerID? OwnerPlayerID => owner;
+    public AudioSource AudioSource => audioSource;
+    public PlayerInvisibility  Invis => invis;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;
     public static PlayerBody localPlayerBody;
+    private static HashSet<PlayerBody> activePlayers = new();
+    public static IReadOnlyCollection<PlayerBody> ActivePlayers => activePlayers;
 
     // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
     // So the issue is that PlayrBody can register two times. We want to prevent that.  
@@ -35,7 +51,8 @@ public class PlayerBody : NetworkBehaviour
     protected override void OnSpawned(bool asServer)
     {
         base.OnSpawned(asServer);
-
+        
+        if(!activePlayers.Contains(this)) activePlayers.Add(this);
         if (asServer) return;
         if (!TryApplyOwnership(isOwner)) return;
     }
@@ -43,7 +60,7 @@ public class PlayerBody : NetworkBehaviour
     protected override void OnDespawned()
     {
         base.OnDespawned();
-        
+        activePlayers.Remove(this);
         if (!isLocalPlayerRegistered) return;
         
         localPlayerBody = null;
@@ -60,6 +77,18 @@ public class PlayerBody : NetworkBehaviour
     //    bool local = newOwner.HasValue && newOwner == localPlayer;
     //    if (!TryApplyOwnership(local)) return;
     //}
+
+    [ObserversRpc(requireServer: false)] public void DoBurp(float afterSeconds)
+    {
+        CancelInvoke(nameof(Burp));
+        Invoke(nameof(Burp), afterSeconds);
+    }
+
+    private void Burp()
+    {
+        if (!audioSource) return;
+        audioSource.PlayOneShot(burpClip);
+    }
 
     private bool TryApplyOwnership(bool local)
     {

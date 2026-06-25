@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class ChaseState : BaseState
 {
@@ -15,7 +14,8 @@ public class ChaseState : BaseState
         base.Enter();
 
         body.SetMoveSpeed(true);
-
+        body.anim.SetBool("IsRun", true);
+        
         body.OnLostPlayer.AddListener(LostPlayer);
     }
 
@@ -26,16 +26,22 @@ public class ChaseState : BaseState
     {
         target = brain.TargetPos;
 
-        if (target == null) 
+        if (target == null)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
+            return;
+        }
+        
+        if (!body.IsTargetReachable(target.position))
+        {
+            brain.ChangeState(EnemyBrain.StateID.Investigate, target);
             return;
         }
 
         body.RotateTowards(target.position);
         body.MoveToTarget(target.position);
 
-        if (Vector3.Distance(body.transform.position, target.position) <= 2.0f)
+        if (Vector3.Distance(body.transform.position, target.position) <= 3.0f)
         {
             brain.ChangeState(EnemyBrain.StateID.Attack, target);
         }
@@ -51,6 +57,7 @@ public class ChaseState : BaseState
 
     public override void Exit()
     {
+        body.anim.SetBool("IsRun", false);
         body.OnLostPlayer.RemoveListener(LostPlayer);
     }
 }

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7465156958587118779}
   - component: {fileID: -7442751111386065334}
   - component: {fileID: -856330907351235571}
+  - component: {fileID: 5612331650487776578}
   m_Layer: 8
   m_Name: Rubber Duck Holdable
   m_TagString: Untagged
@@ -194,6 +195,39 @@ MonoBehaviour:
   - {fileID: 6574671400105414736}
   - {fileID: 5048712517681468812}
   canvases: []
+  onLocalSpawn:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5612331650487776578}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  almanacEntry: {fileID: 11400000, guid: 8ae08209d8a0c924a9979233d6d5044c, type: 2}
+--- !u!114 &5612331650487776578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4158961773394589312}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: 9a091c14b68f1e145b5102583b39ab8c, type: 2}
+  onNarrationFinished:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &3496352505841463873
 PrefabInstance:
   m_ObjectHideFlags: 0

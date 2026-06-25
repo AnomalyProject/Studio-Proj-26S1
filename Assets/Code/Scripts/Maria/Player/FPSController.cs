@@ -1,5 +1,5 @@
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
 /// <summary>
 /// First Person Character Controller using Unity's New Input System.
@@ -64,6 +64,9 @@ public class FPSController : MonoBehaviour
     private float speedBoostMultiplier = 1f;
     private const float maxSpeedBoostMultiplier = 1.5f;
     private float _speedBoostTimeRemaining = 0f;
+    private FOVController FOVController;
+    //animator stun
+    public bool IsStunned { get; set; }
 
     #endregion
 
@@ -71,6 +74,7 @@ public class FPSController : MonoBehaviour
     private void Awake()
     {
         character = GetComponent<CharacterController>();
+        FOVController = GetComponentInChildren<FOVController>(true);
 
         // Store default height values
         character.height = standingHeight;
@@ -82,7 +86,7 @@ public class FPSController : MonoBehaviour
     private void Update()
     {
         if (!IsLocalPlayer) return;
-        
+       // if (IsStunned) return;
         HandleGroundCheck();
         ApplyMovement();
         HandleGravity();
@@ -190,7 +194,9 @@ public class FPSController : MonoBehaviour
     #region Speed Boost
     public void ApplySpeedBoost(float multiplierAdditive, float duration)
     {
-        if(multiplierAdditive <= 0) return;
+        if (multiplierAdditive <= 0) return;
+
+        FOVController?.SetSpeedBoost(true); // Increase FOV
 
         speedBoostMultiplier = Mathf.Min(speedBoostMultiplier + multiplierAdditive, maxSpeedBoostMultiplier);
         _speedBoostTimeRemaining += duration;
@@ -201,6 +207,8 @@ public class FPSController : MonoBehaviour
     }
     private void RevertSpeedBoost()
     {
+        FOVController?.SetSpeedBoost(false); // Reset FOV
+
         speedBoostMultiplier = 1f;
         _speedBoostTimeRemaining = 0;
     }

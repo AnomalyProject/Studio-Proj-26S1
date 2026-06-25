@@ -26,13 +26,12 @@ public class AlertState : BaseState
         if (body.IsFacingTarget(target.position))
         {
             brain.ChangeState(EnemyBrain.StateID.Investigate, target);
-            return;
         }
     }
 
     private void PlayerFound(PlayerBody player)
     {
-       brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
+        brain.ChangeState(EnemyBrain.StateID.Chase, player.transform);
     }
 
     public override void Exit()

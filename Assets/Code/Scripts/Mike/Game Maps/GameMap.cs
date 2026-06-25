@@ -1,14 +1,19 @@
 using UnityEngine;
 using PurrNet;
+using System.Collections.Generic;
 
 public class GameMap : NetworkBehaviour
 {
     [SerializeField] Transform entryPointAnchor, exitPointAnchor;
     [SerializeField] AudioClip mapMusicTheme;
+    [SerializeField, Tooltip("Optional Alamanc Entry")] private AlmanacEntrySO _almanacEntry;
+    [SerializeField] private Transform[] currencySpawnPoints;
+    public AlmanacEntrySO AlmanacEntry => _almanacEntry;
     public AudioClip MapMusicTheme => mapMusicTheme;
     public Transform EntryPointAnchor => entryPointAnchor;
     public Transform ExitPointAnchor => exitPointAnchor;
     bool HasAnchorPoints => exitPointAnchor != null && entryPointAnchor != null;
+    public IReadOnlyCollection<Transform> CurrencySpawnPoints => currencySpawnPoints;
 
     protected virtual void Awake()
     {
