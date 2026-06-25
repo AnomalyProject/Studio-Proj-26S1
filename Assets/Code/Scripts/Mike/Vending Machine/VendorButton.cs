@@ -12,6 +12,8 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
     private CompositeVendor vendorHost;
     public int SlotIndex;
 
+    private Vector2 itemNameTextRectSize;
+
     void Awake()
     {
         vendorHost = GetComponentInParent<CompositeVendor>();
@@ -25,6 +27,9 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
         vendorHost.OnSlotChanged += UpdateContent;
         vendorHost.OnRestock.AddListener(UpdateContent);
         vendorHost.OnSpawnedEvent += UpdateContent;
+        vendorHost.QueueOnSpawned(UpdateContent);
+
+        itemNameTextRectSize = itemNameText.rectTransform.sizeDelta;
     }
 
     public Task<bool> CanInteract(PlayerBody interactor)
@@ -43,16 +48,18 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
 
         IReadOnlyItemStack stack = vendorHost.GetStackFromSlot(slot);
 
-        if(stack != null)
+        if (stack != null)
         {
             ItemData data = stack.GetItemData();
             itemIcon.sprite = data.ItemIcon;
             itemNameText.text = data.ItemName;
-            itemPriceText.text = $"Cost x{vendorHost.GetStackPrice(slot).ToString()}";
-            itemAmountText.text = $"x{stack.GetQuantity()}";
+            itemNameText.rectTransform.sizeDelta = itemNameTextRectSize;
+            itemPriceText.text = $"x{vendorHost.GetStackPrice(slot).ToString()}";
+            itemAmountText.text = $"Stock: x{stack.GetQuantity()}";
         }
         else
         {
+            itemNameText.rectTransform.sizeDelta = new Vector2(itemNameTextRectSize.x, itemNameTextRectSize.y * 2);
             itemIcon.sprite = lockedSlotSprite;
             itemNameText.text = "Locked";
             itemPriceText.text = "";

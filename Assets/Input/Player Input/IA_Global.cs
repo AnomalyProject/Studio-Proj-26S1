@@ -127,6 +127,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Radial"",
+                    ""type"": ""Button"",
+                    ""id"": ""4b748f90-baca-4220-9fa7-a3c91a51efd9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -204,6 +213,28 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Toggle Chat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4520782a-9721-4385-b1b3-3f810a787f64"",
+                    ""path"": ""<Keyboard>/b"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Radial"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5ea50773-f8c6-44d0-a915-8b6cc1906312"",
+                    ""path"": ""<Gamepad>/dpad/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Radial"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -966,6 +997,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Toggle Duck Mode"",
+                    ""type"": ""Button"",
+                    ""id"": ""e205a174-6e68-4c59-8f66-a1ec4e0556e6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1061,7 +1101,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""ead5aeb1-7fd3-44c6-a398-1f83b74d2258"",
                     ""path"": ""<Keyboard>/leftShift"",
-                    ""interactions"": ""Hold"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gameplay"",
                     ""action"": ""Sprint"",
@@ -1072,7 +1112,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""bb18d174-0a50-492b-848e-6115d3cfd006"",
                     ""path"": ""<Gamepad>/leftShoulder"",
-                    ""interactions"": ""Hold"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gameplay"",
                     ""action"": ""Sprint"",
@@ -1331,6 +1371,39 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""action"": ""Shove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""76905aad-7318-47e2-b6be-ef992db81c81"",
+                    ""path"": ""OneModifier(modifiersOrder=1)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""fc49d5cb-002f-44a4-ab03-73dfadb2fb46"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""797792f8-193c-4121-984e-1b1504357226"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Duck Mode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -1346,6 +1419,15 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Radial"",
+                    ""type"": ""Value"",
+                    ""id"": ""3954e3f8-cd41-4351-b4d6-739d7e278252"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -1368,6 +1450,17 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4d00caea-e787-4107-ba91-2e5a2e079bd5"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Radial"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1517,6 +1610,329 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""None"",
+            ""id"": ""aef3a4f8-04a6-4520-b7f1-9436c70bebff"",
+            ""actions"": [
+                {
+                    ""name"": ""Navigate"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""ded2dbf7-c74a-4b07-817b-462714038b7b"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Submit"",
+                    ""type"": ""Button"",
+                    ""id"": ""5c228d15-7435-467f-a990-a4a41106003c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": ""Gamepad"",
+                    ""id"": ""14ed3219-b7c2-47ab-95c1-13ff0d30be7c"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""e473dc10-b70a-4d74-93a4-98c683658ace"",
+                    ""path"": ""<Gamepad>/leftStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""e823eaba-c3c5-4641-afe5-fdd71f834606"",
+                    ""path"": ""<Gamepad>/rightStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""ea12bc08-9a0c-40b0-8e69-5e4d54cce813"",
+                    ""path"": ""<Gamepad>/leftStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""2e59310a-ce29-4170-9029-70082802f362"",
+                    ""path"": ""<Gamepad>/rightStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""25a598c8-c956-4990-a750-fde24a0b0dfa"",
+                    ""path"": ""<Gamepad>/leftStick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""b58b7eb2-1b7b-4443-a277-a1bfffd58b0a"",
+                    ""path"": ""<Gamepad>/rightStick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""77dcbaf6-da9c-4d55-9427-24efa09b68f8"",
+                    ""path"": ""<Gamepad>/leftStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""ac555a27-08c4-421a-900d-7f6236520b79"",
+                    ""path"": ""<Gamepad>/rightStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""db34e99a-2862-49c0-81fe-96c076598377"",
+                    ""path"": ""<Gamepad>/dpad"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Joystick"",
+                    ""id"": ""a8fc051e-af8a-4933-ad1d-48445832a933"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""9e823687-eccc-499a-90a4-adae1109be4f"",
+                    ""path"": ""<Joystick>/stick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Joystick"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""998bc9a0-fce8-4b2b-b082-0d5818353a0a"",
+                    ""path"": ""<Joystick>/stick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Joystick"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""9197e645-1c54-4e8d-882d-365e7dac6a9d"",
+                    ""path"": ""<Joystick>/stick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Joystick"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""611b8982-43b5-4935-a352-7dc5b59a787c"",
+                    ""path"": ""<Joystick>/stick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Joystick"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Keyboard"",
+                    ""id"": ""8590484c-48a8-41ec-b212-c5b28d25bf98"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""04692489-c6d9-4164-8dce-9ce7f84e693a"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""794ef298-fba5-45e0-b17b-f361d7517651"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""da64d4c1-5c80-4e36-accc-9f35ef0aa53d"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""f671d474-56cc-4ad2-a3a1-a2b074b473e5"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""5326598d-a69d-47cb-a9f9-b443d3bcaf8f"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""d69178c8-4e56-4dc9-b81a-c0b7d4af0f1e"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""0c8c4af5-4280-49fc-9c02-a2dbbb3556ef"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""5c16ec77-7928-4320-9866-4d3304c4ee3b"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""1f993123-1eb7-4de6-a63a-b3c8a409e189"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dfffafc1-a454-49ae-9510-0addec3af4ae"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse;Gamepad;Touch;Joystick;XR"",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4c31e0ef-282e-417e-a12e-e4859c005623"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -1527,6 +1943,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Global_ToggleDev = m_Global.FindAction("Toggle Dev", throwIfNotFound: true);
         m_Global_ToggleBug = m_Global.FindAction("Toggle Bug", throwIfNotFound: true);
         m_Global_ToggleChat = m_Global.FindAction("Toggle Chat", throwIfNotFound: true);
+        m_Global_ToggleRadial = m_Global.FindAction("Toggle Radial", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1560,14 +1977,20 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         m_Player_DropItem = m_Player.FindAction("Drop Item", throwIfNotFound: true);
         m_Player_PingLocation = m_Player.FindAction("Ping Location", throwIfNotFound: true);
         m_Player_Shove = m_Player.FindAction("Shove", throwIfNotFound: true);
+        m_Player_ToggleDuckMode = m_Player.FindAction("Toggle Duck Mode", throwIfNotFound: true);
         // Chat
         m_Chat = asset.FindActionMap("Chat", throwIfNotFound: true);
         m_Chat_Submit = m_Chat.FindAction("Submit", throwIfNotFound: true);
+        m_Chat_Radial = m_Chat.FindAction("Radial", throwIfNotFound: true);
         // NoClip
         m_NoClip = asset.FindActionMap("NoClip", throwIfNotFound: true);
         m_NoClip_Move = m_NoClip.FindAction("Move", throwIfNotFound: true);
         m_NoClip_Sprint = m_NoClip.FindAction("Sprint", throwIfNotFound: true);
         m_NoClip_Look = m_NoClip.FindAction("Look", throwIfNotFound: true);
+        // None
+        m_None = asset.FindActionMap("None", throwIfNotFound: true);
+        m_None_Navigate = m_None.FindAction("Navigate", throwIfNotFound: true);
+        m_None_Submit = m_None.FindAction("Submit", throwIfNotFound: true);
     }
 
     ~@IA_Global()
@@ -1578,6 +2001,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, IA_Global.Player.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Chat.enabled, "This will cause a leak and performance issues, IA_Global.Chat.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_NoClip.enabled, "This will cause a leak and performance issues, IA_Global.NoClip.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_None.enabled, "This will cause a leak and performance issues, IA_Global.None.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1657,6 +2081,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Global_ToggleDev;
     private readonly InputAction m_Global_ToggleBug;
     private readonly InputAction m_Global_ToggleChat;
+    private readonly InputAction m_Global_ToggleRadial;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -1684,6 +2109,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleChat".
         /// </summary>
         public InputAction @ToggleChat => m_Wrapper.m_Global_ToggleChat;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleRadial".
+        /// </summary>
+        public InputAction @ToggleRadial => m_Wrapper.m_Global_ToggleRadial;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1722,6 +2151,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleChat.started += instance.OnToggleChat;
             @ToggleChat.performed += instance.OnToggleChat;
             @ToggleChat.canceled += instance.OnToggleChat;
+            @ToggleRadial.started += instance.OnToggleRadial;
+            @ToggleRadial.performed += instance.OnToggleRadial;
+            @ToggleRadial.canceled += instance.OnToggleRadial;
         }
 
         /// <summary>
@@ -1745,6 +2177,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @ToggleChat.started -= instance.OnToggleChat;
             @ToggleChat.performed -= instance.OnToggleChat;
             @ToggleChat.canceled -= instance.OnToggleChat;
+            @ToggleRadial.started -= instance.OnToggleRadial;
+            @ToggleRadial.performed -= instance.OnToggleRadial;
+            @ToggleRadial.canceled -= instance.OnToggleRadial;
         }
 
         /// <summary>
@@ -2099,6 +2534,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_DropItem;
     private readonly InputAction m_Player_PingLocation;
     private readonly InputAction m_Player_Shove;
+    private readonly InputAction m_Player_ToggleDuckMode;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -2171,6 +2607,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Shove => m_Wrapper.m_Player_Shove;
         /// <summary>
+        /// Provides access to the underlying input action "Player/ToggleDuckMode".
+        /// </summary>
+        public InputAction @ToggleDuckMode => m_Wrapper.m_Player_ToggleDuckMode;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -2241,6 +2681,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started += instance.OnShove;
             @Shove.performed += instance.OnShove;
             @Shove.canceled += instance.OnShove;
+            @ToggleDuckMode.started += instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed += instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled += instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -2297,6 +2740,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Shove.started -= instance.OnShove;
             @Shove.performed -= instance.OnShove;
             @Shove.canceled -= instance.OnShove;
+            @ToggleDuckMode.started -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.performed -= instance.OnToggleDuckMode;
+            @ToggleDuckMode.canceled -= instance.OnToggleDuckMode;
         }
 
         /// <summary>
@@ -2335,6 +2781,7 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Chat;
     private List<IChatActions> m_ChatActionsCallbackInterfaces = new List<IChatActions>();
     private readonly InputAction m_Chat_Submit;
+    private readonly InputAction m_Chat_Radial;
     /// <summary>
     /// Provides access to input actions defined in input action map "Chat".
     /// </summary>
@@ -2350,6 +2797,10 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Chat/Submit".
         /// </summary>
         public InputAction @Submit => m_Wrapper.m_Chat_Submit;
+        /// <summary>
+        /// Provides access to the underlying input action "Chat/Radial".
+        /// </summary>
+        public InputAction @Radial => m_Wrapper.m_Chat_Radial;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -2379,6 +2830,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Submit.started += instance.OnSubmit;
             @Submit.performed += instance.OnSubmit;
             @Submit.canceled += instance.OnSubmit;
+            @Radial.started += instance.OnRadial;
+            @Radial.performed += instance.OnRadial;
+            @Radial.canceled += instance.OnRadial;
         }
 
         /// <summary>
@@ -2393,6 +2847,9 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
             @Submit.started -= instance.OnSubmit;
             @Submit.performed -= instance.OnSubmit;
             @Submit.canceled -= instance.OnSubmit;
+            @Radial.started -= instance.OnRadial;
+            @Radial.performed -= instance.OnRadial;
+            @Radial.canceled -= instance.OnRadial;
         }
 
         /// <summary>
@@ -2544,6 +3001,113 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="NoClipActions" /> instance referencing this action map.
     /// </summary>
     public NoClipActions @NoClip => new NoClipActions(this);
+
+    // None
+    private readonly InputActionMap m_None;
+    private List<INoneActions> m_NoneActionsCallbackInterfaces = new List<INoneActions>();
+    private readonly InputAction m_None_Navigate;
+    private readonly InputAction m_None_Submit;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "None".
+    /// </summary>
+    public struct NoneActions
+    {
+        private @IA_Global m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public NoneActions(@IA_Global wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "None/Navigate".
+        /// </summary>
+        public InputAction @Navigate => m_Wrapper.m_None_Navigate;
+        /// <summary>
+        /// Provides access to the underlying input action "None/Submit".
+        /// </summary>
+        public InputAction @Submit => m_Wrapper.m_None_Submit;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_None; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="NoneActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(NoneActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="NoneActions" />
+        public void AddCallbacks(INoneActions instance)
+        {
+            if (instance == null || m_Wrapper.m_NoneActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_NoneActionsCallbackInterfaces.Add(instance);
+            @Navigate.started += instance.OnNavigate;
+            @Navigate.performed += instance.OnNavigate;
+            @Navigate.canceled += instance.OnNavigate;
+            @Submit.started += instance.OnSubmit;
+            @Submit.performed += instance.OnSubmit;
+            @Submit.canceled += instance.OnSubmit;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="NoneActions" />
+        private void UnregisterCallbacks(INoneActions instance)
+        {
+            @Navigate.started -= instance.OnNavigate;
+            @Navigate.performed -= instance.OnNavigate;
+            @Navigate.canceled -= instance.OnNavigate;
+            @Submit.started -= instance.OnSubmit;
+            @Submit.performed -= instance.OnSubmit;
+            @Submit.canceled -= instance.OnSubmit;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="NoneActions.UnregisterCallbacks(INoneActions)" />.
+        /// </summary>
+        /// <seealso cref="NoneActions.UnregisterCallbacks(INoneActions)" />
+        public void RemoveCallbacks(INoneActions instance)
+        {
+            if (m_Wrapper.m_NoneActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="NoneActions.AddCallbacks(INoneActions)" />
+        /// <seealso cref="NoneActions.RemoveCallbacks(INoneActions)" />
+        /// <seealso cref="NoneActions.UnregisterCallbacks(INoneActions)" />
+        public void SetCallbacks(INoneActions instance)
+        {
+            foreach (var item in m_Wrapper.m_NoneActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_NoneActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="NoneActions" /> instance referencing this action map.
+    /// </summary>
+    public NoneActions @None => new NoneActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
     /// </summary>
@@ -2579,6 +3143,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleChat(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Radial" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleRadial(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -2792,6 +3363,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnShove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Toggle Duck Mode" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleDuckMode(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Chat" which allows adding and removing callbacks.
@@ -2807,6 +3385,13 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSubmit(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Radial" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRadial(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "NoClip" which allows adding and removing callbacks.
@@ -2836,5 +3421,27 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnLook(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "None" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="NoneActions.AddCallbacks(INoneActions)" />
+    /// <seealso cref="NoneActions.RemoveCallbacks(INoneActions)" />
+    public interface INoneActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Navigate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNavigate(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Submit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSubmit(InputAction.CallbackContext context);
     }
 }

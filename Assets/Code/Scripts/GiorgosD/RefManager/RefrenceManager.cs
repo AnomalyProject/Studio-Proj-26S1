@@ -12,6 +12,7 @@ public class RefrenceManager : MonoBehaviour
     public GlobalContainer Global => global;
     public MainMenuContainer Menu => menu;
     public GamePlayContainer Gameplay => gameplay;
+    public static SaveData CurrentSave { get; private set; } 
 
     private void Awake()
     {
@@ -29,5 +30,13 @@ public class RefrenceManager : MonoBehaviour
         {
             Instance = null;
         }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    private static void LoadLastSave() => CurrentSave = SaveSystem.LoadLast();
+    public static void DeleteAllSaves()
+    {
+        SaveSystem.DeleteAllSaves();
+        CurrentSave = new();
     }
 }

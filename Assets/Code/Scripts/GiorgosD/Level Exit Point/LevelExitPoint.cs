@@ -1,9 +1,8 @@
+using System.Threading.Tasks;
+using UnityEngine.Events;
+using UnityEngine;
 using PurrNet;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
 
 [RequireComponent(typeof(Collider))]
 public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
@@ -13,7 +12,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     // Checks
     [SerializeField] protected SyncVar<bool> bHasAnomaly = new(ownerAuth: false);
     protected SyncVar<bool> bIsAvailable = new SyncVar<bool>(initialValue: true, ownerAuth: false);
-    private SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
+    protected SyncHashSet<NetworkID> playersInArea = new SyncHashSet<NetworkID>(ownerAuth: false);
 
     // Events
     public UnityEvent<bool> OnActivateExit, OnPlayersChanged, OnAvailabilityChanged;
@@ -91,7 +90,7 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     /// </summary>
     private bool HasEnoughPlayers()
     {
-        Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
+        //Debug.Log($"Player In Area: {playersInArea.Count} | Players in Session: {NetworkManager.main.playerCount}");
         return playersInArea.Count >= NetworkManager.main.playerCount;
     }
     #endregion

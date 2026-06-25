@@ -1,9 +1,10 @@
-def branchMap = [
-    'develop': "internal_testing",
-    'network': "network_testing",
-    'worknet': "worknet_testing",
-    'main'   : "default"
-]
+def branchMap = [:]
+branchMap['develop'] = "internal_testing"
+branchMap['network'] = "network_testing"
+branchMap['worknet'] = "worknet_testing"
+branchMap['ai'] = "ai_testing"
+branchMap['mike'] = "hunkyjesus_testing"
+branchMap['main'] = "default"
 
 def steamBranch = "unknown"
 def commitMsg = "unknown"
@@ -25,7 +26,7 @@ pipeline {
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
         ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
-        GAME_VERSION = "0.0.${env.BUILD_NUMBER}"
+        GAME_VERSION = "0.0.${env.BUILD_NUMBER}a"
     }
 
     stages {
@@ -66,6 +67,8 @@ pipeline {
                     branch 'main'
                     branch 'network'
                     branch 'worknet'
+                    branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {
@@ -81,6 +84,8 @@ pipeline {
                     branch 'main'
                     branch 'network'
                     branch 'worknet'
+                    branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {
@@ -100,6 +105,8 @@ pipeline {
                     branch 'main'
                     branch 'network'
                     branch 'worknet'
+                    branch 'ai'
+                    branch 'mike'
                 }
             }
             steps {

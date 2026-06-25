@@ -77,7 +77,7 @@ public class ChatUI : MonoBehaviour
         chatInputField.onSubmit.AddListener(OnChatSubmit);
         chatInputField.onValueChanged.AddListener(OnChatValueChanged);
 
-        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged += OnGameStateChanged; 
+        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
 
     private void OnDisable()
@@ -86,8 +86,7 @@ public class ChatUI : MonoBehaviour
         chatInputField.onSubmit.RemoveListener(OnChatSubmit);
         chatInputField.onValueChanged.RemoveListener(OnChatValueChanged);
 
-        if (GameStateManager.Instance != null) GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
-
+        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
     }
 
     private void Update()
@@ -193,6 +192,7 @@ public class ChatUI : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(text))
         {
+            RestoreAndClose();
             return;
         }
 
@@ -202,13 +202,15 @@ public class ChatUI : MonoBehaviour
         }
         else
         {
-            ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
+            if (!SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
+            {
+                ReceiveMessage("<color=red>[System]</color>", "Steam is not available in this editor session.");
+                return;
+            }
             TextChatManager.Instance.SendChatMessage(text, localSteamID);
         }
 
-        chatInputField.text = "";
-        InputBridge.RestorePreviousContext();
-        CloseChat();
+        RestoreAndClose();
     }
 
     private void ProcessCommand(string input)
@@ -218,6 +220,10 @@ public class ChatUI : MonoBehaviour
 
         switch (command)
         {
+            case "/iamadeveloper":
+                TextChatManager.Instance.EnableCheats();
+                ReceiveMessage("<color=#FFD700>[System]</color>", "Developer mode enabled! You can now use the Dev Console");
+                break;
             case "/mute":
                 if (parts.Length > 1) MutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
@@ -225,7 +231,23 @@ public class ChatUI : MonoBehaviour
                 if (parts.Length > 1) UnmutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
             case "/whisper":
-                if (parts.Length > 2) WhisperToPlayer(parts[1], string.Join(" ", parts, 2, parts.Length - 2));
+                if (parts.Length > 2)
+                {
+                    string targetName = "";
+                    string message = string.Join(" ", parts, 1, parts.Length - 1);
+
+                    foreach (string name in GetActivePlayerNames())
+                    {
+                        if (message.Contains(name))
+                        {
+                            message = message.Replace(name, "");
+                            targetName = name;
+                            break;
+                        }
+                    }
+
+                    WhisperToPlayer(targetName, message);
+                }
                 break;
             case "/help":
                 ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
@@ -356,9 +378,36 @@ public class ChatUI : MonoBehaviour
 
     private void WhisperToPlayer(string targetName, string message)
     {
-        ulong localSteamID = SteamUser.GetSteamID().m_SteamID;
+        if (!SteamIdentity.TryGetLocalSteamID(out ulong localSteamID))
+        {
+            ReceiveMessage("<color=red>[System]</color>", "Steam is not available in this editor session.");
+            return;
+        }
         TextChatManager.Instance.SendWhisper(targetName, message, localSteamID);
 
         //ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);   <-- Debug
+    }
+
+    private List<string> GetActivePlayerNames()
+    {
+        SessionData serverSession = SessionManager.Instance.CurrentSession;
+        ClientSessionData clientSession = SessionManager.Instance.LatestClientSession;
+
+        if (serverSession != null && serverSession.Players != null)
+        {
+            return serverSession.Players.Select(p => p.DisplayName).ToList();
+        }
+        if (clientSession.Players != null)
+        {
+            return clientSession.Players.Select(p => p.DisplayName).ToList();
+        }
+        return new List<string>();
+    }
+
+    private void RestoreAndClose()
+    {
+        chatInputField.text = "";
+        InputBridge.RestorePreviousContext();
+        CloseChat();
     }
 }

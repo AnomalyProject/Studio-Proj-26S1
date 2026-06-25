@@ -1,5 +1,6 @@
-using PurrNet;
+using UnityEngine.Events;
 using UnityEngine;
+using PurrNet;
 
 [RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : NetworkBehaviour
@@ -11,7 +12,7 @@ public class AnomalyManager : NetworkBehaviour
         PunishmentRoom,
         WinRoom
     }
-    struct MapStateData
+    public struct MapStateData
     {
         public int mapIndex;
         public int variationIndex;
@@ -25,27 +26,28 @@ public class AnomalyManager : NetworkBehaviour
 
     public event System.Action<RoomState> OnStateChanged;
     public event System.Action<GameMap> OnMapChanged;
+    [SerializeField] private UnityEvent<MapStateData> OnMapStateApplied;
 
-    [SerializeField] AnomalyMap[] mapCollection;
-    [SerializeField, Range(0, 1)] float anomalyChance = .5f;
-    [SerializeField] GameMap[] punishmentRooms;
-    [SerializeField] GameMap winRoom;
-    [SerializeField, Tooltip("Whether to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] bool mapsArePrefabs = true;
+    [SerializeField] private AnomalyMap[] mapCollection;
+    [SerializeField, Range(0, 1)] private float anomalyChance = .5f;
+    [SerializeField] private GameMap[] punishmentRooms;
+    [SerializeField] private GameMap winRoom;
+    [SerializeField, Tooltip("Whether to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] private bool mapsArePrefabs = true;
 
-    int loadedMapIndex = -1;
-    AnomalyMap activeMap;
-    GameMap activeUniqueRoom;
-    MapOrientor mapOrientor;
-    MapStateData currentMapState;
+    private int loadedMapIndex = -1;
+    private AnomalyMap activeMap;
+    private GameMap activeUniqueRoom;
+    private MapOrientor mapOrientor;
+    private MapStateData currentMapState;
 
     public RoomState CurrentState => currentMapState.roomState;
     public bool HasAnomaly => currentMapState.roomState == RoomState.AnomalyRoom;
     public MapOrientor MapOrientor => mapOrientor;
 
-    void Awake()
+    private void Awake()
     {
         mapOrientor = GetComponent<MapOrientor>();
-        OnMapChanged += mapOrientor.OrientMap;
+        OnMapChanged += HandleMapChange;
 
         if (!mapsArePrefabs)
         {
@@ -76,10 +78,13 @@ public class AnomalyManager : NetworkBehaviour
         if (!isServer) return;
         RegisterState(RoomState.WinRoom);
     }
-    public void PickMap_Server()
+    public void PickMap_Server() => PickMapByIndex_Server(Random.Range(0, mapCollection.Length));
+    public void PickMapByIndex_Server(int index)
     {
         if (!isServer) return;
-        currentMapState.mapIndex = Random.Range(0, mapCollection.Length);
+        index = Mathf.Clamp(index, 0, mapCollection.Length);
+
+        currentMapState.mapIndex = index;
         currentMapState.variationIndex = -1;
         RegisterState(RoomState.NormalRoom);
     }
@@ -185,6 +190,7 @@ public class AnomalyManager : NetworkBehaviour
 
         currentMapState = data;
         OnStateChanged?.Invoke(data.roomState);
+        OnMapStateApplied?.Invoke(data);
     }
     /// <summary>
     /// Hides active map and unique room without destroying them.
@@ -220,6 +226,8 @@ public class AnomalyManager : NetworkBehaviour
         activeMap.BaseMap.SetActive(!variation.ReplacesBaseMap);
         variation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
+
+        if (variation.AlmanacEntry != null) AlmanacDiscovery.Discover(variation.AlmanacEntry);
     }
     private void ReleaseActiveMap(bool destroy)
     {
@@ -244,6 +252,11 @@ public class AnomalyManager : NetworkBehaviour
         currentMapState.entryPointID = entry.id.Value;
         currentMapState.entryPosition = entry.transform.position;
         currentMapState.entryRotation = entry.transform.rotation;
+    }
+    private void HandleMapChange(GameMap map)
+    {
+        mapOrientor.OrientMap(map);
+        AlmanacDiscovery.Discover(map.AlmanacEntry);
     }
     #endregion
 }

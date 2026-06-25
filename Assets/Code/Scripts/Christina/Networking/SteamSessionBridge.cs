@@ -13,7 +13,10 @@ public class SteamSessionBridge : MonoBehaviour
     private bool isInLobby = false;
     private bool isCreatingLobby = false;
     private bool isSteamAvailable = false;
-    
+
+    //public getter for other classes to know which lobby we're in, if any. useful for things like the invite system.
+    public CSteamID CurrentLobbyID => currentLobbyID;
+
     [SerializeField] private ELobbyType lobbyType = ELobbyType.k_ELobbyTypeFriendsOnly;
     
     // Host
@@ -22,7 +25,8 @@ public class SteamSessionBridge : MonoBehaviour
     private Coroutine hostStartupCoroutine;
     private Coroutine joinCoroutine; 
     private const float clientConnectionTimeoutSeconds = 15f;
-    
+
+    private string pendingJoinPassword = "";
     public HostStartupStatus CurrentHostStartupStatus => currentHostStartupStatus;
     public event System.Action<HostStartupStatus> OnHostStartupStatusChanged;
     
@@ -31,12 +35,14 @@ public class SteamSessionBridge : MonoBehaviour
     private int joinStartupAttemptID = 0;
     private bool joinStartupInProgress = false;
     private CSteamID pendingJoinLobbyID;
-    private enum JoinApprovalResult { Pending, Approved, Rejected }
+    private enum JoinApprovalResult { Pending, Approved, Reconnected, Rejected }
     private JoinApprovalResult joinApprovalResult = JoinApprovalResult.Pending;
 
     public JoinStartupStatus CurrentJoinStartupStatus => currentJoinStartupStatus;
     public event System.Action<JoinStartupStatus> OnJoinStartupStatusChanged;
     
+    private ulong pendingInviteLobbyId;
+    private bool hasPendingInviteLobby;
     
     // tracks if LobbyCreated_t succeded for this boot attempt
     private bool hostLobbyCreated = false;
@@ -58,6 +64,8 @@ public class SteamSessionBridge : MonoBehaviour
 
     // steam callresults (one-shot for specific API calls)
     private CallResult<LobbyCreated_t> lobbyCreatedCallResult;
+
+    public void SetPendingJoinPassword(string password) => pendingJoinPassword = password;
 
     private void Awake()
     {
@@ -100,23 +108,12 @@ public class SteamSessionBridge : MonoBehaviour
                 {
                     Debug.Log($"[SteamBridge] Launched with +connect_lobby {lobbyId}");
 
-                    joinStartupAttemptID++;
-                    joinStartupInProgress = true;
-                    joinApprovalResult = JoinApprovalResult.Pending; 
-                    pendingJoinLobbyID = new CSteamID(lobbyId);
+                    pendingInviteLobbyId = lobbyId;
+                    hasPendingInviteLobby = true;
 
                     SetJoinStage(
                         JoinStartupStage.JoinRequestReceived,
                         $"Join requested via launch argument for lobby {lobbyId}");
-
-                    if (SessionModeManager.Instance == null)
-                    {
-                        Debug.LogError("[SteamBridge] SessionModeManager missing during join startup.");
-                        LeaveSteamLobby();
-                        return;
-                    }
-                    
-                    SessionModeManager.Instance.StartJoining();
                 }
                 else
                 {
@@ -144,6 +141,17 @@ public class SteamSessionBridge : MonoBehaviour
         );
         
         lobbyCreatedCallResult.Set(apiCall);
+    }
+    
+    public bool TryGetPendingInviteLobby(out ulong lobbyId)
+    {
+        lobbyId = pendingInviteLobbyId;
+
+        if (!hasPendingInviteLobby) return false;
+
+        hasPendingInviteLobby = false;
+        pendingInviteLobbyId = 0;
+        return true;
     }
     
     public bool UpdateRichPresence(GameState state)
@@ -255,8 +263,16 @@ public class SteamSessionBridge : MonoBehaviour
                 JoinStartupStage.LeavingPreviousLobby,
                 "Leaving current Steam lobby before new join attempt.");
         }
-
-        SessionModeManager.Instance.StartJoining();
+        
+        if (SessionModeManager.Instance == null)
+        {
+            Debug.LogError("[SteamBridge] SessionModeManager missing during join startup.");
+            LeaveSteamLobby();
+            return;
+        }
+        
+        SessionModeManager.Instance.StartJoining();    
+        
     }
 
     
@@ -712,6 +728,12 @@ public class SteamSessionBridge : MonoBehaviour
         }
         
         networkManager.StartClient();
+        
+        if (joinCoroutine != null)
+        {
+            StopCoroutine(joinCoroutine);
+            joinCoroutine = null;
+        }
         // we use coroutine because StartClient() is asynchronous.
         // we need to wait for the response to send RPCs
         joinCoroutine = StartCoroutine(WaitForConnectionThenJoin());
@@ -720,14 +742,10 @@ public class SteamSessionBridge : MonoBehaviour
     private IEnumerator WaitForConnectionThenJoin()
     {
         float deadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
-        var networkManager = PurrNet.NetworkManager.main;
+        var networkManager = NetworkManager.main;
 
         // wait until PurrNet reports that the client is connected
-        while (networkManager != null && !networkManager.isClient && Time.realtimeSinceStartup < deadline)
-        {
-            yield return null;
-        }
-
+        while (networkManager != null && !networkManager.isClient && Time.realtimeSinceStartup < deadline) yield return null;
         if (networkManager == null || !networkManager.isClient)
         {
             Debug.LogError("[SteamBridge] Failed to connect to host via PurrNet");
@@ -795,9 +813,6 @@ public class SteamSessionBridge : MonoBehaviour
                 "Transport connected to host successfully.");
         }
         
-        ulong steamID = SteamUser.GetSteamID().m_SteamID;
-        string displayName = SteamFriends.GetPersonaName();
-        
         if (joinStartupInProgress)
         {
             SetJoinStage(
@@ -805,22 +820,27 @@ public class SteamSessionBridge : MonoBehaviour
                 "Transport connected. Requesting session approval from host.");
         }
         
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved || joinApprovalResult == JoinApprovalResult.Reconnected)
+        {
+            joinCoroutine = null;
+            yield break;
+        }
+        
         joinApprovalResult = JoinApprovalResult.Pending;
-        SessionManager.Instance.RequestJoinSession();
-        Debug.Log("[SteamBridge] PurrNet connected, session join requested");
+
+        SessionManager.Instance.RequestJoinSession(pendingJoinPassword);
+        pendingJoinPassword = "";
 
         // waiting for the host to approve or reject, with a timeout
         float approvalDeadline = Time.realtimeSinceStartup + clientConnectionTimeoutSeconds;
 
-        while (joinApprovalResult == JoinApprovalResult.Pending &&
-               joinStartupInProgress &&
-               Time.realtimeSinceStartup < approvalDeadline)
+        while (joinApprovalResult == JoinApprovalResult.Pending && joinStartupInProgress && Time.realtimeSinceStartup < approvalDeadline)
         {
             yield return null;
         }
 
         // success or local teardown happened, so stop cleanly
-        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved)
+        if (!joinStartupInProgress || joinApprovalResult == JoinApprovalResult.Approved || joinApprovalResult == JoinApprovalResult.Reconnected)
         {
             joinCoroutine = null;
             yield break;
@@ -861,9 +881,18 @@ public class SteamSessionBridge : MonoBehaviour
 
     private void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
-        Debug.Log($"[SteamBridge] Join requested for lobby: {callback.m_steamIDLobby}");
-        RequestJoinLobbyById(callback.m_steamIDLobby.m_SteamID);
+        ulong lobbyId = callback.m_steamIDLobby.m_SteamID;
 
+        Debug.Log($"[SteamBridge] Steam invite requested for lobby: {callback.m_steamIDLobby}");
+
+        if (PasswordProtectedLobby.Instance != null)
+        {
+            PasswordProtectedLobby.Instance.TryJoinLobby(lobbyId);
+            return;
+        }
+
+        pendingInviteLobbyId = lobbyId;
+        hasPendingInviteLobby = true;
     }
     
     // note: only lobby owner can set the metadata
@@ -940,9 +969,13 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerJoined += OnPlayerJoinedSession;
         SessionEvents.OnPlayerLeft += OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged += SyncMetadataToSteamLobbyFromEvent;
-        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.OnStateChanged += OnGameStateChanged;    
+        }
         SessionEvents.OnSessionError += OnSessionErrorReceived;
         SessionEvents.OnPlayerJoined += OnLocalPlayerJoinApproved;
+        SessionEvents.OnReconnectApproved += OnLocalPlayerReconnectApproved;
 
     }
     
@@ -951,9 +984,13 @@ public class SteamSessionBridge : MonoBehaviour
         SessionEvents.OnPlayerJoined -= OnPlayerJoinedSession;
         SessionEvents.OnPlayerLeft -= OnPlayerLeftSession;
         SessionEvents.OnSessionDataChanged -= SyncMetadataToSteamLobbyFromEvent;
-        GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;   
+        }
         SessionEvents.OnSessionError -= OnSessionErrorReceived;
         SessionEvents.OnPlayerJoined -= OnLocalPlayerJoinApproved;
+        SessionEvents.OnReconnectApproved -= OnLocalPlayerReconnectApproved;
 
     }
 
@@ -982,8 +1019,7 @@ public class SteamSessionBridge : MonoBehaviour
     
     private void OnSessionErrorReceived(SessionErrorResponse error)
     {
-        if (!joinStartupInProgress)
-            return;
+        if (!joinStartupInProgress) return;
         
         joinApprovalResult = JoinApprovalResult.Rejected;
         
@@ -991,6 +1027,19 @@ public class SteamSessionBridge : MonoBehaviour
             JoinStartupStage.Failed,
             $"Session join failed: {error.Code} - {error.Message}",
             ConnectionFailureSource.SessionApproval);
+
+        joinStartupInProgress = false;
+    }
+    
+    private void OnLocalPlayerReconnectApproved()
+    {
+        if (!joinStartupInProgress) return;
+
+        joinApprovalResult = JoinApprovalResult.Reconnected;
+
+        SetJoinStage(
+            JoinStartupStage.SessionJoinApproved,
+            "Session reconnect approved for local player.");
 
         joinStartupInProgress = false;
     }

@@ -1,7 +1,6 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
@@ -13,7 +12,9 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         Patrol,
         Chase,
         Attack,
-        Investigate
+        Investigate,
+        Distaracted,
+        Stunned
     }
     [Header("STATE")]
     [SerializeField] private StateID currentStateID;
@@ -22,7 +23,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
     [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
     [SerializeField, Tooltip("How long the AI will stay idle before it continues to other stuff")] private float idleTimer;
-
+    
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
 
@@ -57,6 +58,8 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         stateDictionary.Add(StateID.Chase, new ChaseState(this, body));
         stateDictionary.Add(StateID.Attack, new AttackState(this, body));
         stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
+        stateDictionary.Add(StateID.Distaracted, new DistractedState(this, body));
+        stateDictionary.Add(StateID.Stunned, new StunnedState(this, body));
     }
 
     protected override void OnSpawned(bool asServer)
@@ -128,13 +131,22 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID == StateID.Chase 
-            || currentStateID == StateID.Attack 
-            || currentStateID == StateID.Alert
-            || currentStateID == StateID.Investigate) return;
-
+        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned) return;
+        
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
-        ChangeState(StateID.Alert, alertedBy.transform);
+        if (alertedBy.GetComponent<LureItem>())
+        {
+            ChangeState(StateID.Distaracted, alertedBy.transform);
+        }
+        else if (alertedBy.GetComponent<PlayerBody>())
+        {
+            PlayerBody playerBody = alertedBy.GetComponent<PlayerBody>();
+            
+            if (!playerBody.Invis.IsInvis)
+            {
+                ChangeState(StateID.Alert, playerBody.transform);
+            }
+        }
     }
 
     protected override void OnDestroy()

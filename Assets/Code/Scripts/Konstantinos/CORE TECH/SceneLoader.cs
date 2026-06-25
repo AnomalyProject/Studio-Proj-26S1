@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine;
 using System.Collections;
 using System;
 using PurrNet;
@@ -38,7 +38,6 @@ public class SceneLoader : NetworkBehaviour
     [SerializeField] string debugSceneToLoadOnStart;
     [SerializeField] bool debugUseAsync;
 
-
     // scene validation
     bool SceneExists(string sceneName)
     {
@@ -46,20 +45,14 @@ public class SceneLoader : NetworkBehaviour
         {
             string path = SceneUtility.GetScenePathByBuildIndex(i);
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
-            if (name == sceneName)
-                return true;
+            if (name == sceneName) return true;
         }
         return false;
     }
 
-    bool SceneExists(int sceneIndex)
-    {
-        return sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings;
-    }
-
-
-
-    private void Awake()
+    private bool SceneExists(int sceneIndex) => sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings;
+    
+    protected virtual void Awake()
     {
         // singleton pattern
         if (Instance != null & Instance != this)
@@ -78,14 +71,8 @@ public class SceneLoader : NetworkBehaviour
         // debug Mode
         if (debugLoadOnStart)
         {
-            if (!debugUseAsync)
-            {
-                LoadScene(debugSceneToLoadOnStart);
-            }
-            else
-            {
-                LoadSceneWithAsync(debugSceneToLoadOnStart, true);
-            }
+            if (!debugUseAsync) LoadScene(debugSceneToLoadOnStart);
+            else LoadSceneWithAsync(debugSceneToLoadOnStart, true);
         }
     }
 
@@ -96,7 +83,6 @@ public class SceneLoader : NetworkBehaviour
             Debug.LogError($"Scene '{sceneName}' does not exist!");
             return;
         }
-
         SceneManager.LoadScene(sceneName);
     }
 
@@ -177,36 +163,45 @@ public class SceneLoader : NetworkBehaviour
         }
     }
 
-    public void ReloadCurrentScene()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+    public void ReloadCurrentScene() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     #region Helpers
     public void ShowUI()
     {
-        if (loadingScreen != null)
-            loadingScreen.SetActive(true);
+        if (loadingScreen != null) loadingScreen.SetActive(true);
+        if (isSpawned) ShowUI_Observers(true);
     }
 
     public void HideUI()
     {
-        if (loadingScreen != null)
-            loadingScreen.SetActive(false);
+        if (loadingScreen != null) loadingScreen.SetActive(false);
+        if (isSpawned) ShowUI_Observers(false);
     }
 
     public void SetProgress(float value)
     {
-        if (progressBar != null)
-            progressBar.value = value;
+        if (progressBar != null) progressBar.value = value;
+        if (isSpawned) SetProgress_Observers(value);
     }
+
+    [ObserversRpc(excludeSender: true)]
+    private void ShowUI_Observers(bool show)
+    {
+        if (loadingScreen != null) loadingScreen.SetActive(show);
+    }
+    [ObserversRpc(excludeSender: true)]
+    public void SetProgress_Observers(float value)
+    {
+        if (progressBar != null) progressBar.value = value;
+    }
+
     #endregion
 
 
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
-    IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
-    IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(int sceneIndex, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneIndex, mode), showUI);
+    private IEnumerator LoadSceneAsyncEnumerator(string sceneName, bool showUI, LoadSceneMode mode = LoadSceneMode.Single) => PerformAsyncLoading(SceneManager.LoadSceneAsync(sceneName, mode), showUI);
+    private IEnumerator PerformAsyncLoading(AsyncOperation op, bool showLoadUI)
     {
         // Show loading UI if loading screen exists AND showLoadingScreen is checked
         if (showLoadUI) ShowUI();

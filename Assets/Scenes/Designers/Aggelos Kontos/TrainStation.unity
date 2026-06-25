@@ -147276,6 +147276,7 @@ MonoBehaviour:
   enteredVoidClip: {fileID: 8300000, guid: bad55524007199d45930cc0a9fb5fb6e, type: 3}
   winGameClip: {fileID: 8300000, guid: ba00133873de9b9478d37f9d63d68534, type: 3}
   warningTicksAtSeconds: 5
+  escapedVoidNarration: {fileID: 0}
 --- !u!114 &1098471649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173413,6 +173414,8 @@ MonoBehaviour:
   entryPointAnchor: {fileID: 2132361218}
   exitPointAnchor: {fileID: 756591309}
   mapMusicTheme: {fileID: 0}
+  _almanacEntry: {fileID: 0}
+  currencySpawnPoints: []
 --- !u!1 &1442236854
 GameObject:
   m_ObjectHideFlags: 0
@@ -174746,52 +174749,76 @@ MonoBehaviour:
   entryPointAnchor: {fileID: 323894282}
   exitPointAnchor: {fileID: 124268742}
   mapMusicTheme: {fileID: 0}
+  _almanacEntry: {fileID: 0}
+  currencySpawnPoints: []
   baseMap: {fileID: 33736223}
   anomalyVariations:
   - _groupRoot: {fileID: 2070209499}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1513589118}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 198524158}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1953681744}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1681480841}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 350982126}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 2084598539}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1796172436}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 637188873}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1711396957}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 2042485938}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 113839692}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1438830403}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1055144160}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 2059446654}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1929670803}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 557182620}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 2056901067}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 619435408}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 793108579}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 1546705101}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
   - _groupRoot: {fileID: 984488492}
     _replacesBaseMap: 0
+    _almanacEntry: {fileID: 0}
 --- !u!4 &1468770909
 Transform:
   m_ObjectHideFlags: 0
@@ -193926,6 +193953,10 @@ PrefabInstance:
     - target: {fileID: 4349723854473206922, guid: 9c7d0b9cd6947cd48ba721b2498e53e3, type: 3}
       propertyPath: m_Name
       value: WinRoom
+      objectReference: {fileID: 0}
+    - target: {fileID: 4349723854473206922, guid: 9c7d0b9cd6947cd48ba721b2498e53e3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -215331,6 +215362,9 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
+  OnMapStateApplied:
+    m_PersistentCalls:
+      m_Calls: []
   mapCollection:
   - {fileID: 1468770908}
   anomalyChance: 0.5

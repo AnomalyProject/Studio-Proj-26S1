@@ -10,6 +10,8 @@ public class TextChatManager : NetworkBehaviour
 
     public static Dictionary<ulong, string> PlayerNames = new Dictionary<ulong, string>();
 
+    public static bool IsDevConsoleUnlocked { get; private set; } = false;
+
     private HashSet<string> mutedPlayers = new HashSet<string>();
     private bool muteAll = false;
 
@@ -137,15 +139,13 @@ public class TextChatManager : NetworkBehaviour
 
         string cleanName = System.Text.RegularExpressions.Regex.Replace(displayName, "<.*?>", string.Empty).ToLower().Trim();
 
-        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
+        if (mutedPlayers.Contains(cleanName)) return;
 
         if (cleanName == "system")
         {
             if (ChatUI.Instance != null) ChatUI.Instance.ReceiveMessage(displayName, message);
             return;
         }
-
-        if (mutedPlayers.Any(mutedName => cleanName.Contains(mutedName))) return;
 
         if (ChatUI.Instance != null)
         {
@@ -162,6 +162,15 @@ public class TextChatManager : NetworkBehaviour
         RPCMessage(systemName, message);
     }
 
+    /// <summary>
+    /// Sets the mute status for a specific player or for all players.
+    /// </summary>
+    /// <remarks>If <paramref name="playerName"/> is "all", the mute status is applied globally to all
+    /// players. Otherwise, the mute status is set for the specified player only.</remarks>
+    /// <param name="playerName">The name of the player whose mute status is to be set. Specify "all" to set the mute status for all players. The
+    /// comparison is case-insensitive and ignores leading or trailing whitespace.</param>
+    /// <param name="muted">A value indicating whether the player or all players should be muted. Set to <see langword="true"/> to mute;
+    /// otherwise, <see langword="false"/>.</param>
     public void SetMute(string playerName, bool muted)
     {
         string cleanName = playerName.ToLower().Trim();
@@ -172,8 +181,8 @@ public class TextChatManager : NetworkBehaviour
         }
         else
         {
-            if (muted) mutedPlayers.Add(playerName);
-            else mutedPlayers.Remove(playerName);
+            if (muted) mutedPlayers.Add(cleanName);
+            else mutedPlayers.Remove(cleanName);
         }
     }
 
@@ -207,6 +216,12 @@ public class TextChatManager : NetworkBehaviour
         if(targetSteamID == 0)
         {
             SendWhisperError(info.sender, $"Player '{targetName}' not found.");
+            return;
+        }
+
+        if (targetSteamID == senderSteamID)
+        {
+            SendWhisperError(info.sender, "You cannot whisper yourself. Try socializing with others, i think its time.");
             return;
         }
 
@@ -248,5 +263,11 @@ public class TextChatManager : NetworkBehaviour
         {
             ChatUI.Instance.ReceiveMessage($"<color=red>[System]</color>", errorMessage);
         }
+    }
+
+    [ObserversRpc (runLocally: true)]
+    public void EnableCheats()
+    {
+        IsDevConsoleUnlocked = true;
     }
 }

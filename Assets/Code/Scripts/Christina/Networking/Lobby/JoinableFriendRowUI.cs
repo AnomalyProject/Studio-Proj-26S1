@@ -7,7 +7,7 @@ using TMPro;
 public class JoinableFriendRowUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text displayNameText;
-    [SerializeField] private Button joinButton;
+    public Button joinButton;
 
     private ulong lobbyID;
     private Action<ulong> onJoinPressed;
