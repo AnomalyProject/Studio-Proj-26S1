@@ -4,51 +4,59 @@ public class MiniCarMove : MonoBehaviour
 {
     [SerializeField] private float driveSpeed = 5f;
     [SerializeField] private float turnSpeed = 10f;
-    [SerializeField] private float detectRange = 0.5f;
-    [SerializeField] private float frontOffset = 0.3f;
+    [SerializeField] private float reachDistance = 0.3f;
+    [SerializeField] private Vector3 rotationOffset = Vector3.zero;
+    [SerializeField] private  Transform[] waypoints;
+    private int currentIndex = 0;
 
-    private bool isTurning = false;
-    private float rotationY;
 
     // Update is called once per frame
     void Update()
     {
-        if (isTurning)
+        if (waypoints.Length == 0)
+            return;
+
+        Drive();
+    }
+
+    private void Drive()
+    {
+        Vector3 targetWorldPos = waypoints[currentIndex].position;
+
+        targetWorldPos.y = transform.position.y;
+
+        transform.position = Vector3.MoveTowards(transform.position, targetWorldPos, driveSpeed * Time.deltaTime);
+
+        Vector3 worldDirection = targetWorldPos - transform.position;
+        if (worldDirection != Vector3.zero)
         {
-            Turn();
+            Quaternion lookRotation = Quaternion.LookRotation(worldDirection);
+
+            Quaternion correctedRotation = lookRotation * Quaternion.Euler(rotationOffset);
+
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, correctedRotation, turnSpeed * Time.deltaTime);
         }
-        else
+
+        if (Vector3.Distance(transform.position, targetWorldPos) <= reachDistance)
         {
-            DriveForward();
+            currentIndex = (currentIndex + 1) % waypoints.Length;
         }
     }
 
-    private void DriveForward()
+    private void OnDrawGizmos()
     {
-        transform.Translate(Vector3.forward * driveSpeed * Time.deltaTime, Space.Self);
+        if (waypoints == null || waypoints.Length < 2) return;
 
-        Vector3 raycast = transform.position + (transform.forward * frontOffset);
-        Ray ray = new Ray(raycast, transform.forward);
-
-        Debug.DrawRay(raycast, transform.forward * detectRange, Color.green);
-
-        if (Physics.Raycast(ray, detectRange))
+        Gizmos.color = Color.yellow;
+        for (int i = 0; i < waypoints.Length; i++)
         {
-            rotationY = transform.localEulerAngles.y + Random.Range(100f, 260f);
-            isTurning = true;
-        }
-    }
+            if (waypoints[i] == null) continue;
 
-    private void Turn()
-    {
-        float currentY = transform.localEulerAngles.y;
-        float nextY = Mathf.MoveTowardsAngle(currentY, rotationY, turnSpeed * Time.deltaTime);
-
-        transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, nextY, transform.localEulerAngles.z);
-
-        if (Mathf.Abs(Mathf.DeltaAngle(nextY, rotationY)) < 2f)
-        {
-            isTurning = false;
+            int nextIndex = (i + 1) % waypoints.Length;
+            if (waypoints[nextIndex] != null)
+            {
+                Gizmos.DrawLine(waypoints[i].position, waypoints[nextIndex].position);
+            }
         }
     }
 }
