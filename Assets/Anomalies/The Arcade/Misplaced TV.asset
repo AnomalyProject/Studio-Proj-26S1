@@ -23,22 +23,6 @@ MonoBehaviour:
     oldName: SM_Monitor_01b (4)
     newName: SM_Monitor_01b (4)
     oldActive: 1
-    newActive: 0
-    oldTag: Untagged
-    newTag: Untagged
-    oldLayer: 0
-    newLayer: 0
-    addedComponents: []
-    removedComponents: []
-    componentModifications: []
-  - guid: 778c291a-f6bc-417c-a205-ff665c5f93f6
-    oldParentGuid: c55b4bee-c702-427a-be5d-a6167f0c7821
-    newParentGuid: c55b4bee-c702-427a-be5d-a6167f0c7821
-    oldIsStatic: 0
-    newIsStatic: 0
-    oldName: Misplaced TV
-    newName: Misplaced TV
-    oldActive: 0
     newActive: 1
     oldTag: Untagged
     newTag: Untagged
@@ -46,4 +30,26 @@ MonoBehaviour:
     newLayer: 0
     addedComponents: []
     removedComponents: []
-    componentModifications: []
+    componentModifications:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      oldEnabled: 1
+      newEnabled: 1
+      fieldModifications:
+      - before:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.0,"y":1.0,"z":0.0,"w":4.7683710135970616e-7}}'
+        after:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":0.16105549037456513,"y":0.986945390701294,"z":-7.679722813236367e-8,"w":4.7061217856025907e-7}}'
+      - before:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-2.0822479724884035,"y":1.9299999475479127,"z":20.399999618530275}}'
+        after:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-2.3036160469055177,"y":2.065000057220459,"z":20.280000686645509}}'

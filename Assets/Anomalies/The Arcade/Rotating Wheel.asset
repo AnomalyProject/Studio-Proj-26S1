@@ -15,22 +15,6 @@ MonoBehaviour:
   addedGameObjects: []
   removedGameObjects: []
   gameObjectModifications:
-  - guid: 75a6b36c-c5e2-4e55-8c9c-73e84e817727
-    oldParentGuid: 3989cccf-7b70-4277-8033-b3b093880c00
-    newParentGuid: 3989cccf-7b70-4277-8033-b3b093880c00
-    oldIsStatic: 0
-    newIsStatic: 0
-    oldName: Rotating Wheel
-    newName: Rotating Wheel
-    oldActive: 0
-    newActive: 1
-    oldTag: Untagged
-    newTag: Untagged
-    oldLayer: 0
-    newLayer: 0
-    addedComponents: []
-    removedComponents: []
-    componentModifications: []
   - guid: 0b625a57-3e3e-401c-a44d-f02820d0b222
     oldParentGuid: f0102558-ead5-4ec3-9cd6-6b45489f3d85
     newParentGuid: f0102558-ead5-4ec3-9cd6-6b45489f3d85
@@ -39,11 +23,27 @@ MonoBehaviour:
     oldName: SM_Wheel_01
     newName: SM_Wheel_01
     oldActive: 1
-    newActive: 0
+    newActive: 1
     oldTag: Untagged
     newTag: Untagged
     oldLayer: 0
     newLayer: 0
-    addedComponents: []
+    addedComponents:
+    - type: HoverEffect, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      index: 0
+      enabled: 1
+      fields:
+      - path: hoverSpeed
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: hoverUpDown
+        type: 4
+        valueJson: '{"value":0.0}'
+      - path: rotation
+        type: 1
+        valueJson: '{"value":true}'
+      - path: rotationSpeed
+        type: 7
+        valueJson: '{"value":{"x":-5.0,"y":0.0,"z":0.0}}'
     removedComponents: []
     componentModifications: []
