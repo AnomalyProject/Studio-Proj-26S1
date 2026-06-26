@@ -192,6 +192,7 @@ public class ChatUI : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(text))
         {
+            RestoreAndClose();
             return;
         }
 
@@ -209,9 +210,7 @@ public class ChatUI : MonoBehaviour
             TextChatManager.Instance.SendChatMessage(text, localSteamID);
         }
 
-        chatInputField.text = "";
-        InputBridge.RestorePreviousContext();
-        CloseChat();
+        RestoreAndClose();
     }
 
     private void ProcessCommand(string input)
@@ -403,5 +402,12 @@ public class ChatUI : MonoBehaviour
             return clientSession.Players.Select(p => p.DisplayName).ToList();
         }
         return new List<string>();
+    }
+
+    private void RestoreAndClose()
+    {
+        chatInputField.text = "";
+        InputBridge.RestorePreviousContext();
+        CloseChat();
     }
 }
