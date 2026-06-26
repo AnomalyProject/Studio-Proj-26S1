@@ -26,7 +26,7 @@ pipeline {
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
         ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
-        GAME_VERSION = "0.0.${env.BUILD_NUMBER}.A"
+        GAME_VERSION = "0.0.${env.BUILD_NUMBER}a"
     }
 
     stages {
