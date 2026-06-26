@@ -8,7 +8,6 @@ public class AttackState : BaseState
 
     public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
     {
-        
     }
 
     public override void Enter()
@@ -59,7 +58,9 @@ public class AttackState : BaseState
 
     private void Outcome()
     {
-        if (hasHitTarget)
+        bool playerInvis = body.CachedPlayer != null && body.CachedPlayer.Invis.IsInvis;
+
+        if (hasHitTarget || playerInvis)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }
