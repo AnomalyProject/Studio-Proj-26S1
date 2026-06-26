@@ -16,6 +16,9 @@ public class IronMaidenTrap : MonoBehaviour
 
     [SerializeField] private Animator ironMaidenAnimator;
     [SerializeField] private float trapDuration = 5f;
+    [SerializeField] private AudioClip openSound;
+    [SerializeField] private AudioClip closeSound;
+    [SerializeField] private AudioSource audioSource;
 
     private Coroutine trapCoroutine;
     private bool isPlayerInside = false;
@@ -35,7 +38,7 @@ public class IronMaidenTrap : MonoBehaviour
     public void CloseDoors()
     {
         ironMaidenAnimator.SetBool("IsOpen", false);
-
+        audioSource.PlayOneShot(closeSound);
         Debug.Log("Player got trapped inside the Iron Maiden!");
     }
 
@@ -44,7 +47,7 @@ public class IronMaidenTrap : MonoBehaviour
         yield return new WaitForSeconds(trapDuration);
 
         ironMaidenAnimator.SetBool("IsOpen", true);
-
+        audioSource.PlayOneShot(openSound);
         Debug.Log("Player is free to leave the Iron Maiden!");
         isPlayerInside = false;
         trapCoroutine = null;
