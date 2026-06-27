@@ -15,10 +15,14 @@ public class TextChatManager : NetworkBehaviour
     private HashSet<string> mutedPlayers = new HashSet<string>();
     private bool muteAll = false;
 
+    [SerializeField] private GameObject notificationsManager;
+
     [Header("Chat Settings")]
     [SerializeField] private int maxMessageLength = 200;
     private void Awake()
     {
+        notificationsManager.SetActive(false);
+
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -268,6 +272,7 @@ public class TextChatManager : NetworkBehaviour
     [ObserversRpc (runLocally: true)]
     public void EnableCheats()
     {
+        notificationsManager.SetActive(true);
         IsDevConsoleUnlocked = true;
     }
 }
