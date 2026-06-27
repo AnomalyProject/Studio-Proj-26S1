@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a356678c934fe4418477b7a5e8b19f6, type: 3}
+  m_Name: Nemesis
+  m_EditorClassIdentifier: Assembly-CSharp::LevelModification
+  addedGameObjects: []
+  removedGameObjects: []
+  gameObjectModifications:
+  - guid: 7e1a655e-8ff8-4929-a5f0-84108acadaaa
+    oldParentGuid: 8cb09a50-c404-4d9b-a220-36c80c374dcd
+    newParentGuid: 8cb09a50-c404-4d9b-a220-36c80c374dcd
+    oldIsStatic: 0
+    newIsStatic: 0
+    oldName: Duck Head Hat
+    newName: Duck Head Hat
+    oldActive: 1
+    newActive: 0
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents: []
+    removedComponents: []
+    componentModifications: []
+  - guid: 6ae00178-4583-49f7-a221-efa3fbad46eb
+    oldParentGuid: 8cb09a50-c404-4d9b-a220-36c80c374dcd
+    newParentGuid: 8cb09a50-c404-4d9b-a220-36c80c374dcd
+    oldIsStatic: 0
+    newIsStatic: 0
+    oldName: Scale_Of_Justice
+    newName: Scale_Of_Justice
+    oldActive: 0
+    newActive: 1
+    oldTag: Untagged
+    newTag: Untagged
+    oldLayer: 0
+    newLayer: 0
+    addedComponents: []
+    removedComponents: []
+    componentModifications:
+    - type: UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      index: 0
+      oldEnabled: 1
+      newEnabled: 1
+      fieldModifications:
+      - before:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":-0.3935486674308777,"y":0.587468683719635,"z":0.587468683719635,"w":0.3935486674308777}}'
+        after:
+          path: m_LocalRotation
+          type: 9
+          valueJson: '{"value":{"x":-0.34260863065719607,"y":0.6185623407363892,"z":0.6185623407363892,"w":0.34260863065719607}}'
+      - before:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-65.34500885009766,"y":13.583000183105469,"z":1.4829940795898438}}'
+        after:
+          path: m_LocalPosition
+          type: 7
+          valueJson: '{"value":{"x":-65.34500122070313,"y":14.22700023651123,"z":1.4140000343322755}}'
