@@ -8,16 +8,18 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_BlackBricks_01
-  m_Shader: {fileID: -6465566751694194690, guid: 233ba87e7975e2b4594314704a00d3e4, type: 3}
+  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _DISABLE_SSR_TRANSPARENT
+  m_ValidKeywords:
+  - _NORMALMAP
+  - _OCCLUSIONMAP
+  - _SPECULAR_SETUP
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2475
+  m_CustomRenderQueue: -1
   stringTagMap:
     MotionVector: User
     RenderType: Opaque
@@ -101,7 +103,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
         m_Texture: {fileID: 2800000, guid: 421dc92481a486d4186976e43c104db1, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 2, y: 2}
         m_Offset: {x: 0, y: 0}
     - _BaseNormalMap:
         m_Texture: {fileID: 2800000, guid: 979d5776a45220b4fbfdbb5d0e36229c, type: 3}
@@ -119,7 +121,27 @@ Material:
         m_Texture: {fileID: 2800000, guid: df8b5af763a28334481fefabb97ae4e9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 979d5776a45220b4fbfdbb5d0e36229c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DirtMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -139,7 +161,15 @@ Material:
         m_Texture: {fileID: 2800000, guid: 421dc92481a486d4186976e43c104db1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 421dc92481a486d4186976e43c104db1, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
     - _Mask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -187,7 +217,15 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 2800000, guid: b6ba5318cc3bac245a2bf8899b618436, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OpacityMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -197,6 +235,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _SecondBaseMap:
         m_Texture: {fileID: 2800000, guid: ef250a92189c770458d1984d8987729a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -259,7 +301,10 @@ Material:
     - _BottomSaturation: 1
     - _Bottom_Tiling: 2
     - _Brightness: 2
+    - _BumpScale: 1
     - _CastShadows: 1
+    - _ClearCoatMask: 0
+    - _ClearCoatSmoothness: 0
     - _Color_Variation_Int: 1
     - _ConservativeDepthOffsetEnable: 0
     - _Contrast_B: 1
@@ -270,7 +315,10 @@ Material:
     - _Cull: 2
     - _CullMode: 2
     - _CullModeForward: 2
+    - _Cutoff: 0.5
     - _DepthOffsetEnable: 0
+    - _DetailAlbedoMapScale: 1
+    - _DetailNormalMapScale: 1
     - _Detail_Colour_Int: 0
     - _Detail_Roughness: 0
     - _Details_Nrm_Intensity: 1
@@ -289,8 +337,12 @@ Material:
     - _Emissive_Power: 1
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
+    - _EnvironmentReflections: 1
     - _Flatness: 3.06
     - _Float: 0
+    - _GlossMapScale: 0
+    - _Glossiness: 0
+    - _GlossyReflections: 0
     - _Hue: 1
     - _Mask_Intensity: 1
     - _Max_Roughness: 1
@@ -305,9 +357,11 @@ Material:
     - _NormalStrength: 1
     - _NormalStrength_R: 1
     - _Nrm_Intensity: 1
+    - _OcclusionStrength: 0.4
     - _Opacity_Gradient_Intensity: 1
     - _Opacity_Intensity: 1
     - _OpaqueCullMode: 2
+    - _Parallax: 0.005
     - _QueueControl: 1
     - _QueueOffset: 0
     - _RGBA_MASK: 0
@@ -327,6 +381,9 @@ Material:
     - _SaturationValue: 1
     - _Saturation_B: 1
     - _Saturation_R: 1
+    - _Smoothness: 0.1
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _StencilRef: 0
@@ -364,7 +421,8 @@ Material:
     - _Wetness_Colour: 0
     - _Wetness_Colour_Int: 0
     - _Wetness_Roughness: 0
-    - _WorkflowMode: 1
+    - _WorkflowMode: 0
+    - _XRMotionVectorsPass: 1
     - _ZTest: 4
     - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 3
@@ -381,9 +439,11 @@ Material:
     - _Albedo_Tint: {r: 1, g: 1, b: 1, a: 0}
     - _Albedo_Tint_B: {r: 1, g: 1, b: 1, a: 0}
     - _Albedo_Tint_R: {r: 1, g: 1, b: 1, a: 0}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor_Value: {r: 1, g: 1, b: 1, a: 1}
     - _BaseTint: {r: 0.7924528, g: 0.7887148, b: 0.7887148, a: 1}
     - _BottomTint: {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Colour_Variation: {r: 1, g: 1, b: 1, a: 0}
     - _Crevice_Colour: {r: 1, g: 1, b: 1, a: 0}
     - _Detail_Colour: {r: 1, g: 1, b: 1, a: 0}
@@ -406,6 +466,7 @@ Material:
     - _RemapNoiseIn: {r: 0, g: 1, b: 0, a: 0}
     - _RemapNoiseOut: {r: -5, g: 5, b: 0, a: 0}
     - _SecondBaseMapColor: {r: 0.7924528, g: 0.7924528, b: 0.7924528, a: 0}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _UV_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _UV_Offset_B: {r: 0, g: 0, b: 0, a: 0}
     - _UV_Offset_R: {r: 0, g: 0, b: 0, a: 0}
