@@ -1,8 +1,8 @@
-import re
+from pathlib import Path
+from tqdm import tqdm
 import subprocess
 import sys
-from tqdm import tqdm
-from pathlib import Path
+import re
 
 try:
     from tqdm import tqdm
