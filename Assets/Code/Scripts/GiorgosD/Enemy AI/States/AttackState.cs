@@ -16,6 +16,8 @@ public class AttackState : BaseState
 
         Debug.Log("Attacking");
         
+        sound.SelectGrowl(brain.CurrentStateID);
+        
         target = brain.TargetPos;
         hasHitTarget = false;
         
@@ -38,8 +40,6 @@ public class AttackState : BaseState
     private void DoAttack()
     {
         if (target == null) return;
-        
-        sound.SelectGrowl(brain.CurrentStateID);
         
         if (body.IsHitSuccess(target))
         {
