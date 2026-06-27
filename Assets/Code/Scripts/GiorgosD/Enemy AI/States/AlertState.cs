@@ -3,7 +3,7 @@ using UnityEngine;
 public class AlertState : BaseState
 {
     private Transform target;
-    public AlertState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public AlertState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
 
     }
@@ -14,8 +14,8 @@ public class AlertState : BaseState
 
         target = brain.TargetPos;
         
-        // Play sound and/or animation to indicate the enemy is alert.
-
+        sound.SelectGrowl();
+        
         body.OnPlayerSpotted.AddListener(PlayerFound);
     }
 

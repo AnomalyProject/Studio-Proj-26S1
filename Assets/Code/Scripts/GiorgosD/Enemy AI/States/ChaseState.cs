@@ -4,7 +4,7 @@ public class ChaseState : BaseState
 {
     private Transform target;
 
-    public ChaseState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public ChaseState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
         
     }

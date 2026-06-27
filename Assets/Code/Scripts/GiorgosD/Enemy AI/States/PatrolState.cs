@@ -5,7 +5,7 @@ public class PatrolState : BaseState
 {
     private static int pointIndex = -1;
 
-    public PatrolState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public PatrolState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
 
     }

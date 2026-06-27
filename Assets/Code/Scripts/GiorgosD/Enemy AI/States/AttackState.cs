@@ -6,7 +6,7 @@ public class AttackState : BaseState
     private Transform target;
     private bool hasHitTarget;
 
-    public AttackState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public AttackState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
     }
 
@@ -38,6 +38,8 @@ public class AttackState : BaseState
     private void DoAttack()
     {
         if (target == null) return;
+        
+        sound.SelectGrowl();
         
         if (body.IsHitSuccess(target))
         {

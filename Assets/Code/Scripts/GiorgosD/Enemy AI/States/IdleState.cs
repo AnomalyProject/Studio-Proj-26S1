@@ -3,7 +3,7 @@ using UnityEngine;
 public class IdleState : BaseState
 {
     private float timer;
-    public IdleState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public IdleState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
         
     }

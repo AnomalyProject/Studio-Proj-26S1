@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DistractedState : BaseState
 {
-    public DistractedState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public DistractedState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
     }
 
