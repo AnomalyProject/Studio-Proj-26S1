@@ -17,7 +17,7 @@ public class LevelCatalog : ScriptableObject
 
         for (int i = 0; i < levels.Count; i++)
         {
-            if (levels[i] != null && levels[i].AvailableInLobby && levels[i].Id == id)
+            if (levels[i] != null && levels[i].Id == id)
             {
                 level = levels[i];
                 return true;
@@ -33,7 +33,7 @@ public class LevelCatalog : ScriptableObject
 
         for (int i = 0; i < levels.Count; i++)
         {
-            if (levels[i] != null && levels[i].AvailableInLobby)
+            if (levels[i] != null)
             {
                 level = levels[i];
                 return true;
@@ -59,7 +59,7 @@ public class LevelCatalog : ScriptableObject
             int index = (startIndex + step * offset + levels.Count) % levels.Count;
             LevelDefinition candidate = levels[index];
 
-            if (candidate != null && candidate.AvailableInLobby)
+            if (candidate != null)
             {
                 level = candidate;
                 return true;
@@ -86,13 +86,11 @@ public class LevelDefinition
 {
     [SerializeField] private string id;
     [SerializeField] private string displayName;
-    [SerializeField] private string sceneName;
+    [SerializeField] private int mapIndex;
     [SerializeField] private Sprite preview;
-    [SerializeField] private bool availableInLobby = true;
 
     public string Id => id;
     public string DisplayName => displayName;
-    public string SceneName => sceneName;
+    public int MapIndex => mapIndex;
     public Sprite Preview => preview;
-    public bool AvailableInLobby => availableInLobby;
 }

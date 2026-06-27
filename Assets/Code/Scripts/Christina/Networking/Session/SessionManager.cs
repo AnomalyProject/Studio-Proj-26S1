@@ -861,7 +861,6 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         sessionStore.Current.ResetReadyStates();
 
         SendSessionUpdate();
-        Debug.Log($"[SessionManager] Selected level: {level.DisplayName} ({level.SceneName})");
 
         return SessionCommandResult.Succeeded();
     }
@@ -877,7 +876,7 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     private void ApplyLevelSelection(SessionData session, LevelDefinition level)
     {
         session.SelectedLevelId = level.Id;
-        session.SelectedLevelSceneName = level.SceneName;
+        session.SelectedLevelMapIndex  = level.MapIndex;
         session.MapName = level.DisplayName;
     }
 

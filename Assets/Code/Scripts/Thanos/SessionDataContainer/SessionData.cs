@@ -53,7 +53,6 @@ public struct ClientPlayerInfo
 public struct ClientSessionData
 {
     public ulong HostSteamID;
-    public string MapName;
     public string GameMode;
     public int MaxPlayers;
     public int PlayerCount;
@@ -62,6 +61,7 @@ public struct ClientSessionData
     
     // level selection
     public string SelectedLevelId;
+    public string MapName;
 
     //workaround for serialization issues with Dictionaries
     public List<string> CustomPropertyKeys;
@@ -87,7 +87,7 @@ public class SessionData
     
     // level selection
     public string SelectedLevelId { get; set; }
-    public string SelectedLevelSceneName { get; set; }
+    public int SelectedLevelMapIndex  { get; set; }
 
 
     public SessionData()

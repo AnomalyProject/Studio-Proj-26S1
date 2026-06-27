@@ -125,7 +125,7 @@ public class GameManager : NetworkBehaviour
             mapChangeCoroutine = null;
         }
 
-        anomalyManager.PickMap_Server();
+        PickStartingMap();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
         InvokeOnProgressChanged(CurrentProgress);
@@ -422,6 +422,20 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Helpers
+
+    private void PickStartingMap()
+    {
+        if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
+        {
+            int selectedIndex = SessionManager.Instance.CurrentSession.SelectedLevelMapIndex;
+            anomalyManager.PickMapByIndex_Server(selectedIndex);
+            return;
+        }
+        
+        // fallback case
+        anomalyManager.PickMap_Server();
+    }
+    
     private bool TryStartCooldown()
     {
         if (ElevatorCoolDown) return false;

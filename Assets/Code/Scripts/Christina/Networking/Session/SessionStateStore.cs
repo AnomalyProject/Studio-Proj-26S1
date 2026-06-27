@@ -38,7 +38,7 @@ public class SessionStateStore
         data.HostSteamID = hostSteamID;
         data.MapName = "Main Gameplay";
         data.SelectedLevelId = "main_gameplay";
-        data.SelectedLevelSceneName = "MainGameplayScene";
+        //data.SelectedLevelSceneName = "MainGameplayScene";
         data.GameMode = "Default";
         data.MaxPlayers = 4;
         
