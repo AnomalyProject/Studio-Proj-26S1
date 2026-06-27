@@ -158,6 +158,7 @@ public class EnemyPawn : NetworkBehaviour
 
         if (controller != null) controller.enabled = true;
 
+        cachedPlayer = null;
     }
     #endregion
 

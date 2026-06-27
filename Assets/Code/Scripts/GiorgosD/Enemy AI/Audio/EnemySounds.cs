@@ -101,6 +101,8 @@ public class EnemySounds : NetworkBehaviour
     {
         if (voiceAudio.isPlaying)
         {
+            if (stateID == EnemyBrain.StateID.Alert && voiceAudio.clip != null && alertedGrowls.Contains(voiceAudio.clip)) return;
+            
             bool isMustPlay = stateID == EnemyBrain.StateID.Alert ||
                          stateID == EnemyBrain.StateID.Attack ||
                          stateID == EnemyBrain.StateID.Stunned;
