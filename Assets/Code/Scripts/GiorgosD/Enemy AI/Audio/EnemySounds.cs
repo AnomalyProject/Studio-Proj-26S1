@@ -12,10 +12,8 @@ public class EnemySounds : MonoBehaviour
 
     public void FootStep()
     {
-        Debug.LogError("FootStep");
+        int index = Random.Range(minFootSteps, maxFootSteps);
         
-        //int index = Random.Range(minFootSteps, maxFootSteps);
-        
-        //audioSource.PlayOneShot(footSteps[index]);
+        audioSource.PlayOneShot(footSteps[index]);
     }
 }
