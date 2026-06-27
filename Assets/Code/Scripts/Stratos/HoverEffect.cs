@@ -11,7 +11,7 @@ public class HoverEffect : MonoBehaviour
 
     private Vector3 startLocPos;
 
-    private void OnEnable()
+    private void Start()
     {
         startLocPos = transform.localPosition;
     }
@@ -25,7 +25,7 @@ public class HoverEffect : MonoBehaviour
     {
         float hoverY = startLocPos.y + (Mathf.Sin(Time.time * hoverSpeed) * hoverUpDown);
 
-        transform.position = new Vector3(startLocPos.x, hoverY, startLocPos.z);
+        transform.localPosition = new Vector3(startLocPos.x, hoverY, startLocPos.z);
 
         if (rotation)
         {
