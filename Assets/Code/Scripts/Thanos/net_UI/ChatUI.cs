@@ -192,6 +192,7 @@ public class ChatUI : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(text))
         {
+            RestoreAndClose();
             return;
         }
 
@@ -209,9 +210,7 @@ public class ChatUI : MonoBehaviour
             TextChatManager.Instance.SendChatMessage(text, localSteamID);
         }
 
-        chatInputField.text = "";
-        InputBridge.RestorePreviousContext();
-        CloseChat();
+        RestoreAndClose();
     }
 
     private void ProcessCommand(string input)
@@ -221,6 +220,10 @@ public class ChatUI : MonoBehaviour
 
         switch (command)
         {
+            case "/iamadeveloper":
+                TextChatManager.Instance.EnableCheats();
+                ReceiveMessage("<color=#FFD700>[System]</color>", "Developer mode enabled! You can now use the Dev Console");
+                break;
             case "/mute":
                 if (parts.Length > 1) MutePlayer(string.Join(" ", parts, 1, parts.Length - 1));
                 break;
@@ -399,5 +402,12 @@ public class ChatUI : MonoBehaviour
             return clientSession.Players.Select(p => p.DisplayName).ToList();
         }
         return new List<string>();
+    }
+
+    private void RestoreAndClose()
+    {
+        chatInputField.text = "";
+        InputBridge.RestorePreviousContext();
+        CloseChat();
     }
 }
