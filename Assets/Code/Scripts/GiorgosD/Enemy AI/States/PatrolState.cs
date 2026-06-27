@@ -34,6 +34,8 @@ public class PatrolState : BaseState
     /// </summary>
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);

@@ -550,7 +550,10 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
-  currentStateID: 0
+  currentStateID:
+    _value: 0
+    _ownerAuth: 0
+    _sendIntervalInSeconds: 0
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -3552,6 +3555,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26c4975f897e573419c80673124f038f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySounds
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   brain: {fileID: 5561190351584055429}
   feetAudio: {fileID: 8702256645544858296}
   voiceAudio: {fileID: 5241571812194433436}
@@ -3561,10 +3573,24 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1c205578fdad00549947d85e6d95d29b, type: 3}
   - {fileID: 8300000, guid: 27a17b4b3f66ae34d8dd9673595dbe97, type: 3}
   - {fileID: 8300000, guid: 4676fc28f33b26a439ce98d6f05c1134, type: 3}
-  normalGrowls: []
-  alertedGrowls: []
-  chaseGrowls: []
-  damagedGrowls: []
+  normalGrowls:
+  - {fileID: 8300000, guid: 90a78e3b3b1f0cb4eaa5d2bc76fdc9d8, type: 3}
+  - {fileID: 8300000, guid: 90daa381c35ebc74ab73d33a110b784d, type: 3}
+  - {fileID: 8300000, guid: 8546f0fb2ba8c894dbd9d1e0fbd2430a, type: 3}
+  alertedGrowls:
+  - {fileID: 8300000, guid: 66989a70335a8534482776dc5ed1b66b, type: 3}
+  - {fileID: 8300000, guid: dcddda3e1c1497943845ce05af428fd4, type: 3}
+  - {fileID: 8300000, guid: 169bbb6dbd77ebc4d8ebde1c589e2d62, type: 3}
+  chaseGrowls:
+  - {fileID: 8300000, guid: fa143754617182c4693a0892d88c6f1b, type: 3}
+  - {fileID: 8300000, guid: c19db046c998c4c46971e3f911ee8086, type: 3}
+  damagedGrowls:
+  - {fileID: 8300000, guid: f38780cbbd7a7e141b5f83a35d4fdb27, type: 3}
+  - {fileID: 8300000, guid: a15b2ffcb46447b47a20c1064c66eb18, type: 3}
+  - {fileID: 8300000, guid: 5295cba9af3002146bb5bf4b02caa404, type: 3}
+  attackGrowls:
+  - {fileID: 8300000, guid: 4b97ff1e37073f34abadce9e15302da4, type: 3}
+  - {fileID: 8300000, guid: 64bd78b1bc7f3cf44a856f6b104795cb, type: 3}
 --- !u!95 &6143667513356890738 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 3490026887111630760, guid: e0a2ae8d8ae1c1f4b83e337da0b6f6b4, type: 3}

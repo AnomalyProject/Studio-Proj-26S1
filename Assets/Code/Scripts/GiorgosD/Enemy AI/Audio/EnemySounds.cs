@@ -27,6 +27,8 @@ public class EnemySounds : NetworkBehaviour
 
     private int minAttackGrowls = 0;
     private int maxAttackGrowls;
+
+    private bool isMustPlay;
     
     [Header("Audio Sounds")]
     [SerializeField] private AudioClip[] footSteps;
@@ -69,11 +71,13 @@ public class EnemySounds : NetworkBehaviour
     [ObserversRpc]
     public void SelectGrowl()
     {
+        isMustPlay = brain.CurrentStateID == EnemyBrain.StateID.Alert ||
+                     brain.CurrentStateID == EnemyBrain.StateID.Attack ||
+                     brain.CurrentStateID == EnemyBrain.StateID.Stunned;
+        
         switch (brain.CurrentStateID)
         {
             case EnemyBrain.StateID.Idle:
-                Growl(minNormalGrowls, maxNormalGrowls, normalGrowls);
-                break;
             case EnemyBrain.StateID.Patrol:
                 Growl(minNormalGrowls, maxNormalGrowls, normalGrowls);
                 break;
@@ -100,6 +104,13 @@ public class EnemySounds : NetworkBehaviour
     /// <param name="growls"></param>
     private void Growl(int minGrowl, int maxGrowl, AudioClip[] growls)
     {
+        if (!isMustPlay && voiceAudio.isPlaying) return;
+
+        if (isMustPlay)
+        {
+            voiceAudio.Stop();
+        }
+        
         int index = Random.Range(minGrowl, maxGrowl);
         
         voiceAudio.PlayOneShot(growls[index]);

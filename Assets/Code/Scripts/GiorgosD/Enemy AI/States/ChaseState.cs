@@ -24,6 +24,8 @@ public class ChaseState : BaseState
     /// </summary>
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         target = brain.TargetPos;
 
         if (target == null)

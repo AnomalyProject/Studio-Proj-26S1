@@ -21,6 +21,8 @@ public class IdleState : BaseState
 
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         timer -= Time.deltaTime;
         if (timer <= 0)
         {

@@ -2,6 +2,7 @@ using PurrNet;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
 {
@@ -19,6 +20,11 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     [Header("STATE")]
     [SerializeField] private SyncVar<StateID> currentStateID;
 
+    [Header("Voice Timer")] 
+    [SerializeField] private float minVoiceTimer = 10;
+    [SerializeField] private float maxVoiceTimer = 20;
+    private float voiceTimer;
+    
     [Header("Patrol Settings")]
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
     [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
@@ -96,6 +102,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
         currentState?.Exit();
         currentStateID.value = newStateID;
+        ResetVoiceTimer();
         currentState = stateDictionary[newStateID];
         currentState.Enter();
         OnStateChanged?.Invoke(currentState);
@@ -149,6 +156,30 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
             {
                 ChangeState(StateID.Alert, playerBody.transform);
             }
+        }
+    }
+    
+    /// <summary>
+    /// Called on the on State changed
+    /// </summary>
+    private void ResetVoiceTimer()
+    {
+        voiceTimer = Random.Range(minVoiceTimer, maxVoiceTimer);
+    }
+
+    /// <summary>
+    /// Count down for next voice line play.
+    /// </summary>
+    public void ReduceTimer()
+    {
+        if (voiceTimer <= 0)
+        {
+            sound.SelectGrowl();
+            ResetVoiceTimer();
+        }
+        else
+        {
+            voiceTimer -= Time.deltaTime;
         }
     }
 

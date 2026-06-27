@@ -19,6 +19,8 @@ public class DistractedState : BaseState
 
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         if (body.agent.remainingDistance > body.agent.stoppingDistance) return;
         
         // Hack
