@@ -3,9 +3,11 @@ using UnityEngine;
 public class EnemySounds : MonoBehaviour
 {
     [Header("Refrence")]
-    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioSource feetAudio;
     [SerializeField] private int minFootSteps = 0;
     [SerializeField] private int maxFootSteps = 4;
+    
+    [SerializeField] private AudioSource voiceAudio;
     
     [Header("Audio Sounds")]
     [SerializeField] private AudioClip[] footSteps;
@@ -14,6 +16,6 @@ public class EnemySounds : MonoBehaviour
     {
         int index = Random.Range(minFootSteps, maxFootSteps);
         
-        audioSource.PlayOneShot(footSteps[index]);
+        feetAudio.PlayOneShot(footSteps[index]);
     }
 }
