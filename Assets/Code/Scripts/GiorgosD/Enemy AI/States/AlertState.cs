@@ -14,7 +14,7 @@ public class AlertState : BaseState
 
         target = brain.TargetPos;
         
-        sound.SelectGrowl();
+        sound.SelectGrowl(brain.CurrentStateID);
         
         body.OnPlayerSpotted.AddListener(PlayerFound);
     }

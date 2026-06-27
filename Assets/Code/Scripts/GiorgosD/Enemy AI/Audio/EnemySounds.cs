@@ -1,3 +1,4 @@
+using System.Linq;
 using PurrNet;
 using UnityEngine;
 
@@ -27,8 +28,6 @@ public class EnemySounds : NetworkBehaviour
 
     private int minAttackGrowls = 0;
     private int maxAttackGrowls;
-
-    private bool isMustPlay;
     
     [Header("Audio Sounds")]
     [SerializeField] private AudioClip[] footSteps;
@@ -69,29 +68,25 @@ public class EnemySounds : NetworkBehaviour
     /// Helper that choses what kind of growl should play
     /// </summary>
     [ObserversRpc]
-    public void SelectGrowl()
+    public void SelectGrowl(EnemyBrain.StateID stateID)
     {
-        isMustPlay = brain.CurrentStateID == EnemyBrain.StateID.Alert ||
-                     brain.CurrentStateID == EnemyBrain.StateID.Attack ||
-                     brain.CurrentStateID == EnemyBrain.StateID.Stunned;
-        
-        switch (brain.CurrentStateID)
+        switch (stateID)
         {
             case EnemyBrain.StateID.Idle:
             case EnemyBrain.StateID.Patrol:
-                Growl(minNormalGrowls, maxNormalGrowls, normalGrowls);
+                Growl(minNormalGrowls, maxNormalGrowls, normalGrowls, stateID);
                 break;
             case EnemyBrain.StateID.Alert:
-                Growl(minAlertedGrowls, maxAlertedGrowls, alertedGrowls);
+                Growl(minAlertedGrowls, maxAlertedGrowls, alertedGrowls, stateID);
                 break;
             case EnemyBrain.StateID.Chase:
-                Growl(minChaseGrowls, maxChaseGrowls, chaseGrowls);
+                Growl(minChaseGrowls, maxChaseGrowls, chaseGrowls, stateID);
                 break;
             case EnemyBrain.StateID.Stunned:
-                Growl(minDamagedGrowls, maxDamagedGrowls, damagedGrowls);
+                Growl(minDamagedGrowls, maxDamagedGrowls, damagedGrowls, stateID);
                 break;
             case EnemyBrain.StateID.Attack:
-                Growl(minAttackGrowls, maxAttackGrowls, attackGrowls);
+                Growl(minAttackGrowls, maxAttackGrowls, attackGrowls, stateID);
                 break;
         }
     }
@@ -102,18 +97,25 @@ public class EnemySounds : NetworkBehaviour
     /// <param name="minGrowl"></param>
     /// <param name="maxGrowl"></param>
     /// <param name="growls"></param>
-    private void Growl(int minGrowl, int maxGrowl, AudioClip[] growls)
+    private void Growl(int minGrowl, int maxGrowl, AudioClip[] growls, EnemyBrain.StateID stateID)
     {
-        if (!isMustPlay && voiceAudio.isPlaying) return;
-
-        if (isMustPlay)
+        if (voiceAudio.isPlaying)
         {
+            bool isMustPlay = stateID == EnemyBrain.StateID.Alert ||
+                         stateID == EnemyBrain.StateID.Attack ||
+                         stateID == EnemyBrain.StateID.Stunned;
+            
+            if (!isMustPlay) return;
+            
+            if (stateID == EnemyBrain.StateID.Chase && voiceAudio.clip != null && chaseGrowls.Contains(voiceAudio.clip)) return;
+            
             voiceAudio.Stop();
         }
         
         int index = Random.Range(minGrowl, maxGrowl);
         
-        voiceAudio.PlayOneShot(growls[index]);
+        voiceAudio.clip = growls[index];
+        voiceAudio.Play();
     }
     #endregion
 }

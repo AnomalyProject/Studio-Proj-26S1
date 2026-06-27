@@ -16,7 +16,7 @@ public class StunnedState : BaseState
         // Start stun countdown
         timer = body.StunDuration;
 
-        sound.SelectGrowl();
+        sound.SelectGrowl(brain.CurrentStateID);
 
         if (body.anim != null)
             body.anim.SetBool("IsStunned", true);

@@ -18,11 +18,11 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         Stunned
     }
     [Header("STATE")]
-    [SerializeField] private SyncVar<StateID> currentStateID;
+    [SerializeField] private StateID currentStateID;
 
     [Header("Voice Timer")] 
-    [SerializeField] private float minVoiceTimer = 10;
-    [SerializeField] private float maxVoiceTimer = 20;
+    [SerializeField] private float minVoiceTimer = 5;
+    [SerializeField] private float maxVoiceTimer = 8;
     private float voiceTimer;
     
     [Header("Patrol Settings")]
@@ -54,7 +54,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     public Transform TargetPos => targetPos;
     public float IdleTime => idleTimer;
     public List<Transform> RespawnPoints => respawnPoints;
-    public StateID CurrentStateID => currentStateID.value;
+    public StateID CurrentStateID => currentStateID;
 
     private void Awake()
     {
@@ -101,7 +101,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         if (target != null) targetPos = target;
 
         currentState?.Exit();
-        currentStateID.value = newStateID;
+        currentStateID = newStateID;
         ResetVoiceTimer();
         currentState = stateDictionary[newStateID];
         currentState.Enter();
@@ -141,7 +141,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID.value == StateID.Distaracted || currentStateID.value == StateID.Stunned) return;
+        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned) return;
         
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
         if (alertedBy.GetComponent<LureItem>())
@@ -174,7 +174,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (voiceTimer <= 0)
         {
-            sound.SelectGrowl();
+            sound.SelectGrowl(currentStateID);
             ResetVoiceTimer();
         }
         else

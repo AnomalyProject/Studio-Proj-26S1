@@ -39,11 +39,11 @@ public class AttackState : BaseState
     {
         if (target == null) return;
         
-        sound.SelectGrowl();
+        sound.SelectGrowl(brain.CurrentStateID);
         
         if (body.IsHitSuccess(target))
         {
-            int randomIndex = UnityEngine.Random.Range(0, brain.RespawnPoints.Count);
+            int randomIndex = Random.Range(0, brain.RespawnPoints.Count);
             Transform targetPoint = brain.RespawnPoints[randomIndex];
 
             var playerID = target.GetComponent<NetworkIdentity>();
