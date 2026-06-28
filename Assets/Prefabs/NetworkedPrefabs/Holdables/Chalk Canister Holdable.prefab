@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 720702730603848073}
   - component: {fileID: 4063848119617448307}
+  - component: {fileID: 790732501938787178}
   - component: {fileID: 2301451609993079832}
   - component: {fileID: 7486213919174757406}
   - component: {fileID: 4740218615345811935}
@@ -62,12 +63,41 @@ MonoBehaviour:
   canvases: []
   onLocalSpawn:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 790732501938787178}
+        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
+        m_MethodName: PlayNarration
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   almanacEntry: {fileID: 11400000, guid: e55b4a0197933e54980d979e649ed5bb, type: 2}
-  fadeInSpeed: 0.2
+  invisibleTimer: 15
   audioSource: {fileID: 2301451609993079832}
   particles: {fileID: 7486213919174757406}
   OnUsed:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &790732501938787178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6922926630768273016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
+  triggerOnce: 1
+  entry: {fileID: 11400000, guid: e3e4f7bd8833c104693c9bc644b4dcee, type: 2}
+  onNarrationFinished:
     m_PersistentCalls:
       m_Calls: []
 --- !u!82 &2301451609993079832
