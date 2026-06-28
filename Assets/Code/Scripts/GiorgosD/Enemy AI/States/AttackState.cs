@@ -1,4 +1,3 @@
-using PurrNet;
 using UnityEngine;
 
 public class AttackState : BaseState
@@ -14,11 +13,18 @@ public class AttackState : BaseState
     {
         base.Enter();
 
+        target = brain.TargetPos;
+        
+        if (body.IsAttackCooldown)
+        {
+            brain.ChangeState(EnemyBrain.StateID.Chase, target);
+            return;
+        }
+        
         Debug.Log("Attacking");
         
         sound.SelectGrowl(brain.CurrentStateID);
         
-        target = brain.TargetPos;
         hasHitTarget = false;
         
         body.OnStartAttack.AddListener(DoAttack);
@@ -41,20 +47,29 @@ public class AttackState : BaseState
     {
         if (target == null) return;
         
+        PlayerBody player = target.GetComponent<PlayerBody>();
+        if (player != null && player.Invis.IsInvis)
+        {
+            hasHitTarget = false;
+            return; 
+        }
+        
         if (body.IsHitSuccess(target))
         {
             int randomIndex = Random.Range(0, brain.RespawnPoints.Count);
             Transform targetPoint = brain.RespawnPoints[randomIndex];
+            
+            hasHitTarget = true;
 
-            var playerID = target.GetComponent<NetworkIdentity>();
-
-            body.TeleportToSpawn(targetPoint.position, playerID);
+            body.TeleportToSpawn(targetPoint.position, player);
 
             Debug.Log("Player Attacked");
         
             body.InvokeAttacked(target.GetComponent<PlayerBody>());
-            
-            hasHitTarget = true;
+        }
+        else
+        {
+            hasHitTarget = false;
         }
     }
 
@@ -62,7 +77,7 @@ public class AttackState : BaseState
     {
         bool playerInvis = body.CachedPlayer != null && body.CachedPlayer.Invis.IsInvis;
 
-        if (hasHitTarget || playerInvis)
+        if (playerInvis || hasHitTarget)
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }

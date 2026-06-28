@@ -14,6 +14,8 @@ public class EnemyPawn : NetworkBehaviour
     public NavMeshPath path { get; private set; }
     public NetworkAnimator anim { get; private set; }
 
+    private EnemyBrain brain;
+
     [Header("Sight")]
     [SerializeField, Tooltip("How far in front of it can see")] private float sightRange;
     [SerializeField, Tooltip("How close the player need to be for the AI to cinsider him 'touch' distance")] private float autoDetectRange;
@@ -45,6 +47,12 @@ public class EnemyPawn : NetworkBehaviour
     [Header("Attack")]
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
+    private bool isAttackCooldown;
+    [SerializeField] private float attackTimer = 3.0f;
+    private float attackTimerReset;
+
+    public bool IsAttackCooldown => isAttackCooldown;
+
     #endregion
     
     #region Events
@@ -60,8 +68,10 @@ public class EnemyPawn : NetworkBehaviour
     {
         anim = GetComponentInChildren<NetworkAnimator>();
         agent = GetComponent<NavMeshAgent>();
+        brain = GetComponent<EnemyBrain>();
         path = new();
         sightAngleNormal = sightAngle;
+        attackTimerReset = attackTimer;
     }
     
     private void Update()
@@ -70,6 +80,8 @@ public class EnemyPawn : NetworkBehaviour
 
         Sight();
 
+        AttackCooldown();
+        
         if (!hasPlayer)
         {
             LostTimer();
@@ -133,6 +145,9 @@ public class EnemyPawn : NetworkBehaviour
 
         Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, attackHitBox / 2, transform.rotation, playerLayer);
 
+        isAttackCooldown = true;
+        attackTimer = attackTimerReset;
+        
         return Array.Exists(hitColliders, c => c.transform == player);
     }
 
@@ -142,14 +157,14 @@ public class EnemyPawn : NetworkBehaviour
     /// <param name="spawn"></param>
     /// <param name="player"></param>
     [ObserversRpc]
-    public void TeleportToSpawn(Vector3 spawn, NetworkIdentity player)
+    public void TeleportToSpawn(Vector3 spawn, PlayerBody player)
     {
-        if (!player.isOwner || player.transform.position == null) return;
+        if (player == null) return;
+        
 
-        PlayerBody playerBody = player.GetComponent<PlayerBody>();
-
-        if (playerBody.Invis.IsInvis) return;
-
+        if (player.Invis.IsInvis) return;
+        
+        
         var controller = player.GetComponent<CharacterController>();
 
         if (controller != null) controller.enabled = false;
@@ -159,6 +174,19 @@ public class EnemyPawn : NetworkBehaviour
         if (controller != null) controller.enabled = true;
 
         cachedPlayer = null;
+    }
+
+    private void AttackCooldown()
+    {
+        if (!isAttackCooldown) return;
+        
+        attackTimer -= Time.deltaTime;
+
+        if (attackTimer <= 0.0f)
+        {
+            isAttackCooldown = false;
+            attackTimer = attackTimerReset;
+        }
     }
     #endregion
 
