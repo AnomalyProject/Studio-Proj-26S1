@@ -214,14 +214,12 @@ public class EnemyPawn : NetworkBehaviour
 
         Vector3 direction = (targetPos - transform.position);
         direction.y = 0;
-
+        
+        if (direction.sqrMagnitude < 0.001f) return;
+        
         Quaternion targetRot = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.RotateTowards(
-            transform.rotation,
-            targetRot,
-            agent.angularSpeed * Time.deltaTime
-        );
-
+        transform.rotation = targetRot;
+        
         agent.isStopped = false;
     }
 

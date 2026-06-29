@@ -13,8 +13,6 @@ public class AttackState : BaseState
     public override void Enter()
     {
         base.Enter();
-
-        Debug.Log("Attacking");
         
         target = brain.TargetPos;
         hasHitTarget = false;

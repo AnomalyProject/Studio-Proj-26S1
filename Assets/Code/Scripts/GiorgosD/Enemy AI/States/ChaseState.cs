@@ -37,8 +37,7 @@ public class ChaseState : BaseState
             brain.ChangeState(EnemyBrain.StateID.Investigate, target);
             return;
         }
-
-        body.RotateTowards(target.position);
+        
         body.MoveToTarget(target.position);
 
         if (Vector3.Distance(body.transform.position, target.position) <= 3.0f)

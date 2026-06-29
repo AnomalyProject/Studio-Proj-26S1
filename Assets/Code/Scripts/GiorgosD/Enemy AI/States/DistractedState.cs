@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class DistractedState : BaseState
 {
     public DistractedState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
