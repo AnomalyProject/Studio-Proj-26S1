@@ -54,6 +54,7 @@ public static class SessionSnapshotFactory
         ClientSessionData snapshot = new ClientSessionData();
         snapshot.HostSteamID = sessionData.HostSteamID;
         snapshot.MapName = sessionData.MapName;
+        snapshot.SelectedLevelId = sessionData.SelectedLevelId;
         snapshot.GameMode = sessionData.GameMode;
         snapshot.MaxPlayers = sessionData.MaxPlayers;
         snapshot.PlayerCount = sessionData.Players.Count;

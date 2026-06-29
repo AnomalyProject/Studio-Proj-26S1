@@ -1,6 +1,6 @@
+using PurrNet;
 using System;
 using System.Collections;
-using PurrNet;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -36,6 +36,8 @@ public class GameManager : NetworkBehaviour
 
     [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
     [SerializeField, Min(1f)] private float punishmentTimeLimit = 10;
+
+    [SerializeField, Tooltip("How many correct decisions to do a restock"), Min(1)] int vendorRestockAfterProgress = 3;
     #endregion
 
     #region State
@@ -82,6 +84,7 @@ public class GameManager : NetworkBehaviour
         OnInitialized?.Invoke(this);
 
         if (!asServer) return;
+        OnProgressChanged.AddListener(CheckRestock);
         NewGame();
     }
 
@@ -125,7 +128,7 @@ public class GameManager : NetworkBehaviour
             mapChangeCoroutine = null;
         }
 
-        anomalyManager.PickMap_Server();
+        PickStartingMap();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
         InvokeOnProgressChanged(CurrentProgress);
@@ -422,6 +425,35 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Helpers
+
+    private void CheckRestock(int progress)
+    {
+        if (!isServer) return;
+        bool correctRound = progress % vendorRestockAfterProgress == 0;
+        if (correctRound && anomalyManager.ActiveMap.Vendor != null) anomalyManager.ActiveMap.Vendor.Restock(); 
+    }
+
+    private void PickStartingMap()
+    {
+        if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
+        {
+            int selectedIndex = SessionManager.Instance.CurrentSession.SelectedLevelMapIndex;
+            
+            // for random map selection 
+            if (selectedIndex < 0)
+            {
+                anomalyManager.PickMap_Server();
+                return;
+            }
+            
+            anomalyManager.PickMapByIndex_Server(selectedIndex);
+            return;
+        }
+        
+        // fallback case
+        anomalyManager.PickMap_Server();
+    }
+    
     private bool TryStartCooldown()
     {
         if (ElevatorCoolDown) return false;

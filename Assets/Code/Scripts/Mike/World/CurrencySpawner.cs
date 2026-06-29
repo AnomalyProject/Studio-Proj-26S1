@@ -19,7 +19,7 @@ public class CurrencySpawner : PickUpSpawner
     {
         if (!Application.isPlaying) spawnPoints.Clear();
 
-        spawnMode = SpawnMode.SpawnAll;
+        spawnMode = SpawnMode.RandomSpawn;
         onEnable = false;
     }
 }

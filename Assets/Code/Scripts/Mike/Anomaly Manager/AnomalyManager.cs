@@ -43,6 +43,7 @@ public class AnomalyManager : NetworkBehaviour
     public RoomState CurrentState => currentMapState.roomState;
     public bool HasAnomaly => currentMapState.roomState == RoomState.AnomalyRoom;
     public MapOrientor MapOrientor => mapOrientor;
+    public AnomalyMap ActiveMap => activeMap;
 
     private void Awake()
     {
