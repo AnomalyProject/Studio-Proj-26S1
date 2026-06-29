@@ -53,12 +53,15 @@ public struct ClientPlayerInfo
 public struct ClientSessionData
 {
     public ulong HostSteamID;
-    public string MapName;
     public string GameMode;
     public int MaxPlayers;
     public int PlayerCount;
     public List<ClientPlayerInfo> Players;
     public ElevatorLobbyState ElevatorState;
+    
+    // level selection
+    public string SelectedLevelId;
+    public string MapName;
 
     //workaround for serialization issues with Dictionaries
     public List<string> CustomPropertyKeys;
@@ -81,6 +84,10 @@ public class SessionData
     // elevator
     public ElevatorLobbyState ElevatorState;
     public bool AllPlayersReadyInElevator => Players.Count > 0 && Players.All(pp => pp.IsInElevator && pp.IsReady);
+    
+    // level selection
+    public string SelectedLevelId { get; set; }
+    public int SelectedLevelMapIndex  { get; set; }
 
 
     public SessionData()
