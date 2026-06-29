@@ -1,6 +1,6 @@
+using PurrNet;
 using System;
 using System.Collections;
-using PurrNet;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -36,6 +36,8 @@ public class GameManager : NetworkBehaviour
 
     [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
     [SerializeField, Min(1f)] private float punishmentTimeLimit = 10;
+
+    [SerializeField, Tooltip("How many correct decisions to do a restock"), Min(1)] int vendorRestockAfterProgress = 3;
     #endregion
 
     #region State
@@ -82,6 +84,7 @@ public class GameManager : NetworkBehaviour
         OnInitialized?.Invoke(this);
 
         if (!asServer) return;
+        OnProgressChanged.AddListener(CheckRestock);
         NewGame();
     }
 
@@ -422,6 +425,13 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Helpers
+
+    private void CheckRestock(int progress)
+    {
+        if (!isServer) return;
+        bool correctRound = progress % vendorRestockAfterProgress == 0;
+        if (correctRound && anomalyManager.ActiveMap.Vendor != null) anomalyManager.ActiveMap.Vendor.Restock(); 
+    }
 
     private void PickStartingMap()
     {
