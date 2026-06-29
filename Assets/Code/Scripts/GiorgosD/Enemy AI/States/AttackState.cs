@@ -21,8 +21,6 @@ public class AttackState : BaseState
             return;
         }
         
-        Debug.Log("Attacking");
-        
         sound.SelectGrowl(brain.CurrentStateID);
         
         hasHitTarget = false;
