@@ -53,7 +53,7 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
 
          int newIndex = focusedIndex.value + 1;
 
-         if (newIndex >= levelCatalog.Levels.Count) newIndex = 0;
+         if (newIndex >= levelCatalog.LevelCount) newIndex = 0;
 
          focusedIndex.value = newIndex;
          SelectFocusedLevel(info.sender);
@@ -67,9 +67,10 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
 
          int newIndex = focusedIndex.value - 1;
 
-         if (newIndex < 0) newIndex = levelCatalog.Levels.Count - 1;
+         if (newIndex < 0) newIndex = levelCatalog.LevelCount - 1;
 
          focusedIndex.value = newIndex;
+         SelectFocusedLevel(info.sender);
      }
      
      private void RefreshScreen()
