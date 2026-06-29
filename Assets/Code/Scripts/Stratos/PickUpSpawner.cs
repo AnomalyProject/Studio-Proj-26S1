@@ -18,7 +18,8 @@ public class PickUpSpawner : NetworkBehaviour
     [SerializeField, Range(0f, 1f),Tooltip("The probability that items will actually spawn when requested.")] private float spawnProbability = 1;
     private List<GameObject> spawnedItems = new List<GameObject>();
     [Header("Random Spawn Mode Settings")]
-    [SerializeField, Tooltip("Number of items to spawn randomly. If 0, a random number will be chosen."), Min(0)] private int randomSpawnAmount;
+    [SerializeField, Min(0)] private int MinSpawnAmount = 0;
+    [SerializeField, Min(1)] private int MaxSpawnAmount = 1;
 
 
     private void OnEnable()
@@ -39,6 +40,12 @@ public class PickUpSpawner : NetworkBehaviour
     {
         base.OnSpawned(asServer);
         if(enabled && onEnable && asServer) SpawnItems();
+    }
+
+    private void OnValidate()
+    {
+        if (MaxSpawnAmount > spawnPoints.Count) MaxSpawnAmount = spawnPoints.Count;
+        if (MinSpawnAmount > MaxSpawnAmount) MinSpawnAmount = MaxSpawnAmount;
     }
 
 
@@ -65,7 +72,7 @@ public class PickUpSpawner : NetworkBehaviour
         }
         else if (spawnMode == SpawnMode.RandomSpawn)
         {
-            int spawnAmount = randomSpawnAmount > 0? randomSpawnAmount : Random.Range(1, spawnPoints.Count);  
+            int spawnAmount = Random.Range(MinSpawnAmount, Mathf.Min(MaxSpawnAmount, spawnPoints.Count));  
 
             for (int i = 0; i < spawnAmount; i++)              //Pick random items from the collection
             {
