@@ -199,6 +199,16 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
         BroadcastPlayerJoined(playerID, host.SteamID, host.DisplayName, isHost: true);
         Debug.Log($"[SessionManager] Host registered as first player in {source}. PlayerID={playerID}");
     }
+    
+    /// <summary>
+    /// Returns true when the given network player is the registered session host.
+    /// Use this for ServerRpc authority checks, because ServerRpc code runs on the host machine
+    /// even when the request was sent by a non-host client.
+    /// </summary>
+    public bool IsPlayerHost(PlayerID playerID)
+    {
+        return registry != null && registry.IsHost(playerID);
+    }
 
     /// <summary>
     /// Waits briefly for the local networking player to become available, then

@@ -8,6 +8,17 @@ public class LevelCatalog : ScriptableObject
     [SerializeField] private List<LevelDefinition> levels = new();
 
     public IReadOnlyList<LevelDefinition> Levels => levels;
+    public int LevelCount => levels.Count;
+    
+    public bool TryGetLevel(int index, out LevelDefinition level)
+    {
+        level = null;
+
+        if (index < 0 || index >= levels.Count) return false;
+
+        level = levels[index];
+        return level != null;
+    }
 
     public bool TryGetById(string id, out LevelDefinition level)
     {
@@ -51,8 +62,7 @@ public class LevelCatalog : ScriptableObject
         int step = direction < 0 ? -1 : 1;
         int startIndex = FindIndex(currentId);
 
-        if (startIndex < 0)
-            return TryGetDefault(out level);
+        if (startIndex < 0) return TryGetDefault(out level);
 
         for (int offset = 1; offset <= levels.Count; offset++)
         {
@@ -73,8 +83,7 @@ public class LevelCatalog : ScriptableObject
     {
         for (int i = 0; i < levels.Count; i++)
         {
-            if (levels[i] != null && levels[i].Id == id)
-                return i;
+            if (levels[i] != null && levels[i].Id == id) return i;
         }
 
         return -1;

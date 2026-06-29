@@ -19,19 +19,30 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      {
          base.OnSpawned(asServer);
 
-         focusedIndex.onChanged += RefreshScreen;
-         RefreshScreen(focusedIndex.value);
+         focusedIndex.onChanged += HandleFocusedIndexChanged;
+         RefreshScreen();
      }
 
      protected override void OnDespawned()
      {
-         focusedIndex.onChanged -= RefreshScreen;
+         focusedIndex.onChanged -=HandleFocusedIndexChanged;
          base.OnDespawned();
      }
      
-     [ServerRpc(requireOwnership: false)]
-     public void RequestNextLevel()
+     private void OnEnable()
      {
+         SessionEvents.OnSessionDataChanged += RefreshScreen;
+     }
+
+     private void OnDisable()
+     {
+         SessionEvents.OnSessionDataChanged -= RefreshScreen;
+     }
+     
+     [ServerRpc(requireOwnership: false)]
+     public void RequestNextLevel(RPCInfo info = default)
+     {
+         if (!WasRequestedByHost(info)) return;
          if (!HasLevels()) return;
 
          int newIndex = focusedIndex.value + 1;
@@ -42,8 +53,9 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      }
      
      [ServerRpc(requireOwnership: false)]
-     public void RequestPreviousLevel()
+     public void RequestPreviousLevel(RPCInfo info = default)
      {
+         if (!WasRequestedByHost(info)) return;
          if (!HasLevels()) return;
 
          int newIndex = focusedIndex.value - 1;
@@ -54,37 +66,61 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      }
      
      [ServerRpc(requireOwnership: false)]
-     public void RequestSelectFocusedLevel()
+     public void RequestSelectFocusedLevel(RPCInfo info = default)
      {
          if (!HasLevels()) return;
          if (SessionManager.Instance == null) return;
+         if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
 
-         LevelDefinition level = levelCatalog.Levels[focusedIndex.value];
-         SessionManager.Instance.RequestSelectLevel(level.Id);
+         SessionManager.Instance.RequestSelectLevel(level.Id, info);
      }
      
-     private void RefreshScreen(int index)
+     private void RefreshScreen()
      {
          if (!HasLevels()) return;
-
-         LevelDefinition level = levelCatalog.Levels[index];
+         if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
 
          if (levelNameText != null) levelNameText.text = level.DisplayName;
+         if (progressText != null) progressText.text = $"{focusedIndex.value + 1}/{levelCatalog.LevelCount}";
 
-         if (previewImage != null) previewImage.sprite = level.Preview;
+         if (previewImage != null)
+         {
+             previewImage.sprite = level.Preview;
+             previewImage.enabled = level.Preview != null;
+         }
 
-         if (progressText != null) progressText.text = "Progress: 0%";
-
-         if (selectedText != null) selectedText.text = IsCurrentlySelected(level) ? "Selected" : "Preview";
+         if (selectedText != null)
+         {
+             selectedText.text = IsCurrentlySelected(level) ? "Selected" : "Select";
+         }
+     }
+     
+     public bool CanLocalPlayerControl()
+     {
+         return SessionManager.Instance != null && SessionManager.Instance.IsHost;
      }
      
      //helpers
+     private void HandleFocusedIndexChanged(int _)
+     {
+         RefreshScreen();
+     }
+
+     private bool WasRequestedByHost(RPCInfo info)
+     {
+         return SessionManager.Instance != null && SessionManager.Instance.IsPlayerHost(info.sender);
+     }
+     
      private bool IsCurrentlySelected(LevelDefinition level)
      {
-         if (SessionManager.Instance == null) return false;
-         if (SessionManager.Instance.CurrentSession == null) return false;
+         if (SessionManager.Instance == null || level == null) return false;
+         
+         if (SessionManager.Instance.CurrentSession != null)
+         {
+             return SessionManager.Instance.CurrentSession.SelectedLevelId == level.Id;
+         }
 
-         return SessionManager.Instance.CurrentSession.SelectedLevelId == level.Id;
+         return SessionManager.Instance.LatestClientSession.SelectedLevelId == level.Id;
      }
 
      private bool HasLevels()

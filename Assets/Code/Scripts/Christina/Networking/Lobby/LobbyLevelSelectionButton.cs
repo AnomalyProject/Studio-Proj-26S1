@@ -15,7 +15,7 @@ public class LobbyLevelSelectionButton : MonoBehaviour, IInteractable<PlayerBody
    
     public Task<bool> CanInteract(PlayerBody interactor)
     {
-        return Task.FromResult(tv != null);
+        return Task.FromResult(tv != null && tv.CanLocalPlayerControl());
     }
 
     public Task<bool> TryInteract(PlayerBody interactor)
