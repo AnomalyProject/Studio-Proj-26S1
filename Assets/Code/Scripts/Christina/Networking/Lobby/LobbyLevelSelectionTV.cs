@@ -74,23 +74,23 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      
      private void RefreshScreen()
      {
-         if (!HasLevels()) return;
-         if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
+        if (!HasLevels()) return;
+        if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
 
-         if (levelNameText != null) levelNameText.text = level.DisplayName;
-         if (progressText != null) progressText.text = $"{focusedIndex.value + 1}/{levelCatalog.LevelCount}";
+        if (levelNameText != null) levelNameText.text = level.DisplayName;
+        if (progressText != null) progressText.text = $"{focusedIndex.value + 1}/{levelCatalog.LevelCount}";
 
-         if (previewImage != null)
-         {
-             previewImage.sprite = level.IsRandomOption ? null : level.Preview;
-             previewImage.enabled = level.Preview != null && !level.IsRandomOption;
-         }
+        if (previewImage != null)
+        {
+            previewImage.sprite = level.Preview;
+            previewImage.enabled = level.Preview != null;
+        }
 
-         if (selectedText != null)
-         {
-             selectedText.text = IsCurrentlySelected(level) ? "Selected" : "Select";
-         }
-     }
+        if (selectedText != null)
+        {
+            selectedText.text = IsCurrentlySelected(level) ? "Selected" : "Select";
+        }
+    }
      
      private void RefreshHostControls()
      {
