@@ -102,4 +102,5 @@ public class LevelDefinition
     public string DisplayName => displayName;
     public int MapIndex => mapIndex;
     public Sprite Preview => preview;
+    public bool IsRandomOption => mapIndex < 0;
 }

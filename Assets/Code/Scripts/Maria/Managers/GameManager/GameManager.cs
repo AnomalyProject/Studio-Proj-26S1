@@ -428,6 +428,14 @@ public class GameManager : NetworkBehaviour
         if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
         {
             int selectedIndex = SessionManager.Instance.CurrentSession.SelectedLevelMapIndex;
+            
+            // for random map selection 
+            if (selectedIndex < 0)
+            {
+                anomalyManager.PickMap_Server();
+                return;
+            }
+            
             anomalyManager.PickMapByIndex_Server(selectedIndex);
             return;
         }

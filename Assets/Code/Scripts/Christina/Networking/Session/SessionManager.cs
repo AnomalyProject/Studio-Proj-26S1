@@ -841,11 +841,18 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     [ServerRpc(requireOwnership: false)]
     public void RequestSelectLevel(string levelID, RPCInfo info = default)
     {
-        PlayerID sender = info.sender;
+        SelectLevelFromServer(levelID, info.sender);
+    }
+    
+    public void SelectLevelFromServer(string levelID, PlayerID sender)
+    {
+        if (!isServer) return;
+
         SessionCommandResult result = TrySelectLevel(sender, levelID);
 
         if (SendCommandErrorIfFailed(sender, result)) return;
     }
+    
 
     private SessionCommandResult TrySelectLevel(PlayerID sender, string levelID)
     {

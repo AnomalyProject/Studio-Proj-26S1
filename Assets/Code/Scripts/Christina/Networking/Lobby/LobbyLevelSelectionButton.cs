@@ -6,8 +6,7 @@ public class LobbyLevelSelectionButton : MonoBehaviour, IInteractable<PlayerBody
     private enum ButtonType
     {
         Previous,
-        Next,
-        Select
+        Next
     }
     
     [SerializeField] private LobbyLevelSelectionTV tv;
@@ -30,10 +29,6 @@ public class LobbyLevelSelectionButton : MonoBehaviour, IInteractable<PlayerBody
 
             case ButtonType.Next:
                 tv.RequestNextLevel();
-                break;
-
-            case ButtonType.Select:
-                tv.RequestSelectFocusedLevel();
                 break;
         }
 

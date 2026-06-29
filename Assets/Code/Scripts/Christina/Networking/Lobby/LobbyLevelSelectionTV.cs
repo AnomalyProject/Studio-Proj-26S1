@@ -13,6 +13,9 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
     [SerializeField] private TMP_Text progressText;
     [SerializeField] private TMP_Text selectedText;
     
+    [Header("Host Controls")]
+    [SerializeField] private GameObject[] hostOnlyControls;
+    
      private SyncVar<int> focusedIndex = new(0, ownerAuth: false);
     
      protected override void OnSpawned(bool asServer)
@@ -21,6 +24,7 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
 
          focusedIndex.onChanged += HandleFocusedIndexChanged;
          RefreshScreen();
+         RefreshHostControls();
      }
 
      protected override void OnDespawned()
@@ -32,11 +36,13 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      private void OnEnable()
      {
          SessionEvents.OnSessionDataChanged += RefreshScreen;
+         SessionEvents.OnSessionDataChanged += RefreshHostControls;
      }
 
      private void OnDisable()
      {
          SessionEvents.OnSessionDataChanged -= RefreshScreen;
+         SessionEvents.OnSessionDataChanged -= RefreshHostControls;
      }
      
      [ServerRpc(requireOwnership: false)]
@@ -50,6 +56,7 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
          if (newIndex >= levelCatalog.Levels.Count) newIndex = 0;
 
          focusedIndex.value = newIndex;
+         SelectFocusedLevel(info.sender);
      }
      
      [ServerRpc(requireOwnership: false)]
@@ -65,16 +72,6 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
          focusedIndex.value = newIndex;
      }
      
-     [ServerRpc(requireOwnership: false)]
-     public void RequestSelectFocusedLevel(RPCInfo info = default)
-     {
-         if (!HasLevels()) return;
-         if (SessionManager.Instance == null) return;
-         if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
-
-         SessionManager.Instance.RequestSelectLevel(level.Id, info);
-     }
-     
      private void RefreshScreen()
      {
          if (!HasLevels()) return;
@@ -85,13 +82,23 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
 
          if (previewImage != null)
          {
-             previewImage.sprite = level.Preview;
-             previewImage.enabled = level.Preview != null;
+             previewImage.sprite = level.IsRandomOption ? null : level.Preview;
+             previewImage.enabled = level.Preview != null && !level.IsRandomOption;
          }
 
          if (selectedText != null)
          {
              selectedText.text = IsCurrentlySelected(level) ? "Selected" : "Select";
+         }
+     }
+     
+     private void RefreshHostControls()
+     {
+         bool canControl = CanLocalPlayerControl();
+
+         for (int i = 0; i < hostOnlyControls.Length; i++)
+         {
+             if (hostOnlyControls[i] != null) hostOnlyControls[i].SetActive(canControl);
          }
      }
      
@@ -126,5 +133,13 @@ public class LobbyLevelSelectionTV : NetworkBehaviour
      private bool HasLevels()
      {
          return levelCatalog != null && levelCatalog.Levels != null && levelCatalog.Levels.Count > 0;
+     }
+     
+     private void SelectFocusedLevel(PlayerID sender)
+     {
+         if (SessionManager.Instance == null) return;
+         if (!levelCatalog.TryGetLevel(focusedIndex.value, out LevelDefinition level)) return;
+
+         SessionManager.Instance.SelectLevelFromServer(level.Id, sender);
      }
 }
