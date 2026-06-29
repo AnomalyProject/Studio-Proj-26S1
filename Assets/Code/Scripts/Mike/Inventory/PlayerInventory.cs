@@ -34,7 +34,7 @@ public class PlayerInventory : NetworkBehaviour
     private PlayerBody playerBody;
     private Task<bool> currentUseTask;
     public bool IsUsingItem => currentUseTask != null && !currentUseTask.IsCompleted;
-    
+
     private bool inventoryEventsBound;
     private Coroutine heldItemRebuildRoutine;
 
@@ -43,7 +43,7 @@ public class PlayerInventory : NetworkBehaviour
         playerBody = GetComponent<PlayerBody>();
         Inventory = new Inventory(inventorySize);
     }
-    
+
     private void BindInventoryEvents()
     {
         if (inventoryEventsBound) return;
@@ -60,7 +60,7 @@ public class PlayerInventory : NetworkBehaviour
 
         inventoryEventsBound = true;
     }
-    
+
     private void UnbindInventoryEvents()
     {
         if (!inventoryEventsBound) return;
@@ -80,21 +80,21 @@ public class PlayerInventory : NetworkBehaviour
 
     public void DebugInventory()
     {
-        foreach(var item in Inventory.GetEnumeration())
+        foreach (var item in Inventory.GetEnumeration())
         {
             if (item == null) Debug.Log("Empty Slot");
             else Debug.Log($"Item: {item.GetItemData().name}, Quantity: {item.GetQuantity()}");
         }
 
-        foreach(var item in itemInstances)
+        foreach (var item in itemInstances)
         {
             if (item.Value == null) Debug.Log("Empty Slot");
             else Debug.Log($"Instances: Item Key: {item.Key}, Item Object: {item.Value.name}");
         }
     }
-    
+
     #region Network Lifecycle
-    
+
     protected override void OnSpawned()
     {
         base.OnSpawned();
@@ -103,7 +103,7 @@ public class PlayerInventory : NetworkBehaviour
         BindInventoryEvents();
         RebuildHeldItemsAfterSync();
     }
-    
+
     protected override void OnDespawned()
     {
         base.OnDespawned();
@@ -112,18 +112,18 @@ public class PlayerInventory : NetworkBehaviour
         UnbindInventoryEvents();
         ClearHeldItems();
     }
-    
+
     protected override void OnDestroy()
     {
         base.OnDestroy();
         CancelHeldItemRebuild();
         UnbindInventoryEvents();
     }
-    
+
     protected override void OnOwnerReconnected(PlayerID ownerId)
     {
-        base.OnOwnerReconnected(ownerId);  
-        if(!isOwner) return;
+        base.OnOwnerReconnected(ownerId);
+        if (!isOwner) return;
 
         BindInventoryEvents();
         RebuildHeldItemsAfterSync();
@@ -139,18 +139,18 @@ public class PlayerInventory : NetworkBehaviour
 
         ShowFocusedHeldItem();
     }
-    
+
     private void HandleStackCreation(IReadOnlyItemStack stack, int slotIndex)
     {
         CreateOrUpdateHeldItem(stack, slotIndex);
-        
+
         if (activeInstance == null)
         {
             focusedSlot = slotIndex;
             ShowFocusedHeldItem();
         }
     }
-    
+
     private void CreateOrUpdateHeldItem(IReadOnlyItemStack stack, int slotIndex)
     {
         if (stack == null || stack.IsEmpty()) return;
@@ -171,11 +171,11 @@ public class PlayerInventory : NetworkBehaviour
 
         itemInstances.Add(stack.GetID(), itemObject);
     }
-    
+
     private void ShowFocusedHeldItem()
     {
         HideAllHeldItems();
-        
+
         if (activeInstance != null) activeInstance.SetActive(false);
 
         activeInstance = null;
@@ -190,7 +190,7 @@ public class PlayerInventory : NetworkBehaviour
 
         OnFocusedChanged?.Invoke(stack.GetItemData());
     }
-    
+
     private void HideAllHeldItems()
     {
         foreach (PlayerItem item in itemInstances.Values)
@@ -205,12 +205,12 @@ public class PlayerInventory : NetworkBehaviour
             if (item != null) item.gameObject.SetActive(false);
         }
     }
-    
+
     private void HandleStackChanged(IReadOnlyItemStack stack, int slotIndex)
     {
         if (itemInstances.TryGetValue(stack.GetID(), out PlayerItem item)) item.BindTo(this, stack, slotIndex);
     }
-    
+
     private void HandleStackRemoval(IReadOnlyItemStack stack, int slotIndex)
     {
         if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return;
@@ -259,7 +259,7 @@ public class PlayerInventory : NetworkBehaviour
 
         OnFocusedIndexChanged?.Invoke(previous, focusedSlot);
     }
-    
+
     private void ClearHeldItems()
     {
         for (int i = itemHolder.childCount - 1; i >= 0; i--)
@@ -276,16 +276,16 @@ public class PlayerInventory : NetworkBehaviour
         itemInstances.Clear();
         activeInstance = null;
     }
-    
+
     private async Task<bool> TryUseFocused()
     {
         if (!Inventory.TryGet(focusedSlot, out IReadOnlyItemStack stack)) return false; // Check if item exists in the inventory
-        if(!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return false; // Try get item's world instance
+        if (!itemInstances.TryGetValue(stack.GetID(), out PlayerItem itemInstance)) return false; // Try get item's world instance
 
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance.gameObject, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         bool success = await interactable.TryInteract(playerBody); // Try interact with instance.
 
-        if(success)
+        if (success)
         {
             await RegisterUsage_ServerRpc(focusedSlot);
             OnItemUsed?.Invoke(stack.GetItemData());
@@ -299,7 +299,8 @@ public class PlayerInventory : NetworkBehaviour
         if (!InteractionUtils.TryGetInteractable<PlayerBody>(itemInstance.gameObject, out IInteractable<PlayerBody> interactable)) return false; // Check if its interactable, could get refactored in the future   
         return interactable.CanInteract(playerBody).Result; // Check if you can interact with instance.
     }
-    [ServerRpc] private void DropItem_ServerRpc(int slotIndex)
+    [ServerRpc]
+    private void DropItem_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) return;
         if (TutorialManager.Instance != null) return; // Don't allow items to be dropped during tutorial to avoid them despawning / getting lost
@@ -310,15 +311,15 @@ public class PlayerInventory : NetworkBehaviour
         Vector3 throwDirection = itemHolder.transform.forward + Vector3.up;
 
         ItemPickup droppedItem = Instantiate(
-            stack.GetItemData().PickupPrefab, 
-            playerBody.transform.position + throwDirection, 
+            stack.GetItemData().PickupPrefab,
+            playerBody.transform.position + throwDirection,
             Quaternion.identity);
 
         droppedItem.SetStack(stack.CloneWithQuantity(quantityRemoved));
         ApplyThrowForce_Server(droppedItem.Rigidbody, throwDirection);
 
         if (!stack.GetItemData().IsKeyItem)
-        Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
+            Destroy(droppedItem.gameObject, destroyDropAfterSeconds);
     }
     private void DropConsumed_Server(ItemData data)
     {
@@ -326,8 +327,8 @@ public class PlayerInventory : NetworkBehaviour
 
         Vector3 throwDirection = itemHolder.transform.forward + itemHolder.right * 0.5f + Vector3.up;
 
-        NetworkRigidbody consumedDrop = Instantiate(data.ConsumedPrefab, 
-            playerBody.transform.position + throwDirection, 
+        NetworkRigidbody consumedDrop = Instantiate(data.ConsumedPrefab,
+            playerBody.transform.position + throwDirection,
             Quaternion.identity);
 
         ApplyThrowForce_Server(consumedDrop, throwDirection);
@@ -343,7 +344,8 @@ public class PlayerInventory : NetworkBehaviour
         rb.AddTorque(UnityEngine.Random.insideUnitSphere, ForceMode.Force);
     }
 
-    [ServerRpc] private async Task RegisterUsage_ServerRpc(int slotIndex)
+    [ServerRpc]
+    private async Task RegisterUsage_ServerRpc(int slotIndex)
     {
         if (!Inventory.TryGet(slotIndex, out IReadOnlyItemStack stack)) await Task.CompletedTask;
 
@@ -358,7 +360,7 @@ public class PlayerInventory : NetworkBehaviour
         CancelHeldItemRebuild();
         heldItemRebuildRoutine = StartCoroutine(RebuildHeldItemsNextFrame());
     }
-    
+
     private void CancelHeldItemRebuild()
     {
         if (heldItemRebuildRoutine == null) return;
@@ -366,7 +368,7 @@ public class PlayerInventory : NetworkBehaviour
         StopCoroutine(heldItemRebuildRoutine);
         heldItemRebuildRoutine = null;
     }
-    
+
     private IEnumerator RebuildHeldItemsNextFrame()
     {
         yield return null;
@@ -374,7 +376,7 @@ public class PlayerInventory : NetworkBehaviour
         heldItemRebuildRoutine = null;
         RebuildHeldItems();
     }
-    
+
     private void RebuildHeldItems()
     {
         ClearHeldItems();
@@ -394,7 +396,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (ctx.started)
         {
-            if(IsUsingItem) return;
+            if (IsUsingItem) return;
             currentUseTask = TryUseFocused();
         }
     }
@@ -416,7 +418,7 @@ public class PlayerInventory : NetworkBehaviour
     }
     public void ScrollSlot(InputAction.CallbackContext ctx)
     {
-        if(ctx.performed) ChangeFocused((ctx.ReadValue<float>() > 0 ? focusedSlot + 1 : focusedSlot - 1 + Inventory.TotalSlots) % Inventory.TotalSlots);
+        if (ctx.performed) ChangeFocused((ctx.ReadValue<float>() > 0 ? focusedSlot + 1 : focusedSlot - 1 + Inventory.TotalSlots) % Inventory.TotalSlots);
     }
     #endregion
 

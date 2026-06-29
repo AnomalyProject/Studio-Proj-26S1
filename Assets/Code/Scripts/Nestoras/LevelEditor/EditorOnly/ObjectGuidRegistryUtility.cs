@@ -49,6 +49,7 @@ public static class ObjectGuidRegistryUtility
         string guid = System.Guid.NewGuid().ToString();
         registry.entries.Add(new Entry()
         {
+            objName = obj.name,
             guid = guid,
             obj = obj
         });
@@ -90,7 +91,11 @@ public static class ObjectGuidRegistryUtility
         int entries = registry.entries.Count;
 
         // Remvove unused entries from the registry.
-        for (int i = registry.entries.Count - 1; i >= 0; i--) if (!entryUsageBuffer[registry.entries[i].guid]) registry.entries.RemoveAt(i);
+        for (int i = registry.entries.Count - 1; i >= 0; i--)
+        {
+            if (!entryUsageBuffer[registry.entries[i].guid] || registry.entries[i].obj == null) registry.entries.RemoveAt(i);
+            else if (string.IsNullOrEmpty(registry.entries[i].objName)) registry.entries[i].objName = registry.entries[i].obj.name;
+        }
         EditorUtility.SetDirty(registry);
         AssetDatabase.SaveAssetIfDirty(registry);
 
