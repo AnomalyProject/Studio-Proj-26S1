@@ -10,7 +10,7 @@ public class ItemData : ScriptableObject
     [SerializeField] private bool _isConsumable;
     [SerializeField, Tooltip("Blocks game progression if absent.")] private bool _isKeyItem;
     [SerializeField, Min(1)] private int _maxStackSize;
-    [SerializeField, Min(0)] private int _vendorPrice = 1;
+    [SerializeField, Min(0), Tooltip("Price Per Unit")] private int _vendorPrice = 1;
     [SerializeField] private PlayerItem _itemPrefab;
     [SerializeField] private ItemPickup _pickupPrefab;
     [SerializeField, Tooltip("Optional Consumed Drop")] private NetworkRigidbody _consumedPrefab;
