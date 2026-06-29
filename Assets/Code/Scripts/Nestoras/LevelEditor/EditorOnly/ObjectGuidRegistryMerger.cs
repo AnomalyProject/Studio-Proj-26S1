@@ -57,6 +57,7 @@ public class ObjectGuidRegistryMerger : EditorWindow
                     continue; // Skip if the same reference already exists
                 }
                 destinationEntry.obj = sourceEntry.obj;
+                destinationEntry.objName = sourceEntry.objName;
                 replaced++;
             }
             else
@@ -64,7 +65,8 @@ public class ObjectGuidRegistryMerger : EditorWindow
                 destination.entries.Add(new Entry
                 {
                     guid = sourceEntry.guid,
-                    obj = sourceEntry.obj
+                    obj = sourceEntry.obj,
+                    objName = sourceEntry.objName,
                 });
                 added++;
             }

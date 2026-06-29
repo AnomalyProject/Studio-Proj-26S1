@@ -13,11 +13,12 @@ def botsAdminRole = "<@&1483456172567822378>"
 def programmerRole = "<@&1476249214106472592>"
 
 pipeline {
-    agent any
+    agent any //any
 
     options {
         disableConcurrentBuilds()
         lock ('project-anomaly-build-queue')
+        skipDefaultCheckout()
     }
 
     environment {
@@ -26,7 +27,7 @@ pipeline {
         ANOMALY_DISCORD_WEBHOOK_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_BUILD_RESULT')
         ANOMALY_DISCORD_WEBHOOK_MERGE_URL = credentials('PROJECT_ANOMALY_DISCORD_WEBHOOK_MERGE')
         UNITY_LOG_PATH = "${env.WORKSPACE}\\unity_build.log"
-        GAME_VERSION = "0.0.${env.BUILD_NUMBER}.A"
+        GAME_VERSION = "0.0.${env.BUILD_NUMBER}a"
     }
 
     stages {

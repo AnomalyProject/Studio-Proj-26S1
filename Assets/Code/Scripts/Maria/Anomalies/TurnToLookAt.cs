@@ -58,6 +58,8 @@ public class TurnToLookAt : MonoBehaviour
 
     private void Awake() => restRotation = transform.rotation;
 
+    private void OnDisable() => transform.rotation = restRotation;
+
     private void Update()
     {
         if (Time.time >= nextRefresh)
@@ -157,6 +159,8 @@ public class TurnToLookAt : MonoBehaviour
 
         foreach (PlayerBody identity in PlayerBody.ActivePlayers)
         {
+            if(identity == null || identity.CameraController == null) continue;
+
             float sqDist = (identity.CameraController.transform.position - transform.position).sqrMagnitude;
             if (sqDist < nearestSqDist)
             {
