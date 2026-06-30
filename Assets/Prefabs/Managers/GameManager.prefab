@@ -190,6 +190,7 @@ MonoBehaviour:
   decisionCooldown: 2
   mapChangeDelay: 6
   punishmentTimeLimit: 300
+  vendorRestockAfterProgress: 3
   OnProgressChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -240,19 +241,7 @@ MonoBehaviour:
         m_CallState: 2
   OnGameWon:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8916752523714583773}
-        m_TargetAssemblyTypeName: NarrationEvent, Assembly-CSharp
-        m_MethodName: PlayNarration
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   OnGameReset:
     m_PersistentCalls:
       m_Calls: []
@@ -496,55 +485,6 @@ Transform:
   - {fileID: 5648415570149415843}
   m_Father: {fileID: 793812348881820501}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5690491769502749127
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5485406636139758375}
-  - component: {fileID: 8916752523714583773}
-  m_Layer: 0
-  m_Name: Narrator Win
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5485406636139758375
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5690491769502749127}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8395108722908808034}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8916752523714583773
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5690491769502749127}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de04a29fd0f4c7a4b83462bfb5f551aa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NarrationEvent
-  triggerOnce: 1
-  entry: {fileID: 11400000, guid: 876e95cfc1873d942a0fa53ad97efa59, type: 2}
-  onNarrationFinished:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &6021099260736174197
 GameObject:
   m_ObjectHideFlags: 0
@@ -574,7 +514,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5485406636139758375}
   - {fileID: 316375159315106073}
   - {fileID: 6290126709817540729}
   m_Father: {fileID: 7032054832690312386}
@@ -731,7 +670,7 @@ MonoBehaviour:
   - {fileID: 4158961773394589312, guid: 9305b7631f9b57640bf14ad284dc57e7, type: 3}
   spawnPoints: []
   onEnable: 0
-  spawnMode: 0
+  spawnMode: 1
   spawnProbability: 1
   MinSpawnAmount: 1
   MaxSpawnAmount: 3
