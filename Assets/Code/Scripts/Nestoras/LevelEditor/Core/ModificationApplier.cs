@@ -53,10 +53,11 @@ public class ModificationApplier : MonoBehaviour
         foreach (GameObjectSnapshot goToAdd in levelModification.addedGameObjects)
         {
             GameObject parent = FindByGuid(goToAdd.parentGuid);
-            if (parent == null) continue;
-
+#if !UNITY_EDITOR
+            if (parent == null) continue; // Let it create the gameobject outside the prefab when in the editor, for debugging purposes
+#endif
             GameObject go = new GameObject(goToAdd.name);
-            go.transform.SetParent(parent.transform);
+            if (parent != null) go.transform.SetParent(parent.transform);
 
             go.isStatic = goToAdd.isStatic;
             go.SetActive(goToAdd.active);
@@ -214,7 +215,7 @@ public class ModificationApplier : MonoBehaviour
         if (component is Collider collider) collider.enabled = enabled;
     }
     #endregion
-    #endregion
+#endregion
 
     #region Field Setting
     private void SetField(Component target, FieldSnapshot field)

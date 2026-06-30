@@ -54,7 +54,9 @@ def main(file_path):
             text = text.replace(key, f"guid: {old_guid}")
             count += 1
 
-    Path(file_path).write_text(text, encoding="utf-8", newline="\n")
+    # Path(file_path).write_text(text, encoding="utf-8", newline="\n")
+    with Path(file_path).open("w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
     print(f"Done. Reverted {count} GUID changes")
 

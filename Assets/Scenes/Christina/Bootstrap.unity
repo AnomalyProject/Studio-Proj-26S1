@@ -370,50 +370,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
-      insertIndex: 2
-      addedObject: {fileID: 822192054}
-    - targetCorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
-      insertIndex: 3
-      addedObject: {fileID: 822192053}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
---- !u!1 &822192052 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3119065908442879513, guid: 507733f8788c263438a5f2013a1d397e, type: 3}
-  m_PrefabInstance: {fileID: 822192051}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &822192053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822192052}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 895c7dee86be8004e8a4231d404c756f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NetworkDebugDisplay
-  statsManager: {fileID: 822192054}
---- !u!114 &822192054
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822192052}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef882a0e84c58df4885b0e1e59320b49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.StatisticsManager
-  checkInterval: 0.33
-  placement: 4
-  _displayType: -1
-  _displayTarget: -1
-  fontSize: 13
-  textColor: {r: 0.26971158, g: 0.78113204, b: 0.27773386, a: 1}
 --- !u!1001 &946757509
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -747,6 +705,7 @@ MonoBehaviour:
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
   reconnectTimeoutSeconds: 30
+  levelCatalog: {fileID: 11400000, guid: bd1215bfea1ceee4d954d349f20812aa, type: 2}
 --- !u!4 &970893396
 Transform:
   m_ObjectHideFlags: 0

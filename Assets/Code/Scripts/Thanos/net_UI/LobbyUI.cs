@@ -15,11 +15,11 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Transform playerListContainer;
     [SerializeField] private PlayerListUI playerListItemPrefab;
 
-    [Header("Buttons")]
+    /*[Header("Buttons")]
     [SerializeField] private Button readyButton;
     [SerializeField] private TMP_Text readyButtonText;
     [SerializeField] private Button startButton;
-    [SerializeField] private Button leaveButton;
+    [SerializeField] private Button leaveButton;*/
     
     [Header("Lobby Info")]
     [SerializeField] private TMP_Text readyCountText;
@@ -29,8 +29,8 @@ public class LobbyUI : MonoBehaviour
     
     [Header("Host Controls")]
     [SerializeField] private GameObject hostControlsRoot;
-    [SerializeField] private GameObject leftControlsRoot;
-    [SerializeField] private TMP_Dropdown privacyDropdown;
+    /*[SerializeField] private GameObject leftControlsRoot;
+    [SerializeField] private TMP_Dropdown privacyDropdown;*/
     [SerializeField] private TMP_Dropdown maxPlayersDropdown;
 
     [Header("Messages")]
@@ -50,12 +50,12 @@ public class LobbyUI : MonoBehaviour
     private void Awake()
     {
         //Connecting UI interactions to SessionManager
-        readyButton.onClick.AddListener(() => SessionManager.Instance.RequestToggleReady());
+        /*readyButton.onClick.AddListener(() => SessionManager.Instance.RequestToggleReady());
         startButton.onClick.AddListener(() => SessionManager.Instance.RequestStartMatch());
-        leaveButton.onClick.AddListener(OnLeaveClicked);
+        leaveButton.onClick.AddListener(OnLeaveClicked);*/
         
         inviteButton.onClick.AddListener(OnInviteClicked);
-        privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
+        //privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
         maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
         
         kickReasonConfirmButton.onClick.AddListener(OnKickReasonConfirmed);
@@ -179,14 +179,14 @@ public class LobbyUI : MonoBehaviour
         readyCountText.text = $"{readyCount}/{sessionData.PlayerCount} Ready In Elevator";
 
         //Updating ready status
-        if (readyButton != null)
+        /*if (readyButton != null)
         {
             readyButton.gameObject.SetActive(isLobby);
             
             readyButton.interactable = isLocalPlayerInElevator && !isLocalPlayerReady && sessionData.ElevatorState == ElevatorLobbyState.Open;
-        }
+        }*/
 
-        if (readyButtonText != null)
+        /*if (readyButtonText != null)
         {
             if (sessionData.ElevatorState == ElevatorLobbyState.DoorsClosing)
             {
@@ -211,17 +211,17 @@ public class LobbyUI : MonoBehaviour
                     readyButtonText.text = "Ready";
                 }
             }
-        }
+        }*/
         
         hostControlsRoot.SetActive(isLobby && isHost);
-        leftControlsRoot.SetActive(isLobby);
+        //leftControlsRoot.SetActive(isLobby);
         inviteButton.gameObject.SetActive(isLobby);
         inviteButton.interactable = isLobby && SteamSessionBridge.Instance != null;
         
         ApplyLobbySettings(sessionData, isHost);
         
-        startButton.gameObject.SetActive(false);
-        startButton.interactable = false;
+        /*startButton.gameObject.SetActive(false);
+        startButton.interactable = false;*/
     }
     
     private void OpenKickReasonPanel(ulong targetSteamID)
@@ -367,7 +367,7 @@ public class LobbyUI : MonoBehaviour
     }
     
     private void ApplyLobbySettings(ClientSessionData sessionData, bool isHost)
-    {
+    {/*
         if (privacyDropdown != null)
         {
             string visibility = GetCustomProperty(sessionData, "LobbyVisibility");
@@ -376,9 +376,9 @@ public class LobbyUI : MonoBehaviour
                 visibility = "Friends Only";
             }
 
-            privacyDropdown.SetValueWithoutNotify(visibility == "Public" ? 1 : 0);
-            privacyDropdown.interactable = isHost;
-        }
+            /*privacyDropdown.SetValueWithoutNotify(visibility == "Public" ? 1 : 0);
+            privacyDropdown.interactable = isHost;#1#
+        }*/
 
         if (maxPlayersDropdown != null)
         {
