@@ -482,6 +482,8 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
+  nearPlane: 2
+  farPlane: 40
   obstructionLayers:
     serializedVersion: 2
     m_Bits: 851
@@ -495,6 +497,31 @@ MonoBehaviour:
   glitchLoopClip: {fileID: 8300000, guid: b7c412c9b22df144689fa29ea1370b61, type: 3}
   maxGlitchVolume: 1
   playLoopAutomatically: 1
+  targetAmplitude: 0
+  amplitudeRamp:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.0013771057
+      value: -0.0011901855
+      inSlope: 0.42617613
+      outSlope: 0.42617613
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.18131998
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 3.6500552
+      outSlope: 3.6500552
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.031593326
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &177643267097350056
 MonoBehaviour:
   m_ObjectHideFlags: 0
