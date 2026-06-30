@@ -492,7 +492,7 @@ public class ModificationEditorWindow : EditorWindow
     private string GetParentNameFromGuid(string guid)
     {
         if (string.IsNullOrEmpty(guid)) return "<none>";
-        GameObject go = ModificationApplier.FindByGuid(guid);
+        GameObject go = ModificationApplier.FindByGuidStatic(guid);
         if (go != null) return go.name;
         return guid;
     }

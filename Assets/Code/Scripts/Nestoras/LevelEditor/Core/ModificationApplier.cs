@@ -202,7 +202,8 @@ public class ModificationApplier : MonoBehaviour
     }
 
     #region Helpers
-    public static GameObject FindByGuid(string guid) => FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
+    public GameObject FindByGuid(string guid) => transform.root.GetComponentsInChildren<SnapshotID>().FirstOrDefault(x => x.guid == guid)?.gameObject;
+    public static GameObject FindByGuidStatic(string guid) => FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
     private Component FindComponent(GameObject go, string type, int index)
     {
         List<Component> comps = go.GetComponents<Component>().Where(c => c.GetType().AssemblyQualifiedName == type).ToList();
