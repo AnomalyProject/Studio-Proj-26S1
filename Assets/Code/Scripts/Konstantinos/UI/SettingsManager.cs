@@ -39,6 +39,7 @@ public class SettingsManager : MonoBehaviour
 
     // Graphics
     [SerializeField] TMP_Dropdown resolutionDropdown;
+    [SerializeField] TMP_Dropdown qualityDropdown;
     [SerializeField] Toggle vSyncToggle;
     [SerializeField] Toggle fullscreenToggle;
 
@@ -54,7 +55,7 @@ public class SettingsManager : MonoBehaviour
     private float masterVolume = 1.0f, musicVolume = 0.5f, SFXVolume = 1.0f, UIVolume = 1.0f;
 
     // Graphics 
-    private int resolutionValue;
+    private int resolutionValue, qualityValue;
     private bool vSync, fullscreen;
 
     //------------------------------------------------------------//
@@ -69,7 +70,7 @@ public class SettingsManager : MonoBehaviour
         }
         Instance = this;
 
-        DontDestroyOnLoad(gameObject);      
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Start()
@@ -145,8 +146,7 @@ public class SettingsManager : MonoBehaviour
         // add all supported resolutions as options on the dropdown
         resolutionDropdown.AddOptions(options);
 
-        if (PlayerPrefs.HasKey("Resolution"))
-            currentResolutionIndex = PlayerPrefs.GetInt("Resolution"); // apply the last resolution if previously changed
+        if (PlayerPrefs.HasKey("Resolution")) currentResolutionIndex = PlayerPrefs.GetInt("Resolution"); // apply the last resolution if previously changed
 
         resolutionDropdown.value = currentResolutionIndex;
         resolutionDropdown.RefreshShownValue();
@@ -154,10 +154,16 @@ public class SettingsManager : MonoBehaviour
         resolutionValue = currentResolutionIndex;
         OnResolutionChanged(resolutionValue);
 
+        if (PlayerPrefs.HasKey("Quality")) qualityValue = PlayerPrefs.GetInt("Quality");
+        else qualityValue = qualityDropdown.value;
+        qualityDropdown.value = qualityValue;
+        qualityDropdown.RefreshShownValue();
+
+        OnQualityChanged(qualityValue);
 
         // Initialize V-Sync
         if (PlayerPrefs.HasKey("V-Sync")) vSync = bool.Parse(PlayerPrefs.GetString("V-Sync"));
-        else vSync = true;
+        //else vSync = false; // Off by default
 
         vSyncToggle.isOn = vSync;
         ToggleVSync(vSync);
@@ -348,22 +354,18 @@ public class SettingsManager : MonoBehaviour
     public void OnResolutionChanged(int value)
     {
         resolutionValue = value;
-
         Resolution selectedResolution = Screen.resolutions[value];
-
-        Debug.Log( 
-            $"[SettingsManager] Resolution changed to " +
-            $"{selectedResolution.width}x{selectedResolution.height}"
-        );
-
-        Screen.SetResolution(
-          selectedResolution.width,
-          selectedResolution.height,
-          Screen.fullScreenMode,
-          selectedResolution.refreshRateRatio
-        );
-
+        Debug.Log($"[SettingsManager] Resolution changed to {selectedResolution.width}x{selectedResolution.height}");
+        Screen.SetResolution(selectedResolution.width, selectedResolution.height, Screen.fullScreenMode, selectedResolution.refreshRateRatio);
         PlayerPrefs.SetInt("Resolution", resolutionValue);
+    }
+
+    public void OnQualityChanged(int value)
+    {
+        qualityValue = value;
+        QualitySettings.SetQualityLevel(qualityValue, true);
+        Debug.Log($"[SettingsManager] Quality changed to {QualitySettings.names[qualityValue]}");
+        PlayerPrefs.SetInt("Quality", qualityValue);
     }
 
     public void ToggleVSync(bool value)
