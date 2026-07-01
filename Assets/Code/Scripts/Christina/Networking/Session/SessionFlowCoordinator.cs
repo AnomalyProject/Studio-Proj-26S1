@@ -72,7 +72,7 @@ public class SessionFlowCoordinator
             return SessionCommandResult.Failed(SessionErrorCode.InvalidState, "SessionModeManager missing. Cannot return to lobby.");
 
         SessionData session = sessionStore.Current;
-        session.ResetReadyStates();
+        session.ResetLobbyPlayerStates();
         session.ElevatorState = ElevatorLobbyState.Open;
 
         SessionModeManager.Instance.LoadLobbyScene();

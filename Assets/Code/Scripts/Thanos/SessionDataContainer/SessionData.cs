@@ -149,6 +149,17 @@ public class SessionData
             Players[i] = pp;
         }
     }
+    
+    public void ResetLobbyPlayerStates()
+    {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            var pp = Players[i];
+            pp.IsReady = false;
+            pp.IsInElevator = false;
+            Players[i] = pp;
+        }
+    }
 
     public void SetCustomProperty(string key, string value) => CustomProperties[key] = value;
 
