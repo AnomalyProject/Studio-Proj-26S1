@@ -56,6 +56,10 @@ public class GameManager : NetworkBehaviour
     private bool pendingExitEnabled;
     private bool hasPendingInteraction;
 
+    //Analytics
+    private float floorStartTime;
+    private string lastLoggedAnomalyName = "None";
+
     public AnomalyManager AnomalyManager => anomalyManager;
     #endregion
 
@@ -164,6 +168,9 @@ public class GameManager : NetworkBehaviour
     {
         if (!isServer) return;
 
+        floorStartTime = Time.time;
+        lastLoggedAnomalyName = anomalyManager.HasAnomaly && anomalyManager.ActiveMap != null ? anomalyManager.ActiveMap.name : "None";
+
         switch (newState)
         {
             case AnomalyManager.RoomState.NormalRoom:
@@ -199,6 +206,19 @@ public class GameManager : NetworkBehaviour
     private void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
     {
         if (!isServer || !TryStartCooldown()) return;
+
+        //===========DO NOT TOUCH -> TELEMETRY DATA=========== :)
+        float timeSpentOnFloor = Time.time - floorStartTime;
+        bool hasAnomaly = anomalyManager.HasAnomaly;
+        string choiceText = decision ? "EntryElevator" : "ExitElevator";
+        int floorRecorded = CurrentProgress;
+
+        if (anomalyManager.CurrentState == AnomalyManager.RoomState.NormalRoom ||
+            anomalyManager.CurrentState == AnomalyManager.RoomState.AnomalyRoom)
+        {
+            // Fire an ObserversRpc down to all connected clients so they record their individual analytics
+            SendTelemetryToClients(floorRecorded, hasAnomaly, choiceText, timeSpentOnFloor, lastLoggedAnomalyName);
+        }
 
         usedElevator.SetInteraction(false);
         mapChangeCoroutine = StartCoroutine(PerformMapChange());
@@ -426,6 +446,32 @@ public class GameManager : NetworkBehaviour
 
     #region Helpers
 
+    [ObserversRpc]
+    private void SendTelemetryToClients(int floorNumber, bool roomHadAnomaly, string playerChoice, float timeSpent, string anomalyName)
+    {
+        //Calculate right wrong choice
+        bool choseEntry = playerChoice == "EntryElevator";
+        bool isChoiceCorrect = (roomHadAnomaly && choseEntry) || (!roomHadAnomaly && !choseEntry);
+
+        if (Unity.Services.Core.UnityServices.State == Unity.Services.Core.ServicesInitializationState.Initialized)
+        {
+            //Data to send to the dashboard
+            var floorEvent = new Unity.Services.Analytics.CustomEvent("floor_completed")
+            {
+                { "floor_number", floorNumber },
+                { "room_had_anomaly", roomHadAnomaly },
+                { "anomaly_id_name", anomalyName },
+                { "player_choice", playerChoice },
+                { "is_choice_correct", isChoiceCorrect },
+                { "time_spent_seconds", timeSpent }
+            };
+
+            Unity.Services.Analytics.AnalyticsService.Instance.RecordEvent(floorEvent);
+            Unity.Services.Analytics.AnalyticsService.Instance.Flush();
+
+            Debug.Log($"[Local Client Telemetry] Logged floor {floorNumber} to the dashboard. Time: {timeSpent:F2}s");
+        }
+    }
     private void CheckRestock(int progress)
     {
         if (!isServer) return;
