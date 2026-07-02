@@ -48,6 +48,11 @@ public class PlayerNameplate : NetworkBehaviour
         {
             nameText.text = playerInfo.Value.DisplayName;
             nameText.color = playerInfo.Value.GetPlayerColor();
+
+            if (isOwner && TelemetryManager.Instance != null)
+            {
+                TelemetryManager.Instance.InitializeWithPlayerName(playerInfo.Value.DisplayName);
+            }
         }
     }
 }
