@@ -18,8 +18,8 @@ public class PlayerBody : NetworkBehaviour
     [SerializeField] private AudioSource audioSource;
     
     [Header("Local Player")]
-    [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener playerAudioListener;
+    [SerializeField] private Camera playerCamera, hudCamera;
     [SerializeField] private CameraLean playerCameraLean;
     [SerializeField] private GameObject nameplateVisuals;
 
@@ -95,6 +95,7 @@ public class PlayerBody : NetworkBehaviour
         Debug.Log($"[PlayerBody:Ownership] ApplyOwnershipState: local={local}");
         
         playerCamera.enabled = local;
+        hudCamera.enabled = local;
         playerAudioListener.enabled = local;
         cameraController.enabled = local;
         

@@ -116,7 +116,7 @@ public class SessionModeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Shuts down any active network session, leaves the Steam lobbyu, resets session state, and
+    /// Shuts down any active network session, leaves the Steam lobby, resets session state, and
     /// returns the game to the main menu flow. 
     /// </summary>
     public void ReturnToMenu()
