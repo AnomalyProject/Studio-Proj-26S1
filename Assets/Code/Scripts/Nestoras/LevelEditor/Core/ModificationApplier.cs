@@ -216,7 +216,11 @@ public class ModificationApplier : MonoBehaviour
     }
 
     #region Helpers
-    public static GameObject FindByGuid(string guid) => GUIDCache.TryGetValue(guid, out GameObject go) ? go : null;
+    public static GameObject FindByGuid(string guid)
+    {
+        if (Application.isPlaying) return GUIDCache.TryGetValue(guid, out GameObject go) ? go : null;
+        return FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
+    }
     private Component FindComponent(GameObject go, string type, int index)
     {
         List<Component> comps = go.GetComponents<Component>().Where(c => c.GetType().AssemblyQualifiedName == type).ToList();
