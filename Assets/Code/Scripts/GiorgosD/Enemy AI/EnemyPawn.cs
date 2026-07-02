@@ -1,5 +1,6 @@
 using PurrNet;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
@@ -53,6 +54,13 @@ public class EnemyPawn : NetworkBehaviour
 
     public bool IsAttackCooldown => isAttackCooldown;
 
+    [Header("Stuck Settings")] 
+    [SerializeField] private float stuckDistThres = 0.2f;
+    [SerializeField] private float stuckTimer = 2.0f;
+    private float stuckTimerReset;
+    private Vector3 lastTrackedPos;
+    [SerializeField] private GameObject shadowParticles;
+    [SerializeField] private float startUnstuckTimer = 0.5f;
     #endregion
     
     #region Events
@@ -72,6 +80,7 @@ public class EnemyPawn : NetworkBehaviour
         path = new();
         sightAngleNormal = sightAngle;
         attackTimerReset = attackTimer;
+        stuckTimerReset = stuckTimer;
     }
     
     private void Update()
@@ -187,6 +196,82 @@ public class EnemyPawn : NetworkBehaviour
             isAttackCooldown = false;
             attackTimer = attackTimerReset;
         }
+    }
+    #endregion
+
+    #region Stuck Teleport
+    /// <summary>
+    /// Checks if the enemy needs an unstuck.
+    /// </summary>
+    /// <returns></returns>
+    public bool CheckStuck()
+    {
+        if (!agent.isOnNavMesh) return true;
+        
+        if (!agent.hasPath || agent.remainingDistance <= agent.stoppingDistance || agent.isStopped) return false;
+        
+        stuckTimer -= Time.deltaTime;
+        if (stuckTimer <= 0f)
+        {
+            float distMoved = Vector3.Distance(transform.position, lastTrackedPos);
+            
+            if (distMoved < stuckDistThres)
+            {
+                lastTrackedPos = transform.position;
+                stuckTimer = stuckTimerReset;
+                return true;
+            }
+            
+            lastTrackedPos = transform.position;
+            stuckTimer = stuckTimerReset;
+        }
+        
+        return false;
+    }
+
+    /// <summary>
+    /// Starts Unstuck process
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public IEnumerator StartUnStuck(Transform target)
+    {
+        anim.SetBool("IsWalk", false);
+        ToggleShadow(true);
+        yield return new WaitForSeconds(startUnstuckTimer);
+        UnStuck(target);
+        
+        yield return new WaitForSeconds(startUnstuckTimer);
+        ToggleShadow(false);
+        brain.ChangeState(EnemyBrain.StateID.Idle);
+    }
+    
+    /// <summary>
+    /// UnStucks the enemy.
+    /// </summary>
+    /// <param name="target"></param>
+    private void UnStuck(Transform target)
+    {
+        if (!isServer) return;
+
+        Debug.LogWarning($"I Unstucked Myself");
+        
+        Vector3 destPos = target.position;
+        
+        if (NavMesh.SamplePosition(target.position, out NavMeshHit hit, 3f, NavMesh.AllAreas)) destPos = hit.position;
+        
+        if (agent.hasPath) agent.ResetPath();
+        
+        agent.Warp(destPos);
+        lastTrackedPos = destPos;
+        stuckTimer = stuckTimerReset;
+    }
+    
+    //Enables/Disables Shadow Particles.
+    [ObserversRpc(bufferLast: true)]
+    private void ToggleShadow(bool isEnabled)
+    {
+        shadowParticles.SetActive(isEnabled);
     }
     #endregion
 

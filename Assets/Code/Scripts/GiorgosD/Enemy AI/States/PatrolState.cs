@@ -4,6 +4,7 @@ using UnityEngine;
 public class PatrolState : BaseState
 {
     private static int pointIndex = -1;
+    private Transform targetPoint;
 
     public PatrolState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
@@ -40,6 +41,11 @@ public class PatrolState : BaseState
         {
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }
+
+        if (body.CheckStuck())
+        {
+            body.StartCoroutine(body.StartUnStuck(targetPoint));
+        }
     }
 
     /// <summary>
@@ -58,9 +64,9 @@ public class PatrolState : BaseState
         }
 
         pointIndex = nextIndex;
-
-        Debug.Log($"Moving to patrol point {pointIndex}");
-
+        
+        targetPoint = patrolPoints[pointIndex];
+        
         body.MoveToTarget(patrolPoints[pointIndex].position);
     }
 
