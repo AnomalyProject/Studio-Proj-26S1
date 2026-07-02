@@ -58,7 +58,7 @@ public class MainMenuManager : MonoBehaviour
         Instance = this;
 
         // Unlock 'Start' tab if you have collectible from tutorial
-        UnlockMainGame();
+        //UnlockMainGame();
         SetMenuActivity(false);
 
         //DevConsole.RegisterCommand("skiptutorial", new DevConsole.CommandData("Registers the tutorial as complete.", args =>
