@@ -54,7 +54,7 @@ public class PrefabLightmapData : MonoBehaviour
             for (int j = 0; j < lightmaps.Length; j++)
             {
 
-                if (m_Lightmaps[i] == lightmaps[j].lightmapColor)
+                if (m_Lightmaps[i] != null && lightmaps[j].lightmapColor != null && m_Lightmaps[i].name == lightmaps[j].lightmapColor.name)
                 {
                     exists = true;
                     offsetsindexes[i] = j;
