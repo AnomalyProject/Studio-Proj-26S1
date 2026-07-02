@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Collections;
 using System.Reflection;
 using System.Linq;
 using System;
 using static SnapshotUtility;
+using Unity.VisualScripting;
 using UnityEngine.Events;
 using UnityEngine;
 
@@ -16,6 +18,7 @@ using UnityEngine;
 [ExecuteAlways]
 public class ModificationApplier : MonoBehaviour
 {
+    private static Dictionary<string, GameObject> GUIDCache = new Dictionary<string, GameObject>();
     public LevelModification levelModification;
     [SerializeField] [HideInInspector] private bool applied;
 
@@ -23,6 +26,12 @@ public class ModificationApplier : MonoBehaviour
     public UnityEvent onEnable;
     [Tooltip("Called before modification is reverted.")]
     public UnityEvent onDisable;
+
+    public static void RefreshGUIDCache()
+    {
+        GUIDCache.Clear();
+        GUIDCache.AddRange(FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).ToDictionary(x => x.guid, x => x.gameObject));
+    }
 
     #region Triggers
     private void OnEnable()
@@ -71,6 +80,7 @@ public class ModificationApplier : MonoBehaviour
         foreach (GameObjectSnapshot goToRemove in levelModification.removedGameObjects)
         {
             GameObject obj = FindByGuid(goToRemove.guid);
+            GUIDCache.Remove(goToRemove.guid);
             if (obj == null) continue;
 
 #if UNITY_EDITOR
@@ -107,6 +117,7 @@ public class ModificationApplier : MonoBehaviour
         foreach (GameObjectSnapshot goToAdd in levelModification.addedGameObjects)
         {
             GameObject obj = FindByGuid(goToAdd.guid);
+            GUIDCache.Remove(goToAdd.guid);
             if (obj == null) continue;
 
 #if UNITY_EDITOR
@@ -164,6 +175,7 @@ public class ModificationApplier : MonoBehaviour
             SetComponentEnabled(comp, componentToAdd.enabled);
 
             foreach (FieldSnapshot fieldToAdd in componentToAdd.fields) SetField(comp, fieldToAdd);
+            if (compType == typeof(SnapshotID)) GUIDCache.Add((comp as SnapshotID).guid, go); // Add to cache when adding a new SnapshotID
         }
     }
     private void RemoveComponents(List<ComponentSnapshot> componentsToRemove, GameObject go)
@@ -179,6 +191,8 @@ public class ModificationApplier : MonoBehaviour
             {
                 if (compToRemove.index >= components.Count) continue;
                 Component component = components[compToRemove.index];
+
+                if (component is SnapshotID snapshotID) GUIDCache.Remove(snapshotID.guid); // Remove from cache when removing a SnapshotID
 
 #if UNITY_EDITOR
                 DestroyImmediate(component);
@@ -202,7 +216,7 @@ public class ModificationApplier : MonoBehaviour
     }
 
     #region Helpers
-    public static GameObject FindByGuid(string guid) => FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(x => x.guid == guid)?.gameObject;
+    public static GameObject FindByGuid(string guid) => GUIDCache.TryGetValue(guid, out GameObject go) ? go : null;
     private Component FindComponent(GameObject go, string type, int index)
     {
         List<Component> comps = go.GetComponents<Component>().Where(c => c.GetType().AssemblyQualifiedName == type).ToList();
