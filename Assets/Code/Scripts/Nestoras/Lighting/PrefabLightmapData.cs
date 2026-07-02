@@ -35,6 +35,12 @@ public class PrefabLightmapData : MonoBehaviour
 
     void Start()
     {
+        Debug.Log(LightmapSettings.lightmaps.Length);
+
+        Debug.Log(m_Lightmaps.Length);
+
+        foreach (var tex in m_Lightmaps) Debug.Log(tex == null ? "NULL" : tex.name);
+
         Init();
     }
 
