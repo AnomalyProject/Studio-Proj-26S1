@@ -58,15 +58,15 @@ public class MainMenuManager : MonoBehaviour
         Instance = this;
 
         // Unlock 'Start' tab if you have collectible from tutorial
-        if (RefrenceManager.CurrentSave.collectiblesGathered.Contains(tutorialCollectible.ID)) UnlockMainGame();
+        UnlockMainGame();
         SetMenuActivity(false);
 
-        DevConsole.RegisterCommand("skiptutorial", new DevConsole.CommandData("Registers the tutorial as complete.", args =>
-        {
-            RefrenceManager.CurrentSave.collectiblesGathered.Add(tutorialCollectible.ID);
-            SaveSystem.QuickSave(RefrenceManager.CurrentSave);
-            UnlockMainGame();
-        }, "Awards the user with the Tutorial collectible, unlocking the main game."));
+        //DevConsole.RegisterCommand("skiptutorial", new DevConsole.CommandData("Registers the tutorial as complete.", args =>
+        //{
+        //    RefrenceManager.CurrentSave.collectiblesGathered.Add(tutorialCollectible.ID);
+        //    SaveSystem.QuickSave(RefrenceManager.CurrentSave);
+        //    UnlockMainGame();
+        //}, "Awards the user with the Tutorial collectible, unlocking the main game."));
     }
     private void UnlockMainGame()
     {

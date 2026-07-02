@@ -1220,6 +1220,4 @@ public class SessionManager : NetworkBehaviour, IPlayerEvents
     }
 
     #endregion
-
-
 }

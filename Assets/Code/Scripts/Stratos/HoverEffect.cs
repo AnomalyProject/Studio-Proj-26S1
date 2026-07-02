@@ -9,10 +9,11 @@ public class HoverEffect : MonoBehaviour
     [SerializeField] private bool rotation = true;
     [SerializeField] private Vector3 rotationSpeed = new Vector3(0f, 10f, 0f);
 
-    private Vector3 startPos;
-    private void OnEnable()
+    private Vector3 startLocPos;
+
+    private void Start()
     {
-        startPos = transform.position;
+        startLocPos = transform.localPosition;
     }
     private void Update()
     {
@@ -22,9 +23,9 @@ public class HoverEffect : MonoBehaviour
 
     private void ApplyHoverEffect()
     {
-        float hoverY = startPos.y + (Mathf.Sin(Time.time * hoverSpeed) * hoverUpDown);
+        float hoverY = startLocPos.y + (Mathf.Sin(Time.time * hoverSpeed) * hoverUpDown);
 
-        transform.position = new Vector3(startPos.x, hoverY, startPos.z);
+        transform.localPosition = new Vector3(startLocPos.x, hoverY, startLocPos.z);
 
         if (rotation)
         {
