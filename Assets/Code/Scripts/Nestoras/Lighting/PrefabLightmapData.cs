@@ -33,7 +33,7 @@ public class PrefabLightmapData : MonoBehaviour
     LightInfo[] m_LightInfo;
 
 
-    void Awake()
+    void Start()
     {
         Init();
     }
