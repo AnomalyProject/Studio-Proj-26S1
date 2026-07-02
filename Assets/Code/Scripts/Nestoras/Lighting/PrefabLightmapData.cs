@@ -137,6 +137,14 @@ public class PrefabLightmapData : MonoBehaviour
 
             info.renderer.lightmapIndex = lightmapOffsetIndex[info.lightmapIndex];
             info.renderer.lightmapScaleOffset = info.lightmapOffsetScale;
+
+            // Forces LIGHTMAP_ON keyword to be active on the material in builds
+            Material[] mat = info.renderer.sharedMaterials;
+            for (int j = 0; j < mat.Length; j++)
+            {
+                if (mat[j] != null && Shader.Find(mat[j].shader.name) != null)
+                    mat[j].shader = Shader.Find(mat[j].shader.name);
+            }
         }
 
         for (int i = 0; i < lightsInfo.Length; i++)
