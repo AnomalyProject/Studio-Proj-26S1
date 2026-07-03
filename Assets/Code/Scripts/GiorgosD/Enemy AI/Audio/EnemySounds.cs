@@ -17,9 +17,6 @@ public class EnemySounds : NetworkBehaviour
     private int minNormalGrowls = 0;
     private int maxNormalGrowls;
     
-    private int minAlertedGrowls = 0;
-    private int maxAlertedGrowls;
-    
     private int minChaseGrowls = 0;
     private int maxChaseGrowls;
     
@@ -32,7 +29,6 @@ public class EnemySounds : NetworkBehaviour
     [Header("Audio Sounds")]
     [SerializeField] private AudioClip[] footSteps;
     [SerializeField] private AudioClip[] normalGrowls;
-    [SerializeField] private AudioClip[] alertedGrowls;
     [SerializeField] private  AudioClip[] chaseGrowls;
     [SerializeField] private AudioClip[] damagedGrowls;
     [SerializeField] private AudioClip[] attackGrowls;
@@ -43,7 +39,6 @@ public class EnemySounds : NetworkBehaviour
     {
         maxFootSteps = footSteps.Length;
         maxNormalGrowls = normalGrowls.Length;
-        maxAlertedGrowls = alertedGrowls.Length;
         maxChaseGrowls = chaseGrowls.Length;
         maxDamagedGrowls = damagedGrowls.Length;
         maxAttackGrowls = attackGrowls.Length;
@@ -77,8 +72,6 @@ public class EnemySounds : NetworkBehaviour
                 Growl(minNormalGrowls, maxNormalGrowls, normalGrowls, stateID);
                 break;
             case EnemyBrain.StateID.Alert:
-                Growl(minAlertedGrowls, maxAlertedGrowls, alertedGrowls, stateID);
-                break;
             case EnemyBrain.StateID.Chase:
                 Growl(minChaseGrowls, maxChaseGrowls, chaseGrowls, stateID);
                 break;
@@ -101,7 +94,7 @@ public class EnemySounds : NetworkBehaviour
     {
         if (voiceAudio.isPlaying)
         {
-            if (stateID == EnemyBrain.StateID.Alert && voiceAudio.clip != null && alertedGrowls.Contains(voiceAudio.clip)) return;
+            if (stateID == EnemyBrain.StateID.Alert && voiceAudio.clip != null && chaseGrowls.Contains(voiceAudio.clip)) return;
             
             bool isMustPlay = stateID == EnemyBrain.StateID.Alert ||
                          stateID == EnemyBrain.StateID.Attack ||
