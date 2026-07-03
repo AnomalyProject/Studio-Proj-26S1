@@ -3107,6 +3107,54 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 2909156414253074638, guid: 96e323a3d92d01a4296db50ba268fe5e, type: 3}
+--- !u!1 &1794028279921714171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 156992924602595218}
+  - component: {fileID: 1884278516573804311}
+  m_Layer: 0
+  m_Name: Cylinder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &156992924602595218
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1794028279921714171}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.12, y: -1.191, z: -0.924}
+  m_LocalScale: {x: 2, y: 1, z: 2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7415692512052807039}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!208 &1884278516573804311
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1794028279921714171}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.6, y: 0.5, z: 0.6}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1 &1803114432325811900
 GameObject:
   m_ObjectHideFlags: 0
@@ -5738,6 +5786,7 @@ Transform:
   - {fileID: 6051177070470842193}
   - {fileID: 610981808623542236}
   - {fileID: 6789143803412834452}
+  - {fileID: 156992924602595218}
   m_Father: {fileID: 1372553853603282279}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &2391688337684271174
@@ -6386,7 +6435,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1372553853603282279
 Transform:
   m_ObjectHideFlags: 0
@@ -6430,6 +6479,8 @@ MonoBehaviour:
   exitPointAnchor: {fileID: 407001064493652398}
   mapMusicTheme: {fileID: 0}
   _almanacEntry: {fileID: 0}
+  currencySpawnPoints: []
+  vendor: {fileID: 0}
   baseMap: {fileID: 3287323414207450411}
   anomalyVariations: []
 --- !u!1 &3753346320272096540
@@ -13263,7 +13314,8 @@ MonoBehaviour:
   onEnable: 0
   spawnMode: 0
   spawnProbability: 1
-  randomSpawnAmount: 0
+  MinSpawnAmount: 0
+  MaxSpawnAmount: 1
 --- !u!1 &7907284943488115151
 GameObject:
   m_ObjectHideFlags: 0
@@ -15248,7 +15300,8 @@ MonoBehaviour:
   onEnable: 0
   spawnMode: 0
   spawnProbability: 1
-  randomSpawnAmount: 0
+  MinSpawnAmount: 0
+  MaxSpawnAmount: 1
 --- !u!1 &9121887166270373112
 GameObject:
   m_ObjectHideFlags: 0
