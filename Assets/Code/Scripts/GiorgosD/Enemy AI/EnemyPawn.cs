@@ -204,11 +204,17 @@ public class EnemyPawn : NetworkBehaviour
     /// Checks if the enemy needs an unstuck.
     /// </summary>
     /// <returns></returns>
-    public bool CheckStuck()
+    public void CheckStuck(Transform target)
     {
-        if (!agent.isOnNavMesh) return true;
+        if (!isServer) return;
         
-        if (!agent.hasPath || agent.remainingDistance <= agent.stoppingDistance || agent.isStopped) return false;
+        if (!agent.isOnNavMesh)
+        {
+            StartCoroutine(StartUnStuck(target));
+            return;
+        }
+        
+        if (!agent.hasPath || agent.remainingDistance <= agent.stoppingDistance || agent.isStopped) return;
         
         stuckTimer -= Time.deltaTime;
         if (stuckTimer <= 0f)
@@ -219,14 +225,13 @@ public class EnemyPawn : NetworkBehaviour
             {
                 lastTrackedPos = transform.position;
                 stuckTimer = stuckTimerReset;
-                return true;
+                StartCoroutine(StartUnStuck(target));
+                return;
             }
             
             lastTrackedPos = transform.position;
             stuckTimer = stuckTimerReset;
         }
-        
-        return false;
     }
 
     /// <summary>
@@ -234,8 +239,10 @@ public class EnemyPawn : NetworkBehaviour
     /// </summary>
     /// <param name="target"></param>
     /// <returns></returns>
-    public IEnumerator StartUnStuck(Transform target)
+    private IEnumerator StartUnStuck(Transform target)
     {
+        if (!isServer) yield break;
+        
         anim.SetBool("IsWalk", false);
         ToggleShadow(true);
         yield return new WaitForSeconds(startUnstuckTimer);
@@ -258,7 +265,7 @@ public class EnemyPawn : NetworkBehaviour
         
         Vector3 destPos = target.position;
         
-        if (NavMesh.SamplePosition(target.position, out NavMeshHit hit, 3f, NavMesh.AllAreas)) destPos = hit.position;
+        if (NavMesh.SamplePosition(target.position, out NavMeshHit hit, 6f, NavMesh.AllAreas)) destPos = hit.position;
         
         if (agent.hasPath) agent.ResetPath();
         

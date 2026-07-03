@@ -42,10 +42,7 @@ public class PatrolState : BaseState
             brain.ChangeState(EnemyBrain.StateID.Idle);
         }
 
-        if (body.CheckStuck())
-        {
-            body.StartCoroutine(body.StartUnStuck(targetPoint));
-        }
+        body.CheckStuck(targetPoint);
     }
 
     /// <summary>
