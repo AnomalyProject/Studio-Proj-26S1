@@ -1062,8 +1062,18 @@ public class SteamSessionBridge : MonoBehaviour
 
     public bool TryOpenInviteOverlay()
     {
-        if (!isSteamAvailable || !isInLobby) return false;
-        
+        if (!isSteamAvailable)
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: Steam is not available.");
+            return false;
+        }
+
+        if (!isInLobby || !currentLobbyID.IsValid())
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: not in a Steam lobby.");
+            return false;
+        }
+
         SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
         return true;
     }
