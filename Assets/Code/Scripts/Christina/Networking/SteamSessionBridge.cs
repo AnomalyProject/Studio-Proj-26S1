@@ -1088,9 +1088,9 @@ public class SteamSessionBridge : MonoBehaviour
         if (!isSteamAvailable || !isInLobby) return false;
 
         if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
-        
-        if(maxPlayers < 2 || maxPlayers > 4) return false;
-        
+
+        if (maxPlayers < 2 || maxPlayers > 4) return false;
+
         return SteamMatchmaking.SetLobbyMemberLimit(currentLobbyID, maxPlayers);
     }
 }

@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 
 public class LobbyUI : MonoBehaviour
@@ -24,9 +24,9 @@ public class LobbyUI : MonoBehaviour
     [Header("Lobby Info")]
     [SerializeField] private TMP_Text readyCountText;
     
-    [Header("Invite")]
-    [SerializeField] private Button inviteButton;
-    
+    [Header("Multiplayer")]
+    [SerializeField] private GameObject multiplayerSettings;
+
     [Header("Host Controls")]
     [SerializeField] private GameObject hostControlsRoot;
     /*[SerializeField] private GameObject leftControlsRoot;
@@ -54,7 +54,6 @@ public class LobbyUI : MonoBehaviour
         startButton.onClick.AddListener(() => SessionManager.Instance.RequestStartMatch());
         leaveButton.onClick.AddListener(OnLeaveClicked);*/
         
-        inviteButton.onClick.AddListener(OnInviteClicked);
         //privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
         maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
         
@@ -212,12 +211,12 @@ public class LobbyUI : MonoBehaviour
                 }
             }
         }*/
-        
-        hostControlsRoot.SetActive(isLobby && isHost);
+
+        //hostControlsRoot.SetActive(isLobby && isHost);
         //leftControlsRoot.SetActive(isLobby);
-        inviteButton.gameObject.SetActive(isLobby);
-        inviteButton.interactable = isLobby && SteamSessionBridge.Instance != null;
         
+        multiplayerSettings.SetActive(isHost && isLobby && SteamSessionBridge.Instance != null);
+
         ApplyLobbySettings(sessionData, isHost);
         
         /*startButton.gameObject.SetActive(false);
@@ -307,7 +306,7 @@ public class LobbyUI : MonoBehaviour
         SessionManager.Instance.RequestUpdateSettings("LobbyVisibility", visibility);
     }
     
-    private void OnInviteClicked()
+    public void OnInviteClicked()
     {
         if (IsSoloMode()) return;
         if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TryOpenInviteOverlay())
@@ -316,7 +315,7 @@ public class LobbyUI : MonoBehaviour
         }
     }
     
-    private void OnMaxPlayersChanged(int index)
+    public void OnMaxPlayersChanged(int index)
     {
         if (IsSoloMode()) return;
         if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
@@ -332,6 +331,8 @@ public class LobbyUI : MonoBehaviour
         }
 
         // fix for dev testing
+
+
         bool isDevHost = SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.DevHost;
 
         if (!isDevHost && (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers)))
