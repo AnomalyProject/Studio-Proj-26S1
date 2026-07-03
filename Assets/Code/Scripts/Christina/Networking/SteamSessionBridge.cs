@@ -1062,8 +1062,18 @@ public class SteamSessionBridge : MonoBehaviour
 
     public bool TryOpenInviteOverlay()
     {
-        if (!isSteamAvailable || !isInLobby) return false;
-        
+        if (!isSteamAvailable)
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: Steam is not available.");
+            return false;
+        }
+
+        if (!isInLobby || !currentLobbyID.IsValid())
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: not in a Steam lobby.");
+            return false;
+        }
+
         SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
         return true;
     }
@@ -1088,9 +1098,9 @@ public class SteamSessionBridge : MonoBehaviour
         if (!isSteamAvailable || !isInLobby) return false;
 
         if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
-        
-        if(maxPlayers < 2 || maxPlayers > 4) return false;
-        
+
+        if (maxPlayers < 2 || maxPlayers > 4) return false;
+
         return SteamMatchmaking.SetLobbyMemberLimit(currentLobbyID, maxPlayers);
     }
 }
