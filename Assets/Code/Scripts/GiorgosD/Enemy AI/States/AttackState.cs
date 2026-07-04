@@ -33,7 +33,7 @@ public class AttackState : BaseState
         
         hasHitTarget = false;
         
-        body.OnStartAttack.AddListener(DoAttack);
+        body.OnStartAttack.AddListener(ActivateAttack);
         body.OnEndAttack.AddListener(Outcome);
 
         body.anim.SetTrigger("Attack");
@@ -44,7 +44,17 @@ public class AttackState : BaseState
         if (target == null) return;
         
         body.RotateTowards(target.position);
+
+        if (shouldAttack)
+        {
+            DoAttack();
+        }
     }
+
+    private void ActivateAttack()
+    {
+        shouldAttack = true;
+    }    
     
     /// <summary>
     /// Picks random respawn and does attack and sends you to it.
@@ -72,6 +82,8 @@ public class AttackState : BaseState
             Debug.Log("Player Attacked");
         
             body.InvokeAttacked(target.GetComponent<PlayerBody>());
+
+            shouldAttack = false;
         }
         else
         {
@@ -98,7 +110,7 @@ public class AttackState : BaseState
     {
         body.anim.ResetTrigger("Attack");
         
-        body.OnStartAttack.RemoveListener(DoAttack);
+        body.OnStartAttack.RemoveListener(ActivateAttack);
         body.OnEndAttack.RemoveListener(Outcome);
         
         body.agent.isStopped = false;

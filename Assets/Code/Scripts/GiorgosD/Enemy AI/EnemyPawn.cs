@@ -48,7 +48,6 @@ public class EnemyPawn : NetworkBehaviour
     [Header("Attack")] 
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
-    [SerializeField] private EnemyHitCheck hitCheck;
     private bool isAttackCooldown;
     [SerializeField] private float attackTimer = 3.0f;
     private float attackTimerReset;
@@ -159,15 +158,6 @@ public class EnemyPawn : NetworkBehaviour
         attackTimer = attackTimerReset;
         
         return Array.Exists(hitColliders, c => c.transform == player);
-        
-        /*
-        if (hitCheck.CanHit)
-        {
-            return true;
-        }
-    
-        return false;
-        */
     }
 
     /// <summary>
@@ -576,6 +566,12 @@ public class EnemyPawn : NetworkBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, rightLimit * sightRange);
         Gizmos.DrawRay(transform.position, leftLimit * sightRange);
+        
+        // Attack hitbox (green box)
+        Gizmos.color = Color.green;
+        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
+        Gizmos.matrix = Matrix4x4.TRS(hitboxCenter, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
     }
     #endregion
     
