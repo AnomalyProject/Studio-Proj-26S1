@@ -4,6 +4,7 @@ public class AttackState : BaseState
 {
     private Transform target;
     private bool hasHitTarget;
+    private bool shouldAttack;
 
     public AttackState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
@@ -20,6 +21,13 @@ public class AttackState : BaseState
             brain.ChangeState(EnemyBrain.StateID.Chase, target);
             return;
         }
+        
+        body.agent.ResetPath();
+        body.agent.velocity = Vector3.zero;
+        body.agent.isStopped = true;
+      
+        body.ActivateAttackCooldown();
+        
         
         sound.SelectGrowl(brain.CurrentStateID);
         
@@ -73,6 +81,7 @@ public class AttackState : BaseState
 
     private void Outcome()
     {
+        shouldAttack = false;
         bool playerInvis = body.CachedPlayer != null && body.CachedPlayer.Invis.IsInvis;
 
         if (playerInvis || hasHitTarget)
@@ -87,7 +96,11 @@ public class AttackState : BaseState
 
     public override void Exit()
     {
+        body.anim.ResetTrigger("Attack");
+        
         body.OnStartAttack.RemoveListener(DoAttack);
         body.OnEndAttack.RemoveListener(Outcome);
+        
+        body.agent.isStopped = false;
     }
 }

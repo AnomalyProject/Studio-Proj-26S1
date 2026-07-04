@@ -45,9 +45,8 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
-    [Header("Attack")]
-    [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
-    [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
+    [Header("Attack")] 
+    [SerializeField] private EnemyHitCheck hitCheck;
     private bool isAttackCooldown;
     [SerializeField] private float attackTimer = 3.0f;
     private float attackTimerReset;
@@ -150,14 +149,12 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     public bool IsHitSuccess(Transform player)
     {
-        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
-
-        Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, attackHitBox / 2, transform.rotation, playerLayer);
-
-        isAttackCooldown = true;
-        attackTimer = attackTimerReset;
-        
-        return Array.Exists(hitColliders, c => c.transform == player);
+        if (hitCheck.CanHit)
+        {
+            return true;
+        }
+    
+        return false;
     }
 
     /// <summary>
@@ -185,6 +182,14 @@ public class EnemyPawn : NetworkBehaviour
         cachedPlayer = null;
     }
 
+    public void ActivateAttackCooldown()
+    {
+        if (!isServer) return;
+
+        isAttackCooldown = true;
+        attackTimer = attackTimerReset;
+    }
+    
     private void AttackCooldown()
     {
         if (!isAttackCooldown) return;
@@ -340,8 +345,6 @@ public class EnemyPawn : NetworkBehaviour
         
         Quaternion targetRot = Quaternion.LookRotation(direction);
         transform.rotation = targetRot;
-        
-        agent.isStopped = false;
     }
 
     /// <summary>
@@ -560,12 +563,6 @@ public class EnemyPawn : NetworkBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, rightLimit * sightRange);
         Gizmos.DrawRay(transform.position, leftLimit * sightRange);
-
-        // Attack hitbox (green box)
-        Gizmos.color = Color.green;
-        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
-        Gizmos.matrix = Matrix4x4.TRS(hitboxCenter, transform.rotation, Vector3.one);
-        Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
     }
     #endregion
     
