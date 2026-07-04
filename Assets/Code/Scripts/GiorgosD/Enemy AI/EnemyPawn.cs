@@ -46,6 +46,8 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
 
     [Header("Attack")] 
+    [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
+    [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
     [SerializeField] private EnemyHitCheck hitCheck;
     private bool isAttackCooldown;
     [SerializeField] private float attackTimer = 3.0f;
@@ -149,12 +151,23 @@ public class EnemyPawn : NetworkBehaviour
     /// <returns></returns>
     public bool IsHitSuccess(Transform player)
     {
+        Vector3 hitboxCenter = transform.position + (transform.forward * attackOffset);
+
+        Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, attackHitBox / 2, transform.rotation, playerLayer);
+
+        isAttackCooldown = true;
+        attackTimer = attackTimerReset;
+        
+        return Array.Exists(hitColliders, c => c.transform == player);
+        
+        /*
         if (hitCheck.CanHit)
         {
             return true;
         }
     
         return false;
+        */
     }
 
     /// <summary>
