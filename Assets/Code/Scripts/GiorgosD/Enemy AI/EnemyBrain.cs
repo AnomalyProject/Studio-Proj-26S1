@@ -141,7 +141,8 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned || currentStateID == StateID.Attack) return;
+        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned 
+            || currentStateID == StateID.Attack || currentStateID == StateID.Chase) return;
         
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
         if (alertedBy.GetComponent<LureItem>())
