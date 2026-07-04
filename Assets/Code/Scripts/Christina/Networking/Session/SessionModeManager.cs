@@ -182,6 +182,8 @@ public class SessionModeManager : MonoBehaviour
             if (menuScene.IsValid() && menuScene.isLoaded)
             {
                 SceneManager.SetActiveScene(menuScene);
+                BlackFadeManager.Instance?.FadeOut();
+                MainMenuManager.Instance?.SetMenuActivity(true);
             }
             else
             {
@@ -639,7 +641,9 @@ public class SessionModeManager : MonoBehaviour
     {
         if (currentMode != SessionMode.None)
         {
+            LastJoinFailureMessage = $"Could not join lobby: already in {currentMode} mode.";
             Debug.LogWarning($"[SessionModeManager] Cannot join, already in {currentMode} mode.");
+            ReturnToMenu();
             return;
         }
 
