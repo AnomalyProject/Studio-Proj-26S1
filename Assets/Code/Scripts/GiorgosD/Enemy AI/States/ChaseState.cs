@@ -13,6 +13,8 @@ public class ChaseState : BaseState
     {
         base.Enter();
 
+        if (body.anim != null) body.anim.ResetTrigger("Attack");
+        
         body.SetMoveSpeed(true);
         body.anim.SetBool("IsRun", true);
         
@@ -44,6 +46,10 @@ public class ChaseState : BaseState
 
         if (Vector3.Distance(body.transform.position, target.position) <= 3.0f && !body.IsAttackCooldown)
         {
+            body.agent.ResetPath();
+            body.agent.velocity = Vector3.zero;
+            body.agent.isStopped = true;
+            
             brain.ChangeState(EnemyBrain.StateID.Attack, target);
         }
     }
