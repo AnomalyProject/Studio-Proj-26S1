@@ -425,6 +425,7 @@ Transform:
   - {fileID: 3862717840031737168}
   - {fileID: 3162333053757165556}
   - {fileID: 3388716018001502443}
+  - {fileID: 1986680373093465882}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &3967792416529539938
@@ -505,7 +506,7 @@ MonoBehaviour:
     m_Bits: 8
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 65
   timeToLost: 3
   runMultiplier: 0
   autoDetectMultiplier: 0
@@ -513,8 +514,9 @@ MonoBehaviour:
   aggressionLevel: 0
   maxAggressionLevel: 0
   attackHitBox: {x: 2, y: 3, z: 4}
-  attackOffset: 2.6
+  attackOffset: 2.5
   attackTimer: 3
+  attackRayPos: {fileID: 7530970587915459847}
   stuckDistThres: 0.2
   stuckTimer: 4
   shadowParticles: {fileID: 4598599992787357075}
@@ -5511,6 +5513,37 @@ Transform:
   m_Children:
   - {fileID: 7337256293185552097}
   - {fileID: 1325038696962910943}
+  m_Father: {fileID: 1176467095086660947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7530970587915459847
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1986680373093465882}
+  m_Layer: 7
+  m_Name: Attack Ray Origin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1986680373093465882
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7530970587915459847}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 1176467095086660947}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &9069173521175767135

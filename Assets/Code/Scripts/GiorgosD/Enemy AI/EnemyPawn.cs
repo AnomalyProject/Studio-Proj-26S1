@@ -51,6 +51,7 @@ public class EnemyPawn : NetworkBehaviour
     private bool isAttackCooldown;
     [SerializeField] private float attackTimer = 3.0f;
     private float attackTimerReset;
+    [SerializeField] private GameObject attackRayPos;
 
     public bool IsAttackCooldown => isAttackCooldown;
 
@@ -156,8 +157,17 @@ public class EnemyPawn : NetworkBehaviour
 
         isAttackCooldown = true;
         attackTimer = attackTimerReset;
+
+        bool isInBox = Array.Exists(hitColliders, c => c.transform == player);
+
+        if (!isInBox) return false;
         
-        return Array.Exists(hitColliders, c => c.transform == player);
+        Vector3 playerDir = (player.position + Vector3.up * 1.0f) - attackRayPos.transform.position;
+        float playerDist = playerDir.magnitude;
+        
+        if (Physics.Raycast(attackRayPos.transform.position, playerDir.normalized, playerDist, obstacleLayer)) return false;
+
+        return true;
     }
 
     /// <summary>
@@ -509,10 +519,7 @@ public class EnemyPawn : NetworkBehaviour
         
         if (Vector3.Angle(flatForward, flatDirection) < sightAngle / 2f)
         {
-            if (!Physics.Raycast(eyePos.position, directionToTarget, distanceToTarget, obstacleLayer))
-            {
-                return true;
-            }
+            if (!Physics.Raycast(eyePos.position, directionToTarget, distanceToTarget, obstacleLayer)) return true;
         }
 
         return false;
