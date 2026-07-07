@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 
 public class LobbyUI : MonoBehaviour
@@ -21,17 +21,12 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private Button leaveButton;*/
     
-    [Header("Lobby Info")]
-    [SerializeField] private TMP_Text readyCountText;
     
-    [Header("Invite")]
-    [SerializeField] private Button inviteButton;
-    
+    [Header("Multiplayer")]
+    [SerializeField] private GameObject multiplayerSettings;
+
     [Header("Host Controls")]
     [SerializeField] private GameObject hostControlsRoot;
-    /*[SerializeField] private GameObject leftControlsRoot;
-    [SerializeField] private TMP_Dropdown privacyDropdown;*/
-    [SerializeField] private TMP_Dropdown maxPlayersDropdown;
 
     [Header("Messages")]
     [SerializeField] private GameObject messagePanel;
@@ -54,9 +49,8 @@ public class LobbyUI : MonoBehaviour
         startButton.onClick.AddListener(() => SessionManager.Instance.RequestStartMatch());
         leaveButton.onClick.AddListener(OnLeaveClicked);*/
         
-        inviteButton.onClick.AddListener(OnInviteClicked);
         //privacyDropdown.onValueChanged.AddListener(OnPrivacyChanged);
-        maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
+       // maxPlayersDropdown.onValueChanged.AddListener(OnMaxPlayersChanged);
         
         kickReasonConfirmButton.onClick.AddListener(OnKickReasonConfirmed);
         kickReasonCancelButton.onClick.AddListener(HideKickReasonPanel);
@@ -175,8 +169,6 @@ public class LobbyUI : MonoBehaviour
                 isLocalPlayerInElevator = player.IsInElevator;
             }
         }
-        
-        readyCountText.text = $"{readyCount}/{sessionData.PlayerCount} Ready In Elevator";
 
         //Updating ready status
         /*if (readyButton != null)
@@ -212,12 +204,12 @@ public class LobbyUI : MonoBehaviour
                 }
             }
         }*/
-        
-        hostControlsRoot.SetActive(isLobby && isHost);
+
+        //hostControlsRoot.SetActive(isLobby && isHost);
         //leftControlsRoot.SetActive(isLobby);
-        inviteButton.gameObject.SetActive(isLobby);
-        inviteButton.interactable = isLobby && SteamSessionBridge.Instance != null;
         
+        multiplayerSettings.SetActive(isHost && isLobby && SteamSessionBridge.Instance != null);
+
         ApplyLobbySettings(sessionData, isHost);
         
         /*startButton.gameObject.SetActive(false);
@@ -307,37 +299,53 @@ public class LobbyUI : MonoBehaviour
         SessionManager.Instance.RequestUpdateSettings("LobbyVisibility", visibility);
     }
     
-    private void OnInviteClicked()
+    public void OnInviteClicked()
     {
         if (IsSoloMode()) return;
-        if (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TryOpenInviteOverlay())
+
+        if (SessionModeManager.Instance != null &&
+            SessionModeManager.Instance.CurrentMode == SessionMode.DevHost)
+        {
+            ShowMessage("Steam invites are not available in dev host mode.");
+            return;
+        }
+
+        if (SteamSessionBridge.Instance == null ||
+            !SteamSessionBridge.Instance.TryOpenInviteOverlay())
         {
             ShowMessage("Could not open the Steam invite overlay.");
         }
     }
     
-    private void OnMaxPlayersChanged(int index)
+    public void RequestMaxPlayers(int maxPlayers)
     {
         if (IsSoloMode()) return;
         if (SessionManager.Instance == null || !SessionManager.Instance.IsHost) return;
 
         var sessionData = SessionManager.Instance.LatestClientSession;
-        int maxPlayers = index + 2;
+
+        if (maxPlayers < 2 || maxPlayers > 4)
+        {
+            ShowMessage($"Invalid max players request: {maxPlayers}.");
+            RefreshUI();
+            return;
+        }
 
         if (maxPlayers < sessionData.PlayerCount)
         {
             ShowMessage("Max players cannot be lower than the current player count.");
-            maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);
+            RefreshUI();
             return;
         }
 
-        // fix for dev testing
         bool isDevHost = SessionModeManager.Instance != null && SessionModeManager.Instance.CurrentMode == SessionMode.DevHost;
 
-        if (!isDevHost && (SteamSessionBridge.Instance == null || !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers)))
+        if (!isDevHost &&
+            (SteamSessionBridge.Instance == null ||
+             !SteamSessionBridge.Instance.TrySetLobbyMaxPlayers(maxPlayers)))
         {
             ShowMessage("Failed to update max players.");
-            maxPlayersDropdown.SetValueWithoutNotify(Mathf.Clamp(sessionData.MaxPlayers, 2, 4) - 2);
+            RefreshUI();
             return;
         }
 
@@ -380,12 +388,12 @@ public class LobbyUI : MonoBehaviour
             privacyDropdown.interactable = isHost;#1#
         }*/
 
-        if (maxPlayersDropdown != null)
+        /*if (maxPlayersDropdown != null)
         {
             int clampedMaxPlayers = Mathf.Clamp(sessionData.MaxPlayers, 2, 4);
             maxPlayersDropdown.SetValueWithoutNotify(clampedMaxPlayers - 2);
             maxPlayersDropdown.interactable = isHost;
-        }
+        }*/
     }
     
     private string GetCustomProperty(ClientSessionData sessionData, string key)

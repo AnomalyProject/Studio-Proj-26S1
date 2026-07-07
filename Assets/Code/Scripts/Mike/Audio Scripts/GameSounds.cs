@@ -23,7 +23,7 @@ public class GameSounds : SoundCaller
     }
 
     private void HandleElevatorInteraction(LevelExitPoint point, bool arg2) => FadeOutMusic(null);
-    private void OnMapChanged(GameMap map)
+    public void OnMapChanged(GameMap map)
     {
         currentMapTrack = map.MapMusicTheme;
         if (enteredVoidOnce) escapedVoidNarration.PlayNarration();
