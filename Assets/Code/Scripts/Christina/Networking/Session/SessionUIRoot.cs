@@ -6,6 +6,7 @@ using UnityEngine;
 public class SessionUIRoot : MonoBehaviour
 {
     public static SessionUIRoot Instance { get; private set; }
+    public LobbyUI LobbyUI;
 
     private void Awake()
     {
