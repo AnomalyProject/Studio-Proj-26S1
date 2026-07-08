@@ -180,9 +180,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (player == null) return;
         
-
         if (player.Invis.IsInvis) return;
-        
         
         var controller = player.GetComponent<CharacterController>();
 
@@ -222,12 +220,20 @@ public class EnemyPawn : NetworkBehaviour
     /// Checks if the enemy needs an unstuck.
     /// </summary>
     /// <returns></returns>
-    public void CheckStuck(Transform target)
+    public void CheckStuck(Transform target, bool stuckOverride)
     {
         if (!isServer) return;
+
+        if (stuckOverride)
+        {
+            Debug.LogError("Force UnStuck");
+            StartCoroutine(StartUnStuck(target));
+            return;
+        }
         
         if (!agent.isOnNavMesh)
         {
+            Debug.LogError("Out of Nav Stuck");
             StartCoroutine(StartUnStuck(target));
             return;
         }
@@ -241,6 +247,8 @@ public class EnemyPawn : NetworkBehaviour
             
             if (distMoved < stuckDistThres)
             {
+                Debug.LogError("Hasnt made progress to point stuck");
+                
                 lastTrackedPos = transform.position;
                 stuckTimer = stuckTimerReset;
                 StartCoroutine(StartUnStuck(target));
@@ -279,7 +287,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         if (!isServer) return;
 
-        Debug.LogWarning($"I Unstucked Myself");
+        Debug.LogError($"I Unstucked Myself");
         
         Vector3 destPos = target.position;
         

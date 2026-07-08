@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PatrolState : BaseState
 {
@@ -35,14 +36,22 @@ public class PatrolState : BaseState
     /// </summary>
     public override void Update()
     {
+        body.CheckStuck(targetPoint, false);
+        
         brain.ReduceTimer();
         
         if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
-            brain.ChangeState(EnemyBrain.StateID.Idle);
+            if (isActualDest())
+            {
+                brain.ChangeState(EnemyBrain.StateID.Idle);
+            }
+            else
+            {
+                HandleStuckInRoom();
+            }
         }
 
-        body.CheckStuck(targetPoint);
     }
 
     /// <summary>
@@ -65,6 +74,20 @@ public class PatrolState : BaseState
         targetPoint = patrolPoints[pointIndex];
         
         body.MoveToTarget(patrolPoints[pointIndex].position);
+    }
+
+    private bool isActualDest()
+    {
+        Vector3 agentTarget = body.agent.destination;
+        
+        float devDist = Vector3.Distance(targetPoint.position, agentTarget);
+
+        return devDist < 1.5f;
+    }
+
+    private void HandleStuckInRoom()
+    {
+        body.CheckStuck(targetPoint, true);
     }
 
     private void HandlePlayerSpotted(PlayerBody player)
