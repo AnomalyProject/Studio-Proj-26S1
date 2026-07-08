@@ -8,7 +8,7 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
     [SerializeField] private Canvas buttonCanvas;
     [SerializeField] private Image itemIcon;
     [SerializeField] private Sprite lockedSlotSprite;
-    [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText;
+    [SerializeField] private TextMeshProUGUI itemNameText, itemPriceText, itemAmountText, itemDescription;
     private CompositeVendor vendorHost;
     public int SlotIndex;
 
@@ -54,16 +54,20 @@ public class VendorButton : MonoBehaviour, IInteractable<PlayerBody>
             itemIcon.sprite = data.ItemIcon;
             itemNameText.text = data.ItemName;
             itemNameText.rectTransform.sizeDelta = itemNameTextRectSize;
+            itemDescription.text = data.ItemDescription;
+            itemDescription.alignment = TextAlignmentOptions.TopGeoAligned;
             itemPriceText.text = $"x{vendorHost.GetStackPrice(slot).ToString()}";
             itemAmountText.text = $"Stock: x{stack.GetQuantity()}";
         }
         else
         {
-            itemNameText.rectTransform.sizeDelta = new Vector2(itemNameTextRectSize.x, itemNameTextRectSize.y * 2);
+            //itemNameText.rectTransform.sizeDelta = new Vector2(itemNameTextRectSize.x, itemNameTextRectSize.y * 2);
             itemIcon.sprite = lockedSlotSprite;
             itemNameText.text = "Locked";
             itemPriceText.text = "";
             itemAmountText.text = "";
+            itemDescription.text = "Nothing in stock.";
+            itemDescription.alignment = TextAlignmentOptions.TopRight;
         }
 
         itemPriceText.gameObject.SetActive(stack != null);
