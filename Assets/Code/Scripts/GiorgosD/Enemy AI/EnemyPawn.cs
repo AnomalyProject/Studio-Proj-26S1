@@ -223,7 +223,7 @@ public class EnemyPawn : NetworkBehaviour
     public void CheckStuck(Transform target, bool stuckOverride)
     {
         if (!isServer) return;
-
+        
         if (stuckOverride)
         {
             StartCoroutine(StartUnStuck(target));

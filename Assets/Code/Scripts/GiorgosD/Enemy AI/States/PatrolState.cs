@@ -6,6 +6,7 @@ public class PatrolState : BaseState
 {
     private static int pointIndex = -1;
     private Transform targetPoint;
+    private bool isStuckInRoom;
 
     public PatrolState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
@@ -18,6 +19,7 @@ public class PatrolState : BaseState
 
         body.SetMoveSpeed(false);
         body.anim.SetBool("IsWalk", true);
+        isStuckInRoom = false;
 
         body.OnPlayerSpotted.AddListener(HandlePlayerSpotted);
 
@@ -46,8 +48,9 @@ public class PatrolState : BaseState
             {
                 brain.ChangeState(EnemyBrain.StateID.Idle);
             }
-            else
+            else if (!isStuckInRoom)
             {
+                isStuckInRoom = true;
                 HandleStuckInRoom();
             }
         }
