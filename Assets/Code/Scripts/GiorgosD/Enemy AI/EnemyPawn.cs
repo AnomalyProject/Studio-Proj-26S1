@@ -226,14 +226,12 @@ public class EnemyPawn : NetworkBehaviour
 
         if (stuckOverride)
         {
-            Debug.LogError("Force UnStuck");
             StartCoroutine(StartUnStuck(target));
             return;
         }
         
         if (!agent.isOnNavMesh)
         {
-            Debug.LogError("Out of Nav Stuck");
             StartCoroutine(StartUnStuck(target));
             return;
         }
@@ -247,8 +245,6 @@ public class EnemyPawn : NetworkBehaviour
             
             if (distMoved < stuckDistThres)
             {
-                Debug.LogError("Hasnt made progress to point stuck");
-                
                 lastTrackedPos = transform.position;
                 stuckTimer = stuckTimerReset;
                 StartCoroutine(StartUnStuck(target));
@@ -286,8 +282,6 @@ public class EnemyPawn : NetworkBehaviour
     private void UnStuck(Transform target)
     {
         if (!isServer) return;
-
-        Debug.LogError($"I Unstucked Myself");
         
         Vector3 destPos = target.position;
         
