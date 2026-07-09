@@ -14,8 +14,9 @@ public class InputIcon : MonoBehaviour
     [SerializeField] private string overrideIconName;
     private InputAction inputAction;
     private Image icon;
+    [SerializeField] private bool controlOpacity = true;
 
-    private void Awake()
+    private void Start()
     {
         icon = GetComponent<Image>();
         ReloadIcon();
@@ -34,5 +35,10 @@ public class InputIcon : MonoBehaviour
     {
         if (string.IsNullOrEmpty(overrideIconName)) icon.sprite = InputIconService.GetIcon(inputAction);
         else icon.sprite = InputIconService.GetIcon(overrideIconName);
+
+        if (!controlOpacity) return;
+        if (icon.sprite == null) icon.color = Color.clear;
+        else icon.color = Color.white;
+        Debug.Log($"{icon.color.a}");
     }
 }

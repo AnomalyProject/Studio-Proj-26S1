@@ -69,6 +69,7 @@ public static class InputIconService
     public static Sprite GetIcon(string mapping) => iconDatabase.GetIcon(mapping);
     public static Sprite GetIcon(InputAction action)
     {
+        if (action == null) return null;
         foreach (InputBinding binding in action.bindings)
         {
             if (binding.isComposite) continue;
