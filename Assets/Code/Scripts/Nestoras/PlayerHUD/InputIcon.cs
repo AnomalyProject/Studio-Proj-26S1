@@ -11,17 +11,28 @@ using UnityEngine;
 public class InputIcon : MonoBehaviour
 {
     [SerializeField] private string action;
+    [SerializeField] private string overrideIconName;
     private InputAction inputAction;
     private Image icon;
 
     private void Awake()
     {
         icon = GetComponent<Image>();
-        inputAction = InputBridge.Actions.FindAction(action);
-        icon.sprite = InputIconService.GetIcon(inputAction);
+        ReloadIcon();
 
         InputIconService.OnDeviceChanged += HandleInputDeviceChanged;
     }
+
+    [ContextMenu("Reload Icon")]
+    private void ReloadIcon()
+    {
+        inputAction = InputBridge.Actions.FindAction(action);
+        if (inputAction != null) icon.sprite = InputIconService.GetIcon(inputAction);
+    }
     private void OnDestroy() => InputIconService.OnDeviceChanged -= HandleInputDeviceChanged;
-    private void HandleInputDeviceChanged(InputIconService.InputDeviceType deviceType) => icon.sprite = InputIconService.GetIcon(inputAction);
+    private void HandleInputDeviceChanged(InputIconService.InputDeviceType deviceType)
+    {
+        if (string.IsNullOrEmpty(overrideIconName)) icon.sprite = InputIconService.GetIcon(inputAction);
+        else icon.sprite = InputIconService.GetIcon(overrideIconName);
+    }
 }

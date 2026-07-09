@@ -66,6 +66,7 @@ public static class InputIconService
         }
     }
 
+    public static Sprite GetIcon(string mapping) => iconDatabase.GetIcon(mapping);
     public static Sprite GetIcon(InputAction action)
     {
         foreach (InputBinding binding in action.bindings)
