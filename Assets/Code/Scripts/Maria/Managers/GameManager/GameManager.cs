@@ -66,7 +66,20 @@ public class GameManager : NetworkBehaviour
     #region Events
     public static event Action<GameManager> OnInitialized, OnDestroyed;
 
+    /// <summary>
+    /// Raised on the server each time a player falls into the Void. Listeners (e.g. the Stalker's
+    /// <see cref="EnemyPawn"/>) subscribe to react independently rather than being called directly.
+    /// </summary>
+    public static event Action OnPlayerFellIntoVoid;
+
+    /// <summary>
+    /// Raised on the server whenever a new game/session starts, so session-scoped state elsewhere
+    /// (e.g. Stalker aggression) can reset itself without GameManager needing to know who's listening.
+    /// </summary>
+    public static event Action OnNewGame;
+
     public UnityEvent<int> OnProgressChanged;
+    public UnityEvent OnVoidFall;
     public UnityEvent<float> OnPunishmentTimerTick;
     public UnityEvent OnWrongDecision, OnPunishmentTimerExpired;
     public UnityEvent OnGameWon;
@@ -135,6 +148,8 @@ public class GameManager : NetworkBehaviour
         PickStartingMap();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
+        OnNewGame?.Invoke();
+
         InvokeOnProgressChanged(CurrentProgress);
         InvokeOnGameReset();
 
@@ -155,6 +170,19 @@ public class GameManager : NetworkBehaviour
 
         hasPendingInteraction = false;
         SetElevatorInteraction(pendingEntryEnabled, pendingExitEnabled);
+    }
+
+    /// <summary>
+    /// Called each time a player falls into the Void. Raises <see cref="OnPlayerFellIntoVoid"/> so
+    /// interested systems (e.g. the Stalker's <see cref="EnemyPawn"/>) can react on their own.
+    /// Wire this to the Void trigger's UnityEvent in the Inspector.
+    /// </summary>
+    public void RegisterPlayerVoidFall()
+    {
+        if (!isServer) return;
+
+        OnPlayerFellIntoVoid?.Invoke();
+        LogProgress("Player fell into the Void.");
     }
     #endregion
 
@@ -476,7 +504,7 @@ public class GameManager : NetworkBehaviour
     {
         if (!isServer) return;
         bool correctRound = progress % vendorRestockAfterProgress == 0;
-        if (correctRound && anomalyManager.ActiveMap.Vendor != null) anomalyManager.ActiveMap.Vendor.Restock(); 
+        if (correctRound && anomalyManager.ActiveMap.Vendor != null) anomalyManager.ActiveMap.Vendor.Restock();
     }
 
     private void PickStartingMap()
@@ -484,22 +512,22 @@ public class GameManager : NetworkBehaviour
         if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
         {
             int selectedIndex = SessionManager.Instance.CurrentSession.SelectedLevelMapIndex;
-            
+
             // for random map selection 
             if (selectedIndex < 0)
             {
                 anomalyManager.PickMap_Server();
                 return;
             }
-            
+
             anomalyManager.PickMapByIndex_Server(selectedIndex);
             return;
         }
-        
+
         // fallback case
         anomalyManager.PickMap_Server();
     }
-    
+
     private bool TryStartCooldown()
     {
         if (ElevatorCoolDown) return false;

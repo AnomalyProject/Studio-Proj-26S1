@@ -22,18 +22,18 @@ public class EnemyPawn : NetworkBehaviour
     private float sightAngleNormal;
 
     [SerializeField, Tooltip("The offset point (Y) where the raycast start (preferably its head)")] private Transform eyePos;
-    private Collider[] playersInSight = new Collider[4]; 
+    private Collider[] playersInSight = new Collider[4];
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     private PlayerBody cachedPlayer;
 
     public PlayerBody CachedPlayer => cachedPlayer;
-    
+
     [Header("Lost Player Timer")]
-    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")]private float timeToLost = 2.0f;
+    [SerializeField, Tooltip("How much time does it take for the ai to lose you and enter investigate after the olayer moves out of sight.")] private float timeToLost = 2.0f;
     private bool hasPlayer = false;
     private float timer;
-    
+
     // Aggression will be revised later.
     [Header("Aggression Settings")]
     [SerializeField, Tooltip("Controls how much each aggression level increases the run speed")] private float runMultiplier;
@@ -41,12 +41,15 @@ public class EnemyPawn : NetworkBehaviour
     [SerializeField, Tooltip("Controls how much each aggression level increases the Sight Range")] private float sightRangeMultiplier;
     [SerializeField, Tooltip("Controls the current aggression level of the enemy")] private int aggressionLevel;
     [SerializeField, Tooltip("Controls the maximum aggression level the enemy can reach")] private int maxAggressionLevel;
+    private float baseRunSpeed;
+    private float baseAutoDetectRange;
+    private float baseSightRange;
 
     [Header("Attack")]
     [SerializeField, Tooltip("Controls size of the hitbox")] private Vector3 attackHitBox;
     [SerializeField, Tooltip("Controls how far in front the hitbox will be")] private float attackOffset;
     #endregion
-    
+
     #region Events
     public UnityEvent<PlayerBody> OnPlayerSpotted;
     public UnityEvent OnLostPlayer;
@@ -62,8 +65,12 @@ public class EnemyPawn : NetworkBehaviour
         agent = GetComponent<NavMeshAgent>();
         path = new();
         sightAngleNormal = sightAngle;
+
+        baseRunSpeed = runSpeed;
+        baseAutoDetectRange = autoDetectRange;
+        baseSightRange = sightRange;
     }
-    
+
     private void Update()
     {
         if (!isServer) return;
@@ -75,8 +82,20 @@ public class EnemyPawn : NetworkBehaviour
             LostTimer();
         }
     }
+
+    private void OnEnable()
+    {
+        GameManager.OnPlayerFellIntoVoid += HandlePlayerFellIntoVoid;
+        GameManager.OnNewGame += HandleNewGame;
+    }
+
+    private void OnDisable()
+    {
+        GameManager.OnPlayerFellIntoVoid -= HandlePlayerFellIntoVoid;
+        GameManager.OnNewGame -= HandleNewGame;
+    }
     #endregion
-    
+
     #region Movement
     /// <summary>
     /// Tells the enemy to move to the target possition.
@@ -90,7 +109,7 @@ public class EnemyPawn : NetworkBehaviour
         {
             LostTimer();
         }
-        
+
         if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }
 
@@ -121,7 +140,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         InvokeEndAttack();
     }
-    
+
     /// <summary>
     /// Checks if player is in attack range.
     /// </summary>
@@ -199,6 +218,41 @@ public class EnemyPawn : NetworkBehaviour
         }
         Debug.LogWarning("Aggression level is already at minimum!");
     }
+
+    /// <summary>
+    /// Restores aggression to its base level, snapping stats back to their cached starting values
+    /// rather than repeatedly dividing (which would drift over many increases). Call this at the
+    /// start of a new session/game.
+    /// </summary>
+    public void ResetAggression()
+    {
+        aggressionLevel = 0;
+        runSpeed = baseRunSpeed;
+        autoDetectRange = baseAutoDetectRange;
+        sightRange = baseSightRange;
+
+        Debug.Log("Aggression reset to base level.");
+    }
+
+    /// <summary>
+    /// Reacts to <see cref="GameManager.OnPlayerFellIntoVoid"/> by escalating aggression by one level.
+    /// </summary>
+    private void HandlePlayerFellIntoVoid()
+    {
+        if (!isServer) return;
+
+        IncreaseAggression();
+    }
+
+    /// <summary>
+    /// Reacts to <see cref="GameManager.OnNewGame"/> by resetting aggression back to base for the new session.
+    /// </summary>
+    private void HandleNewGame()
+    {
+        if (!isServer) return;
+
+        ResetAggression();
+    }
     #endregion
 
     #region Turning
@@ -241,7 +295,7 @@ public class EnemyPawn : NetworkBehaviour
         return dotProduct >= 0.95f;
     }
     #endregion
-    
+
     #region Sight Lost Timer
     /// <summary>
     /// A timer that checks when the ai actually should lose the player and stop following his live pos
@@ -249,7 +303,7 @@ public class EnemyPawn : NetworkBehaviour
     private void LostTimer()
     {
         if (!isServer) return;
-        
+
         if (cachedPlayer == null) return;
 
         if (cachedPlayer.Invis.IsInvis)
@@ -261,7 +315,7 @@ public class EnemyPawn : NetworkBehaviour
             InvokeOnLost();
             return;
         }
-        
+
         timer += Time.deltaTime;
 
         if (timer >= timeToLost)
@@ -291,7 +345,7 @@ public class EnemyPawn : NetworkBehaviour
         return path.status == NavMeshPathStatus.PathComplete;
     }
     #endregion
-    
+
     #region Sight
     /// <summary>
     /// Checks for players in sight and if it finds any.
@@ -299,7 +353,7 @@ public class EnemyPawn : NetworkBehaviour
     private void Sight()
     {
         if (!isServer) return;
-        
+
         if (cachedPlayer != null)
         {
             if (IsTargetVisible(cachedPlayer.transform) && IsTargetReachable(cachedPlayer.transform.position) && !cachedPlayer.Invis.IsInvis)
@@ -309,7 +363,7 @@ public class EnemyPawn : NetworkBehaviour
                 InvokeSpotted(cachedPlayer);
                 return;
             }
-            
+
             Vector3 targetDestination = cachedPlayer.transform.position;
             if (cachedPlayer.TryGetComponent<Collider>(out Collider col) && !cachedPlayer.Invis.IsInvis)
             {
@@ -327,13 +381,13 @@ public class EnemyPawn : NetworkBehaviour
                     return;
                 }
             }
-            
+
             hasPlayer = false;
             return;
         }
-        
+
         int count = Physics.OverlapSphereNonAlloc(transform.position, sightRange, playersInSight, playerLayer);
-        
+
         for (int i = 0; i < count; i++)
         {
             PlayerBody player = playersInSight[i].GetComponent<PlayerBody>();
@@ -344,7 +398,7 @@ public class EnemyPawn : NetworkBehaviour
                 hasPlayer = true;
                 timer = 0f;
                 InvokeSpotted(cachedPlayer);
-                break; 
+                break;
             }
         }
     }
@@ -363,17 +417,17 @@ public class EnemyPawn : NetworkBehaviour
         }
 
         float distanceToTarget = Vector3.Distance(eyePos.position, targetDestination);
-        
+
         if (distanceToTarget <= autoDetectRange)
         {
             if (!Physics.Raycast(eyePos.position, (targetDestination - eyePos.position).normalized, distanceToTarget, obstacleLayer))
             {
-                return true; 
+                return true;
             }
         }
-        
+
         Vector3 directionToTarget = (targetDestination - eyePos.position).normalized;
-        
+
         Vector3 flatForward = transform.forward;
         flatForward.y = 0;
         flatForward.Normalize();
@@ -381,7 +435,7 @@ public class EnemyPawn : NetworkBehaviour
         Vector3 flatDirection = directionToTarget;
         flatDirection.y = 0;
         flatDirection.Normalize();
-        
+
         if (Vector3.Angle(flatForward, flatDirection) < sightAngle / 2f)
         {
             if (!Physics.Raycast(eyePos.position, directionToTarget, distanceToTarget, obstacleLayer))
@@ -392,7 +446,7 @@ public class EnemyPawn : NetworkBehaviour
 
         return false;
     }
-    
+
     /// <summary>
     /// This func increases and decreases the Sight angle to mimic the enemy looking around for the player when it loses sight.
     /// </summary>
@@ -449,7 +503,7 @@ public class EnemyPawn : NetworkBehaviour
         Gizmos.DrawWireCube(Vector3.zero, attackHitBox);
     }
     #endregion
-    
+
     #region Event Helpers
     /// <summary>
     /// Invokes Spotted Helper
@@ -459,7 +513,7 @@ public class EnemyPawn : NetworkBehaviour
     {
         OnPlayerSpotted?.Invoke(player);
     }
-    
+
     /// <summary>
     /// Invokes OnLost Helper
     /// </summary>
@@ -487,17 +541,17 @@ public class EnemyPawn : NetworkBehaviour
     {
         OnEndAttack?.Invoke();
     }
-    
+
     /// <summary>
     /// Invokes Attack Helper
     /// </summary>
     [ObserversRpc]
     public void InvokeAttacked(PlayerBody player)
-    { 
+    {
         OnPlayerAttacked?.Invoke(player);
     }
     #endregion
-    
+
     #region Stun
     public float StunDuration { get; private set; }
 
