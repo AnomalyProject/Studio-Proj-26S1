@@ -39,6 +39,5 @@ public class InputIcon : MonoBehaviour
         if (!controlOpacity) return;
         if (icon.sprite == null) icon.color = Color.clear;
         else icon.color = Color.white;
-        Debug.Log($"{icon.color.a}");
     }
 }

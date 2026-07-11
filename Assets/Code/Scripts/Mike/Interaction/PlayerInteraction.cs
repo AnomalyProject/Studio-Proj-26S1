@@ -1,11 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using TMPro;
-using UnityEngine;
+using System.Threading;
+using System.Linq;
 using UnityEngine.InputSystem;
+using UnityEngine;
+using TMPro;
 
 [RequireComponent(typeof(PlayerBody))]
 public class PlayerInteraction : MonoBehaviour
