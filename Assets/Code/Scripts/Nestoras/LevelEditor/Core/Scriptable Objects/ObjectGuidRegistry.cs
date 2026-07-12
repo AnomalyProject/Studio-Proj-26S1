@@ -12,6 +12,7 @@ public class ObjectGuidRegistry : ScriptableObject
     [System.Serializable]
     public class Entry
     {
+        public string objName;
         public string guid;
         public Object obj;
     }

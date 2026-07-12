@@ -406,6 +406,8 @@ public class SteamSessionBridge : MonoBehaviour
                 ConnectionFailureSource.Steam);
             return;
         }
+        
+        if (!TryPrepareSteamClientTransport(NetworkManager.main))return;
 
         SteamMatchmaking.JoinLobby(pendingJoinLobbyID);
 
@@ -448,8 +450,7 @@ public class SteamSessionBridge : MonoBehaviour
         }
 
         steamTransport.enabled = true;
-        if (localTransport != null)
-            localTransport.enabled = false;
+        if (localTransport != null) localTransport.enabled = false;
 
         networkManager.transport = steamTransport;
 
@@ -700,6 +701,8 @@ public class SteamSessionBridge : MonoBehaviour
             }
             return;
         }
+        
+        if (!TryPrepareSteamClientTransport(networkManager)) return;
 
         var steamTransport = networkManager.transport as SteamTransport;
         if (steamTransport == null)
@@ -737,6 +740,43 @@ public class SteamSessionBridge : MonoBehaviour
         // we use coroutine because StartClient() is asynchronous.
         // we need to wait for the response to send RPCs
         joinCoroutine = StartCoroutine(WaitForConnectionThenJoin());
+    }
+    
+    // Helper function to reset the transport
+    private bool TryPrepareSteamClientTransport(NetworkManager networkManager)
+    {
+        if (networkManager == null)
+        {
+            SetJoinStage(
+                JoinStartupStage.Failed,
+                "NetworkManager not found while preparing Steam client transport.",
+                ConnectionFailureSource.Transport);
+
+            joinStartupInProgress = false;
+            return false;
+        }
+
+        SteamTransport steamTransport = networkManager.GetComponent<SteamTransport>();
+        LocalTransport localTransport = networkManager.GetComponent<LocalTransport>();
+        UDPTransport udpTransport = networkManager.GetComponent<UDPTransport>();
+
+        if (steamTransport == null)
+        {
+            SetJoinStage(
+                JoinStartupStage.Failed,
+                "SteamTransport component was missing on NetworkManager.",
+                ConnectionFailureSource.Transport);
+
+            joinStartupInProgress = false;
+            return false;
+        }
+
+        steamTransport.enabled = true;
+        if (localTransport != null) localTransport.enabled = false;
+        if (udpTransport != null) udpTransport.enabled = false;
+
+        networkManager.transport = steamTransport;
+        return true;
     }
     
     private IEnumerator WaitForConnectionThenJoin()
@@ -1062,8 +1102,18 @@ public class SteamSessionBridge : MonoBehaviour
 
     public bool TryOpenInviteOverlay()
     {
-        if (!isSteamAvailable || !isInLobby) return false;
-        
+        if (!isSteamAvailable)
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: Steam is not available.");
+            return false;
+        }
+
+        if (!isInLobby || !currentLobbyID.IsValid())
+        {
+            Debug.LogWarning("[SteamBridge] Cannot open invite overlay: not in a Steam lobby.");
+            return false;
+        }
+
         SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
         return true;
     }
@@ -1088,9 +1138,9 @@ public class SteamSessionBridge : MonoBehaviour
         if (!isSteamAvailable || !isInLobby) return false;
 
         if (SteamMatchmaking.GetLobbyOwner(currentLobbyID) != SteamUser.GetSteamID()) return false;
-        
-        if(maxPlayers < 2 || maxPlayers > 4) return false;
-        
+
+        if (maxPlayers < 2 || maxPlayers > 4) return false;
+
         return SteamMatchmaking.SetLobbyMemberLimit(currentLobbyID, maxPlayers);
     }
 }

@@ -32,6 +32,7 @@ public class SnapshotID : MonoBehaviour
     private void OnValidate() => EnsureGuid();
 
     private bool listMarkedForDeletion = false;
+    [InitializeOnLoadMethod] private static void ResetSnapshotIDsMap() => snapshotIDs.Clear();
     private void ResetGUIDsNextFrame()
     {
         snapshotIDs.Clear();
@@ -60,7 +61,7 @@ public class SnapshotID : MonoBehaviour
             listMarkedForDeletion = true;
             try
             {
-                snapshotIDs.AddRange(FindObjectsByType<SnapshotID>(FindObjectsInactive.Include, FindObjectsSortMode.None).ToDictionary(x => x.guid));
+                snapshotIDs.AddRange(transform.root.GetComponentsInChildren<SnapshotID>().ToDictionary(x => x.guid));
             }
             catch // Duplicates Occured
             {

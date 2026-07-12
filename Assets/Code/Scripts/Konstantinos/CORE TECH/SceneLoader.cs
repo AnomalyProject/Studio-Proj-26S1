@@ -14,7 +14,7 @@ public class SceneLoader : NetworkBehaviour
     private bool isLoading = false;
 
 
-    float currentFakeProgress = 0f;
+    private float currentFakeProgress = 0f;
 
     [Header("Loading UI")]
     [SerializeField] private GameObject loadingScreen;
@@ -30,16 +30,16 @@ public class SceneLoader : NetworkBehaviour
     [Header("Events")]
     public Action OnLoadStarted;
     public Action<float> OnLoadProgress;
-    [SerializeField] bool showRealProgressOnAction = true; //fake progress bar progress will be used during false
+    [SerializeField] private bool showRealProgressOnAction = true; //fake progress bar progress will be used during false
     public Action OnLoadFinished;
 
     [Header("Debug")]
-    [SerializeField] bool debugLoadOnStart;
-    [SerializeField] string debugSceneToLoadOnStart;
-    [SerializeField] bool debugUseAsync;
+    [SerializeField] private bool debugLoadOnStart;
+    [SerializeField] private string debugSceneToLoadOnStart;
+    [SerializeField] private bool debugUseAsync;
 
     // scene validation
-    bool SceneExists(string sceneName)
+    private bool SceneExists(string sceneName)
     {
         for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
         {

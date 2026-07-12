@@ -1,6 +1,6 @@
+using PurrNet;
 using System;
 using System.Collections;
-using PurrNet;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -36,6 +36,8 @@ public class GameManager : NetworkBehaviour
 
     [Tooltip("Seconds the player has to exit the punishment room before progress resets.")]
     [SerializeField, Min(1f)] private float punishmentTimeLimit = 10;
+
+    [SerializeField, Tooltip("How many correct decisions to do a restock"), Min(1)] int vendorRestockAfterProgress = 3;
     #endregion
 
     #region State
@@ -53,6 +55,10 @@ public class GameManager : NetworkBehaviour
     private bool pendingEntryEnabled;
     private bool pendingExitEnabled;
     private bool hasPendingInteraction;
+
+    //Analytics
+    private float floorStartTime;
+    private string lastLoggedAnomalyName = "None";
 
     public AnomalyManager AnomalyManager => anomalyManager;
     #endregion
@@ -82,6 +88,7 @@ public class GameManager : NetworkBehaviour
         OnInitialized?.Invoke(this);
 
         if (!asServer) return;
+        OnProgressChanged.AddListener(CheckRestock);
         NewGame();
     }
 
@@ -125,7 +132,7 @@ public class GameManager : NetworkBehaviour
             mapChangeCoroutine = null;
         }
 
-        anomalyManager.PickMap_Server();
+        PickStartingMap();
         SetElevatorInteraction(entryEnabled: false, exitEnabled: true); // unique to first round.
 
         InvokeOnProgressChanged(CurrentProgress);
@@ -160,6 +167,9 @@ public class GameManager : NetworkBehaviour
     private void HandleStateChanged(AnomalyManager.RoomState newState)
     {
         if (!isServer) return;
+
+        floorStartTime = Time.time;
+        lastLoggedAnomalyName = anomalyManager.HasAnomaly && anomalyManager.ActiveMap != null ? anomalyManager.ActiveMap.name : "None";
 
         switch (newState)
         {
@@ -196,6 +206,19 @@ public class GameManager : NetworkBehaviour
     private void HandleElevatorInteracted(LevelExitPoint usedElevator, bool decision)
     {
         if (!isServer || !TryStartCooldown()) return;
+
+        //===========DO NOT TOUCH -> TELEMETRY DATA=========== :)
+        float timeSpentOnFloor = Time.time - floorStartTime;
+        bool hasAnomaly = anomalyManager.HasAnomaly;
+        string choiceText = decision ? "EntryElevator" : "ExitElevator";
+        int floorRecorded = CurrentProgress;
+
+        if (anomalyManager.CurrentState == AnomalyManager.RoomState.NormalRoom ||
+            anomalyManager.CurrentState == AnomalyManager.RoomState.AnomalyRoom)
+        {
+            // Fire an ObserversRpc down to all connected clients so they record their individual analytics
+            SendTelemetryToClients(floorRecorded, hasAnomaly, choiceText, timeSpentOnFloor, lastLoggedAnomalyName);
+        }
 
         usedElevator.SetInteraction(false);
         mapChangeCoroutine = StartCoroutine(PerformMapChange());
@@ -422,6 +445,62 @@ public class GameManager : NetworkBehaviour
     #endregion
 
     #region Helpers
+
+    [ObserversRpc]
+    private void SendTelemetryToClients(int floorNumber, bool roomHadAnomaly, string playerChoice, float timeSpent, string anomalyName)
+    {
+        //Calculate right wrong choice
+        bool choseEntry = playerChoice == "EntryElevator";
+        bool isChoiceCorrect = (roomHadAnomaly && choseEntry) || (!roomHadAnomaly && !choseEntry);
+
+        if (Unity.Services.Core.UnityServices.State == Unity.Services.Core.ServicesInitializationState.Initialized)
+        {
+            //Data to send to the dashboard
+            var floorEvent = new Unity.Services.Analytics.CustomEvent("floor_completed")
+            {
+                { "floor_number", floorNumber },
+                { "room_had_anomaly", roomHadAnomaly },
+                { "anomaly_id_name", anomalyName },
+                { "player_choice", playerChoice },
+                { "is_choice_correct", isChoiceCorrect },
+                { "time_spent_seconds", timeSpent }
+            };
+
+            Unity.Services.Analytics.AnalyticsService.Instance.RecordEvent(floorEvent);
+            Unity.Services.Analytics.AnalyticsService.Instance.Flush();
+
+            Debug.Log($"[Local Client Telemetry] Logged floor {floorNumber} to the dashboard. Time: {timeSpent:F2}s");
+        }
+    }
+    private void CheckRestock(int progress)
+    {
+        if (!isServer || anomalyManager.ActiveMap == null) return;
+        if(anomalyManager.ActiveMap is not AnomalyMap anomalyMap) return;
+        bool correctRound = progress % vendorRestockAfterProgress == 0;
+        if (correctRound && anomalyMap.Vendor != null) anomalyMap.Vendor.Restock(); 
+    }
+
+    private void PickStartingMap()
+    {
+        if (SessionManager.Instance != null && SessionManager.Instance.CurrentSession != null)
+        {
+            int selectedIndex = SessionManager.Instance.CurrentSession.SelectedLevelMapIndex;
+            
+            // for random map selection 
+            if (selectedIndex < 0)
+            {
+                anomalyManager.PickMap_Server();
+                return;
+            }
+            
+            anomalyManager.PickMapByIndex_Server(selectedIndex);
+            return;
+        }
+        
+        // fallback case
+        anomalyManager.PickMap_Server();
+    }
+    
     private bool TryStartCooldown()
     {
         if (ElevatorCoolDown) return false;

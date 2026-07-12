@@ -18,11 +18,14 @@ public class StalkerGlitchController : MonoBehaviour
 
     [Header("Detection")]
     [SerializeField] private LayerMask enemyLayer;
+    private EnemyPawn enemyPawn;
+    [SerializeField] private float nearPlane = 5f;
+    [SerializeField] private float farPlane = 50f;
     [SerializeField] private LayerMask obstructionLayers; // anything other than the stalker meant to block visibility
 
     [Header("Glitch Timing")]
     [SerializeField] private float glitchInSpeed = 3f;
-    [SerializeField] private float glitchOutSpeed = 1f; 
+    [SerializeField] private float glitchOutSpeed = 1f;
 
     [Header("Shader Values")]
     [SerializeField] private float maxNoiseAmount = 1f;
@@ -75,6 +78,9 @@ public class StalkerGlitchController : MonoBehaviour
         if (playLoopAutomatically && glitchAudioSource.clip != null && !glitchAudioSource.isPlaying) glitchAudioSource.Play();
     }
 
+    [SerializeField] private float targetAmplitude;
+    [SerializeField] private AnimationCurve amplitudeRamp;
+
     private void Update()
     {
         if (!identity.isOwner) return; // only local player can change the glitch shader
@@ -83,7 +89,10 @@ public class StalkerGlitchController : MonoBehaviour
 
         HandleVisibilityEvents(lookingAtStalker);
 
-        float targetIntensity = lookingAtStalker ? 1f : 0f;
+        float distanceFromStalker = 0;
+        if (enemyPawn != null) distanceFromStalker = amplitudeRamp.Evaluate(Mathf.InverseLerp(farPlane, nearPlane, Vector3.Distance(transform.position, enemyPawn.transform.position)));
+        float targetIntensity = lookingAtStalker ? 1 : 0;
+        targetAmplitude = lookingAtStalker ? distanceFromStalker : 0;
         float speed = lookingAtStalker ? glitchInSpeed : glitchOutSpeed;
 
         currentIntensity = Mathf.MoveTowards(currentIntensity, targetIntensity, speed * Time.deltaTime);
@@ -127,6 +136,7 @@ public class StalkerGlitchController : MonoBehaviour
             bool insideFrustum = GeometryUtility.TestPlanesAABB(frustumPlanes, bounds);
             if (!insideFrustum) continue;
             if (HasLineOfSight(enemy)) return true;
+            if (enemyPawn == null) enemyPawn = enemy.GetComponent<EnemyPawn>();
         }
 
         return false;
@@ -153,12 +163,13 @@ public class StalkerGlitchController : MonoBehaviour
         glitchMaterial.SetFloat("_NoiseAmount", Mathf.Lerp(0f, maxNoiseAmount, currentIntensity));
         glitchMaterial.SetFloat("_GlitchStrength", Mathf.Lerp(0f, maxGlitchStrength, currentIntensity));
         glitchMaterial.SetFloat("_ScanLinesTransparency", Mathf.Lerp(1f, minScanLinesTransparency, currentIntensity));
+        glitchMaterial.SetFloat("_GlitchAmplitude", targetAmplitude);
     }
 
     private void UpdateAudio()
     {
         if (glitchAudioSource == null) return;
-        glitchAudioSource.volume = currentIntensity * maxGlitchVolume;
+        glitchAudioSource.volume = targetAmplitude * maxGlitchVolume;
     }
 
     public float CurrentIntensity => currentIntensity;

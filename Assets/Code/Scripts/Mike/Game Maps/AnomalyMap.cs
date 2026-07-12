@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class AnomalyMap : GameMap
 {
+    [SerializeField] VendorBase vendor;
     [SerializeField, Tooltip("The normal version of the map, no anomalies.")] private GameObject baseMap;
     [SerializeField, Tooltip("The parent objects of anomaly groups.")] private List<AnomalyGroup> anomalyVariations;
     public List<AnomalyGroup> AnomalyVariations => anomalyVariations;
@@ -10,6 +11,7 @@ public class AnomalyMap : GameMap
     private List<int> availableIndices = new();
     public GameObject BaseMap => baseMap;
     public bool HasAnomalyVariations => anomalyVariations != null && anomalyVariations.Count > 0;
+    public VendorBase Vendor => vendor;
 
     protected override void Awake()
     {
@@ -17,6 +19,7 @@ public class AnomalyMap : GameMap
         anomalyVariations.RemoveAll(group => group.GroupRoot == null);
         ResetAvailableIndices();
         DisableAll(keepBase: true);
+        ModificationApplier.RefreshGUIDCache();
     }
 
     /// <summary>

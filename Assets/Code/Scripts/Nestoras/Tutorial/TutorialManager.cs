@@ -1,8 +1,8 @@
-using PurrNet;
-using System;
 using System.Collections;
-using UnityEngine;
+using System;
+using PurrNet;
 using UnityEngine.Events;
+using UnityEngine;
 
 public class TutorialManager : NetworkBehaviour
 {
@@ -15,6 +15,7 @@ public class TutorialManager : NetworkBehaviour
     [SerializeField] private GameObject collectible;
     private AnomalyMap activeLevel;
     private MapOrientor mapOrientor;
+    private GameSounds gameSounds;
 
     [Header("Decision Cooldown")]
     [Tooltip("Seconds after a decision is made before another can be registered. Prevents spam.")]
@@ -27,7 +28,7 @@ public class TutorialManager : NetworkBehaviour
     [SerializeField, Min(1f)] private float voidTimeLimit = 3600;
 
     [SerializeField] private int CurrentProgress = 0;
-
+    
     private Coroutine voidTimerCoroutine;
     private bool votedAnomalyPresent;
     private bool unlockedVoidExit;
@@ -44,6 +45,8 @@ public class TutorialManager : NetworkBehaviour
 
         mapOrientor = GetComponent<MapOrientor>();
         mapOrientor.ExitElevator.QueueOnSpawned(() => ((ElevatorExit)mapOrientor.ExitElevator).CloseDoors());
+        gameSounds = GetComponent<GameSounds>();
+        gameSounds.OnMapChanged(mainLevel);
     }
     protected override void OnSpawned(bool asServer)
     {
@@ -164,17 +167,21 @@ public class TutorialManager : NetworkBehaviour
         {
             case 1: // First anomaly (forced correct decision)
                 AfterFirstElevator?.Invoke();
+                gameSounds.OnElevatorFullyOpened();
                 break;
             case 2: // No Anomaly
                 AfterSecondElevator?.Invoke();
+                gameSounds.OnElevatorFullyOpened();
                 break;
             case 3: // Second anomaly (player can vote incorrectly)
                 OnObjectiveUpdated.Invoke("Check for anomalies and pick the appropriate elevator.");
+                gameSounds.OnElevatorFullyOpened();
                 break;
             case 4: // Void (vending machine tutorial)
                 if (unlockedVoidExit) break;
                 AfterEnteringVoid?.Invoke();
                 OnObjectiveUpdated.Invoke("Purchase a flashlight.");
+                gameSounds.OnElevatorFullyOpened();
                 break;
             case 5: // Return from void (collectibe tutorial)
                 CollectibleInteractable collectibleInteractable = collectible.GetComponentInChildren<CollectibleInteractable>();
@@ -196,6 +203,7 @@ public class TutorialManager : NetworkBehaviour
         activeLevel = newLevel;
         activeLevel.gameObject.SetActive(true);
         mapOrientor.OrientMap(activeLevel);
+        gameSounds.OnMapChanged(activeLevel);
     }
 
     #region Elevator Control

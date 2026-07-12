@@ -67,7 +67,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -82,7 +82,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
+  m_AllowDynamicResolution: 1
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -443,7 +443,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -458,7 +458,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
+  m_AllowDynamicResolution: 1
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -482,19 +482,46 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
+  nearPlane: 2
+  farPlane: 40
   obstructionLayers:
     serializedVersion: 2
-    m_Bits: 891
+    m_Bits: 851
   glitchInSpeed: 0.1
   glitchOutSpeed: 0.6
   maxNoiseAmount: 100
   maxGlitchStrength: 0.8
   minScanLinesTransparency: 0
   visibilitySearchRadius: 1000
-  glitchAudioSource: {fileID: 0}
-  glitchLoopClip: {fileID: 0}
+  glitchAudioSource: {fileID: 2119119815091281868}
+  glitchLoopClip: {fileID: 8300000, guid: b7c412c9b22df144689fa29ea1370b61, type: 3}
   maxGlitchVolume: 1
   playLoopAutomatically: 1
+  targetAmplitude: 0
+  amplitudeRamp:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.0013771057
+      value: -0.0011901855
+      inSlope: 0.42617613
+      outSlope: 0.42617613
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.18131998
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 3.6500552
+      outSlope: 3.6500552
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.031593326
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &177643267097350056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -603,8 +630,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraLean
   cameraTransform: {fileID: 8398281657158445380}
-  leanAngle: 15
-  leanDistance: 0.5
+  leanAngle: 5
+  leanDistance: 0.3
   leanSpeed: 7
 --- !u!114 &1719570517764467312
 MonoBehaviour:
@@ -727,7 +754,7 @@ AudioSource:
   m_GameObject: {fileID: 4227618509524077635}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 2711175741230133365, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
+  OutputAudioMixerGroup: {fileID: -4590799063784688275, guid: 2d4f1561e4bcab84981ec8d232e425fb, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -1354,6 +1381,7 @@ MonoBehaviour:
   bodyVisuals: {fileID: 5348312652502001726}
   audioSource: {fileID: 7412561033432568348}
   playerCamera: {fileID: 5794337579464328323}
+  hudCamera: {fileID: 4543138664715801701}
   playerAudioListener: {fileID: 4446143913667706670}
   playerCameraLean: {fileID: 5223983998993346721}
   nameplateVisuals: {fileID: 2628281181172639720}
@@ -1455,7 +1483,7 @@ MonoBehaviour:
   pingLayer:
     serializedVersion: 2
     m_Bits: 979
-  pingSFX: {fileID: 8300000, guid: ce2c735db2b86ed44b8a7eb1af1466db, type: 3}
+  pingSFX: {fileID: 8300000, guid: db12a05132b10d04eb260523347a85e1, type: 3}
   OnPingLocation:
     m_PersistentCalls:
       m_Calls: []
@@ -1710,7 +1738,6 @@ MonoBehaviour:
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
   bodyVisuals: {fileID: 5348312652502001726}
-  invisibleTimer: 5
   PPInvisVolume: {fileID: 5750942810834854251}
   invisMat: {fileID: 2100000, guid: c9f299550a94c614392a7cc339accc4f, type: 2}
   fadeSpeed: 2
@@ -1839,51 +1866,51 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 9186995736018209350}
     m_Modifications:
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0.0000000037252894
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5348343374004725884, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 5348343374004725884, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_Name
       value: Duck Head Hat
       objectReference: {fileID: 0}
-    - target: {fileID: 5348343374004725884, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+    - target: {fileID: 5348343374004725884, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -1891,15 +1918,15 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
 --- !u!4 &3111157320133743047 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3130718240226743340, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+  m_CorrespondingSourceObject: {fileID: 3130718240226743340, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
   m_PrefabInstance: {fileID: 26888280408622571}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &5361156342201265559 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5348343374004725884, guid: 1ef879c906ae39c4ea9a1f1964e5dd56, type: 3}
+  m_CorrespondingSourceObject: {fileID: 5348343374004725884, guid: d988a9b2f66479c459a17f69ebab13e6, type: 3}
   m_PrefabInstance: {fileID: 26888280408622571}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1152733124731409575

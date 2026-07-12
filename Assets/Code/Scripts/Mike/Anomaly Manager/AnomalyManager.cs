@@ -1,6 +1,11 @@
-using UnityEngine.Events;
-using UnityEngine;
 using PurrNet;
+using PurrNet.Modules;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(MapOrientor))]
 public class AnomalyManager : NetworkBehaviour
@@ -24,112 +29,143 @@ public class AnomalyManager : NetworkBehaviour
         public Quaternion entryRotation;
     }
 
-    public event System.Action<RoomState> OnStateChanged;
-    public event System.Action<GameMap> OnMapChanged;
+    public event Action<RoomState> OnStateChanged;
+    public event Action<GameMap> OnMapChanged;
     [SerializeField] private UnityEvent<MapStateData> OnMapStateApplied;
 
-    [SerializeField] private AnomalyMap[] mapCollection;
+    [SerializeField] private string[] mapCollection;
     [SerializeField, Range(0, 1)] private float anomalyChance = .5f;
-    [SerializeField] private GameMap[] punishmentRooms;
-    [SerializeField] private GameMap winRoom;
-    [SerializeField, Tooltip("Whether to Instantiate Map Prefabs or Enable/Disable Maps from the scene.")] private bool mapsArePrefabs = true;
+    [SerializeField] private string[] punishmentRooms;
+    [SerializeField] private string winRoom;
 
-    private int loadedMapIndex = -1;
-    private AnomalyMap activeMap;
-    private GameMap activeUniqueRoom;
+    private GameMap activeMap;
     private MapOrientor mapOrientor;
+    private IndexPicker anomalyIndexPicker = new(1);
     private MapStateData currentMapState;
+    private Scene loadedScene;
+
+    // Serializes server-side transitions so one fully completes (scene load,
+    // entry point update, broadcast) before the next one is allowed to start.
+    private readonly SemaphoreSlim transitionLock = new(1, 1);
+
+    // Holds state received (via RPC) whose target scene hasn't finished loading locally yet. 
+    private MapStateData? pendingData;
 
     public RoomState CurrentState => currentMapState.roomState;
     public bool HasAnomaly => currentMapState.roomState == RoomState.AnomalyRoom;
     public MapOrientor MapOrientor => mapOrientor;
+    public GameMap ActiveMap => activeMap;
 
     private void Awake()
     {
         mapOrientor = GetComponent<MapOrientor>();
-        OnMapChanged += HandleMapChange;
+        OnMapChanged += mapOrientor.OrientMap;
+        GameMap.OnMapLoaded += HandleMapLoaded;
+    }
 
-        if (!mapsArePrefabs)
-        {
-            foreach (var map in mapCollection) map.DisableAll();
-            foreach (var punish in punishmentRooms) punish.gameObject.SetActive(false);
-            if (winRoom) winRoom.gameObject.SetActive(false);
-        }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        GameMap.OnMapLoaded -= HandleMapLoaded;
     }
 
     #region Authority Methods
-    public void DecideNextMapVariation() => DecideNextMapVariation(withAnomalies: Random.value <= anomalyChance);
+    public void DecideNextMapVariation() => DecideNextMapVariation(withAnomalies: UnityEngine.Random.value <= anomalyChance);
     public void DecideNextMapVariation(bool withAnomalies)
     {
         if (!isServer) return;
-        if (activeMap == null) { Debug.LogError("No active map to apply variation to!"); return; }
 
-        currentMapState.variationIndex = withAnomalies && activeMap.HasAnomalyVariations? activeMap.GetRandomUnusedAnomalyIndex() : -1;
-        RegisterState(withAnomalies? RoomState.AnomalyRoom : RoomState.NormalRoom);
+        _ = QueueTransition(state =>
+        {
+            state.variationIndex = withAnomalies ? anomalyIndexPicker.GetNext() : -1;
+            state.roomState = withAnomalies ? RoomState.AnomalyRoom : RoomState.NormalRoom;
+            return state;
+        });
     }
     public void EnablePunishmentRoom_Server()
     {
         if (!isServer) return;
-        currentMapState.uniqueRoomIndex = Random.Range(0, punishmentRooms.Length);
-        RegisterState(RoomState.PunishmentRoom);
+
+        _ = QueueTransition(state =>
+        {
+            state.uniqueRoomIndex = UnityEngine.Random.Range(0, punishmentRooms.Length);
+            state.roomState = RoomState.PunishmentRoom;
+            return state;
+        });
     }
     public void EnableWinRoom_Server()
     {
         if (!isServer) return;
-        RegisterState(RoomState.WinRoom);
+
+        _ = QueueTransition(state =>
+        {
+            state.roomState = RoomState.WinRoom;
+            return state;
+        });
     }
-    public void PickMap_Server() => PickMapByIndex_Server(Random.Range(0, mapCollection.Length));
+    public void PickMap_Server() => PickMapByIndex_Server(UnityEngine.Random.Range(0, mapCollection.Length));
     public void PickMapByIndex_Server(int index)
     {
         if (!isServer) return;
-        index = Mathf.Clamp(index, 0, mapCollection.Length);
+        index = Mathf.Clamp(index, 0, mapCollection.Length - 1);
 
-        currentMapState.mapIndex = index;
-        currentMapState.variationIndex = -1;
-        RegisterState(RoomState.NormalRoom);
+        _ = QueueTransition(state =>
+        {
+            state.mapIndex = index;
+            state.variationIndex = -1;
+            state.roomState = RoomState.NormalRoom;
+            return state;
+        });
     }
     public void ChangeAnomalyChance(float percentage01) => anomalyChance = Mathf.Clamp01(percentage01);
 
     /// <summary>
-    /// Server: resolves which map objects are needed for the new state, then broadcasts state to all clients.
+    /// Queues a state mutation behind the transition lock. mutate is evaluated only once
+    /// it's this transition's turn, so it always builds on top of the last committed state,
+    /// not whatever currentMapState happened to be when the caller fired.
     /// </summary>
-    private void RegisterState(RoomState newState)
+    private async Task QueueTransition(Func<MapStateData, MapStateData> mutate)
     {
-        if (!isServer) return;
-
-        currentMapState.roomState = newState;
-
-        ResolveMapReferences(newState);
-        UpdateEntryPointData();
-        BroadcastState_ObserversRpc(activeMap, activeUniqueRoom, currentMapState);
+        await transitionLock.WaitAsync();
+        try
+        {
+            MapStateData nextState = mutate(currentMapState);
+            await RegisterState(nextState);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        finally
+        {
+            transitionLock.Release();
+        }
     }
-    /// <summary>
-    /// Server-side only. Instantiates or picks the correct map objects for the given state,
-    /// releasing whatever was active before.
-    /// </summary>
-    private void ResolveMapReferences(RoomState newState)
-    {
-        ReleaseUniqueRoom();
 
-        switch (newState)
+    private async Task RegisterState(MapStateData nextState)
+    {
+        await ResolveMapReferences(nextState);
+
+        currentMapState = nextState;
+        UpdateEntryPointData();
+        BroadcastState_ObserversRpc(currentMapState);
+    }
+
+    private async Task ResolveMapReferences(MapStateData nextState)
+    {
+        switch (nextState.roomState)
         {
             case RoomState.NormalRoom:
             case RoomState.AnomalyRoom:
-                // Only reload the AnomalyMap if it changed.
-                if (activeMap == null || currentMapState.mapIndex != loadedMapIndex)
-                {
-                    ReleaseActiveMap(destroy: mapsArePrefabs);
-                    activeMap = SpawnOrGet(mapCollection[currentMapState.mapIndex]);
-                    loadedMapIndex = currentMapState.mapIndex;
-                }
+                await LoadMapAsync(mapCollection[nextState.mapIndex]);
                 break;
 
             case RoomState.PunishmentRoom:
-                activeUniqueRoom = SpawnOrGet(punishmentRooms[currentMapState.uniqueRoomIndex]);
+                await LoadMapAsync(punishmentRooms[nextState.uniqueRoomIndex]);
                 break;
 
             case RoomState.WinRoom:
-                activeUniqueRoom = SpawnOrGet(winRoom);
+                await LoadMapAsync(winRoom);
                 break;
         }
     }
@@ -137,12 +173,27 @@ public class AnomalyManager : NetworkBehaviour
     /// Returns the existing scene object, or instantiates a prefab copy if mapsArePrefabs.
     /// Server only.
     /// </summary>
-    private TMap SpawnOrGet<TMap>(TMap source) where TMap : GameMap
+    private async Task LoadMapAsync(string sceneName)
     {
-        if (!isServer) return null;
-        TMap result = mapsArePrefabs ? Instantiate(source) : source;
-        return result;
+        if (!isServer) return;
+
+        if (loadedScene.IsValid() && loadedScene.isLoaded)
+        {
+            if (loadedScene.name == sceneName) return;
+            await networkManager.sceneModule.UnloadSceneAsync(loadedScene.buildIndex);
+        }
+
+        PurrSceneSettings settings = new()
+        {
+            isPublic = true,
+            mode = LoadSceneMode.Additive
+        };
+
+        await networkManager.sceneModule.LoadSceneAsync(sceneName, settings);
+
+        loadedScene = SceneManager.GetSceneByName(sceneName);
     }
+
     #endregion
 
     #region Sync Methods
@@ -150,98 +201,96 @@ public class AnomalyManager : NetworkBehaviour
     {
         base.OnObserverAdded(player);
 
-        if (isServer) BroadcastState_TargetRpc(player, activeMap, activeUniqueRoom, currentMapState);
+        if (player.isServer) return;
+        if (isServer && activeMap) BroadcastState_TargetRpc(player, currentMapState);
     }
-    [ObserversRpc(runLocally: false)] private void BroadcastState_ObserversRpc(AnomalyMap map, GameMap uniqueRoom, MapStateData data) => ApplyState(map, uniqueRoom, data);
-    [TargetRpc] private void BroadcastState_TargetRpc(PlayerID player, AnomalyMap map, GameMap uniqueRoom, MapStateData data) => ApplyState(map, uniqueRoom, data);
+    [ObserversRpc(runLocally: false)] private void BroadcastState_ObserversRpc(MapStateData data) => ApplyState(data);
+    [TargetRpc] private void BroadcastState_TargetRpc(PlayerID player, MapStateData data) => ApplyState(data);
     #endregion
 
     #region Map Manipulation Methods
-    /// <summary>
-    /// The single method that actually changes what's visible.
-    /// Runs on both server (directly) and clients (via RPC).
-    /// On clients, map/uniqueRoom are the network-resolved prefab instances.
-    /// On the server, they're the same references that were just spawned.
-    /// </summary>
-    private void ApplyState(AnomalyMap map, GameMap uniqueRoom, MapStateData data)
+    private void ApplyState(MapStateData data)
     {
         // Clients sync their entry elevator transform.
         if (!isServer) mapOrientor.SyncEntryPointWith(data.entryPointID, data.entryPosition, data.entryRotation);
 
-        HideAll(); // Clean previous map.
-
-        activeMap = map;
-        activeUniqueRoom = uniqueRoom;
-
-        switch (data.roomState) // Then activate what needs be.
-        {
-            case RoomState.NormalRoom:
-            case RoomState.AnomalyRoom:
-                activeMap.gameObject.SetActive(true);
-                ShowMapVariation(data.variationIndex);
-                break;
-
-            case RoomState.PunishmentRoom:
-            case RoomState.WinRoom:
-                activeUniqueRoom.gameObject.SetActive(true);
-                OnMapChanged?.Invoke(activeUniqueRoom);
-                break;
-        }
-
         currentMapState = data;
         OnStateChanged?.Invoke(data.roomState);
         OnMapStateApplied?.Invoke(data);
-    }
-    /// <summary>
-    /// Hides active map and unique room without destroying them.
-    /// </summary>
-    private void HideAll()
-    {
-        if (activeMap)
+
+        if (IsMapReady(data))
         {
-            activeMap.DisableAll();
-            activeMap.gameObject.SetActive(false);
+            pendingData = null;
+            ApplyVisuals(data);
         }
-        if (activeUniqueRoom) activeUniqueRoom.gameObject.SetActive(false);
+        else pendingData = data;
     }
+
+    private bool IsMapReady(MapStateData data)
+    {
+        string expectedScene = GetExpectedSceneName(data);
+        return activeMap != null && expectedScene != null && activeMap.gameObject.scene.name == expectedScene;
+    }
+
+    private string GetExpectedSceneName(MapStateData data)
+    {
+        switch (data.roomState)
+        {
+            case RoomState.NormalRoom:
+            case RoomState.AnomalyRoom:
+            return mapCollection[data.mapIndex];
+
+            case RoomState.PunishmentRoom: return punishmentRooms[data.uniqueRoomIndex];
+            case RoomState.WinRoom: return winRoom;
+            default: return null;
+        }
+    }
+
+    private void ApplyVisuals(MapStateData data)
+    {
+        switch (data.roomState)
+        {
+            case RoomState.NormalRoom:
+            case RoomState.AnomalyRoom:
+                ShowMapVariation(data.variationIndex);
+                break;
+
+            default: OnMapChanged?.Invoke(activeMap); break;
+        }
+    }
+
     /// <summary>
     /// Makes the variation of an AnomalyMap visible. Negative values enable BaseMap.
     /// </summary>
     private void ShowMapVariation(int variationIndex)
     {
+        if (activeMap == null || activeMap is not AnomalyMap anomalyMap)
+        {
+            Debug.LogWarning($"ShowMapVariation: active map is not an AnomalyMap!");
+            return;
+        }
+
+        anomalyMap.DisableAll();
+
         if (variationIndex < 0)
         {
-            activeMap.BaseMap.SetActive(true);
+            anomalyMap.BaseMap.SetActive(true);
             OnMapChanged?.Invoke(activeMap);
             return;
         }
 
-        AnomalyGroup variation = activeMap.GetAnomalyGroupAtIndex(variationIndex);
+        AnomalyGroup variation = anomalyMap.GetAnomalyGroupAtIndex(variationIndex);
         if (!variation.GroupRoot)
         {
-            Debug.LogWarning($"ShowMapVariation: no GroupRoot on variation {variationIndex} of {activeMap.BaseMap.name}");
+            Debug.LogWarning($"ShowMapVariation: no GroupRoot on variation {variationIndex} of {anomalyMap.BaseMap.name}");
             return;
         }
 
-        activeMap.BaseMap.SetActive(!variation.ReplacesBaseMap);
+        anomalyMap.BaseMap.SetActive(!variation.ReplacesBaseMap);
         variation.GroupRoot.SetActive(true);
         OnMapChanged?.Invoke(activeMap);
 
         if (variation.AlmanacEntry != null) AlmanacDiscovery.Discover(variation.AlmanacEntry);
-    }
-    private void ReleaseActiveMap(bool destroy)
-    {
-        if (!activeMap) return;
-        if (destroy && isServer) Destroy(activeMap.gameObject);
-        else activeMap.DisableAll();
-        activeMap = null;
-    }
-    private void ReleaseUniqueRoom()
-    {
-        if (!activeUniqueRoom) return;
-        if (mapsArePrefabs && isServer) Destroy(activeUniqueRoom.gameObject);
-        else activeUniqueRoom.gameObject.SetActive(false);
-        activeUniqueRoom = null;
     }
     #endregion
 
@@ -253,10 +302,25 @@ public class AnomalyManager : NetworkBehaviour
         currentMapState.entryPosition = entry.transform.position;
         currentMapState.entryRotation = entry.transform.rotation;
     }
-    private void HandleMapChange(GameMap map)
+
+    private void HandleMapLoaded(GameMap map)
     {
-        mapOrientor.OrientMap(map);
+        activeMap = map;
+
+        if (map is AnomalyMap anomalyMap)
+        {
+            if (anomalyIndexPicker.Length != anomalyMap.AnomalyVariations.Count)
+                anomalyIndexPicker.Reset(anomalyMap.AnomalyVariations.Count);
+        }
+
         AlmanacDiscovery.Discover(map.AlmanacEntry);
+
+        if (pendingData.HasValue && IsMapReady(pendingData.Value))
+        {
+            MapStateData state = pendingData.Value;
+            pendingData = null;
+            ApplyVisuals(state);
+        }
     }
     #endregion
 }
