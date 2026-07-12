@@ -5,8 +5,11 @@ using UnityEngine;
 public class NeonSparkTrigger : MonoBehaviour
 {
     [Header("Neon Settings")]
-    [Tooltip("Drag your entire Neon Prefab(s) here. The script will automatically find all the glowing parts inside!")]
-    public GameObject[] neonPrefabs;
+    [Tooltip("Drag your scene objects here. The script will automatically find all the glowing parts inside!")]
+    public GameObject[] neonObjects; 
+
+    [Tooltip("Drag the actual Unity Light components (Point, Spot, etc.) here to make them flash in sync.")]
+    public Light[] neonLights;
 
     [Tooltip("How many times the neon should spark.")]
     public int numberOfSparks = 3;
@@ -23,25 +26,45 @@ public class NeonSparkTrigger : MonoBehaviour
 
     private bool hasTriggeredOnce = false;
     private bool isOnCooldown = false;
+    
+    // Material caching
     private List<Renderer> glowingRenderers = new List<Renderer>();
     private List<Color> originalEmissionColors = new List<Color>();
+    private MaterialPropertyBlock propBlock;
+    private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
+
+    // Light caching
+    private float[] originalLightIntensities;
 
     private void Start()
     {
-        foreach (GameObject prefab in neonPrefabs)
+        propBlock = new MaterialPropertyBlock();
+
+        // 1. Setup Material Data
+        foreach (GameObject obj in neonObjects)
         {
-            if (prefab != null)
+            if (obj != null)
             {
-                Renderer[] renderersInChildren = prefab.GetComponentsInChildren<Renderer>();
+                Renderer[] renderersInChildren = obj.GetComponentsInChildren<Renderer>();
                 
                 foreach (Renderer rend in renderersInChildren)
                 {
-                    if (rend.material.HasProperty("_EmissionColor"))
+                    if (rend.sharedMaterial != null && rend.sharedMaterial.HasProperty(EmissionColorID))
                     {
                         glowingRenderers.Add(rend);
-                        originalEmissionColors.Add(rend.material.GetColor("_EmissionColor"));
+                        originalEmissionColors.Add(rend.sharedMaterial.GetColor(EmissionColorID));
                     }
                 }
+            }
+        }
+
+        // 2. Setup Light Data
+        originalLightIntensities = new float[neonLights.Length];
+        for (int i = 0; i < neonLights.Length; i++)
+        {
+            if (neonLights[i] != null)
+            {
+                originalLightIntensities[i] = neonLights[i].intensity;
             }
         }
     }
@@ -53,14 +76,14 @@ public class NeonSparkTrigger : MonoBehaviour
             if (triggerOnlyOnce && hasTriggeredOnce) return;
             if (isOnCooldown) return;
             
-            if (glowingRenderers.Count > 0)
+            if (glowingRenderers.Count > 0 || neonLights.Length > 0)
             {
                 hasTriggeredOnce = true;
                 StartCoroutine(SparkRoutine());
             }
             else
             {
-                Debug.LogWarning("Cannot spark: No glowing neon parts were found in the assigned prefabs!");
+                Debug.LogWarning("Cannot spark: No glowing parts or lights were assigned!");
             }
         }
     }
@@ -71,31 +94,69 @@ public class NeonSparkTrigger : MonoBehaviour
         
         for (int i = 0; i < numberOfSparks; i++)
         {
-            //  TURN EMISSION OFF 
-            for (int j = 0; j < glowingRenderers.Count; j++)
-            {
-                if (glowingRenderers[j] != null)
-                {
-                    glowingRenderers[j].material.SetColor("_EmissionColor", Color.black);
-                }
-            }
-            
+            // TURN OFF (Material + Lights)
+            SetEmissionColor(Color.black);
+            SetLightIntensity(0f);
             yield return new WaitForSeconds(sparkSpeed);
             
-            //  TURN EMISSION ON 
-            for (int j = 0; j < glowingRenderers.Count; j++)
-            {
-                if (glowingRenderers[j] != null)
-                {
-                    glowingRenderers[j].material.SetColor("_EmissionColor", originalEmissionColors[j]);
-                }
-            }
-            
+            // TURN ON (Material + Lights)
+            RestoreOriginalEmission();
+            RestoreOriginalLights();
             yield return new WaitForSeconds(sparkSpeed);
         }
         
         yield return new WaitForSeconds(cooldownTime);
         
         isOnCooldown = false;
+    }
+
+    // --- MATERIAL HELPERS ---
+    private void SetEmissionColor(Color color)
+    {
+        for (int j = 0; j < glowingRenderers.Count; j++)
+        {
+            if (glowingRenderers[j] != null)
+            {
+                glowingRenderers[j].GetPropertyBlock(propBlock);
+                propBlock.SetColor(EmissionColorID, color);
+                glowingRenderers[j].SetPropertyBlock(propBlock);
+            }
+        }
+    }
+
+    private void RestoreOriginalEmission()
+    {
+        for (int j = 0; j < glowingRenderers.Count; j++)
+        {
+            if (glowingRenderers[j] != null)
+            {
+                glowingRenderers[j].GetPropertyBlock(propBlock);
+                propBlock.SetColor(EmissionColorID, originalEmissionColors[j]);
+                glowingRenderers[j].SetPropertyBlock(propBlock);
+            }
+        }
+    }
+
+    // --- LIGHT HELPERS ---
+    private void SetLightIntensity(float intensity)
+    {
+        for (int i = 0; i < neonLights.Length; i++)
+        {
+            if (neonLights[i] != null)
+            {
+                neonLights[i].intensity = intensity;
+            }
+        }
+    }
+
+    private void RestoreOriginalLights()
+    {
+        for (int i = 0; i < neonLights.Length; i++)
+        {
+            if (neonLights[i] != null)
+            {
+                neonLights[i].intensity = originalLightIntensities[i];
+            }
+        }
     }
 }
