@@ -1,13 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class LightSparkTrigger : MonoBehaviour
+public class NeonSparkTrigger : MonoBehaviour
 {
-    [Header("Light Settings")]
-    [Tooltip("Drag the Light components you want to spark here. You can expand the list to add more!")]
-    public Light[] targetLights; 
-    
-    [Tooltip("How many times the lights should spark.")]
+    [Header("Neon Settings")]
+    [Tooltip("Drag your entire Neon Prefab(s) here. The script will automatically find all the glowing parts inside!")]
+    public GameObject[] neonPrefabs;
+
+    [Tooltip("How many times the neon should spark.")]
     public int numberOfSparks = 3;
     
     [Tooltip("How fast the spark flashes (in seconds).")]
@@ -22,6 +23,28 @@ public class LightSparkTrigger : MonoBehaviour
 
     private bool hasTriggeredOnce = false;
     private bool isOnCooldown = false;
+    private List<Renderer> glowingRenderers = new List<Renderer>();
+    private List<Color> originalEmissionColors = new List<Color>();
+
+    private void Start()
+    {
+        foreach (GameObject prefab in neonPrefabs)
+        {
+            if (prefab != null)
+            {
+                Renderer[] renderersInChildren = prefab.GetComponentsInChildren<Renderer>();
+                
+                foreach (Renderer rend in renderersInChildren)
+                {
+                    if (rend.material.HasProperty("_EmissionColor"))
+                    {
+                        glowingRenderers.Add(rend);
+                        originalEmissionColors.Add(rend.material.GetColor("_EmissionColor"));
+                    }
+                }
+            }
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -29,14 +52,15 @@ public class LightSparkTrigger : MonoBehaviour
         {
             if (triggerOnlyOnce && hasTriggeredOnce) return;
             if (isOnCooldown) return;
-            if (targetLights.Length > 0)
+            
+            if (glowingRenderers.Count > 0)
             {
                 hasTriggeredOnce = true;
                 StartCoroutine(SparkRoutine());
             }
             else
             {
-                Debug.LogWarning("Cannot spark: No Light components were assigned in the Inspector!");
+                Debug.LogWarning("Cannot spark: No glowing neon parts were found in the assigned prefabs!");
             }
         }
     }
@@ -45,33 +69,28 @@ public class LightSparkTrigger : MonoBehaviour
     {
         isOnCooldown = true;
         
-        bool[] originalStates = new bool[targetLights.Length];
-        for (int i = 0; i < targetLights.Length; i++)
-        {
-            if (targetLights[i] != null)
-            {
-                originalStates[i] = targetLights[i].enabled;
-            }
-        }
-        
         for (int i = 0; i < numberOfSparks; i++)
         {
-            for (int j = 0; j < targetLights.Length; j++)
+            //  TURN EMISSION OFF 
+            for (int j = 0; j < glowingRenderers.Count; j++)
             {
-                if (targetLights[j] != null)
+                if (glowingRenderers[j] != null)
                 {
-                    targetLights[j].enabled = !originalStates[j];
+                    glowingRenderers[j].material.SetColor("_EmissionColor", Color.black);
                 }
             }
+            
             yield return new WaitForSeconds(sparkSpeed);
             
-            for (int j = 0; j < targetLights.Length; j++)
+            //  TURN EMISSION ON 
+            for (int j = 0; j < glowingRenderers.Count; j++)
             {
-                if (targetLights[j] != null)
+                if (glowingRenderers[j] != null)
                 {
-                    targetLights[j].enabled = originalStates[j];
+                    glowingRenderers[j].material.SetColor("_EmissionColor", originalEmissionColors[j]);
                 }
             }
+            
             yield return new WaitForSeconds(sparkSpeed);
         }
         
