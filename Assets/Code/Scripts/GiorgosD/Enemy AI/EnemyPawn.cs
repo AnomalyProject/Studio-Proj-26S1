@@ -267,12 +267,12 @@ public class EnemyPawn : NetworkBehaviour
         if (!isServer) yield break;
         
         anim.SetBool("IsWalk", false);
-        ToggleShadow(true);
+        ToggleShadow();
         yield return new WaitForSeconds(startUnstuckTimer);
         UnStuck(target);
         
         yield return new WaitForSeconds(startUnstuckTimer);
-        ToggleShadow(false);
+        ToggleShadow();
         brain.ChangeState(EnemyBrain.StateID.Idle);
     }
     
@@ -297,9 +297,9 @@ public class EnemyPawn : NetworkBehaviour
     
     //Enables/Disables Shadow Particles.
     [ObserversRpc(bufferLast: true)]
-    private void ToggleShadow(bool isEnabled)
+    private void ToggleShadow()
     {
-        shadowParticles.SetActive(isEnabled);
+        Instantiate(shadowParticles, transform.position + Vector3.down, transform.rotation);
     }
     #endregion
 
