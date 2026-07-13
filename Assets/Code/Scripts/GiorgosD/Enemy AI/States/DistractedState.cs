@@ -12,7 +12,7 @@ public class DistractedState : BaseState
         
         body.anim.SetBool("isRun", true);
         
-        body.MoveToTarget(brain.TargetPos.position);
+        body.MoveToTarget(brain.TargetPos.position, true);
     }
 
     public override void Update()

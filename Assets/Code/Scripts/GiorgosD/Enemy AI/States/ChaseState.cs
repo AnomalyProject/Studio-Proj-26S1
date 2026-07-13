@@ -42,7 +42,7 @@ public class ChaseState : BaseState
             return;
         }
         
-        body.MoveToTarget(target.position);
+        body.MoveToTarget(target.position, false);
 
         if (Vector3.Distance(body.transform.position, target.position) <= 3.0f && !body.IsAttackCooldown)
         {

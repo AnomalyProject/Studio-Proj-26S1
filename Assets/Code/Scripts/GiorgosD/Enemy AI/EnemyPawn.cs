@@ -104,7 +104,7 @@ public class EnemyPawn : NetworkBehaviour
     /// Tells the enemy to move to the target possition.
     /// </summary>
     /// <param name="target"> either the player or the point whatever the brain thinks </param>
-    public void MoveToTarget(Vector3 target)
+    public void MoveToTarget(Vector3 target, bool forcePath)
     {
         if (!isServer) return;
 
@@ -113,7 +113,7 @@ public class EnemyPawn : NetworkBehaviour
             LostTimer();
         }
         
-        if (Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
+        if (forcePath || Vector3.Distance(agent.destination, target) > 0.9f) agent.SetDestination(target);
     }
 
     /// <summary>
@@ -235,8 +235,9 @@ public class EnemyPawn : NetworkBehaviour
             StartCoroutine(StartUnStuck(target));
             return;
         }
-        
+
         if (!agent.hasPath || agent.remainingDistance <= agent.stoppingDistance || agent.isStopped) return;
+        
         
         stuckTimer -= Time.deltaTime;
         if (stuckTimer <= 0f)

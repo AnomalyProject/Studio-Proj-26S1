@@ -19,7 +19,7 @@ public class InvestigateState : BaseState
 
         lastKnownPos = brain.TargetPos.position;
         
-        body.MoveToTarget(lastKnownPos);
+        body.MoveToTarget(lastKnownPos, true);
 
         body.OnPlayerSpotted.AddListener(PlayerFound);
     }

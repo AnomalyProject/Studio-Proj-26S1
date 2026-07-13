@@ -54,7 +54,6 @@ public class PatrolState : BaseState
                 HandleStuckInRoom();
             }
         }
-
     }
 
     /// <summary>
@@ -76,7 +75,7 @@ public class PatrolState : BaseState
         
         targetPoint = patrolPoints[pointIndex];
         
-        body.MoveToTarget(patrolPoints[pointIndex].position);
+        body.MoveToTarget(patrolPoints[pointIndex].position, true);
     }
 
     private bool isActualDest()
