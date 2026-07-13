@@ -1,8 +1,6 @@
-using UnityEngine;
-
 public class DistractedState : BaseState
 {
-    public DistractedState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public DistractedState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
     }
 
@@ -14,11 +12,13 @@ public class DistractedState : BaseState
         
         body.anim.SetBool("isRun", true);
         
-        body.MoveToTarget(brain.TargetPos.position);
+        body.MoveToTarget(brain.TargetPos.position, true);
     }
 
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         if (body.agent.remainingDistance > body.agent.stoppingDistance) return;
         
         // Hack
