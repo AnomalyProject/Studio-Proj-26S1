@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine;
 using PurrNet;
 using System;
+using System.Collections;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
@@ -59,7 +60,17 @@ public class ElevatorExit : LevelExitPoint
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
         UpdateAnomalyIndicators(bHasAnomaly);
 
-        if (openOnStart) OpenDoors();
+        if (openOnStart && gameObject.activeInHierarchy) StartCoroutine(InitialOpenDoors());
+    }
+    private IEnumerator InitialOpenDoors()
+    {
+        if(GameManager.Instance != null && GameManager.Instance.AnomalyManager != null)
+        {
+            // wait for the map to spawn
+            yield return new WaitUntil(() => GameManager.Instance.AnomalyManager.ActiveMap != null);
+        }
+
+        OpenDoors();
     }
     private void UpdateAvatarColors(bool isReady)
     {
