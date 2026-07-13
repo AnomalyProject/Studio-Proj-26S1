@@ -157,17 +157,23 @@ public class FPSController : MonoBehaviour
     private bool CanStandUp()
     {
         // Cast upward from current position to check for overhead obstacles
-        float castDistance = standingHeight - crouchHeight;
-        return !Physics.SphereCast(transform.position,
-                groundCheckRadius, Vector3.up, out _,
-                castDistance, groundLayers, 
-                QueryTriggerInteraction.Ignore);
+     
+            float distance = standingHeight - character.height;
 
-    }
-    #endregion
+            Vector3 origin = transform.position + Vector3.up * character.height;
 
-    #region Movement
-    public void HandleMovement(InputAction.CallbackContext ctx)
+            return !Physics.SphereCast(
+                origin,
+                character.radius * 0.35f,
+                Vector3.up,
+                out _,
+                distance
+            );
+        }
+        #endregion
+
+        #region Movement
+        public void HandleMovement(InputAction.CallbackContext ctx)
     {
         moveInput = ctx.ReadValue<Vector2>();
     }
