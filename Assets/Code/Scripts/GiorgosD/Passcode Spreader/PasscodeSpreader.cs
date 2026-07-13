@@ -6,6 +6,7 @@ using TMPro;
 
 public class PasscodeSpreader : NetworkBehaviour
 {
+    [SerializeField, Tooltip("For Tutorial: digits are assigned to the TextMeshes in order.")] private bool orderedSpread = false;
     [SerializeField] private TextMeshPro[] texts;
     [SerializeField] private bool applySymbols = true;
 
@@ -35,7 +36,7 @@ public class PasscodeSpreader : NetworkBehaviour
     {
         for (int i = indices.Count - 1; i > 0; i--)
         {
-            int randIndex = Random.Range(0, i + 1);
+            int randIndex = orderedSpread ? i : Random.Range(0, i + 1);
             int temp = indices[i];
             indices[i] = indices[randIndex];
             indices[randIndex] = temp;

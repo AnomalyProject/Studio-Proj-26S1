@@ -62,7 +62,7 @@ public class AlmanacUI : MonoBehaviour
     public static string GetCompletionPercentage(float completion01)
     {
         float completion = completion01 * 100;
-        return $"{(int)Mathf.Clamp(completion, 0, 100)}%";
+        return $"{Mathf.RoundToInt(Mathf.Clamp(completion, 0, 100))}%";
     }
     private void ContextChangeHandle(InputContext ctx) => gameObject.SetActive(ctx == InputContext.Almanac);
 }
