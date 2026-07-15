@@ -5,7 +5,7 @@ public class StunnedState : BaseState
 {
     private float timer;
 
-    public StunnedState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public StunnedState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
     }
 
@@ -15,8 +15,8 @@ public class StunnedState : BaseState
 
         // Start stun countdown
         timer = body.StunDuration;
-        // Cancel movement/actions while stunned
-        body.StopAll();
+
+        sound.SelectGrowl(brain.CurrentStateID);
 
         if (body.anim != null)
             body.anim.SetBool("IsStunned", true);

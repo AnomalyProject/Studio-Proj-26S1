@@ -60,12 +60,16 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   mapCollection:
-  - {fileID: 8064673867262377988, guid: cd3acc0af6ba2c042b76c090f3ac48af, type: 3}
+  - map_office
+  - map_cathedral
+  - map_tavern
+  - map_store
+  - map_arcade
+  - map_pizza
   anomalyChance: 0.5
   punishmentRooms:
-  - {fileID: 8092290379861920650, guid: 69c7171269118c24099129d122d3e1e1, type: 3}
-  winRoom: {fileID: 7922669162057803736, guid: 9c7d0b9cd6947cd48ba721b2498e53e3, type: 3}
-  mapsArePrefabs: 1
+  - map_void
+  winRoom: map_winroom
 --- !u!114 &1200105713825438942
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -929,6 +933,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7718683810689320557}
     m_Modifications:
+    - target: {fileID: 4379053667238093916, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4379053667238093916, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4379053667238093916, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4474410217797436803, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.31
+      objectReference: {fileID: 0}
     - target: {fileID: 6117208234726776361, guid: 81e71b128b3bc5a4980dd7d2ab2c3230, type: 3}
       propertyPath: m_LocalPosition.x
       value: 73.06113
