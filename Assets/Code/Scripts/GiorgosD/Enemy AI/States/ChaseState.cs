@@ -4,7 +4,7 @@ public class ChaseState : BaseState
 {
     private Transform target;
 
-    public ChaseState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public ChaseState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
         
     }
@@ -13,6 +13,8 @@ public class ChaseState : BaseState
     {
         base.Enter();
 
+        if (body.anim != null) body.anim.ResetTrigger("Attack");
+        
         body.SetMoveSpeed(true);
         body.anim.SetBool("IsRun", true);
         
@@ -24,6 +26,8 @@ public class ChaseState : BaseState
     /// </summary>
     public override void Update()
     {
+        brain.ReduceTimer();
+        
         target = brain.TargetPos;
 
         if (target == null)
@@ -37,12 +41,15 @@ public class ChaseState : BaseState
             brain.ChangeState(EnemyBrain.StateID.Investigate, target);
             return;
         }
+        
+        body.MoveToTarget(target.position, false);
 
-        body.RotateTowards(target.position);
-        body.MoveToTarget(target.position);
-
-        if (Vector3.Distance(body.transform.position, target.position) <= 3.0f)
+        if (Vector3.Distance(body.transform.position, target.position) <= 3.0f && !body.IsAttackCooldown)
         {
+            body.agent.ResetPath();
+            body.agent.velocity = Vector3.zero;
+            body.agent.isStopped = true;
+            
             brain.ChangeState(EnemyBrain.StateID.Attack, target);
         }
     }

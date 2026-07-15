@@ -5,7 +5,7 @@ public class InvestigateState : BaseState
     private Vector3 lastKnownPos;
     private Transform target;
 
-    public InvestigateState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public InvestigateState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
 
     }
@@ -19,7 +19,7 @@ public class InvestigateState : BaseState
 
         lastKnownPos = brain.TargetPos.position;
         
-        body.MoveToTarget(lastKnownPos);
+        body.MoveToTarget(lastKnownPos, true);
 
         body.OnPlayerSpotted.AddListener(PlayerFound);
     }
