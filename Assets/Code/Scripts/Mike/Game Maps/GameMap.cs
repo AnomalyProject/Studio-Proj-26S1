@@ -1,6 +1,7 @@
 using UnityEngine;
 using PurrNet;
 using System.Collections.Generic;
+using System;
 
 public class GameMap : NetworkBehaviour
 {
@@ -14,12 +15,14 @@ public class GameMap : NetworkBehaviour
     public Transform ExitPointAnchor => exitPointAnchor;
     bool HasAnchorPoints => exitPointAnchor != null && entryPointAnchor != null;
     public IReadOnlyCollection<Transform> CurrencySpawnPoints => currencySpawnPoints;
+    public static event Action<GameMap> OnMapLoaded;
 
     protected virtual void Awake()
     {
         entryPointAnchor.gameObject.SetActive(false);
         exitPointAnchor.gameObject.SetActive(false);
     }
+    private void OnEnable() => OnMapLoaded?.Invoke(this);
 
     private void OnValidate()
     {
