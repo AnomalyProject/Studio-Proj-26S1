@@ -38,9 +38,9 @@ public class HoverEffect : MonoBehaviour
         }
     }
 
-    private void OnDisable()
-    {
-        startLocPos = transform.localPosition;
-        startLocRot = transform.localRotation;
-    }
+    //private void OnDisable()
+    //{
+    //    startLocPos = transform.localPosition;
+    //    startLocRot = transform.localRotation;
+    //}
 }
