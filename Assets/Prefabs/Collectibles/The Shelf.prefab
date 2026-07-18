@@ -146,6 +146,7 @@ Transform:
   - {fileID: 7760134737213429856}
   - {fileID: 1822459819413581515}
   - {fileID: 7027985744135413995}
+  - {fileID: 7332976839685079355}
   m_Father: {fileID: 5564537381978889812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8778386400938481961
@@ -446,6 +447,92 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 6879159945173802342, guid: 9161ce48212ccba47b828c8ff6734ea7, type: 3}
   m_PrefabInstance: {fileID: 3802769714877859078}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &3926981530045991247
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7633987643595196048}
+    m_Modifications:
+    - target: {fileID: 1503341347268377622, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_Name
+      value: Punching Duck Collectible
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.27199936
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.7419984
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.1989999
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5321439328283291646, guid: e633fecb82d988e46951b110f6941721, type: 3}
+    - {fileID: 5741791052506379107, guid: e633fecb82d988e46951b110f6941721, type: 3}
+    - {fileID: 9120483782270944798, guid: e633fecb82d988e46951b110f6941721, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1503341347268377622, guid: e633fecb82d988e46951b110f6941721, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4815434121099460750}
+  m_SourcePrefab: {fileID: 100100000, guid: e633fecb82d988e46951b110f6941721, type: 3}
+--- !u!1 &2495979462382843225 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1503341347268377622, guid: e633fecb82d988e46951b110f6941721, type: 3}
+  m_PrefabInstance: {fileID: 3926981530045991247}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4815434121099460750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2495979462382843225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd10ed10eb08be74189f5e7f82ac9a55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollectibleDisplay
+  collectibleData: {fileID: 11400000, guid: a2103fa14d48fc942b525626506cef40, type: 2}
+--- !u!4 &7332976839685079355 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6033846516856244340, guid: e633fecb82d988e46951b110f6941721, type: 3}
+  m_PrefabInstance: {fileID: 3926981530045991247}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4051799243878016545
 PrefabInstance:
