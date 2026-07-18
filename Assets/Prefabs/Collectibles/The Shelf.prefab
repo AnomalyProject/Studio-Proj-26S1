@@ -148,6 +148,7 @@ Transform:
   - {fileID: 7027985744135413995}
   - {fileID: 7332976839685079355}
   - {fileID: 3335964020174024397}
+  - {fileID: 6797704230187869363}
   m_Father: {fileID: 5564537381978889812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8778386400938481961
@@ -705,4 +706,90 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7578847321572427985, guid: 57773399103f38e4eb9d6d64117d2f27, type: 3}
   m_PrefabInstance: {fileID: 5145011718606956060}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7423399464124342139
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7633987643595196048}
+    m_Modifications:
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.3729999
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.734
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.34500027
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5502948397877069117, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      propertyPath: m_Name
+      value: Squeaky Cleany Collectible
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 2567679617315090213, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+    - {fileID: 6705422491893886056, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+    - {fileID: 8140182784065887905, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5502948397877069117, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3119304853307178893}
+  m_SourcePrefab: {fileID: 100100000, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+--- !u!1 &3124178805492570694 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5502948397877069117, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+  m_PrefabInstance: {fileID: 7423399464124342139}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3119304853307178893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3124178805492570694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd10ed10eb08be74189f5e7f82ac9a55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollectibleDisplay
+  collectibleData: {fileID: 11400000, guid: 665ff90ced9a9ae4980e46eaf3352c7d, type: 2}
+--- !u!4 &6797704230187869363 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4130783272415296456, guid: 706b6a85b9fe6df40bfcf443612ab407, type: 3}
+  m_PrefabInstance: {fileID: 7423399464124342139}
   m_PrefabAsset: {fileID: 0}
