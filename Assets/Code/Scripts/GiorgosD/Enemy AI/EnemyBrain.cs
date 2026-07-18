@@ -1,7 +1,9 @@
 using PurrNet;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class EnemyBrain : NetworkBehaviour, IAlertable
 {
@@ -19,6 +21,11 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     [Header("STATE")]
     [SerializeField] private StateID currentStateID;
 
+    [Header("Voice Timer")] 
+    [SerializeField] private float minVoiceTimer = 5;
+    [SerializeField] private float maxVoiceTimer = 8;
+    private float voiceTimer;
+    
     [Header("Patrol Settings")]
     [SerializeField] private List<Transform> patrolPoints = new List<Transform>();
     [SerializeField] private List<Transform> patrolPriorities = new List<Transform>();
@@ -26,12 +33,16 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     
     [Header("Chase Settings")]
     [SerializeField] private List<Transform> respawnPoints = new List<Transform>();
+    
+    [Header("Spwan Settings")]
+    [SerializeField] private Transform spawnPoint;
 
     private Transform targetPos;
 
     private Dictionary<StateID, BaseState> stateDictionary = new Dictionary<StateID, BaseState>();
 
     private EnemyPawn body;
+    private EnemySounds sound;
     private BaseState currentState;
 
     public event Action<BaseState> OnStateChanged;
@@ -47,19 +58,21 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     public Transform TargetPos => targetPos;
     public float IdleTime => idleTimer;
     public List<Transform> RespawnPoints => respawnPoints;
+    public StateID CurrentStateID => currentStateID;
 
     private void Awake()
     {
         body = GetComponent<EnemyPawn>();
+        sound = GetComponentInChildren<EnemySounds>();
 
-        stateDictionary.Add(StateID.Idle, new IdleState(this, body));
-        stateDictionary.Add(StateID.Alert, new AlertState(this, body));
-        stateDictionary.Add(StateID.Patrol, new PatrolState(this, body));
-        stateDictionary.Add(StateID.Chase, new ChaseState(this, body));
-        stateDictionary.Add(StateID.Attack, new AttackState(this, body));
-        stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body));
-        stateDictionary.Add(StateID.Distaracted, new DistractedState(this, body));
-        stateDictionary.Add(StateID.Stunned, new StunnedState(this, body));
+        stateDictionary.Add(StateID.Idle, new IdleState(this, body, sound));
+        stateDictionary.Add(StateID.Alert, new AlertState(this, body, sound));
+        stateDictionary.Add(StateID.Patrol, new PatrolState(this, body, sound));
+        stateDictionary.Add(StateID.Chase, new ChaseState(this, body, sound));
+        stateDictionary.Add(StateID.Attack, new AttackState(this, body, sound));
+        stateDictionary.Add(StateID.Investigate, new InvestigateState(this, body, sound));
+        stateDictionary.Add(StateID.Distaracted, new DistractedState(this, body, sound));
+        stateDictionary.Add(StateID.Stunned, new StunnedState(this, body, sound));
     }
 
     protected override void OnSpawned(bool asServer)
@@ -80,8 +93,8 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
         if (!isServer) return;
 
         // Warp enemy to a random patrol point on spawn, if there are any
-        if (patrolPoints.Count > 0) body.agent.Warp(patrolPoints[UnityEngine.Random.Range(0, patrolPoints.Count)].position);
-
+        if (patrolPoints.Count > 0) body.agent.Warp(spawnPoint.position);
+        
         ChangeState(StateID.Idle);
     }
 
@@ -93,6 +106,7 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
 
         currentState?.Exit();
         currentStateID = newStateID;
+        ResetVoiceTimer();
         currentState = stateDictionary[newStateID];
         currentState.Enter();
         OnStateChanged?.Invoke(currentState);
@@ -131,7 +145,8 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
     {
         if (!isServer) return;
 
-        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned) return;
+        if (currentStateID == StateID.Distaracted || currentStateID == StateID.Stunned 
+            || currentStateID == StateID.Attack || currentStateID == StateID.Chase) return;
         
         Debug.Log($"[EnemyBrain] {gameObject.name} audibly alerted by {alertedBy.gameObject.name}");
         if (alertedBy.GetComponent<LureItem>())
@@ -146,6 +161,30 @@ public class EnemyBrain : NetworkBehaviour, IAlertable
             {
                 ChangeState(StateID.Alert, playerBody.transform);
             }
+        }
+    }
+    
+    /// <summary>
+    /// Called on the on State changed
+    /// </summary>
+    private void ResetVoiceTimer()
+    {
+        voiceTimer = Random.Range(minVoiceTimer, maxVoiceTimer);
+    }
+
+    /// <summary>
+    /// Count down for next voice line play.
+    /// </summary>
+    public void ReduceTimer()
+    {
+        if (voiceTimer <= 0)
+        {
+            sound.SelectGrowl(currentStateID);
+            ResetVoiceTimer();
+        }
+        else
+        {
+            voiceTimer -= Time.deltaTime;
         }
     }
 
