@@ -15,4 +15,8 @@ public static class Utils
             (array[r], array[i]) = (array[i], array[r]);
         }
     }
+    public static void ToggleChildren(this Transform tr, bool childrenActive)
+    {
+        foreach(Transform child in tr) child.gameObject.SetActive(childrenActive);
+    }
 }
