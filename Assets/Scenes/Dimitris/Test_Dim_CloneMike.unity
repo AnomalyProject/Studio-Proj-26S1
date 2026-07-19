@@ -330,10 +330,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Office Map Big
       objectReference: {fileID: 0}
-    - target: {fileID: 3055277136664380809, guid: cd3acc0af6ba2c042b76c090f3ac48af, type: 3}
-      propertyPath: levelModification
-      value: 
-      objectReference: {fileID: 11400000, guid: aa7b19844cba9dd4a977c8206013bda1, type: 2}
     - target: {fileID: 7678491008498445916, guid: cd3acc0af6ba2c042b76c090f3ac48af, type: 3}
       propertyPath: backgroundMusic
       value: 
@@ -673,17 +669,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &897865641 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8064673867262377988, guid: cd3acc0af6ba2c042b76c090f3ac48af, type: 3}
-  m_PrefabInstance: {fileID: 382048223}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3fb7b05b67073946944eeeee337f20f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AnomalyMap
 --- !u!224 &1000989151 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8295314741552497948, guid: edd6748d5e5e7a9429ace318ae0691a0, type: 3}
@@ -1034,7 +1019,7 @@ PrefabInstance:
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: 'mapCollection.Array.data[0]'
       value: 
-      objectReference: {fileID: 897865641}
+      objectReference: {fileID: 0}
     - target: {fileID: 2036968019297628306, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: 'mapCollection.Array.data[1]'
       value: 
@@ -1047,6 +1032,10 @@ PrefabInstance:
       propertyPath: 'mapCollection.Array.data[3]'
       value: 
       objectReference: {fileID: 8578147528456770990, guid: 391f077c5ca05a64ea7a683ad034a143, type: 3}
+    - target: {fileID: 5613523581925930812, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7032054832690312386, guid: 8c1dd47d3f335284f838ee71f3fdc4f0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 19.31181
