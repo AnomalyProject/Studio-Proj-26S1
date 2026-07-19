@@ -61,6 +61,7 @@ public class EnemyPawn : NetworkBehaviour
     private float stuckTimerReset;
     private Vector3 lastTrackedPos;
     [SerializeField] private GameObject shadowParticles;
+    [SerializeField] private GameObject bodyVisuals;
     [SerializeField] private float startUnstuckTimer = 0.5f;
     #endregion
     
@@ -267,12 +268,12 @@ public class EnemyPawn : NetworkBehaviour
         if (!isServer) yield break;
         
         anim.SetBool("IsWalk", false);
-        ToggleShadow();
+        ToggleShadow(isVisible: false);
         yield return new WaitForSeconds(startUnstuckTimer);
         UnStuck(target);
         
         yield return new WaitForSeconds(startUnstuckTimer);
-        ToggleShadow();
+        ToggleShadow(isVisible: true);
         brain.ChangeState(EnemyBrain.StateID.Idle);
     }
     
@@ -297,8 +298,9 @@ public class EnemyPawn : NetworkBehaviour
     
     //Enables/Disables Shadow Particles.
     [ObserversRpc(bufferLast: true)]
-    private void ToggleShadow()
+    private void ToggleShadow(bool isVisible)
     {
+        bodyVisuals.SetActive(isVisible);
         Instantiate(shadowParticles, transform.position + Vector3.down, transform.rotation);
     }
     #endregion

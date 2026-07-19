@@ -10,11 +10,16 @@ public class HoverEffect : MonoBehaviour
     [SerializeField] private Vector3 rotationSpeed = new Vector3(0f, 10f, 0f);
 
     private Vector3 startLocPos;
+    private Quaternion startLocRot;
+    private float hoverTimer;
+
 
     private void Start()
     {
         startLocPos = transform.localPosition;
+        startLocRot = transform.localRotation;
     }
+
     private void Update()
     {
         ApplyHoverEffect();
@@ -32,4 +37,10 @@ public class HoverEffect : MonoBehaviour
             transform.Rotate(rotationSpeed * Time.deltaTime);
         }
     }
+
+    //private void OnDisable()
+    //{
+    //    startLocPos = transform.localPosition;
+    //    startLocRot = transform.localRotation;
+    //}
 }

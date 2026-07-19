@@ -45,16 +45,16 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.5
-  m_Pitch: 1.7
+  m_Volume: 0.4
+  m_Pitch: 0.8
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 75
+  MinDistance: 3.5
+  MaxDistance: 200
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -174,7 +174,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.9
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -182,7 +182,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
+  MinDistance: 2.5
   MaxDistance: 150
   Pan2D: 0
   rolloffMode: 0
@@ -520,6 +520,7 @@ MonoBehaviour:
   stuckDistThres: 0.2
   stuckTimer: 4
   shadowParticles: {fileID: 7750205674768588072, guid: 6a0f0faff1d9eb74490c6970209fdb8c, type: 3}
+  bodyVisuals: {fileID: 6143667513347522794}
   startUnstuckTimer: 0.5
   OnPlayerSpotted:
     m_PersistentCalls:
@@ -558,8 +559,8 @@ MonoBehaviour:
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
   currentStateID: 0
-  minVoiceTimer: 3
-  maxVoiceTimer: 5
+  minVoiceTimer: 6
+  maxVoiceTimer: 12
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -3543,6 +3544,11 @@ PrefabInstance:
 --- !u!4 &6143667513347038610 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3490026887102541896, guid: e0a2ae8d8ae1c1f4b83e337da0b6f6b4, type: 3}
+  m_PrefabInstance: {fileID: 7290661475375869402}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6143667513347522794 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3490026887102115120, guid: e0a2ae8d8ae1c1f4b83e337da0b6f6b4, type: 3}
   m_PrefabInstance: {fileID: 7290661475375869402}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6143667513347522994 stripped
