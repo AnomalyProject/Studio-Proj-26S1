@@ -80,7 +80,7 @@ public class ElevatorExit : LevelExitPoint
     {
         ornament.SetActive(true);
         foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
-        if (networkManager.playerCount <= 1) return;
+        if (NetworkManager.main == null || NetworkManager.main.playerCount <= 1) return;
         for (int i = 0; i < NetworkManager.main.playerCount; i++)
         {
             avatars[i].gameObject.SetActive(true);
