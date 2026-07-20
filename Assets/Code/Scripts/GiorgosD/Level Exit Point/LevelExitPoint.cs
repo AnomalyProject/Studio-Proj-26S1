@@ -64,22 +64,24 @@ public class LevelExitPoint : NetworkBehaviour, IInteractable<PlayerBody>
     /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
-        if (!isServer) return;
-
         if (other.TryGetComponent(out PlayerBody player) && player.id.HasValue)
         {
-            playersInArea.Add(player.id.Value);
+            if (isServer) playersInArea.Add(player.id.Value);
+            if (player.isOwner) player.transform.SetParent(transform, true);
+        }
+        else if(other.TryGetComponent(out ItemPickup pickup) && pickup.isOwner)
+        {
+            pickup.transform.SetParent(transform, true);
         }
     }
 
     // See OnTriggerEnter summary.
     private void OnTriggerExit(Collider other)
     {
-        if(!isServer) return;
-
         if (other.TryGetComponent(out PlayerBody player) && player.id.HasValue)
         {
-            playersInArea.Remove(player.id.Value);
+            if (isServer) playersInArea.Remove(player.id.Value);
+            if (player.isOwner) player.transform.SetParent(null, true);
         }
     }
     #endregion

@@ -37,8 +37,15 @@ public static class ExceptionLogger
         // Attempt to convert it to an exception
         Exception ex = e.ExceptionObject as Exception;
         LogEntry entry;
-        if (ex != null) entry = new LogEntry($"UNHANDLED: {ex.Message}", ex.StackTrace, LogType.Exception);
-        else entry = new LogEntry($"UNHANDLED: {e}", "", LogType.Exception);
+        if (ex != null)
+        {
+            if (ex.Message.ToLower().Contains("unicode")) return; // Skip unicode errors because they cause positive feedback loops and crashes.
+            entry = new LogEntry($"UNHANDLED: {ex.Message}", ex.StackTrace, LogType.Exception);
+        }
+        else
+        {
+            entry = new LogEntry($"UNHANDLED: {e}", "", LogType.Exception);
+        }
 
         WriteToFile(entry.Format(true, true));
         Log(entry);
@@ -48,6 +55,7 @@ public static class ExceptionLogger
     {
         foreach (var ex in e.Exception.Flatten().InnerExceptions)
         {
+            if (ex.Message.ToLower().Contains("unicode")) return; // Skip unicode errors because they cause positive feedback loops and crashes.
             LogEntry entry = new LogEntry($"TASK EXCEPTION: {ex.Message}", ex.StackTrace, LogType.Exception);
             WriteToFile(entry.Format(true, true));
             Log(entry);
@@ -57,6 +65,7 @@ public static class ExceptionLogger
 
     private static void HandleUnityLog(string condition, string stackTrace, LogType type)
     {
+        if (condition.ToLower().Contains("unicode")) return; // Skip unicode errors because they cause positive feedback loops and crashes.
         LogEntry entry = new LogEntry(condition, stackTrace, type);
         // if (type != LogType.Log) // Use this to skip Debug.Log events in the log file
         WriteToFile(entry.Format(includeStackTrace: true, includeTimestamp: true));

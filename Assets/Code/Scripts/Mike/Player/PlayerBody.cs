@@ -25,6 +25,7 @@ public class PlayerBody : NetworkBehaviour
 
     [Header("Misc")]
     [SerializeField] private AudioClip burpClip;
+    [SerializeField] private CameraShake camShake;
     
     [Header("Invisibility")]
     [SerializeField] private PlayerInvisibility invis;
@@ -37,6 +38,7 @@ public class PlayerBody : NetworkBehaviour
     public PlayerID? OwnerPlayerID => owner;
     public AudioSource AudioSource => audioSource;
     public PlayerInvisibility  Invis => invis;
+    public CameraShake CamShake => camShake;
 
     public static event Action<PlayerBody> OnLocalPlayerSpawned;
     public static event Action<PlayerBody> OnLocalPlayerDespawned;

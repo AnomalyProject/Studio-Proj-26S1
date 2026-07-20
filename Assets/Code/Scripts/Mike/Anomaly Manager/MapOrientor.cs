@@ -11,6 +11,7 @@ public class MapOrientor : MonoBehaviour
 
     void Awake()
     {
+        entryElevator.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         entryElevator.OnExitActivated += HandleExitActivation;
         exitElevator.OnExitActivated += HandleExitActivation;
     }
@@ -26,12 +27,11 @@ public class MapOrientor : MonoBehaviour
     /// </summary>
     public static void OrientMap(GameMap map, Transform entryPoint, Transform exitPoint)
     {
-        // Entry Point is the parent of the whole map, configured in GameMap's awake.
-        map.transform.position = entryPoint.transform.position;
-        map.transform.rotation = entryPoint.transform.rotation;
+        entryPoint.ToggleChildren(childrenActive: false); // Disable all children which may be CharacterController's or Rigidbodies that tend to fight with external movement.
+        entryPoint.SetPositionAndRotation(map.EntryPointAnchor.position, map.EntryPointAnchor.rotation);
+        entryPoint.ToggleChildren(childrenActive: true);
 
-        exitPoint.transform.position = map.ExitPointAnchor.position;
-        exitPoint.transform.rotation = map.ExitPointAnchor.rotation;
+        exitPoint.SetPositionAndRotation(map.ExitPointAnchor.position, map.ExitPointAnchor.rotation);
     }
     private void SetNewEntryPoint(LevelExitPoint newPoint)
     {

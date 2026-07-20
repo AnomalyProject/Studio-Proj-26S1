@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine;
 using PurrNet;
 using System;
+using System.Collections;
 
 [RequireComponent(typeof(AudioSource), typeof(Animator))]
 public class ElevatorExit : LevelExitPoint
@@ -40,6 +41,16 @@ public class ElevatorExit : LevelExitPoint
         SessionEvents.OnPlayerJoined += UpdateAvatarCount;
         SessionEvents.OnPlayerLeft += UpdateAvatarCount;
         OnPlayersChanged.AddListener(UpdateAvatarColors);
+        OnActivateExit.AddListener(ApplyShake);
+    }
+
+    private void ApplyShake(bool _)
+    {
+        var body = PlayerBody.localPlayerBody;
+        if (!body) return;
+
+        OnFullyClosed.ListenOnce(body.CamShake.StartShake);
+        OnStartOpen.ListenOnce(body.CamShake.StopShake);
     }
 
     protected override void OnDestroy()
@@ -59,7 +70,17 @@ public class ElevatorExit : LevelExitPoint
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
         UpdateAnomalyIndicators(bHasAnomaly);
 
-        if (openOnStart) OpenDoors();
+        if (openOnStart && gameObject.activeInHierarchy) StartCoroutine(InitialOpenDoors());
+    }
+    private IEnumerator InitialOpenDoors()
+    {
+        if(GameManager.Instance != null && GameManager.Instance.AnomalyManager != null)
+        {
+            // wait for the map to spawn
+            yield return new WaitUntil(() => GameManager.Instance.AnomalyManager.ActiveMap != null);
+        }
+
+        OpenDoors();
     }
     private void UpdateAvatarColors(bool isReady)
     {
@@ -69,7 +90,7 @@ public class ElevatorExit : LevelExitPoint
     {
         ornament.SetActive(true);
         foreach (Renderer avatar in avatars) avatar.gameObject.SetActive(false);
-        if (NetworkManager.main.playerCount <= 1) return;
+        if (NetworkManager.main == null || NetworkManager.main.playerCount <= 1) return;
         for (int i = 0; i < NetworkManager.main.playerCount; i++)
         {
             avatars[i].gameObject.SetActive(true);

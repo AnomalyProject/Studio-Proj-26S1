@@ -502,9 +502,10 @@ public class GameManager : NetworkBehaviour
     }
     private void CheckRestock(int progress)
     {
-        if (!isServer) return;
+        if (!isServer || anomalyManager.ActiveMap == null) return;
+        if(anomalyManager.ActiveMap is not AnomalyMap anomalyMap) return;
         bool correctRound = progress % vendorRestockAfterProgress == 0;
-        if (correctRound && anomalyManager.ActiveMap.Vendor != null) anomalyManager.ActiveMap.Vendor.Restock();
+        if (correctRound && anomalyMap.Vendor != null) anomalyMap.Vendor.Restock(); 
     }
 
     private void PickStartingMap()

@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PatrolState : BaseState
 {
     private static int pointIndex = -1;
+    private Transform targetPoint;
+    private bool isStuckInRoom;
 
-    public PatrolState(EnemyBrain brain, EnemyPawn body) : base(brain, body)
+    public PatrolState(EnemyBrain brain, EnemyPawn body, EnemySounds sound) : base(brain, body, sound)
     {
 
     }
@@ -16,6 +19,7 @@ public class PatrolState : BaseState
 
         body.SetMoveSpeed(false);
         body.anim.SetBool("IsWalk", true);
+        isStuckInRoom = false;
 
         body.OnPlayerSpotted.AddListener(HandlePlayerSpotted);
 
@@ -34,9 +38,21 @@ public class PatrolState : BaseState
     /// </summary>
     public override void Update()
     {
+        body.CheckStuck(targetPoint, false);
+        
+        brain.ReduceTimer();
+        
         if (body.agent.hasPath && body.agent.remainingDistance <= body.agent.stoppingDistance)
         {
-            brain.ChangeState(EnemyBrain.StateID.Idle);
+            if (isActualDest())
+            {
+                brain.ChangeState(EnemyBrain.StateID.Idle);
+            }
+            else if (!isStuckInRoom)
+            {
+                isStuckInRoom = true;
+                HandleStuckInRoom();
+            }
         }
     }
 
@@ -56,10 +72,24 @@ public class PatrolState : BaseState
         }
 
         pointIndex = nextIndex;
+        
+        targetPoint = patrolPoints[pointIndex];
+        
+        body.MoveToTarget(patrolPoints[pointIndex].position, true);
+    }
 
-        Debug.Log($"Moving to patrol point {pointIndex}");
+    private bool isActualDest()
+    {
+        Vector3 agentTarget = body.agent.destination;
+        
+        float devDist = Vector3.Distance(targetPoint.position, agentTarget);
 
-        body.MoveToTarget(patrolPoints[pointIndex].position);
+        return devDist < 1.5f;
+    }
+
+    private void HandleStuckInRoom()
+    {
+        body.CheckStuck(targetPoint, true);
     }
 
     private void HandlePlayerSpotted(PlayerBody player)
