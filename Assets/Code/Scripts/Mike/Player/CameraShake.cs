@@ -78,8 +78,8 @@ public class CameraShake : MonoBehaviour
         float strength = fadeCurve.Evaluate(fadingIn ? currentBlend : 1f - currentBlend);
         noiseTime += Time.deltaTime * frequency;
 
-        Vector2 noise = new(Mathf.PerlinNoise(noiseTime, 0f), Mathf.PerlinNoise(0f, noiseTime));
-        Vector3 offset = (Vector3)(noise * (amplitude * strength));
+        Vector3 noise = new(Mathf.PerlinNoise(noiseTime, 0f), Mathf.PerlinNoise(0f, noiseTime), 0);
+        Vector3 offset = noise * (amplitude * strength);
         target.localPosition = initialLocalPosition + offset;
     }
 }
