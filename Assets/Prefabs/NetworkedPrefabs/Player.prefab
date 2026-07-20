@@ -578,6 +578,7 @@ GameObject:
   - component: {fileID: 8945130606974342615}
   - component: {fileID: 5223983998993346721}
   - component: {fileID: 1719570517764467312}
+  - component: {fileID: 6361182315622814776}
   m_Layer: 3
   m_Name: CameraHolder
   m_TagString: Untagged
@@ -613,9 +614,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e974ad9a76972b4cacf0f2257b6d00f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FPSCameraController
-  sensitivityMultiplier: 20
   pitchMin: -80
   pitchMax: 80
+  mouseDegreesPerPixel: 0.08
+  gamepadDegreesPerSecond: 260
+  maxYawDegreesPerFrame: 35
+  maxPitchDegreesPerFrame: 25
+  maxLookDeltaTime: 0.033333335
   playerBody: {fileID: 3679284614733776610}
 --- !u!114 &5223983998993346721
 MonoBehaviour:
@@ -652,6 +657,71 @@ MonoBehaviour:
   speedBoostFOV: 90
   zoomScale: 0.5
   zoomTransitionSpeed: 12
+--- !u!114 &6361182315622814776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3688201667625389418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e10ef8d319a9bc44fb9b1b60b8b9e353, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
+  target: {fileID: 7145071027208893932}
+  amplitude: 0.01
+  frequency: 15
+  fadeInDuration: 3
+  fadeOutDuration: 0.15
+  fadeInCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fadeOutCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &4227618509524077635
 GameObject:
   m_ObjectHideFlags: 0
@@ -1380,12 +1450,13 @@ MonoBehaviour:
   interaction: {fileID: 3680812478694482278}
   bodyVisuals: {fileID: 5348312652502001726}
   audioSource: {fileID: 7412561033432568348}
+  playerAudioListener: {fileID: 4446143913667706670}
   playerCamera: {fileID: 5794337579464328323}
   hudCamera: {fileID: 4543138664715801701}
-  playerAudioListener: {fileID: 4446143913667706670}
   playerCameraLean: {fileID: 5223983998993346721}
   nameplateVisuals: {fileID: 2628281181172639720}
   burpClip: {fileID: 8300000, guid: 0c2ef362cf36a9e48943490891c665b1, type: 3}
+  camShake: {fileID: 6361182315622814776}
   invis: {fileID: 4398589874693912511}
 --- !u!114 &2519213704156087875
 MonoBehaviour:

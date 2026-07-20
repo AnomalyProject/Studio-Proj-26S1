@@ -41,6 +41,16 @@ public class ElevatorExit : LevelExitPoint
         SessionEvents.OnPlayerJoined += UpdateAvatarCount;
         SessionEvents.OnPlayerLeft += UpdateAvatarCount;
         OnPlayersChanged.AddListener(UpdateAvatarColors);
+        OnActivateExit.AddListener(ApplyShake);
+    }
+
+    private void ApplyShake(bool _)
+    {
+        var body = PlayerBody.localPlayerBody;
+        if (!body) return;
+
+        OnFullyClosed.ListenOnce(body.CamShake.StartShake);
+        OnStartOpen.ListenOnce(body.CamShake.StopShake);
     }
 
     protected override void OnDestroy()
