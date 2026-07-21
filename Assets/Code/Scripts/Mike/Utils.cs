@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public static class Utils
 {
@@ -14,5 +15,21 @@ public static class Utils
             int r = UnityEngine.Random.Range(i, array.Count);
             (array[r], array[i]) = (array[i], array[r]);
         }
+    }
+    public static void ToggleChildren(this Transform tr, bool childrenActive)
+    {
+        foreach(Transform child in tr) child.gameObject.SetActive(childrenActive);
+    }
+    public static void ListenOnce(this UnityEvent handler, System.Action action)
+    {
+        if (handler == null) return;
+
+        void Wrapper()
+        {
+            handler.RemoveListener(Wrapper);
+            action();
+        }
+
+        handler.AddListener(Wrapper);
     }
 }

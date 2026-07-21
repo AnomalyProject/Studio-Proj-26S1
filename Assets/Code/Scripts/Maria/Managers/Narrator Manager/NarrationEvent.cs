@@ -8,12 +8,17 @@ using UnityEngine;
 /// </summary>
 public class NarrationEvent : MonoBehaviour
 {
+    #region Serialized Fields
     [SerializeField] private bool triggerOnce = false;
     [SerializeField] private NarrationEntry entry;
     [SerializeField] private UnityEvent onNarrationFinished;
+    #endregion
 
+    #region Private Field
     private static readonly System.Collections.Generic.Dictionary<string,int> s_lastTriggeredFrame = new();
+    #endregion
 
+    #region Public Methods
     public void PlayNarration()
     {
         if (!NarratorManager.Instance || entry == null) return;
@@ -32,6 +37,9 @@ public class NarrationEvent : MonoBehaviour
         // invoke the provided callback when the narration actually finishes.
         NarratorManager.Instance.TryTriggerNarration(entry, OnNarrationFinsihed, triggerOnce);
     }
+    #endregion
 
+    #region Private Method
     private void OnNarrationFinsihed() => onNarrationFinished?.Invoke();
+    #endregion
 }

@@ -32,7 +32,10 @@ public class FPSCameraController : MonoBehaviour
     private bool lookFromMouse;
     private bool suppressNextLookFrame;
     #endregion
+
+    #region Public Accessors
     public float CurrentPitch => currentPitch;
+    #endregion
 
     #region Unity Lifecycle
     private void Awake()
