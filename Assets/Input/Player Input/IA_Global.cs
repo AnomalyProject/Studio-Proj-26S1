@@ -218,6 +218,17 @@ public partial class @IA_Global: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""f41cb224-e060-4d57-9d0a-1fb9fbe3d1f3"",
+                    ""path"": ""<Gamepad>/dpad/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Toggle Chat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""4520782a-9721-4385-b1b3-3f810a787f64"",
                     ""path"": ""<Keyboard>/b"",
                     ""interactions"": """",

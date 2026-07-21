@@ -6,6 +6,7 @@ using System.Net.Mail;
 using System.IO;
 using System;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class BugReporter : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public class BugReporter : MonoBehaviour
     public Button submitButton;
     public Button closeButton;
     public GameObject thankYouMessage;
+    [SerializeField] private GameObject firstSelectedObject;
 
     [Header("SMTP Configuration")]
     
@@ -45,7 +47,14 @@ public class BugReporter : MonoBehaviour
     {
         bool isActive = context == InputBridge.InputContext.BugReporter;
         bugReporterPanel.SetActive(isActive);
-        if (!isActive) thankYouMessage.SetActive(false);
+        if (!isActive) 
+        {
+            thankYouMessage.SetActive(false);
+        }
+        else
+        {
+            EventSystem.current.SetSelectedGameObject(firstSelectedObject);
+        }
     }
 
     private void ValidateInput(string input)

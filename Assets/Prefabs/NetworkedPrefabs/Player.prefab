@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5794337579464328323}
   - component: {fileID: 4446143913667706670}
   - component: {fileID: 3378285796096836427}
+  - component: {fileID: 7069096581796954073}
   m_Layer: 3
   m_Name: Base Camera
   m_TagString: MainCamera
@@ -34,7 +35,7 @@ Transform:
   m_Children:
   - {fileID: 4606633856125498859}
   - {fileID: 6325326864437828213}
-  m_Father: {fileID: 7145071027208893932}
+  m_Father: {fileID: 7715824457594436583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &5794337579464328323
 Camera:
@@ -140,6 +141,29 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &7069096581796954073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 527101611340826613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07f219b6873cd4f2c801b2d912e9060f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeadBobbing
+  controller: {fileID: 1494246198799042083}
+  positionSmooth: 500
+  rotationSmooth: 600
+  idleFrequency: 1
+  idleAmplitude: 0.025
+  bobFrequency: 6
+  sprintMultiplier: 2
+  crouchedMultiplier: 0.5
+  bobAmplitude: 0.0055
+  bobLimit: {x: 0.0075, y: 0.0175, z: 0}
+  rotationMultiplier: {x: 0.5, y: 0, z: 0.15}
 --- !u!1 &1040727758960398401
 GameObject:
   m_ObjectHideFlags: 0
@@ -598,7 +622,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8398281657158445380}
+  - {fileID: 7715824457594436583}
   m_Father: {fileID: 3679284614733776610}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8945130606974342615
@@ -613,9 +637,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e974ad9a76972b4cacf0f2257b6d00f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FPSCameraController
-  sensitivityMultiplier: 20
   pitchMin: -80
   pitchMax: 80
+  mouseDegreesPerPixel: 0.08
+  gamepadDegreesPerSecond: 260
+  maxYawDegreesPerFrame: 35
+  maxPitchDegreesPerFrame: 25
+  maxLookDeltaTime: 0.033333335
   playerBody: {fileID: 3679284614733776610}
 --- !u!114 &5223983998993346721
 MonoBehaviour:
@@ -629,7 +657,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07a5bc9b4b641e54fb594a4f1078a588, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraLean
-  cameraTransform: {fileID: 8398281657158445380}
+  cameraTransform: {fileID: 7715824457594436583}
   leanAngle: 5
   leanDistance: 0.3
   leanSpeed: 7
@@ -1090,6 +1118,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 7069096581796954073}
+        m_TargetAssemblyTypeName: HeadBobbing, Assembly-CSharp
+        m_MethodName: GetWalkInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onNextItem:
     m_PersistentCalls:
       m_Calls:
@@ -1380,9 +1420,9 @@ MonoBehaviour:
   interaction: {fileID: 3680812478694482278}
   bodyVisuals: {fileID: 5348312652502001726}
   audioSource: {fileID: 7412561033432568348}
+  playerAudioListener: {fileID: 4446143913667706670}
   playerCamera: {fileID: 5794337579464328323}
   hudCamera: {fileID: 4543138664715801701}
-  playerAudioListener: {fileID: 4446143913667706670}
   playerCameraLean: {fileID: 5223983998993346721}
   nameplateVisuals: {fileID: 2628281181172639720}
   burpClip: {fileID: 8300000, guid: 0c2ef362cf36a9e48943490891c665b1, type: 3}
@@ -1858,6 +1898,38 @@ MonoBehaviour:
   blendDistance: 0
   weight: 0
   sharedProfile: {fileID: 11400000, guid: 256b62f66554507478b0905439886769, type: 2}
+--- !u!1 &8566339920187963041
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7715824457594436583}
+  m_Layer: 3
+  m_Name: CameraLeanHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7715824457594436583
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8566339920187963041}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8398281657158445380}
+  m_Father: {fileID: 7145071027208893932}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &26888280408622571
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -190,6 +190,24 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectNext"",
+                    ""type"": ""Button"",
+                    ""id"": ""5aa92e84-b203-41c1-8c6f-35efc94e9e34"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectPrevious"",
+                    ""type"": ""Button"",
+                    ""id"": ""e5f58032-4668-4fd1-a712-b74a055d9987"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -654,6 +672,50 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
                     ""action"": ""Toggle Pause Menu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0f06ec4e-303f-4520-b2a5-66863dd53c5b"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectNext"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2694e69e-1252-42eb-ae4c-62efd1556b48"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectNext"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c58085a6-3514-4cd0-b3d7-680e477166d4"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectPrevious"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6a9ad70b-9e2e-47f4-9de7-455bcecfb7cb"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectPrevious"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -673,6 +735,8 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         m_UI_TrackedDevicePosition = m_UI.FindAction("TrackedDevicePosition", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         m_UI_TogglePauseMenu = m_UI.FindAction("Toggle Pause Menu", throwIfNotFound: true);
+        m_UI_SelectNext = m_UI.FindAction("SelectNext", throwIfNotFound: true);
+        m_UI_SelectPrevious = m_UI.FindAction("SelectPrevious", throwIfNotFound: true);
     }
 
     ~@IA_UserInterface()
@@ -764,6 +828,8 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
     private readonly InputAction m_UI_TrackedDevicePosition;
     private readonly InputAction m_UI_TrackedDeviceOrientation;
     private readonly InputAction m_UI_TogglePauseMenu;
+    private readonly InputAction m_UI_SelectNext;
+    private readonly InputAction m_UI_SelectPrevious;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -819,6 +885,14 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/TogglePauseMenu".
         /// </summary>
         public InputAction @TogglePauseMenu => m_Wrapper.m_UI_TogglePauseMenu;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/SelectNext".
+        /// </summary>
+        public InputAction @SelectNext => m_Wrapper.m_UI_SelectNext;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/SelectPrevious".
+        /// </summary>
+        public InputAction @SelectPrevious => m_Wrapper.m_UI_SelectPrevious;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -878,6 +952,12 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
             @TogglePauseMenu.started += instance.OnTogglePauseMenu;
             @TogglePauseMenu.performed += instance.OnTogglePauseMenu;
             @TogglePauseMenu.canceled += instance.OnTogglePauseMenu;
+            @SelectNext.started += instance.OnSelectNext;
+            @SelectNext.performed += instance.OnSelectNext;
+            @SelectNext.canceled += instance.OnSelectNext;
+            @SelectPrevious.started += instance.OnSelectPrevious;
+            @SelectPrevious.performed += instance.OnSelectPrevious;
+            @SelectPrevious.canceled += instance.OnSelectPrevious;
         }
 
         /// <summary>
@@ -922,6 +1002,12 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
             @TogglePauseMenu.started -= instance.OnTogglePauseMenu;
             @TogglePauseMenu.performed -= instance.OnTogglePauseMenu;
             @TogglePauseMenu.canceled -= instance.OnTogglePauseMenu;
+            @SelectNext.started -= instance.OnSelectNext;
+            @SelectNext.performed -= instance.OnSelectNext;
+            @SelectNext.canceled -= instance.OnSelectNext;
+            @SelectPrevious.started -= instance.OnSelectPrevious;
+            @SelectPrevious.performed -= instance.OnSelectPrevious;
+            @SelectPrevious.canceled -= instance.OnSelectPrevious;
         }
 
         /// <summary>
@@ -1039,5 +1125,19 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTogglePauseMenu(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectNext" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectNext(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectPrevious" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectPrevious(InputAction.CallbackContext context);
     }
 }

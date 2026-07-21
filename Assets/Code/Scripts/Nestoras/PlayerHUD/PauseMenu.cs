@@ -2,6 +2,7 @@ using PurrNet;
 using PurrNet.Transports;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -12,6 +13,8 @@ public class PauseMenu : MonoBehaviour
 {
     private Transform root;
     private Coroutine mainMenuTransitionCoroutine;
+
+    [SerializeField] private GameObject firstSelectableButton;
 
     private void Awake() => root = transform.GetChild(0);
     private void OnEnable() => InputBridge.OnContextChanged += TogglePauseMenu;
@@ -27,6 +30,11 @@ public class PauseMenu : MonoBehaviour
 
         // Toggle
         root.gameObject.SetActive(context == InputBridge.InputContext.UI);
+
+        // When opening Pause Menu, automatically select the first button for controllers
+        if (context == InputBridge.InputContext.UI) EventSystem.current.SetSelectedGameObject(firstSelectableButton);
+
+        Debug.Log(EventSystem.current.currentSelectedGameObject);
 
         // Make sure the settings page is disabled if Pause Menu is closed
         if (SettingsManager.IsOpen) SettingsManager.Close();

@@ -1,3 +1,4 @@
+using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
 using UnityEngine.EventSystems;
@@ -16,10 +17,16 @@ public class SettingsManager : MonoBehaviour
     public static event Action OnSettingsOpened;
     public static event Action OnSettingsClosed;
 
+    [Header("Input")]
+    [SerializeField] private InputActionAsset actionsAsset;
+    [SerializeField] private string selectNextName = "SelectNext", selectPreviousName = "SelectPrevious";
+    private InputAction selectNextAction, selectPreviousAction;
+    
+
     [Header("Categories")]
     [SerializeField] RectTransform CategoryHolderTransform; // holds all category tabs
     [SerializeField] Vector2[] CatHolderSizeDeltas; // resize holder whenever category changes
-    [SerializeField] GameObject[] Categories, CategoryButtonsOutline; // Category tabs & filter button outlines
+    [SerializeField] GameObject[] Categories, categoryButtons, CategoryButtonsOutline; // Category tabs & filter button outlines
     [SerializeField] int selectedCategory = -1; // -1 = all categories. Then specific category index goes like 0, 1, 2 etc
     private float[] categoryYPositions;
 
@@ -47,6 +54,9 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Slider lookSensitivitySlider;
     [SerializeField] Toggle invertLookXToggle, invertLookYToggle;
 
+    //Accessibility
+    [SerializeField] Toggle headBobbingToggle;
+
     //------------------------------------------------------------//
 
     // Saveable variables: 
@@ -57,6 +67,9 @@ public class SettingsManager : MonoBehaviour
     // Graphics 
     private int resolutionValue, qualityValue;
     private bool vSync, fullscreen;
+
+    // Accessibility
+    public bool headBobbing; //accessible from Head Bobbing script
 
     //------------------------------------------------------------//
 
@@ -73,12 +86,56 @@ public class SettingsManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    private void OnEnable()
+{
+    if (actionsAsset == null) return;
+
+    selectNextAction = actionsAsset.FindAction(selectNextName);
+    selectPreviousAction = actionsAsset.FindAction(selectPreviousName);
+
+    selectNextAction.performed += OnNextCategory;
+    selectPreviousAction.performed += OnPreviousCategory;
+
+    selectNextAction.Enable();
+    selectPreviousAction.Enable();
+}
+
+private void OnDisable()
+{
+    if (selectNextAction != null)
+    {
+        selectNextAction.performed -= OnNextCategory;
+        selectNextAction.Disable();
+    }
+
+    if (selectPreviousAction != null)
+    {
+        selectPreviousAction.performed -= OnPreviousCategory;
+        selectPreviousAction.Disable();
+    }
+}
+
     private void Start()
     {
         // initialization happens on Start() because it depends on other Systems to be singleton first like the AudioManager
         Close();
         InitializeSettings();
+
+
+        // initialize actions
+        selectNextAction = actionsAsset.FindAction(selectNextName);
+        selectPreviousAction = actionsAsset.FindAction(selectPreviousName);
+
+        selectNextAction.Enable();
+        selectPreviousAction.Enable();
     }
+
+   /* private void Update()
+    {
+        if (!IsOpen) return;
+
+        
+    }*/
 
     #region Initializations
     public void InitializeSettings()
@@ -190,6 +247,10 @@ public class SettingsManager : MonoBehaviour
     void InitializeAccessibility()
     {
         // WIP
+        if (PlayerPrefs.HasKey("headBobbing")){ headBobbing = bool.Parse(PlayerPrefs.GetString("headBobbing"));}
+        else {headBobbing = headBobbingToggle.isOn;} //default value
+
+        headBobbingToggle.isOn = headBobbing;
     }
     #endregion
 
@@ -216,7 +277,6 @@ public class SettingsManager : MonoBehaviour
     {
         Instance?.settingsCanvas.gameObject.SetActive(false);
         IsOpen = false;
-        EventSystem.current.SetSelectedGameObject(null);
         OnSettingsClosed?.Invoke();
 
         if (Instance.Initialized)
@@ -411,4 +471,49 @@ public class SettingsManager : MonoBehaviour
         InputBridge.ChangeInvertY(value);
     }
     #endregion
+
+
+    //------------------------------------------------------------//
+    // Accessibility
+    public void ToggleHeadBobbing(bool value)
+    {
+        headBobbing = value;
+        PlayerPrefs.SetString("headBobbing", headBobbing.ToString());
+    }
+
+
+
+private void OnNextCategory(InputAction.CallbackContext ctx)
+{
+    if (!IsOpen)
+        return;
+
+    int maxIndex = Categories.Length - 1;
+
+    if (selectedCategory == maxIndex)
+        SelectCategory(-1);
+    else
+        SelectCategory(selectedCategory + 1);
+
+    SelectCurrentCategoryButton();
+}
+
+private void SelectCurrentCategoryButton()
+{
+    EventSystem.current.SetSelectedGameObject(
+        categoryButtons[selectedCategory + 1]);
+}
+
+private void OnPreviousCategory(InputAction.CallbackContext ctx)
+{
+    if (!IsOpen)
+        return;
+
+    if (selectedCategory == -1)
+        SelectCategory(Categories.Length - 1);
+    else
+        SelectCategory(selectedCategory - 1);
+
+    SelectCurrentCategoryButton();
+}
 }

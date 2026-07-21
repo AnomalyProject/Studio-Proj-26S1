@@ -257,10 +257,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
-    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
-    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
-    m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.8235294, g: 0.75686276, b: 0.36078432, a: 1}
+    m_PressedColor: {r: 0.6226415, g: 0.5722896, b: 0.2731399, a: 1}
+    m_SelectedColor: {r: 0.8235294, g: 0.75686276, b: 0.36078432, a: 1}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 0.28235295}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -348,6 +348,7 @@ GameObject:
   - component: {fileID: 6555901886070978108}
   - component: {fileID: 6712652226966916781}
   - component: {fileID: 2490797973621450487}
+  - component: {fileID: 9213881242410457567}
   m_Layer: 5
   m_Name: SubmitButton
   m_TagString: Untagged
@@ -457,6 +458,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9213881242410457567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618720407171917129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db3626877fb13f849a099f5e68b35ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonJuice
+  hoverScaleFactor: 1.1
+  squishFactor: 0.8
+  scaleSpeed: 0.1
+  squishSpeed: 0.05
+  hoverSound: {fileID: 0}
+  exitSound: {fileID: 0}
+  clickSound: {fileID: 0}
+  releaseSound: {fileID: 0}
 --- !u!1 &706181844621774839
 GameObject:
   m_ObjectHideFlags: 0
@@ -944,6 +965,7 @@ MonoBehaviour:
   submitButton: {fileID: 2490797973621450487}
   closeButton: {fileID: 3810784376465949999}
   thankYouMessage: {fileID: 7656146933476820712}
+  firstSelectedObject: {fileID: 332099808775932106}
   receiverEmail: saeathenssteambuilds@gmail.com
 --- !u!1 &1078866994324630192
 GameObject:
@@ -2791,6 +2813,7 @@ GameObject:
   - component: {fileID: 6853836980527706320}
   - component: {fileID: 5140812226230665452}
   - component: {fileID: 4258979497776976970}
+  - component: {fileID: 744557015792800865}
   m_Layer: 5
   m_Name: TypeDropdown
   m_TagString: Untagged
@@ -2928,6 +2951,26 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_AlphaFadeSpeed: 0.15
+--- !u!114 &744557015792800865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4653831777291034623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db3626877fb13f849a099f5e68b35ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonJuice
+  hoverScaleFactor: 1.1
+  squishFactor: 0.8
+  scaleSpeed: 0.1
+  squishSpeed: 0.05
+  hoverSound: {fileID: 0}
+  exitSound: {fileID: 0}
+  clickSound: {fileID: 0}
+  releaseSound: {fileID: 0}
 --- !u!1 &4897979310154238217
 GameObject:
   m_ObjectHideFlags: 0
@@ -5670,6 +5713,7 @@ GameObject:
   - component: {fileID: 5020525417968006258}
   - component: {fileID: 2410287060090455665}
   - component: {fileID: 3533513185410093874}
+  - component: {fileID: 3595242712223615153}
   m_Layer: 5
   m_Name: FrequencyDropdown
   m_TagString: Untagged
@@ -5801,6 +5845,26 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_AlphaFadeSpeed: 0.15
+--- !u!114 &3595242712223615153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8930840823136699949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db3626877fb13f849a099f5e68b35ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonJuice
+  hoverScaleFactor: 1.1
+  squishFactor: 0.8
+  scaleSpeed: 0.1
+  squishSpeed: 0.05
+  hoverSound: {fileID: 0}
+  exitSound: {fileID: 0}
+  clickSound: {fileID: 0}
+  releaseSound: {fileID: 0}
 --- !u!1 &9077024603687578465
 GameObject:
   m_ObjectHideFlags: 0

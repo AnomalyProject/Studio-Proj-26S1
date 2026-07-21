@@ -310,7 +310,7 @@ public class ChatUI : MonoBehaviour
 
         if (UnityEngine.EventSystems.EventSystem.current != null)
         {
-            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+            //UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         }
 
         ToggleGameplayInputs(false);
