@@ -158,21 +158,21 @@ public class FPSController : MonoBehaviour
     {
         // Cast upward from current position to check for overhead obstacles
      
-            float distance = standingHeight - character.height;
+        float distance = standingHeight - character.height;
 
-            Vector3 origin = transform.position + Vector3.up * character.height;
+        Vector3 origin = transform.position + Vector3.up * character.height;
 
-            return !Physics.SphereCast(
-                origin,
-                character.radius * 0.35f,
-                Vector3.up,
-                out _,
-                distance
-            );
-        }
-        #endregion
+        return !Physics.SphereCast(
+          origin,
+          character.radius * 0.35f,
+          Vector3.up,
+          out _,
+          distance
+        );
+    }
+    #endregion
 
-        #region Movement
+    #region Movement
         public void HandleMovement(InputAction.CallbackContext ctx)
     {
         moveInput = ctx.ReadValue<Vector2>();
