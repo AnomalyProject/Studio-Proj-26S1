@@ -10,6 +10,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Narrator/DialogueEntry", fileName = "NarrationEntry")]
 public class NarrationEntry : ScriptableObject
 {
+    #region Serialized Fields
     [Tooltip("Must match the string passed to NarratorManager.TriggerNarrator()")]
     [SerializeField]private string triggerID;
 
@@ -23,10 +24,13 @@ public class NarrationEntry : ScriptableObject
     [SerializeField] private List<SubtitleEntry> subtitles = new();
 
     [SerializeField, Min(2f)] private float finalSubOffset;
+    #endregion
 
+    #region Public Accessors
     public string TriggerID => triggerID;
     public bool FirstTimeOnly => firstTimeOnly;
     public List<SubtitleEntry> Subtitles => subtitles;
     public AudioClip VoiceClip => voiceClip;
     public float FinalSubOffset => finalSubOffset;
+    #endregion
 }
