@@ -21,8 +21,15 @@ public class GameMap : NetworkBehaviour
     {
         entryPointAnchor.gameObject.SetActive(false);
         exitPointAnchor.gameObject.SetActive(false);
+        transform.ToggleChildren(false);
     }
-    private void OnEnable() => OnMapLoaded?.Invoke(this);
+    private void OnEnable()
+    {
+        OnMapLoaded?.Invoke(this);
+        transform.ToggleChildren(true); // avoids spawning upon existing world items before initialization.
+    }
+
+    private void OnDisable() => transform.ToggleChildren(false);
 
     private void OnValidate()
     {
