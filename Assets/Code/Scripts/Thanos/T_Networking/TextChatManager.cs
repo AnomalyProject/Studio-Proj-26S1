@@ -16,9 +16,21 @@ public class TextChatManager : NetworkBehaviour
     private bool muteAll = false;
 
     [SerializeField] private GameObject notificationsManager;
+    public GameObject playerHUD;
 
+    [Header("Things the player can Hide")]
+    public GameObject versionDisplay;
+    public GameObject nameplates;
+    public GameObject chatCanvas;
+
+    [Header("UI States")]
+    public bool isNameplateVisible { get; private set; } = true;
+
+    public event Action<bool> OnNameplateVisibilityChanged;
+
+    [Space(5)]
     [Header("Chat Settings")]
-    [SerializeField] private int maxMessageLength = 200;
+    [SerializeField][Range(50, 200)] private int maxMessageLength = 200;
     private void Awake()
     {
         notificationsManager.SetActive(false);
@@ -42,6 +54,12 @@ public class TextChatManager : NetworkBehaviour
     {
         SessionEvents.OnPlayerJoined -= HandlePlayerJoined;
         SessionEvents.OnPlayerLeft -= HandlePlayerLeft;
+    }
+
+    public void ToggleNameplateVisibility()
+    {
+        isNameplateVisible = !isNameplateVisible;
+        OnNameplateVisibilityChanged?.Invoke(isNameplateVisible);
     }
 
     /// <summary>
