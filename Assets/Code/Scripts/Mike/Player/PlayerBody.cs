@@ -45,21 +45,10 @@ public class PlayerBody : NetworkBehaviour
     public static PlayerBody localPlayerBody;
     private static HashSet<PlayerBody> activePlayers = new();
     public static IReadOnlyCollection<PlayerBody> ActivePlayers => activePlayers;
-    private NetworkTransform netTransform;
 
     // guards the local player callbacks because ownership can be applied from both OnSpawned and OnOwnerChanged. 
     // So the issue is that PlayrBody can register two times. We want to prevent that.  
     private bool isLocalPlayerRegistered;
-
-    private void Awake() => netTransform = GetComponent<NetworkTransform>();
-
-    private void OnEnable()
-    {
-        if (isOwner && isSpawned && netTransform)
-        {
-            netTransform.ForceSync(owner.Value);
-        }
-    }
 
     protected override void OnSpawned(bool asServer)
     {

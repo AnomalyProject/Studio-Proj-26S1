@@ -39,6 +39,7 @@ public class FPSController : MonoBehaviour
     public float CurrentSpeed => isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
     public float SpeedBoostTimeRemaining => _speedBoostTimeRemaining;
     public Vector2 MoveInput => moveInput;
+    public CharacterController Controller => character;
     #endregion
 
     #region Private Fields

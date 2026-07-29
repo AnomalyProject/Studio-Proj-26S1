@@ -27,9 +27,18 @@ public class MapOrientor : MonoBehaviour
     /// </summary>
     public static void OrientMap(GameMap map, Transform entryPoint, Transform exitPoint)
     {
-        entryPoint.ToggleChildren(childrenActive: false); // Disable all children which may be CharacterController's or Rigidbodies that tend to fight with external movement.
+        foreach(Transform child in entryPoint)
+        {
+            if (child.gameObject == PlayerBody.localPlayerBody.gameObject)
+            {
+                PlayerBody.localPlayerBody.Movement.Controller.enabled = false;
+            }
+            else child.gameObject.SetActive(false);
+        }
+        //entryPoint.ToggleChildren(childrenActive: false); // Disable all children which may be CharacterController's or Rigidbodies that tend to fight with external movement.
         entryPoint.SetPositionAndRotation(map.EntryPointAnchor.position, map.EntryPointAnchor.rotation);
         entryPoint.ToggleChildren(childrenActive: true);
+        PlayerBody.localPlayerBody.Movement.Controller.enabled = true;
 
         exitPoint.SetPositionAndRotation(map.ExitPointAnchor.position, map.ExitPointAnchor.rotation);
     }
