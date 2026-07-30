@@ -20,27 +20,18 @@ public class MapOrientor : MonoBehaviour
     /// Change provided map's orientation and match it with the Map Orientor's exit points.
     /// </summary>
     /// <param name="map"></param>
-    public void OrientMap(GameMap map) => OrientMap(map, entryElevator.transform, exitElevator.transform);
+    public void OrientMap(GameMap map) => OrientMap(map, entryElevator, exitElevator);
 
     /// <summary>
     /// Change map's orientation to match with the provided transforms.
     /// </summary>
-    public static void OrientMap(GameMap map, Transform entryPoint, Transform exitPoint)
+    public static void OrientMap(GameMap map, LevelExitPoint entryPoint, LevelExitPoint exitPoint)
     {
-        foreach(Transform child in entryPoint)
-        {
-            if (child.gameObject == PlayerBody.localPlayerBody.gameObject)
-            {
-                PlayerBody.localPlayerBody.Movement.Controller.enabled = false;
-            }
-            else child.gameObject.SetActive(false);
-        }
-        //entryPoint.ToggleChildren(childrenActive: false); // Disable all children which may be CharacterController's or Rigidbodies that tend to fight with external movement.
-        entryPoint.SetPositionAndRotation(map.EntryPointAnchor.position, map.EntryPointAnchor.rotation);
-        entryPoint.ToggleChildren(childrenActive: true);
-        PlayerBody.localPlayerBody.Movement.Controller.enabled = true;
+        entryPoint.HandleTransportedChilds(childsActive: false);
+        entryPoint.transform.SetPositionAndRotation(map.EntryPointAnchor.position, map.EntryPointAnchor.rotation);
+        entryPoint.HandleTransportedChilds(childsActive: true);
 
-        exitPoint.SetPositionAndRotation(map.ExitPointAnchor.position, map.ExitPointAnchor.rotation);
+        exitPoint.transform.SetPositionAndRotation(map.ExitPointAnchor.position, map.ExitPointAnchor.rotation);
     }
     private void SetNewEntryPoint(LevelExitPoint newPoint)
     {

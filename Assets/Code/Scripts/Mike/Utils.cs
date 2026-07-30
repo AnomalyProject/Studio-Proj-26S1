@@ -20,6 +20,13 @@ public static class Utils
     {
         foreach(Transform child in tr) child.gameObject.SetActive(childrenActive);
     }
+    public static IEnumerable<Transform> GetDirectChildren(this Transform t)
+    {
+        foreach (Transform c in t)
+        {
+            if (c.parent == t) yield return c;
+        }
+    }
     public static void ListenOnce(this UnityEvent handler, System.Action action)
     {
         if (handler == null) return;
