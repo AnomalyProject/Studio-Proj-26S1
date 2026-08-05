@@ -105,6 +105,11 @@ public class LobbyUI : MonoBehaviour
     private void UpdateLobbyVisibility(GameState state)
     {
         bool shouldShowLobbyUI = (state == GameState.Lobby || state == GameState.InGame) && !IsSoloMode();
+        
+        if (!shouldShowLobbyUI && multiplayerSettings != null)
+        {
+            multiplayerSettings.SetActive(false);
+        }
 
         lobbyPanel.SetActive(shouldShowLobbyUI);
 

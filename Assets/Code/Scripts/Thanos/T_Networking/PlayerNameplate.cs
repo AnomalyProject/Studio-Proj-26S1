@@ -8,11 +8,18 @@ public class PlayerNameplate : NetworkBehaviour
 {
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private GameObject nameplateVisuals;
-    
+
     /// <summary>
     /// Called by the spawn system or player setup to set the name.
     /// Kept as a public method so the name can be set after the object is created.
     /// </summary>
+
+    private void Start() {
+        if(TextChatManager.Instance != null) {
+            nameplateVisuals.SetActive(TextChatManager.Instance.isNameplateVisible);
+        }
+    }
+
     [ObserversRpc(bufferLast: true)]
     public void SetName(string displayName, int colourIndex)
     {
@@ -54,5 +61,23 @@ public class PlayerNameplate : NetworkBehaviour
                 TelemetryManager.Instance.InitializeWithPlayerName(playerInfo.Value.DisplayName);
             }
         }
+    }
+
+    private void OnEnable() {
+        if (TextChatManager.Instance != null)
+        {
+            TextChatManager.Instance.OnNameplateVisibilityChanged += UpdateVisibility;
+        }
+    }
+
+    private void OnDisable() {
+        if (TextChatManager.Instance != null)
+        {
+            TextChatManager.Instance.OnNameplateVisibilityChanged -= UpdateVisibility;
+        }
+    }
+
+    private void UpdateVisibility(bool isVisible) {
+        nameplateVisuals.SetActive(isVisible);
     }
 }

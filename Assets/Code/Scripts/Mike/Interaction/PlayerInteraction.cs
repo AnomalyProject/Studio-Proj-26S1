@@ -47,7 +47,7 @@ public class PlayerInteraction : MonoBehaviour
         UnityEditor.EditorApplication.playModeStateChanged += (stateChange) => ResetOutline();
 #endif
     }
-    private void OnDisable()
+    private void OnDestroy()
     {
         interactionSystem.OnFocusedInteractable -= ShowOutline;
         interactionSystem.OnInteractableLostFocus -= HideOutline;

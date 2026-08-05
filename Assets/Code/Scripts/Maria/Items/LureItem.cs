@@ -36,6 +36,7 @@ public class LureItem : NoiseEmitter
     private int EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor");
     #endregion
 
+    #region Unity Lifecycle
     protected override void Awake()
     {
         base.Awake();
@@ -49,6 +50,7 @@ public class LureItem : NoiseEmitter
         blinkingMat.SetColor(EMISSION_COLOR_ID, currentLightColor * Mathf.Exp(-lightDimSpeed * Time.deltaTime));
         blinkingLight.color = currentLightColor;
     }
+    #endregion
 
     #region Network Lifecycle
 

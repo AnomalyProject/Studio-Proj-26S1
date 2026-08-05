@@ -11,8 +11,11 @@ using UnityEngine;
 /// </summary>
 public class SubtitleManager : MonoBehaviour
 {
+    #region Singleton :3
     public static SubtitleManager Instance { get; private set; }
+    #endregion
 
+    #region Serialized Fields
     [Header("UI References")]
     [SerializeField] private GameObject panel;
     [SerializeField] private TMP_Text speakerLabel;
@@ -25,9 +28,13 @@ public class SubtitleManager : MonoBehaviour
 
     [Header("Speaker Label")]
     [SerializeField] private bool showSpeakerLabel = true;
+    #endregion
 
+    #region Private Fields
     private Coroutine currentRoutine;
+    #endregion
 
+    #region Unity Lifecycle
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -42,7 +49,9 @@ public class SubtitleManager : MonoBehaviour
         if (canvasGroup != null) canvasGroup.alpha = 0f;
         if (panel != null) panel.SetActive(false);
     }
+    #endregion
 
+    #region Public Methods
     /// <summary>
     /// Begins sequencing through the given subtitle cues.
     /// If a sequence is already running it is stopped and replaced immediately.
@@ -69,7 +78,9 @@ public class SubtitleManager : MonoBehaviour
 
         StartCoroutine(FadeOut(onComplete));
     }
+    #endregion
 
+    #region Private Methods
     private IEnumerator SubtitleSequenceRoutine(List<SubtitleEntry> subtitles, float finalSubOffset, System.Action onComplete)
     {
         if (subtitles == null || subtitles.Count == 0)
@@ -182,4 +193,5 @@ public class SubtitleManager : MonoBehaviour
 
         canvasGroup.alpha = to;
     }
+    #endregion
 }

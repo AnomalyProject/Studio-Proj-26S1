@@ -27,7 +27,7 @@ public class ElevatorButton : ExitInteractable
     private Material materialInstance;
     private Coroutine currentRoutine;
     private ButtonState currentState = ButtonState.None;
-    private bool isAfterInteraction = false;
+    private bool isTransitioning = false;
 
     private void Awake()
     {
@@ -39,12 +39,6 @@ public class ElevatorButton : ExitInteractable
 
     private void ChangeStateVisuals(ButtonState state)
     {
-        if (isAfterInteraction)
-        {
-            isAfterInteraction = false;
-            return;
-        }
-
         if (state == currentState) return;
         
         currentState = state;
@@ -71,12 +65,17 @@ public class ElevatorButton : ExitInteractable
     private void DoInteractVisuals()
     {
         ChangeStateVisuals(ButtonState.Interacted);
-        isAfterInteraction = true;
+        isTransitioning = true;
 
         if(buttonAnimation)
         buttonAnimation.Play();
     }
-    private void ChangeStateVisuals(bool available) => ChangeStateVisuals(available? ButtonState.Available : ButtonState.Unavailable);
+    public void SetTransitioning(bool value) => isTransitioning = value;
+    private void ChangeStateVisuals(bool available)
+    {
+        if(isTransitioning) ChangeStateVisuals(ButtonState.Interacted);
+        else ChangeStateVisuals(available ? ButtonState.Available : ButtonState.Unavailable);
+    }
 
     #region IEnumerators
     private IEnumerator FadeTo(Color target)

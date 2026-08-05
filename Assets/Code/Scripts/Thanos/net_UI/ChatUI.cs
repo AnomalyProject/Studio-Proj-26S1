@@ -23,6 +23,7 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private Image scrollViewBackground;
     [SerializeField] private GameObject scrollbarObject;
 
+
     [Header("Style & Functionality Settings")]
     [SerializeField] private CanvasGroup chatCanvasGroup;
     [SerializeField] private RectTransform chatContainerRect;
@@ -45,6 +46,10 @@ public class ChatUI : MonoBehaviour
     private bool isChatOpen = false;
 
     private InputAction submit;
+    private GameObject versionDisplay => TextChatManager.Instance.versionDisplay;
+    private GameObject playerHUD => TextChatManager.Instance.playerHUD;
+    private GameObject chat => TextChatManager.Instance.chatCanvas;
+
 
     private void Awake()
     {
@@ -249,8 +254,47 @@ public class ChatUI : MonoBehaviour
                     WhisperToPlayer(targetName, message);
                 }
                 break;
+            case "/clear":
+                ClearChat();
+                break;
+            case "/helphide":
+                ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Hide commands are currently " + "/hide names " + "/hide version " + "/hide hud " + "/hide chat ");
+                break;
+            case "/hide":
+                if (parts.Length > 1)
+                {
+                    string option = parts[1].ToLower();
+                    switch (option)
+                    {
+                        case "names":
+                            TextChatManager.Instance.ToggleNameplateVisibility();
+                            bool isnameplatesVisible = TextChatManager.Instance.isNameplateVisible;
+                            ReceiveMessage($"\"<color=yellow>[System]</color>\" ", $"Nameplates are now {(isnameplatesVisible ? "visible" : "hidden")}.");
+                            break;
+                        case "version":
+                            versionDisplay.SetActive(!versionDisplay.activeSelf);
+                            ReceiveMessage($"\"<color=yellow>[System]</color>\" ", $"Version display is now {(versionDisplay.activeSelf ? "visible" : "hidden")}.");
+                            break;
+                        case "hud":
+                            playerHUD.SetActive(!playerHUD.activeSelf);
+                            ReceiveMessage($"\"<color=yellow>[System]</color>\" ", $"Player HUD is now {(playerHUD.activeSelf ? "visible" : "hidden")}.");
+                            break;
+                        case "chat":
+                            chat.SetActive(!chat.activeSelf);
+                            ReceiveMessage($"\"<color=yellow>[System]</color>\" ", $"Chat is now {(chat.activeSelf ? "visible" : "hidden")}.");
+                            break;
+                        default:
+                            ReceiveMessage($"\"<color=red>[System]</color>\" ", $"Unknown hide option: {option}");
+                            break;
+                    }
+                }
+                else
+                {
+                    ReceiveMessage($"\"<color=red>[System]</color>\" ", "Please specify what to hide: names, version, hud, chat");
+                }
+                break;
             case "/help":
-                ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message]");
+                ReceiveMessage($"\"<color=yellow>[System]</color>\" ", "Available commands: /mute [player], /unmute [player], /whisper [player] [message], /clear, /helphide");
                 break;
             default:
                 ReceiveMessage($"\"<color=red>[System]</color>\" ", "Unknown command");
@@ -387,7 +431,6 @@ public class ChatUI : MonoBehaviour
 
         //ReceiveMessage($"<color=purple>[Whisper to {targetName}]</color>", message);   <-- Debug
     }
-
     private List<string> GetActivePlayerNames()
     {
         SessionData serverSession = SessionManager.Instance.CurrentSession;

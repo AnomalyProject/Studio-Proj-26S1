@@ -45,6 +45,14 @@ public class KeypadInteractable : NetworkBehaviour
     [SerializeField] private TextMeshPro glyphsText;
     [SerializeField] private KeypadButton[] myButtons;
 
+    private void Awake()
+    {
+        if (inputText != null && statusText != null && glyphsText != null)
+        {
+            inputText.text = statusText.text = glyphsText.text = ""; // texts clear
+        }
+    }
+
     private void OnEnable()
     {
         if (!_initialized) return; // only fires from OnSpawned onwards
@@ -57,15 +65,8 @@ public class KeypadInteractable : NetworkBehaviour
         _initialized = true;
         InitializeButtons();
 
-        if(asServer) currentInput.value = "";
-
-        if (inputText != null && statusText != null && glyphsText != null) 
-        { 
-            inputText.text = statusText.text = glyphsText.text = ""; // texts clear
-        }
-
-        if(!asServer)
-        currentInput.onChanged += OnInputChanged.Invoke;
+        if(!asServer) currentInput.onChanged += OnInputChanged.Invoke;
+        else currentInput.value = "";
     }
 
     private void OnValidate()
@@ -104,6 +105,9 @@ public class KeypadInteractable : NetworkBehaviour
     [ObserversRpc(bufferLast: true)] // fire event on all clients
     private void NotifyPasswordGenerated(PasswordData passwordData)
     {
+        string glyphs = "";
+        foreach (var el in passwordData.glyphIndicies) glyphs += el.ToString();
+        Debug.Log(glyphs);
         OnPasswordGenerated?.Invoke(passwordData);
         OnPasswordDigitsGenerated?.Invoke(requiredPassword);
         SetGlyphs(passwordData.glyphIndicies); // set the glyphs for the password
