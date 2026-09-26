@@ -12,7 +12,7 @@ public class AlmanacCategoryButton : MonoBehaviour
     private AlmanacType assignedType;
 
     private void OnEnable() => UpdateNewIcon();
-
+    public void Select() => button.Select();
     public void Setup(AlmanacType type, Action callback)
     {
         percentage.text = AlmanacUI.GetCompletionPercentage(AlmanacRegistry.GetCategoryCompletion(type));

@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using static InputBridge;
 
 public class AlmanacUI : MonoBehaviour
@@ -10,7 +14,9 @@ public class AlmanacUI : MonoBehaviour
     [SerializeField] private AlmanacEntryUI entryPrefab;
     [SerializeField] private Transform categoryPanel, entryPanel;
     [SerializeField] AudioClip openClip, categorySelectionClip;
+    [SerializeField] Scrollbar scrollbar;
     private bool hasOpenedPanel;
+    readonly List<AlmanacCategoryButton> categoryButtons = new List<AlmanacCategoryButton>();
 
     private void Awake()
     {
@@ -21,17 +27,21 @@ public class AlmanacUI : MonoBehaviour
             AlmanacType type = (AlmanacType)category;
             AlmanacCategoryButton button = Instantiate(categoryButtonPrefab, categoryPanel);
             button.Setup(type, () => OpenCollection(type));
+            categoryButtons.Add(button);
         }
         activeCategoryText.text = "";
         ContextChangeHandle(CurrentContext);
     }
     private void OnDestroy() => OnContextChanged -= ContextChangeHandle;
 
-    private void OnEnable()
+    private async void OnEnable()
     {
         totalCompletionText.text = $"Total Completion {GetCompletionPercentage(AlmanacRegistry.GetTotalCompletion())}";
         hasOpenedPanel = false;
         AudioManager.Instance.PlaySFX(openClip);
+
+        await Awaitable.EndOfFrameAsync();
+        if (categoryButtons.Count > 0) categoryButtons[0].Select();
     }
 
     private void OnDisable()
@@ -53,6 +63,9 @@ public class AlmanacUI : MonoBehaviour
             AlmanacEntryUI entryUI = Instantiate(entryPrefab, entryPanel);
             entryUI.Setup(entry);
         }
+
+        scrollbar.value = 1;
+        scrollbar.Select();
     }
 
     private void ClearOpenEntries()
@@ -64,5 +77,17 @@ public class AlmanacUI : MonoBehaviour
         float completion = completion01 * 100;
         return $"{Mathf.RoundToInt(Mathf.Clamp(completion, 0, 100))}%";
     }
-    private void ContextChangeHandle(InputContext ctx) => gameObject.SetActive(ctx == InputContext.Almanac);
+    private void ContextChangeHandle(InputContext ctx)
+    {
+        gameObject.SetActive(ctx == InputContext.Almanac);
+
+        if (ctx == InputContext.Almanac) Actions.UI.Cancel.started += OnCancel;
+        else Actions.UI.Cancel.started -= OnCancel;
+    }
+
+    private void OnCancel(InputAction.CallbackContext context)
+    {
+        if(EventSystem.current.currentSelectedGameObject == scrollbar.gameObject) categoryButtons[0].Select();
+        else SetContext(InputContext.Player);
+    }
 }
