@@ -1,7 +1,6 @@
-using PurrNet;
-using PurrNet.Transports;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Nestoras Angelopoulos
@@ -12,11 +11,28 @@ public class PauseMenu : MonoBehaviour
 {
     private Transform root;
     private Coroutine mainMenuTransitionCoroutine;
+    [SerializeField] private Button FocusButton;
 
     private void Awake() => root = transform.GetChild(0);
-    private void OnEnable() => InputBridge.OnContextChanged += TogglePauseMenu;
-    private void OnDisable() => InputBridge.OnContextChanged -= TogglePauseMenu;
-    public void TogglePauseMenu(InputBridge.InputContext context)
+    private void OnEnable()
+    {
+        InputBridge.OnContextChanged += TogglePauseMenu;
+        SettingsManager.OnSettingsClosed += HandleFocus;
+    }
+
+    private void OnDisable()
+    {
+        InputBridge.OnContextChanged -= TogglePauseMenu;
+        SettingsManager.OnSettingsClosed -= HandleFocus;
+    }
+    private async void HandleFocus()
+    {
+        if (!root.gameObject.activeInHierarchy) return;
+
+        await Awaitable.EndOfFrameAsync();
+        FocusButton.Select();
+    }
+    public async void TogglePauseMenu(InputBridge.InputContext context)
     {
         // Disable when in Main Menu
         if (MainMenuManager.Instance != null)
@@ -30,6 +46,8 @@ public class PauseMenu : MonoBehaviour
 
         // Make sure the settings page is disabled if Pause Menu is closed
         if (SettingsManager.IsOpen) SettingsManager.Close();
+
+        HandleFocus();
     }
     public void Resume() => InputBridge.SetContext(InputBridge.InputContext.Player);
     public void OpenSettings() => SettingsManager.Open();
