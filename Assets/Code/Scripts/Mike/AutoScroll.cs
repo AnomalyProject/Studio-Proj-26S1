@@ -6,7 +6,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Scrollbar))]
 public class AutoScroll : MonoBehaviour
 {
-    [SerializeField] float autoSnapOffset = 0.15f;
+    [SerializeField, Range(0, .5f)] float autoSnapOffset = 0.15f;
     Scrollbar scroll;
 
     private void Awake() => scroll = GetComponent<Scrollbar>();
@@ -20,7 +20,7 @@ public class AutoScroll : MonoBehaviour
         float value = 1 - (float)currentSelected.transform.GetSiblingIndex() / (currentSelected.transform.parent.childCount - 1);
 
         if (value <= autoSnapOffset) value = 0;
-        else if (value >= 1 - autoSnapOffset) value = 1;
+        else if (value > 1 - autoSnapOffset) value = 1;
 
         scroll.value =  value;
     }
