@@ -46,6 +46,7 @@ public class BugReporter : MonoBehaviour
         bool isActive = context == InputBridge.InputContext.BugReporter;
         bugReporterPanel.SetActive(isActive);
         if (!isActive) thankYouMessage.SetActive(false);
+        else descriptionInput.Select();
     }
 
     private void ValidateInput(string input)
