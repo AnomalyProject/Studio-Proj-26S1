@@ -1,9 +1,11 @@
-using System.Collections.Generic;
 using System;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -11,6 +13,7 @@ public class SettingsManager : MonoBehaviour
     public static SettingsManager Instance { get; private set; }
 
     private bool Initialized; // for running pieces of code ONLY after everything is initialized 
+    TMP_Dropdown[] allDropdowns;
 
     // Events
     public static event Action OnSettingsOpened;
@@ -39,6 +42,7 @@ public class SettingsManager : MonoBehaviour
 
     // Graphics
     [SerializeField] TMP_Dropdown resolutionDropdown;
+    [SerializeField] Scrollbar resolutionScrollbar;
     [SerializeField] TMP_Dropdown qualityDropdown;
     [SerializeField] Toggle vSyncToggle;
     [SerializeField] Toggle fullscreenToggle;
@@ -68,9 +72,37 @@ public class SettingsManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
+        InputBridge.OnContextChanged += OnContextChanged;
+        if (InputBridge.CurrentContext == InputBridge.InputContext.UI) OnContextChanged(InputBridge.CurrentContext);
+        allDropdowns = GetComponentsInChildren<TMP_Dropdown>(true);
 
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy() => InputBridge.OnContextChanged -= OnContextChanged;
+
+    private void OnContextChanged(InputBridge.InputContext context)
+    {
+        if (context == InputBridge.InputContext.UI)
+        {
+            InputBridge.Actions.UI.Next.started += OnNext;
+            InputBridge.Actions.UI.Previous.started += OnPrevious;
+            InputBridge.Actions.UI.Cancel.started += OnCancel;
+        }
+        else
+        {
+            InputBridge.Actions.UI.Next.started -= OnNext;
+            InputBridge.Actions.UI.Previous.started -= OnPrevious;
+            InputBridge.Actions.UI.Cancel.started -= OnCancel;
+        }
+    }
+
+    private void OnCancel(InputAction.CallbackContext context)
+    {
+        if (!settingsCanvas.gameObject.activeInHierarchy || allDropdowns.Any(d => d.IsExpanded)) return;
+        Close();
     }
 
     private void Start()
@@ -203,7 +235,7 @@ public class SettingsManager : MonoBehaviour
 
         if (Instance.Initialized)
         {
-            Instance?.SelectCategory(-1); // selects all
+            Instance?.SelectCategory(0); // selects first category
         }
         else
         {
@@ -221,7 +253,7 @@ public class SettingsManager : MonoBehaviour
 
         if (Instance.Initialized)
         {
-            Instance.SelectCategory(-1);
+            Instance.SelectCategory(0);
         }
     }
 
@@ -270,43 +302,51 @@ public class SettingsManager : MonoBehaviour
     // filters and shows a specific category
     public void SelectCategory(int index)
     {
+        if (!settingsCanvas.gameObject.activeInHierarchy) return;
+
         selectedCategory = index;
 
-        if (CatHolderSizeDeltas.Length > 0)
-        {
-            // resize holder so there's no dead scroll space for each category
-            CategoryHolderTransform.sizeDelta = CatHolderSizeDeltas[selectedCategory + 1];
-        }
+        // resize holder so there's no dead scroll space for each category
+        CategoryHolderTransform.sizeDelta = CatHolderSizeDeltas[selectedCategory + 1];
 
-        if (selectedCategory == -1) // all categories
+        foreach (GameObject cat in Categories)
         {
-            for (int i = 0; i < Categories.Length; i++)
-            {
-                Categories[i]?.SetActive(true);
-
-                // each category moves to their original positions
-                Categories[i].transform.localPosition = new Vector3(Categories[i].transform.localPosition.x, categoryYPositions[i], 0);
-            }
+            cat?.SetActive(false);
         }
-        else // specific category
-        {
-            foreach (GameObject cat in Categories)
-            {
-                cat?.SetActive(false);
-            }
-            Categories[selectedCategory]?.SetActive(true);
+        Categories[selectedCategory]?.SetActive(true);
 
-            // move our category to the top
-            Categories[selectedCategory].transform.localPosition = new Vector3(Categories[selectedCategory].transform.localPosition.x, categoryYPositions[0], 0);
-        }
+        // move our category to the top
+        Categories[selectedCategory].transform.localPosition = new Vector3(Categories[selectedCategory].transform.localPosition.x, categoryYPositions[0], 0);
 
         // category buttons outline
         foreach (GameObject btn in CategoryButtonsOutline)
         {
             btn?.SetActive(false);
         }
-        CategoryButtonsOutline[selectedCategory + 1]?.SetActive(true);
+
+        GameObject correctOutline = CategoryButtonsOutline[selectedCategory + 1];
+        correctOutline?.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(correctOutline?.transform.parent.gameObject);
     }
+
+    private void OnNext(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.started) return;
+        NextCategory();
+    }
+
+    private void OnPrevious(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.started) return;
+        PreviousCategory();
+    }
+
+    public void NextCategory()
+    {
+        int index = selectedCategory == Categories.Length - 1 ? 0 : selectedCategory + 1;
+        SelectCategory(index);
+    }
+    public void PreviousCategory() => SelectCategory(selectedCategory - 1 < 0 ? Categories.Length - 1 : selectedCategory - 1);
 
     //------------------------------------------------------------//
 

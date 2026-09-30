@@ -190,6 +190,24 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Next"",
+                    ""type"": ""Button"",
+                    ""id"": ""e1224368-44fb-4e2a-afd2-0ffeb1819fb1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Previous"",
+                    ""type"": ""Button"",
+                    ""id"": ""487951c5-d3e0-4877-b8c1-b86c8171e797"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -654,6 +672,28 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
                     ""action"": ""Toggle Pause Menu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""50e93b69-7bd1-4faa-ab61-a510ebf01d12"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Next"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c6b1cf97-31b8-4687-9e8a-24564b8b7a58"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Previous"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -673,6 +713,8 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         m_UI_TrackedDevicePosition = m_UI.FindAction("TrackedDevicePosition", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         m_UI_TogglePauseMenu = m_UI.FindAction("Toggle Pause Menu", throwIfNotFound: true);
+        m_UI_Next = m_UI.FindAction("Next", throwIfNotFound: true);
+        m_UI_Previous = m_UI.FindAction("Previous", throwIfNotFound: true);
     }
 
     ~@IA_UserInterface()
@@ -764,6 +806,8 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
     private readonly InputAction m_UI_TrackedDevicePosition;
     private readonly InputAction m_UI_TrackedDeviceOrientation;
     private readonly InputAction m_UI_TogglePauseMenu;
+    private readonly InputAction m_UI_Next;
+    private readonly InputAction m_UI_Previous;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -819,6 +863,14 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/TogglePauseMenu".
         /// </summary>
         public InputAction @TogglePauseMenu => m_Wrapper.m_UI_TogglePauseMenu;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Next".
+        /// </summary>
+        public InputAction @Next => m_Wrapper.m_UI_Next;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Previous".
+        /// </summary>
+        public InputAction @Previous => m_Wrapper.m_UI_Previous;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -878,6 +930,12 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
             @TogglePauseMenu.started += instance.OnTogglePauseMenu;
             @TogglePauseMenu.performed += instance.OnTogglePauseMenu;
             @TogglePauseMenu.canceled += instance.OnTogglePauseMenu;
+            @Next.started += instance.OnNext;
+            @Next.performed += instance.OnNext;
+            @Next.canceled += instance.OnNext;
+            @Previous.started += instance.OnPrevious;
+            @Previous.performed += instance.OnPrevious;
+            @Previous.canceled += instance.OnPrevious;
         }
 
         /// <summary>
@@ -922,6 +980,12 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
             @TogglePauseMenu.started -= instance.OnTogglePauseMenu;
             @TogglePauseMenu.performed -= instance.OnTogglePauseMenu;
             @TogglePauseMenu.canceled -= instance.OnTogglePauseMenu;
+            @Next.started -= instance.OnNext;
+            @Next.performed -= instance.OnNext;
+            @Next.canceled -= instance.OnNext;
+            @Previous.started -= instance.OnPrevious;
+            @Previous.performed -= instance.OnPrevious;
+            @Previous.canceled -= instance.OnPrevious;
         }
 
         /// <summary>
@@ -1039,5 +1103,19 @@ public partial class @IA_UserInterface: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTogglePauseMenu(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Next" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNext(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Previous" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPrevious(InputAction.CallbackContext context);
     }
 }

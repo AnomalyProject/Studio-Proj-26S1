@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 public class ButtonJuice : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, ISelectHandler, IDeselectHandler

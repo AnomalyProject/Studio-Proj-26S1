@@ -5,31 +5,16 @@ using System.Collections.Generic;
 // Navigate menus consisting of both 3D and UI Elements
 public class MenuNavigation : MonoBehaviour
 {
-    [Header("Input")]
-    [SerializeField] private InputActionAsset actionsAsset;
-    [SerializeField] private string navigateActionName = "Navigate"; 
-    [SerializeField] private string submitActionName = "Submit";
 
     [Header("Menu Items")]
     [SerializeField]
     private List<MonoBehaviour> menuItemBehaviours;
-
-    private List<IMenuSelectable> menuItems =
-        new List<IMenuSelectable>();
-
-    private InputAction navigateAction;
-    private InputAction submitAction;
+    private List<IMenuSelectable> menuItems = new List<IMenuSelectable>();
 
     private int currentIndex;
 
     private void Awake()
     {
-        navigateAction =
-            actionsAsset.FindAction(navigateActionName);
-
-        submitAction =
-            actionsAsset.FindAction(submitActionName);
-
         foreach (var behaviour in menuItemBehaviours)
         {
             if (behaviour is IMenuSelectable selectable)
@@ -41,41 +26,36 @@ public class MenuNavigation : MonoBehaviour
 
     private void OnEnable()
     {
-        navigateAction.performed += OnNavigate;
-        submitAction.performed += OnSubmit;
+        if (InputBridge.CurrentContext != InputBridge.InputContext.UI)
+        {
+            Debug.LogWarning("Input is not UI and the menu navigation will not work.");
+        }
+
+        InputBridge.Actions.UI.Next.started += OnNext;
+        InputBridge.Actions.UI.Previous.started += OnPrevious;
+        InputBridge.Actions.UI.Submit.started += OnSubmit;
 
         RefreshSelection();
     }
 
     private void OnDisable()
     {
-        navigateAction.performed -= OnNavigate;
-        submitAction.performed -= OnSubmit;
+        InputBridge.Actions.UI.Next.started -= OnNext;
+        InputBridge.Actions.UI.Previous.started -= OnPrevious;
+        InputBridge.Actions.UI.Submit.started -= OnSubmit;
     }
 
-    private void OnNavigate(InputAction.CallbackContext ctx)
+    void OnNext(InputAction.CallbackContext ctx) => Navigate(1);
+    void OnPrevious(InputAction.CallbackContext ctx) => Navigate(-1);
+
+    private void Navigate(int delta)
     {
-        Vector2 move = ctx.ReadValue<Vector2>();
-
-        if (Mathf.Abs(move.y) < 0.5f &&
-            Mathf.Abs(move.x) < 0.5f)
-            return;
-
         menuItems[currentIndex].Deselect();
-
-        currentIndex++;
-
-        if (currentIndex >= menuItems.Count)
-            currentIndex = 0;
-
+        currentIndex = (currentIndex + delta + menuItems.Count) % menuItems.Count;
         RefreshSelection();
     }
 
-    private void OnSubmit(InputAction.CallbackContext ctx)
-    {
-        menuItems[currentIndex].Submit();
-    }
-
+    private void OnSubmit(InputAction.CallbackContext ctx) => menuItems[currentIndex].Submit();
     private void RefreshSelection()
     {
         for (int i = 0; i < menuItems.Count; i++)
